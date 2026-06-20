@@ -1,0 +1,54 @@
+# SwiftLint configuration for Wrapsweeper.
+# See https://realm.github.io/SwiftLint/rule-directory.html
+
+included:
+  - Packages/WrapsweeperCore/Sources
+  - Packages/WrapsweeperCore/Tests
+  - Sources
+
+excluded:
+  - .build
+  - Packages/WrapsweeperCore/.build
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - first_where
+  - contains_over_first_not_nil
+  - redundant_nil_coalescing
+  - closure_spacing
+  - explicit_init
+  - sorted_first_last
+
+analyzer_rules:
+  - unused_import
+
+disabled_rules:
+  # SwiftUI idiom: Button(action:){ label } legitimately uses a trailing
+  # closure alongside the action argument.
+  - multiple_closures_with_trailing_closure
+  # Defer brace placement to swift-format (the formatter), which puts the
+  # opening brace of a multi-clause `if let` on its own line.
+  - opening_brace
+  # swift-format owns punctuation: it adds trailing commas in multiline
+  # literals, which is the opposite of SwiftLint's default. Let the formatter win.
+  - trailing_comma
+
+type_body_length:
+  warning: 300
+  error: 400
+
+# Match the project's comment-minimal, terse style.
+line_length:
+  warning: 110
+  error: 140
+  ignores_comments: true
+
+identifier_name:
+  # Short names like `c` (coord), `t` (translation), `g` (gesture), `n`, `x`/`y`
+  # are idiomatic here.
+  min_length: 1
+  excluded: [c, t, g, n, p, r, d, x, y, id]
+
+type_name:
+  min_length: 2

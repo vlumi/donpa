@@ -1,0 +1,181 @@
+import SpriteKit
+import SwiftUI
+import WrapsweeperCore
+
+/// The full game surface: a status bar over a pannable/zoomable SpriteKit board.
+/// Hosts a single long-lived `BoardScene`, which owns all board input (tap,
+/// flag, chord, pan, zoom) natively; this view only renders chrome.
+public struct GameView: View {
+    @StateObject private var viewModel: GameViewModel
+    @StateObject private var scoreboard: Scoreboard
+    @State private var scene: BoardScene
+    @State private var showingScores = false
+
+    public init(difficulty: Difficulty = .beginner) {
+        self.init(viewModel: GameViewModel(difficulty: difficulty), scoreboard: Scoreboard())
+    }
+
+    /// Use this when the host (e.g. the macOS menu bar) needs to drive the same
+    /// view model that the board renders.
+    public init(viewModel: GameViewModel, scoreboard: Scoreboard) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        _scoreboard = StateObject(wrappedValue: scoreboard)
+        _scene = State(initialValue: BoardScene(viewModel: viewModel))
+    }
+
+    public var body: some View {
+        VStack(spacing: 0) {
+            statusBar
+            SpriteView(scene: scene, options: [.ignoresSiblingOrder])
+        }
+        .background(Color(white: 0.08))
+        .onChange(of: viewModel.lastWin?.seconds) { _ in handleWin() }
+        .sheet(isPresented: $showingScores) {
+            ScoreboardView(scoreboard: scoreboard)
+        }
+    }
+
+    /// When a win lands, record the time (the store keeps it only if it's a
+    /// new best). Opens the scoreboard so the player sees the result.
+    private func handleWin() {
+        guard let win = viewModel.lastWin else { return }
+        if scoreboard.submit(win.seconds, for: win.difficulty) {
+            showingScores = true
+        }
+    }
+
+    // MARK: Status bar
+
+    private var statusBar: some View {
+        HStack(spacing: 12) {
+            counter(label: "⚑", value: viewModel.flagsRemaining)
+
+            Spacer(minLength: 8)
+
+            modeToggle
+
+            Button(action: { viewModel.newGame() }) {
+                Text(faceGlyph).font(.system(size: 26))
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut("r", modifiers: [])
+            .help("New game (R)")
+
+            Button(action: { showingScores = true }) {
+                Text("🏆").font(.system(size: 22))
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut("s", modifiers: [])
+            .help("High scores (S)")
+
+            Spacer(minLength: 8)
+
+            counter(label: "⏱", value: viewModel.elapsedSeconds)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .safeAreaInset(edge: .bottom, spacing: 0) { difficultyPicker }
+        .background(Color(white: 0.14))
+    }
+
+    /// Toggle between reveal- and flag-mode for plain taps. The icon shows the
+    /// CURRENT mode (what a tap will do), tinted when in flag mode so it's
+    /// obvious you've armed flagging.
+    private var modeToggle: some View {
+        Button(action: { viewModel.inputMode.toggle() }) {
+            Text(viewModel.inputMode == .flag ? "🚩" : "⛏️")
+                .font(.system(size: 22))
+                .frame(width: 40, height: 36)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            viewModel.inputMode == .flag
+                                ? Color.orange.opacity(0.35) : Color.white.opacity(0.08))
+                )
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.space, modifiers: [])
+        .help(
+            viewModel.inputMode == .flag
+                ? "Flag mode — tap flags (Space)"
+                : "Reveal mode — tap reveals (Space)")
+    }
+
+    private func counter(label: String, value: Int) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+            Text(String(format: "%03d", max(0, value)))
+                .font(.system(.title3, design: .monospaced).weight(.bold))
+                .foregroundStyle(Color(red: 1, green: 0.45, blue: 0.3))
+        }
+    }
+
+    private var difficultyPicker: some View {
+        Picker("Difficulty", selection: difficultyBinding) {
+            ForEach(Difficulty.presets, id: \.self) { d in
+                Text(d.name).tag(d)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+
+    private var difficultyBinding: Binding<Difficulty> {
+        Binding(
+            get: { viewModel.difficulty },
+            set: { viewModel.newGame(difficulty: $0) }
+        )
+    }
+
+    private var faceGlyph: String {
+        switch viewModel.status {
+        case .won: return "😎"
+        case .lost: return "😵"
+        case .notStarted, .playing: return "🙂"
+        }
+    }
+}
+
+/// The high-score table: best time per difficulty.
+struct ScoreboardView: View {
+    @ObservedObject var scoreboard: Scoreboard
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirmingReset = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("High Scores").font(.title2.bold())
+
+            VStack(spacing: 0) {
+                ForEach(Difficulty.presets, id: \.self) { d in
+                    HStack {
+                        Text(d.name)
+                        Spacer()
+                        if let r = scoreboard.best(for: d) {
+                            Text(String(format: "%03ds", r.seconds))
+                                .font(.body.monospaced().bold())
+                        } else {
+                            Text("—").foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 10)
+                    if d != Difficulty.presets.last { Divider() }
+                }
+            }
+            .padding(.horizontal)
+
+            HStack {
+                Button("Reset", role: .destructive) { confirmingReset = true }
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(24)
+        .frame(minWidth: 320)
+        .confirmationDialog("Clear all high scores?", isPresented: $confirmingReset) {
+            Button("Clear scores", role: .destructive) { scoreboard.reset() }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+}
