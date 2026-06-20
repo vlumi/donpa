@@ -20,11 +20,14 @@ Ship a polished classic Minesweeper on iOS and macOS.
 - [x] Reveal/Flag mode toggle + long-press alternate action
 - [x] Local best-time scoreboard
 - [x] iOS + macOS app targets, CI
+- [x] App icon
+- [x] Light / dark / system appearance (settings sheet, persisted)
 - [ ] **Remaining for release:**
-  - [ ] App icon + launch screen
+  - [ ] Launch screen
   - [ ] First-run polish: empty-state, win/lose feedback (haptics on iOS, subtle animation)
   - [ ] Accessibility pass (VoiceOver labels for cells, Dynamic Type in chrome)
-  - [ ] Settings persistence (last difficulty, last input mode)
+  - [ ] Persist last difficulty and input mode (appearance already persisted)
+  - [ ] Localization / language setting (Settings sheet has room for it)
   - [ ] Tag v0.1.0, signed builds
 
 ## v0.2.0 — Custom boards & restraint
