@@ -63,6 +63,10 @@ jobs:
           xcrun llvm-cov export "$BIN" -instr-profile "$PROF" -format=lcov \
             -ignore-filename-regex='(\.build|Tests)/|WrapsweeperKit/(BoardScene|BoardView|GameView|GameViewModel)\.swift' \
             > coverage.lcov
+          # Rewrite absolute SF: paths to repo-relative so Codecov maps files
+          # correctly (its ignore globs and file tree are repo-relative). The
+          # job runs on macOS, so this is BSD sed.
+          sed -i '' -E 's#^SF:.*/(Packages/WrapsweeperCore/)#SF:\1#' coverage.lcov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
