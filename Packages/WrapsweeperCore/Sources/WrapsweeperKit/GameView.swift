@@ -26,7 +26,7 @@ public struct GameView: View {
     public var body: some View {
         VStack(spacing: 0) {
             statusBar
-            SpriteView(scene: scene, options: [.ignoresSiblingOrder])
+            BoardView(scene: scene)
         }
         .background(Color(white: 0.08))
         .onChange(of: viewModel.lastWin?.seconds) { _ in handleWin() }
