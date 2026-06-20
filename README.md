@@ -93,6 +93,12 @@ when the whole board already fits on screen, panning is disabled.
 Best time per difficulty is kept locally (via `UserDefaults`) and shown from
 the 🏆 button. Beating your record opens the scoreboard automatically.
 
+## Settings
+
+The ⚙️ button opens settings. Appearance can be set to **System**, **Light**,
+or **Dark** — the board and chrome share one palette that follows the choice
+(System tracks the OS). The selection is saved between launches.
+
 ## License
 
 [MIT](LICENSE).
