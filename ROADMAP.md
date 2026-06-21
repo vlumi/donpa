@@ -27,14 +27,26 @@ Ship a polished classic Minesweeper on iOS and macOS.
 - [x] App icon
 - [x] Light / dark / system appearance (settings sheet, persisted)
 - [x] Persisted board selection (mode + size/density/preset)
+- [x] Win/loss feedback: board animation, restart pop, iOS haptics, bottom
+      result banner with the finishing time (PRs #20–24)
+- [x] Precise wall-clock timing; m:ss.t results, classic LED toolbar
+- [x] macOS: Space restarts after a game ends
+- [x] Reset input mode to Reveal on each new game (decided against persisting
+      it — flag mode never makes sense at the start of a game)
 - [ ] **Remaining for release:**
   - [ ] Launch screen
-  - [ ] First-run polish: empty-state, win/lose feedback (haptics on iOS, subtle animation)
   - [ ] Accessibility pass (VoiceOver labels for cells, Dynamic Type in chrome)
-  - [x] Reset input mode to Reveal on each new game (decided against persisting
-        it — flag mode never makes sense at the start of a game)
-  - [ ] Localization / language setting (Settings sheet has room for it)
-  - [ ] Tag v0.1.0, signed builds
+  - [ ] About view: version number + credits
+  - [ ] Light-mode app icon variant (current icon is dark-tuned)
+  - [ ] Window sizing: sensible min/max per board; consider a fixed/snug size
+        for Classic (switching Beginner↔Expert currently feels loose), while
+        still allowing full-screen / resize
+  - [ ] Localization: Japanese + Finnish + English (Settings has a language row;
+        also affects the App Store listing)
+  - [ ] Tag v0.1.0, signed builds — note: any version string is fine for the
+        App Store (no "must be 1.0"); the build number must increment per
+        upload. Currently `MARKETING_VERSION = 0.1.0` (not marked pre-release;
+        TestFlight is the channel for pre-release testing).
 
 ## v0.2.0 — Fairer boards & restraint
 
@@ -185,8 +197,48 @@ App Store Connect.
 
 ---
 
+## Creative identity & theme (exploring — not committed)
+
+Direction under discussion (brainstorm; nothing locked):
+
+- **Theme**: a cheeky, nostalgic, manga-flavoured take. The signature beat is a
+  **comic-book panel** at the end of a game — a dramatic, cheesy *manga* panel
+  (speed-lines, screentone, kana SFX, a chibi character mid-step) on **loss**,
+  and a smaller triumphant panel on **win**. The melodrama is the joke; it
+  evolves the existing detonation/banner. No persistent story required ("stories
+  might be too much") — the comic *style* carries the flavour.
+  - **Panel size is responsive / try-it-out**: likely full-screen-ish on phone,
+    a non-blocking overlay on Mac (must not break the snappy Space-to-restart).
+- **Sounds** (open): usually a mute-play genre, but a melodramatic manga
+  "ドーン!" sting could fit the panel gag specifically. Needs a mute toggle.
+- **Name** (time-sensitive — do before registering bundle IDs with Apple):
+  reconsidering "Wrapsweeper". Maker is a **Finn in Japan**; wants **Japanese
+  localization**; name should read to both JP and EN (not pure-English, not
+  pure-Japanese). Candidates collected in `.local/NAME-OPTIONS.md` (gitignored);
+  current lead family is **Donpan/Donpa** (manga boom). Getting JP-native
+  (teen) feedback before deciding. The rename is one sweep: repo + bundle IDs +
+  `Wrapsweeper*` package/type names + doc URLs.
+
+## Distribution & extras (later)
+
+- [ ] **Static home page** (marketing/landing site for the app).
+- [ ] **TestFlight** beta distribution (iOS + Mac) — comes with the paid
+      account; the channel for pre-release testing.
+- [ ] **watchOS version?** — a big maybe; minesweeper on a tiny screen is its
+      own design problem. Parked.
+- [ ] **Tip jar?** — see the monetization note below; would be a *deliberate*
+      exception to the no-monetization stance, not ads/IAP-for-content.
+
+## Design principles
+
+- **No anti-cheat, by design.** Scores are local and user-editable (low
+  security, by choice). If Game Center leaderboards land later, lean on GC's
+  own server-side validation rather than building anti-cheat here.
+
 ## Deliberately out of scope
 
-Per project conventions: no monetization, ads, or microtransactions; no
+Per project conventions: **no ads, no microtransactions, no pay-to-win**; no
 third-party dependencies; the older Intel Mac is not targeted. Online
-multiplayer and cloud-synced scores are not planned for v1.0.
+multiplayer and cloud-synced scores are not planned for v1.0. (A **tip jar** —
+optional, content-neutral support — is the one monetization form under
+consideration; see Distribution & extras.)
