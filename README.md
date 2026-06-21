@@ -84,25 +84,43 @@ primary action.
 | Pan             | Drag  | Two-finger scroll            |
 | Zoom            | Pinch | Pinch (trackpad)             |
 
-On macOS the pointer reflects the mode over the board — a crosshair to reveal,
-a flag to flag. Panning is constrained to the board, so you can never scroll
-past its edges; when the whole board already fits on screen, panning is
-disabled.
+On macOS the pointer reflects the mode while a game is in progress — a crosshair
+to reveal, a flag to flag (a plain arrow otherwise). Panning is constrained to
+the board, so you can never scroll past its edges; when the whole board already
+fits on screen, panning is disabled.
 
 ### Keyboard shortcuts
 
-| Key     | Action                                        |
-| ------- | --------------------------------------------- |
-| Space   | Toggle reveal / flag mode                     |
-| ⌘N      | New game (macOS menu)                         |
-| ⌘F      | Toggle mode (macOS menu)                      |
-| ⌘1/2/3  | Beginner / Intermediate / Expert (macOS menu) |
+| Key    | Action                                               |
+| ------ | ---------------------------------------------------- |
+| Space  | Toggle mode while playing; restart after a game ends |
+| ⌘R     | Restart the current board (macOS menu)               |
+| ⌘T     | Return to the title screen (macOS menu)              |
+| ⌘F     | Toggle mode (macOS menu)                             |
+| ⌘1/2/3 | Beginner / Intermediate / Expert (macOS menu)        |
+
+## Start and end of a game
+
+The app opens on a **title screen**; tap it (or press Space / Return on macOS)
+to start. You can return to it any time from the end-of-game screen, or via the
+**Title Screen** menu item (⌘T) on macOS.
+
+When a game ends, a comic **result panel** slides in over the board — a
+triumphant one on a win, a dramatic one on a loss, with a "new record" flourish
+when you beat your best time. It stays until you choose:
+
+- **Continue** (or tap anywhere / Return) — dismiss it to look over the finished
+  board.
+- **Title** (or Esc) — go back to the title screen.
+- **Restart** the same board instantly with **Space** or **⌘R** — no need to
+  dismiss the panel first.
 
 ## Scores
 
 Per-board stats are kept locally (via `UserDefaults`) and shown from the 🏆
 button in Classic and Modern sections: your best time and how many games you've
-cleared on each board. Beating a best time opens the scoreboard automatically.
+cleared on each board. A new best is celebrated on the result panel; the full
+table is always available from the 🏆 button.
 
 Stats are keyed by board geometry, not by tier name, so the format stays stable
 toward the "epic" variants: adding wrapped or hex boards — or re-tuning a tier —
