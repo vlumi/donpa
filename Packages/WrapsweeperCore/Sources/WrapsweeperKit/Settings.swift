@@ -38,6 +38,10 @@ public enum AppearancePreference: String, CaseIterable, Identifiable, Sendable {
         case .light: return .light
         case .dark: return .dark
         case .system:
+            // macOS: the ambient `@Environment(\.colorScheme)` is unreliable
+            // under a sibling `.preferredColorScheme`, so read AppKit directly.
+            // iOS: the ambient value is authoritative once the forced scheme is
+            // cleared, so use the fallback (the view updates when it settles).
             #if canImport(AppKit)
             let match = NSApp?.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua])
             return match == .darkAqua ? .dark : .light
