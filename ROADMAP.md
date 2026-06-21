@@ -123,6 +123,15 @@ How the apps reach the stores once a paid Apple Developer account exists:
 - **App age rating**: 4+ / PEGI 3 (set via the App Store Connect questionnaire;
   nothing in the feature set pushes it higher).
 
+**Decision: stay with two native targets (no Mac Catalyst).** Catalyst would
+simplify publishing (one universal-purchase record) but at the cost of the
+native Mac UX already built on AppKit — the mode cursor (`NSCursor`),
+click-vs-drag and right-click (`NSEvent`), two-finger `scrollWheel` pan,
+menu-bar commands, and `keyDown`. Under Catalyst the Mac app is the iOS app in
+UIKit-on-Mac, where exactly those interactions are weakest. Since that native
+cost is already paid and gives the better result, the small one-time publishing
+overhead (a second submission + distinct bundle ID) is the right trade.
+
 ## Game Center & achievements (planned — gated on a paid account)
 
 Achievements (and possibly leaderboards) via Game Center. Mostly an
