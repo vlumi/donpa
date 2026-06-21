@@ -62,12 +62,13 @@ private struct GameContent: View {
     var body: some View {
         VStack(spacing: 0) {
             statusBar
-            BoardView(scene: scene)
+            // Palette passed as a value: BoardView's updateUIView/NSView pushes
+            // it to the scene whenever the resolved scheme changes — reliable
+            // where .onChange on the SwiftUI side was not.
+            BoardView(scene: scene, palette: palette)
         }
         .background(palette.pageBackground)
         .onChange(of: viewModel.lastWin?.seconds) { _ in handleWin() }
-        .onAppear { scene.palette = palette }
-        .onChange(of: scheme) { _ in scene.palette = palette }
         .sheet(isPresented: $showingScores) {
             ScoreboardView(scoreboard: scoreboard)
         }
