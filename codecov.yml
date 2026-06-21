@@ -22,6 +22,7 @@ comment:
 # geometry and should be unit-tested.
 ignore:
   - "Packages/WrapsweeperCore/Sources/WrapsweeperKit/BoardScene.swift"
+  - "Packages/WrapsweeperCore/Sources/WrapsweeperKit/BoardScene+Effects.swift"
   - "Packages/WrapsweeperCore/Sources/WrapsweeperKit/BoardView.swift"
   - "Packages/WrapsweeperCore/Sources/WrapsweeperKit/GameView.swift"
   - "Packages/WrapsweeperCore/Sources/WrapsweeperKit/GameViewModel.swift"
