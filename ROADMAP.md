@@ -22,32 +22,42 @@ Ship a polished classic Minesweeper on iOS and macOS.
 - [x] 1.0-stable, geometry-keyed, versioned scoreboard format (no migrations)
 - [x] SpriteKit board with pan/zoom, board-constrained panning
 - [x] Reveal/Flag mode toggle + long-press alternate action; macOS mode cursor
+      (a custom crosshair/flag, shown only while a game is in progress)
 - [x] Local scoreboard: best time + games-cleared count per board
 - [x] iOS + macOS app targets, CI
-- [x] App icon
+- [x] App icon (manga-style; PR #33 — placeholder pending a final title-free,
+      single-focal-subject icon, see "Creative identity & theme")
 - [x] Light / dark / system appearance (settings sheet, persisted)
 - [x] Persisted board selection (mode + size/density/preset)
-- [x] Win/loss feedback: board animation, restart pop, iOS haptics, bottom
-      result banner with the finishing time (PRs #20–24)
+- [x] Win/loss feedback: board animation, restart pop, iOS haptics. The early
+      bottom result banner (PRs #20–24) was **replaced** by the manga
+      end-of-game result screen (PR #33) — see "Start and end of a game".
+- [x] Manga title screen on launch + comic end-of-game result screen
+      (win/loss/new-record), with Continue / Title (Esc) and Space/⌘R restart
+      (PR #33)
 - [x] Precise wall-clock timing; m:ss.t results, classic LED toolbar
 - [x] macOS: Space restarts after a game ends
 - [x] Reset input mode to Reveal on each new game (decided against persisting
       it — flag mode never makes sense at the start of a game)
 - [ ] **Remaining for release:**
-  - [ ] Launch screen
+  - [x] Launch / title screen (the manga title card on launch, PR #33 — covers
+        this; a separate instant-flash `UILaunchScreen` is still the empty `{}`
+        if a pre-title splash is ever wanted)
   - [x] Accessibility: chrome is VoiceOver-labelled (buttons, counters, pickers,
         sheets) and uses Dynamic-Type semantic fonts; the board announces a
         state summary. **Per-cell board VoiceOver deferred** — it needs a
         scalable cursor model (swiping 10k cells doesn't work on huge boards),
         so co-design it with the v0.3 huge-map navigation rather than build twice.
   - [ ] About view: version number + credits
-  - [ ] Light-mode app icon variant (current icon is dark-tuned)
-  - [x] Window sizing: macOS snaps to a snug fit per board on config change
-        (Beginner→square, Expert→wide); cells cap their on-screen size and the
-        board centers with padding on oversized/full-screen windows. Manual
-        resize still works. **Revisit for v0.3 huge maps / v0.4 wrapping** —
-        snap-to-fit assumes a board that fits a window, which huge/edgeless
-        boards reject (they're meant to be panned, not framed whole).
+  - [ ] Final app icon: a title-free, single-focal-subject manga icon to
+        replace the PR #33 placeholder (see "Creative identity & theme"). The
+        light/dark question is moot now the icon is B/W manga on a flat field.
+  - [x] Window sizing: macOS grows the window to fit a board but never shrinks a
+        maximized/hand-sized one (PR #33); per-board cell size targets a
+        consistent footprint, and the on-screen cell cap is relative to the
+        viewport so small boards fill big windows without blowing up. **Revisit
+        for v0.3 huge maps / v0.4 wrapping** — this still assumes a board that
+        fits a window, which huge/edgeless boards reject (panned, not framed).
   - [ ] Localization: Japanese + Finnish + English (Settings has a language row;
         also affects the App Store listing)
   - [ ] Tag v0.1.0, signed builds — note: any version string is fine for the
@@ -76,9 +86,10 @@ especially on phone. Direction:
   Title/Home → (pick mode + size/difficulty) → Game. The game screen sheds the
   picker bar and shows just the board + minimal chrome.
 - **Split "Restart" from "New Game"**: *Restart* replays the current board
-  (today's new-game button / Cmd-R); *New Game* returns to the selection screen
-  pre-filled with the current selections, then starts fresh. Plus *Return to
-  title* (already shipped: Settings sheet button + macOS Cmd-T / Cmd-R).
+  (today's restart button / Space / Cmd-R); *New Game* returns to the selection
+  screen pre-filled with the current selections, then starts fresh. *Return to
+  title* already ships on the end-of-game result screen (Title button / Esc) and
+  the macOS menu (Cmd-T).
 - Groundwork already in place: `Navigator` (DonpaKit) holds `showingTitle` and is
   injected into `GameView` so any host can drive navigation; the title screen is
   an always-mounted overlay toggled by it.
@@ -108,8 +119,8 @@ existing `BoardScene` seam.
 - [ ] Incremental re-render (update changed cells instead of full rebuild)
 - [ ] Large presets (e.g. 50×50, 100×100) + smooth pan/zoom at scale
 - [ ] Minimap / overview for navigation
-- [ ] Rethink macOS window snap-to-fit (from v0.1): huge boards don't "fit" a
-      window, so the snug-fit / cell-cap / fit-zoom model needs a pan-first
+- [ ] Rethink macOS window grow-to-fit (from v0.1): huge boards don't "fit" a
+      window, so the grow-to-fit / cell-cap / fit-zoom model needs a pan-first
       alternative here (and again for edgeless wrapped boards in v0.4).
 
 ## v0.4.0 — Wrapped (torus) boards
@@ -175,8 +186,8 @@ overhead (a second submission + distinct bundle ID) is the right trade.
 
 Achievements (and possibly leaderboards) via Game Center. Mostly an
 event-plumbing job, but with real prerequisites and some permanence to design
-around. Targeted once a **paid Apple Developer account** exists (the user is
-planning to go paid; Game Center can't be provisioned under a free personal ID).
+around. Targeted once a **paid Apple Developer account** exists (Game Center
+can't be provisioned under a free personal ID).
 
 **Prerequisites (the real gate, not the code):**
 
@@ -272,18 +283,17 @@ Direction notes (earlier brainstorm; mostly realized above):
     (a fist / SFX poking past the border) is just drawn past the edge in the same
     image, opaque-over-transparent — free, no extra layer. Alpha is only the
     easy kind (outside a clear bordered shape), not a hair-level cut-out.
-  - **Art source**: solo for now — AI-generated panels (NovelAI manga model),
-    exported @1x/2x/3x. A real artist could replace the same slot later, no code
+  - **Art source**: AI-generated panels for now (exported @1x/2x/3x). A
+    commissioned artist could replace the same swappable slot later, no code
     change. **Verify commercial-use licensing of any AI art before shipping.**
 - **Sounds** (open): usually a mute-play genre, but a melodramatic manga
   "ドーン!" sting could fit the panel gag specifically. Needs a mute toggle.
-- **Name** (time-sensitive — do before registering bundle IDs with Apple):
-  reconsidering "Donpa". Maker is a **Finn in Japan**; wants **Japanese
-  localization**; name should read to both JP and EN (not pure-English, not
-  pure-Japanese). Candidates collected in `.local/NAME-OPTIONS.md` (gitignored);
-  current lead family is **Donpan/Donpa** (manga boom). Getting JP-native
-  (teen) feedback before deciding. The rename is one sweep: repo + bundle IDs +
-  `Donpa*` package/type names + doc URLs.
+- **Name**: settled on **Donpa Squad / ドンパ隊** — the repo, `Donpa*`
+  package/type names, and docs were renamed in PR #32 (reads to both JP and EN
+  and fits the manga theme). Still worth a JP-native gut-check **before
+  registering bundle IDs with Apple**, since the store name + bundle ID are
+  painful to change after registration. Candidate history in
+  `.local/NAME-OPTIONS.md` (gitignored).
 
 ## Distribution & extras (later)
 
