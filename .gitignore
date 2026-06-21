@@ -17,3 +17,6 @@ Wrapsweeper.xcodeproj
 
 # Coverage export (produced in CI)
 coverage.lcov
+
+# Local-only scratch (notes, brainstorms) — never committed
+.local/
