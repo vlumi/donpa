@@ -17,6 +17,11 @@ public struct Game: Sendable {
     public private(set) var status: GameStatus = .notStarted
     public let mineCount: Int
 
+    /// The mine that ended the game on a loss — the specific cell whose reveal
+    /// detonated (even when reached via a chord). `nil` unless the game is lost.
+    /// Lets the renderer focus the loss animation on the cell the player hit.
+    public private(set) var lossCoord: Coord?
+
     private let topology: any Topology
     private var minesPlaced = false
 
@@ -83,6 +88,7 @@ public struct Game: Sendable {
         if board[c].isMine {
             board[c].state = .revealed
             status = .lost
+            lossCoord = c
             revealAllMines()
             return
         }
