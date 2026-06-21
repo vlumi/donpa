@@ -223,16 +223,31 @@ struct ScoreboardView: View {
             Text("High Scores").font(.title2.bold())
 
             VStack(spacing: 0) {
+                HStack {
+                    Text("Difficulty").font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Text("Cleared").font(.caption).foregroundStyle(.secondary)
+                        .frame(width: 70, alignment: .trailing)
+                    Text("Best").font(.caption).foregroundStyle(.secondary)
+                        .frame(width: 60, alignment: .trailing)
+                }
+                .padding(.vertical, 4)
+
                 ForEach(Difficulty.presets, id: \.self) { d in
                     HStack {
                         Text(d.name)
                         Spacer()
-                        if let r = scoreboard.best(for: d) {
-                            Text(String(format: "%03ds", r.seconds))
-                                .font(.body.monospaced().bold())
-                        } else {
-                            Text("—").foregroundStyle(.secondary)
+                        Text("\(scoreboard.wins(for: d))")
+                            .font(.body.monospaced())
+                            .frame(width: 70, alignment: .trailing)
+                        Group {
+                            if let best = scoreboard.best(for: d) {
+                                Text(String(format: "%03ds", best)).font(.body.monospaced().bold())
+                            } else {
+                                Text("—").foregroundStyle(.secondary)
+                            }
                         }
+                        .frame(width: 60, alignment: .trailing)
                     }
                     .padding(.vertical, 10)
                     if d != Difficulty.presets.last { Divider() }
