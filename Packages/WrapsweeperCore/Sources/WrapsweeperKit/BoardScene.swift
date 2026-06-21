@@ -334,10 +334,15 @@ public final class BoardScene: SKScene {
     // shortcut doesn't fire reliably, but the scene is in the responder chain
     // for its gesture recognizers and receives key events here.
     public override func keyDown(with event: NSEvent) {
-        if event.charactersIgnoringModifiers == " " {
-            viewModel.inputMode.toggle()
-        } else {
+        guard event.charactersIgnoringModifiers == " " else {
             super.keyDown(with: event)
+            return
+        }
+        // After a game ends, Space starts a new one; while it's playable it
+        // toggles reveal/flag mode (where toggling actually means something).
+        switch viewModel.status {
+        case .won, .lost: viewModel.newGame()
+        case .notStarted, .playing: viewModel.inputMode.toggle()
         }
     }
     #endif

@@ -54,8 +54,9 @@ full game state and tracking elapsed time as accumulated segments rather than
 `now − startDate`.
 
 - [ ] **Pause**: stop the clock, hide/blur the board so it can't be studied
-      while paused; resume continues the same game. Requires the timer to
-      accumulate elapsed across pause/resume segments (not a single start date).
+      while paused; resume continues the same game. Bind to **Esc** on macOS.
+      Requires the timer to accumulate elapsed across pause/resume segments
+      (not a single start date).
 - [ ] **Persist & restore on quit**: save the in-progress game on
       background/quit and offer to resume it on next launch. Needs `Game` /
       `Board` / `Topology` to be `Codable` and the *exact* placed mine layout
