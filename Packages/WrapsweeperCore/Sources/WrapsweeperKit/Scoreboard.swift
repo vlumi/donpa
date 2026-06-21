@@ -1,20 +1,28 @@
 import Foundation
 import WrapsweeperCore
 
-/// A single best-time record for one difficulty.
+/// Per-difficulty stats: how many games have been cleared, and the best time.
 public struct ScoreRecord: Codable, Equatable, Sendable {
-    public var seconds: Int
+    /// Total games cleared on this difficulty.
+    public var wins: Int
+    /// Fastest winning time in seconds, or nil if none recorded yet.
+    public var bestSeconds: Int?
+
+    public init(wins: Int = 0, bestSeconds: Int? = nil) {
+        self.wins = wins
+        self.bestSeconds = bestSeconds
+    }
 }
 
-/// Local best-time-per-difficulty store, persisted in `UserDefaults`. No
-/// security beyond the OS's per-app preferences file — a determined user can
-/// edit it, which is fine for a local high-score table.
+/// Local per-difficulty stats store (clears + best time), persisted in
+/// `UserDefaults`. No security beyond the OS's per-app preferences file — a
+/// determined user can edit it, which is fine for a local high-score table.
 @MainActor
 public final class Scoreboard: ObservableObject {
     @Published public private(set) var records: [String: ScoreRecord]
 
     private let defaults: UserDefaults
-    private let key = "wrapsweeper.bestTimes"
+    private let key = "wrapsweeper.stats"
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -27,23 +35,35 @@ public final class Scoreboard: ObservableObject {
         }
     }
 
-    public func best(for difficulty: Difficulty) -> ScoreRecord? {
+    public func record(for difficulty: Difficulty) -> ScoreRecord? {
         records[difficulty.name]
     }
 
-    /// True if `seconds` would beat (or set) the record for this difficulty.
-    public func isNewRecord(_ seconds: Int, for difficulty: Difficulty) -> Bool {
-        guard let existing = records[difficulty.name] else { return true }
-        return seconds < existing.seconds
+    public func best(for difficulty: Difficulty) -> Int? {
+        records[difficulty.name]?.bestSeconds
     }
 
-    /// Record a winning time. No-op if it doesn't beat the existing best.
+    public func wins(for difficulty: Difficulty) -> Int {
+        records[difficulty.name]?.wins ?? 0
+    }
+
+    /// True if `seconds` would beat (or set) the best time for this difficulty.
+    public func isNewRecord(_ seconds: Int, for difficulty: Difficulty) -> Bool {
+        guard let best = records[difficulty.name]?.bestSeconds else { return true }
+        return seconds < best
+    }
+
+    /// Record a win: always bumps the clear count, and updates the best time if
+    /// `seconds` beats it. Returns true if it set a new best time.
     @discardableResult
     public func submit(_ seconds: Int, for difficulty: Difficulty) -> Bool {
-        guard isNewRecord(seconds, for: difficulty) else { return false }
-        records[difficulty.name] = ScoreRecord(seconds: seconds)
+        var record = records[difficulty.name] ?? ScoreRecord()
+        record.wins += 1
+        let isBest = record.bestSeconds.map { seconds < $0 } ?? true
+        if isBest { record.bestSeconds = seconds }
+        records[difficulty.name] = record
         persist()
-        return true
+        return isBest
     }
 
     public func reset() {
