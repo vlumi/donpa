@@ -40,9 +40,13 @@ public struct AboutView: View {
 
             Divider().frame(maxWidth: 220)
 
-            VStack(spacing: 2) {
-                Text("© 2026 vlumi").font(.footnote)
+            VStack(spacing: 6) {
+                Text("© 2026 Ville Misaki").font(.footnote)
                 Text("MIT License").font(.footnote).foregroundStyle(.secondary)
+                Link(destination: URL(string: "https://github.com/vlumi/donpa")!) {
+                    Label("github.com/vlumi/donpa", systemImage: "link")
+                        .font(.footnote)
+                }
             }
 
             Button("Done") { dismiss() }
