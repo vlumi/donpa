@@ -1,0 +1,114 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "About Donpa Squad" : {
+      "comment" : "App menu: opens the About panel. NEEDS REVIEW: ja/fi.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tietoja: Donpa Squad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ドンパ隊について"
+          }
+        }
+      }
+    },
+    "Game" : {
+      "comment" : "Menu bar menu title for game commands. NEEDS REVIEW: ja/fi.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Peli"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ゲーム"
+          }
+        }
+      }
+    },
+    "Restart Game" : {
+      "comment" : "Menu command: replay the current board. NEEDS REVIEW: ja/fi.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aloita peli alusta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ゲームをやり直す"
+          }
+        }
+      }
+    },
+    "Switch to Flag Mode" : {
+      "comment" : "Menu command: change input mode to flagging. NEEDS REVIEW: ja/fi.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vaihda lipputilaan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "旗モードに切り替え"
+          }
+        }
+      }
+    },
+    "Switch to Reveal Mode" : {
+      "comment" : "Menu command: change input mode to revealing. NEEDS REVIEW: ja/fi.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vaihda avaustilaan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開くモードに切り替え"
+          }
+        }
+      }
+    },
+    "Title Screen" : {
+      "comment" : "Menu command: return to the title screen. NEEDS REVIEW: ja/fi.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aloitusnäyttö"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "タイトル画面"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

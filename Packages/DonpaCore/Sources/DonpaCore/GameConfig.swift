@@ -13,6 +13,8 @@
 /// concrete geometry (`WxH|mN`), so re-tuning a tier later simply produces a new
 /// key (a new scoreboard entry) rather than silently re-pointing old scores.
 
+import Foundation
+
 /// Board width/height/mine-count, computed from a `GameConfig`.
 public struct BoardDimensions: Equatable, Sendable {
     public let width: Int
@@ -33,9 +35,9 @@ public enum ClassicPreset: String, CaseIterable, Sendable {
 
     public var label: String {
         switch self {
-        case .beginner: return "Beginner"
-        case .intermediate: return "Intermediate"
-        case .expert: return "Expert"
+        case .beginner: return String(localized: "Beginner", bundle: .module)
+        case .intermediate: return String(localized: "Intermediate", bundle: .module)
+        case .expert: return String(localized: "Expert", bundle: .module)
         }
     }
 }
@@ -54,9 +56,9 @@ public enum BoardSize: String, CaseIterable, Sendable {
 
     public var label: String {
         switch self {
-        case .small: return "Small"
-        case .medium: return "Medium"
-        case .large: return "Large"
+        case .small: return String(localized: "Small", bundle: .module)
+        case .medium: return String(localized: "Medium", bundle: .module)
+        case .large: return String(localized: "Large", bundle: .module)
         }
     }
 }
@@ -76,13 +78,17 @@ public enum Density: String, CaseIterable, Sendable {
         }
     }
 
+    /// Display labels are sapper-themed skill tiers (ascending difficulty),
+    /// tying difficulty to the game's combat-engineer character. These are
+    /// display-only — the `rawValue` (easy/normal/…) is unchanged, so scoreboard
+    /// keys keyed on it are unaffected.
     public var label: String {
         switch self {
-        case .easy: return "Easy"
-        case .normal: return "Normal"
-        case .hard: return "Hard"
-        case .brutal: return "Brutal"
-        case .insane: return "Insane"
+        case .easy: return String(localized: "Trainee", bundle: .module)
+        case .normal: return String(localized: "Sapper", bundle: .module)
+        case .hard: return String(localized: "Veteran", bundle: .module)
+        case .brutal: return String(localized: "Ace", bundle: .module)
+        case .insane: return String(localized: "Legend", bundle: .module)
         }
     }
 }

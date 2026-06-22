@@ -161,6 +161,9 @@ Instruments (Allocations + Leaks) at those sizes throughout.
 **Navigation / window:**
 
 - [ ] Large presets (e.g. 50×50, 100×100, … up to 1000²) + smooth pan/zoom.
+      Modern sizes use clothing-size labels (S/M/L; 小/中/大 in JA), so bigger
+      boards extend naturally to XL/XXL/XXXL (特大/超特大…) — add `BoardSize`
+      cases + catalog entries; the rawValue keys the scoreboard, label is display.
 - [ ] Minimap / overview for navigation.
 - [ ] Rethink macOS window grow-to-fit (from v0.1): huge boards don't "fit" a
       window, so the grow-to-fit / cell-cap / fit-zoom model needs a pan-first

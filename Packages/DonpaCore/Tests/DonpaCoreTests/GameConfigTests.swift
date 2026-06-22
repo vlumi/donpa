@@ -74,7 +74,8 @@ final class GameConfigTests: XCTestCase {
 
     func testLabels() {
         XCTAssertEqual(GameConfig.classic(.beginner).label, "Beginner")
-        XCTAssertEqual(GameConfig.modern(.medium, .hard).label, "Medium · Hard")
+        // Density labels are sapper-themed tiers (.hard => "Veteran").
+        XCTAssertEqual(GameConfig.modern(.medium, .hard).label, "Medium · Veteran")
     }
 
     // MARK: A config builds a playable, winnable game (integration sanity)

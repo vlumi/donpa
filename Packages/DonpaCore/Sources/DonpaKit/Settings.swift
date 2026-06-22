@@ -15,9 +15,9 @@ public enum AppearancePreference: String, CaseIterable, Identifiable, Sendable {
 
     public var label: String {
         switch self {
-        case .system: return "System"
-        case .light: return "Light"
-        case .dark: return "Dark"
+        case .system: return String(localized: "System", bundle: .module)
+        case .light: return String(localized: "Light", bundle: .module)
+        case .dark: return String(localized: "Dark", bundle: .module)
         }
     }
 
@@ -59,7 +59,43 @@ public enum GameMode: String, CaseIterable, Identifiable, Sendable {
     case modern
 
     public var id: String { rawValue }
-    public var label: String { self == .classic ? "Classic" : "Modern" }
+    public var label: String {
+        self == .classic
+            ? String(localized: "Classic", bundle: .module)
+            : String(localized: "Modern", bundle: .module)
+    }
+}
+
+/// App language override. `.system` follows the device language; the others
+/// force a specific localization. Applied by writing `AppleLanguages`, which the
+/// system reads at launch — so a change takes effect on the next launch.
+public enum LanguagePreference: String, CaseIterable, Identifiable, Sendable {
+    case system
+    case english
+    case japanese
+    case finnish
+
+    public var id: String { rawValue }
+
+    /// The `AppleLanguages` code this forces, or nil to follow the device.
+    public var languageCode: String? {
+        switch self {
+        case .system: return nil
+        case .english: return "en"
+        case .japanese: return "ja"
+        case .finnish: return "fi"
+        }
+    }
+
+    /// Each language shown in its own name (plus "System" localized).
+    public var label: String {
+        switch self {
+        case .system: return String(localized: "System", bundle: .module)
+        case .english: return "English"
+        case .japanese: return "日本語"
+        case .finnish: return "Suomi"
+        }
+    }
 }
 
 /// Persisted user settings (appearance + last board selection), backed by
@@ -82,6 +118,18 @@ public final class Settings: ObservableObject {
     @Published public var classicPreset: ClassicPreset {
         didSet { defaults.set(classicPreset.rawValue, forKey: presetKey) }
     }
+    /// Language override. Persisted as our own preference *and* written to
+    /// `AppleLanguages` so the system picks it up on the next launch.
+    @Published public var language: LanguagePreference {
+        didSet {
+            defaults.set(language.rawValue, forKey: languageKey)
+            if let code = language.languageCode {
+                defaults.set([code], forKey: "AppleLanguages")
+            } else {
+                defaults.removeObject(forKey: "AppleLanguages")
+            }
+        }
+    }
 
     private let defaults: UserDefaults
     private let appearanceKey = "donpa.appearance"
@@ -89,6 +137,7 @@ public final class Settings: ObservableObject {
     private let sizeKey = "donpa.modernSize"
     private let densityKey = "donpa.modernDensity"
     private let presetKey = "donpa.classicPreset"
+    private let languageKey = "donpa.language"
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -101,6 +150,9 @@ public final class Settings: ObservableObject {
             defaults.string(forKey: densityKey).flatMap(Density.init(rawValue:)) ?? .normal
         classicPreset =
             defaults.string(forKey: presetKey).flatMap(ClassicPreset.init(rawValue:)) ?? .beginner
+        language =
+            defaults.string(forKey: languageKey).flatMap(LanguagePreference.init(rawValue:))
+            ?? .system
     }
 
     /// The `GameConfig` implied by the current mode + selections.

@@ -17,6 +17,10 @@ public struct AboutView: View {
         return "\(short) (\(build))"
     }
 
+    /// The localized app name (ドンパ隊 in Japanese, "Donpa Squad" elsewhere),
+    /// used to decide whether to also show the kana subtitle.
+    private var appName: String { String(localized: "App name", bundle: .module) }
+
     public var body: some View {
         VStack(spacing: 16) {
             appIcon
@@ -25,33 +29,45 @@ public struct AboutView: View {
                 .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
 
             VStack(spacing: 4) {
-                Text("Donpa Squad").font(.title2.bold())
-                Text("ドンパ隊").font(.title3).foregroundStyle(.secondary)
+                // Localized name: ドンパ隊 in Japanese, "Donpa Squad" elsewhere.
+                Text("App name", bundle: .module).font(.title2.bold())
+                // Show the kana subtitle only when the title isn't already kana.
+                if appName != "ドンパ隊" {
+                    Text(verbatim: "ドンパ隊").font(.title3).foregroundStyle(.secondary)
+                }
             }
 
-            Text("A Minesweeper game for Apple platforms.")
+            Text("A Minesweeper game for Apple platforms.", bundle: .module)
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            Text("Version \(versionString)")
+            Text("Version \(versionString)", bundle: .module)
                 .font(.footnote.monospaced())
                 .foregroundStyle(.secondary)
 
             Divider().frame(maxWidth: 220)
 
             VStack(spacing: 6) {
-                Text("© 2026 Ville Misaki").font(.footnote)
-                Text("MIT License").font(.footnote).foregroundStyle(.secondary)
+                Text(verbatim: "© 2026 Ville Misaki").font(.footnote)
+                Text(verbatim: "MIT License").font(.footnote).foregroundStyle(.secondary)
                 Link(destination: URL(string: "https://github.com/vlumi/donpa")!) {
-                    Label("github.com/vlumi/donpa", systemImage: "link")
-                        .font(.footnote)
+                    Label {
+                        Text(verbatim: "github.com/vlumi/donpa")
+                    } icon: {
+                        Image(systemName: "link")
+                    }
+                    .font(.footnote)
                 }
             }
 
-            Button("Done") { dismiss() }
-                .keyboardShortcut(.defaultAction)
-                .padding(.top, 4)
+            Button {
+                dismiss()
+            } label: {
+                Text("Done", bundle: .module)
+            }
+            .keyboardShortcut(.defaultAction)
+            .padding(.top, 4)
         }
         .padding(28)
         .frame(minWidth: 300)

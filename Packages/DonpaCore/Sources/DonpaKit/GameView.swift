@@ -109,11 +109,8 @@ private struct GameContent: View {
             // Per-cell VoiceOver is a future task (needs a scalable cursor
             // model for huge boards); for now announce a useful summary.
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Board")
-            .accessibilityValue(
-                "\(viewModel.config.label), "
-                    + "\(viewModel.boardWidth) by \(viewModel.boardHeight), "
-                    + "\(viewModel.flagsRemaining) mines remaining, \(statusDescription)")
+            .accessibilityLabel(Text("Board", bundle: .module))
+            .accessibilityValue(boardSummary)
         }
         .background(palette.pageBackground)
         .overlay { mangaPanel }
@@ -251,8 +248,8 @@ private struct GameContent: View {
                 .scaleEffect(restartPop ? 1.35 : 1.0)  // one-shot pop on game end
         }
         .buttonStyle(.plain)
-        .help("New game")
-        .accessibilityLabel("New game")
+        .help(Text("New game", bundle: .module))
+        .accessibilityLabel(Text("New game", bundle: .module))
         // Convey, in words, what the icon's colour shows.
         .accessibilityValue(statusDescription)
     }
@@ -261,11 +258,23 @@ private struct GameContent: View {
     /// the board's status summary.
     private var statusDescription: String {
         switch viewModel.status {
-        case .won: return "Won"
-        case .lost: return "Lost"
-        case .playing: return "In progress"
-        case .notStarted: return "Ready"
+        case .won: return String(localized: "Won", bundle: .module)
+        case .lost: return String(localized: "Lost", bundle: .module)
+        case .playing: return String(localized: "In progress", bundle: .module)
+        case .notStarted: return String(localized: "Ready", bundle: .module)
         }
+    }
+
+    /// VoiceOver summary of the board: config, size, mines remaining, and state.
+    private var boardSummary: String {
+        let label = viewModel.config.label
+        let width = viewModel.boardWidth
+        let height = viewModel.boardHeight
+        let mines = viewModel.flagsRemaining
+        let status = statusDescription
+        return String(
+            localized: "\(label), \(width) by \(height), \(mines) mines remaining, \(status)",
+            bundle: .module)
     }
 
     private var newGameTint: Color {
@@ -278,18 +287,19 @@ private struct GameContent: View {
         }
     }
 
-    private func iconButton(_ systemName: String, help: String, action: @escaping () -> Void)
-        -> some View
-    {
-        Button(action: action) {
+    private func iconButton(
+        _ systemName: String, help: LocalizedStringKey, action: @escaping () -> Void
+    ) -> some View {
+        let label = Text(help, bundle: .module)
+        return Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 18))
                 .foregroundStyle(.secondary)
                 .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)
-        .help(help)
-        .accessibilityLabel(help)  // the symbol alone says nothing to VoiceOver
+        .help(label)
+        .accessibilityLabel(label)  // the symbol alone says nothing to VoiceOver
     }
 
     /// Toggle between reveal- and flag-mode for plain taps. The icon shows the
@@ -312,12 +322,16 @@ private struct GameContent: View {
         .keyboardShortcut(.space, modifiers: [])
         .help(
             viewModel.inputMode == .flag
-                ? "Flag mode — tap flags (Space)"
-                : "Reveal mode — tap reveals (Space)"
+                ? Text("Flag mode — tap flags (Space)", bundle: .module)
+                : Text("Reveal mode — tap reveals (Space)", bundle: .module)
         )
-        .accessibilityLabel("Input mode")
-        .accessibilityValue(viewModel.inputMode == .flag ? "Flag" : "Reveal")
-        .accessibilityHint("Toggles between revealing and flagging")
+        .accessibilityLabel(Text("Input mode", bundle: .module))
+        .accessibilityValue(
+            viewModel.inputMode == .flag
+                ? Text("Flag", bundle: .module)
+                : Text("Reveal", bundle: .module)
+        )
+        .accessibilityHint(Text("Toggles between revealing and flagging", bundle: .module))
     }
 
     /// Flag/mine count: a fixed 3-digit readout (e.g. `010`).
@@ -333,10 +347,12 @@ private struct GameContent: View {
         return counterLabel(label, String(format: "%03d", seconds), a11y: "Time, seconds")
     }
 
-    private func counterLabel(_ label: String, _ value: String, a11y: String) -> some View {
+    private func counterLabel(_ label: String, _ value: String, a11y: LocalizedStringKey)
+        -> some View
+    {
         HStack(spacing: 3) {
-            Text(label)
-            Text(value)
+            Text(verbatim: label)  // glyph (⚑ / ⏱)
+            Text(verbatim: value)
                 .font(.system(.title3, design: .monospaced).weight(.bold))
                 .foregroundStyle(palette.counter)
         }
@@ -347,8 +363,8 @@ private struct GameContent: View {
         .layoutPriority(1)
         // The glyph (⚑ / ⏱) is meaningless to VoiceOver; speak a real label.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(a11y)
-        .accessibilityValue(value)
+        .accessibilityLabel(Text(a11y, bundle: .module))
+        .accessibilityValue(Text(verbatim: value))
     }
 
     /// The bottom configuration bar: a Classic/Modern mode switch over the
@@ -357,7 +373,7 @@ private struct GameContent: View {
     private var difficultyPicker: some View {
         VStack(spacing: 8) {
             Picker("Mode", selection: modeBinding) {
-                ForEach(GameMode.allCases) { Text($0.label).tag($0) }
+                ForEach(GameMode.allCases) { Text(verbatim: $0.label).tag($0) }
             }
             .labelsHidden()
             .pickerStyle(.segmented)
@@ -365,18 +381,18 @@ private struct GameContent: View {
             switch settings.mode {
             case .classic:
                 Picker("Difficulty", selection: classicBinding) {
-                    ForEach(ClassicPreset.allCases, id: \.self) { Text($0.label).tag($0) }
+                    ForEach(ClassicPreset.allCases, id: \.self) { Text(verbatim: $0.label).tag($0) }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
             case .modern:
                 Picker("Size", selection: sizeBinding) {
-                    ForEach(BoardSize.allCases, id: \.self) { Text($0.label).tag($0) }
+                    ForEach(BoardSize.allCases, id: \.self) { Text(verbatim: $0.label).tag($0) }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
                 Picker("Difficulty", selection: densityBinding) {
-                    ForEach(Density.allCases, id: \.self) { Text($0.label).tag($0) }
+                    ForEach(Density.allCases, id: \.self) { Text(verbatim: $0.label).tag($0) }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
