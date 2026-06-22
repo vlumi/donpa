@@ -99,6 +99,29 @@ especially on phone. Direction:
   injected into `GameView` so any host can drive navigation; the title screen is
   an always-mounted overlay toggled by it.
 
+### Toolbar declutter (part of the same pass)
+
+The top toolbar currently mixes four different jobs and feels cramped (narrow
+windows clipped the timer until the macOS min size was raised to 420×560 as a
+stopgap). It holds: the **HUD** (flag/mine counter, timer), a **primary action**
+(new game), an **input control** (reveal/flag mode toggle), and **navigation**
+(trophy = scoreboard, gear = settings). The last two are parked there only
+because there's no better home yet. Proposed homes:
+
+- **Settings (gear):** macOS → a proper `Settings` scene via the app menu
+  (`⌘,`); iOS → reach it from the title/home hub rather than in-game. Off the
+  toolbar.
+- **Scoreboard (trophy):** it's a between-games view, not an in-game action —
+  move to the title/home hub and the macOS menu.
+- **Mode toggle (reveal/flag):** the awkward one — it's an input *modifier*, not
+  HUD. Options to evaluate: a control docked near the board, a corner button, or
+  reconsidering whether it needs a persistent slot vs. long-press. Open question.
+- **Keep in the toolbar:** flag counter, timer, new-game — the real in-game HUD.
+
+This is a UX restructure (touches both platforms + navigation); design before
+building. Once settled, the toolbar should comfortably fit small windows/phones
+without the raised-min-size stopgap doing the work.
+
 ## Session quality-of-life (planned — pause/persist wanted sooner for mobile)
 
 Pause and resume — two related features that share a foundation: serializing

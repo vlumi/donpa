@@ -16,7 +16,9 @@ struct DonpaApp: App {
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator
             )
-            .frame(minWidth: 320, minHeight: 420)
+            // Min size keeps the end-of-game result panel (square art + buttons)
+            // from being clipped when the user shrinks the window.
+            .frame(minWidth: 420, minHeight: 560)
             .onChange(of: viewModel.config) { config in
                 WindowSizer.growToFit(forBoard: config.width, by: config.height)
             }
