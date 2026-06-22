@@ -33,6 +33,12 @@ struct DonpaApp: App {
             CommandGroup(replacing: .appInfo) {
                 Button("About Donpa Squad") { showingAbout = true }
             }
+            // Settings lives in the app menu at the standard ⌘, slot (no toolbar
+            // gear on macOS). Presented as the in-window sheet via the navigator.
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") { navigator.showingSettings = true }
+                    .keyboardShortcut(",", modifiers: .command)
+            }
             CommandGroup(replacing: .newItem) {
                 // Restart replays the same board; the difficulty items below
                 // start a fresh game with a chosen config.
@@ -45,6 +51,11 @@ struct DonpaApp: App {
                 .keyboardShortcut("t", modifiers: .command)
             }
             CommandMenu("Game") {
+                Button("High Scores") { navigator.showingScores = true }
+                    .keyboardShortcut("s", modifiers: [.command, .shift])
+
+                Divider()
+
                 Button(
                     viewModel.inputMode == .flag
                         ? "Switch to Reveal Mode"

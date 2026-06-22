@@ -70,8 +70,6 @@ private struct GameContent: View {
     @ObservedObject var navigator: Navigator
     let scene: BoardScene
 
-    @State private var showingScores = false
-    @State private var showingSettings = false
     @State private var panel: MangaPanelView.Kind?
     @State private var panelTask: Task<Void, Never>?
     @State private var restartPop = false
@@ -123,10 +121,10 @@ private struct GameContent: View {
         .onChange(of: viewModel.lastResult?.id) { _ in handleResult() }
         // A new game (incl. Space-to-restart) clears any lingering panel.
         .onChange(of: viewModel.gameID) { _ in dismissPanel() }
-        .sheet(isPresented: $showingScores) {
+        .sheet(isPresented: $navigator.showingScores) {
             ScoreboardView(scoreboard: scoreboard)
         }
-        .sheet(isPresented: $showingSettings) {
+        .sheet(isPresented: $navigator.showingSettings) {
             SettingsView(settings: settings)
         }
     }
@@ -233,8 +231,12 @@ private struct GameContent: View {
 
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
-                iconButton("trophy", help: "High scores") { showingScores = true }
-                iconButton("gearshape", help: "Settings") { showingSettings = true }
+                // macOS reaches Settings/Scoreboard from the menu bar; iOS keeps
+                // toolbar buttons (until the title home-hub move in Phase 2).
+                #if os(iOS)
+                iconButton("trophy", help: "High scores") { navigator.showingScores = true }
+                iconButton("gearshape", help: "Settings") { navigator.showingSettings = true }
+                #endif
                 timeCounter(label: "⏱", centiseconds: viewModel.elapsedCentiseconds)
             }
             .frame(maxWidth: .infinity)
