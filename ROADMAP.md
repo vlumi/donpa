@@ -75,6 +75,15 @@ builds on the existing logical solver.
       foundation — generation just resamples until solvable).
 - [ ] Optional per-config "no-guess" toggle (esp. for the harder densities).
 - [ ] Safe-reveal / question-mark flag cycle (classic third flag state).
+- [ ] **Progress-% scoring**: track % of safe (non-mine) tiles revealed
+      (`revealedSafeCount / (cellCount − mineCount)`; 100% == win) and keep a
+      **best-% record per board** in the scoreboard, so the brutal/insane tiers
+      — where actually clearing for a time is near-impossible — still have a
+      meaningful score. Submit on loss (win is trivially 100%). Introduces the
+      incremental `revealedSafeCount` counter the v0.3 perf work also needs;
+      add the record as a new optional, backward-compatible scoreboard field
+      (the format is geometry-keyed + "no migrations"). Show best-% in the
+      scoreboard rows and on the loss result panel ("cleared 87%").
 
 ## Navigation restructure — title as home / selection off the game screen (planned)
 
@@ -94,31 +103,69 @@ especially on phone. Direction:
   injected into `GameView` so any host can drive navigation; the title screen is
   an always-mounted overlay toggled by it.
 
-## Session quality-of-life (planned)
+## Session quality-of-life (planned — pause/persist wanted sooner for mobile)
 
 Pause and resume — two related features that share a foundation: serializing
 full game state and tracking elapsed time as accumulated segments rather than
-`now − startDate`.
+`now − startDate`. **Prioritised up:** on mobile you may need to stop suddenly
+and resume later, and a backgrounded app can be killed by the OS — so persistence
+isn't just nice-to-have.
 
+- [ ] **Segmented timer** (prerequisite for both): replace the single `startDate`
+      in `GameViewModel` with `accumulatedCentiseconds` + an optional
+      `runningSince`. Pause folds the running span into the accumulated total;
+      resume restarts the span. Persists cleanly (store the number, never a
+      wall-clock delta).
 - [ ] **Pause**: stop the clock, hide/blur the board so it can't be studied
-      while paused; resume continues the same game. Bind to **Esc** on macOS.
-      Requires the timer to accumulate elapsed across pause/resume segments
-      (not a single start date).
+      while paused; resume continues the same game. Bind to **Esc** on macOS
+      (distinct from Esc = "return to title" on the *result* screen — pause is
+      mid-play).
 - [ ] **Persist & restore on quit**: save the in-progress game on
-      background/quit and offer to resume it on next launch. Needs `Game` /
-      `Board` / `Topology` to be `Codable` and the *exact* placed mine layout
-      saved (mines are placed first-click-safe mid-game and must not be
-      re-randomized). Store the config + accumulated elapsed time too.
+      background/quit (iOS `scenePhase`) and offer to resume it on next launch.
+      Needs `Game` / `Board` / `Cell` / `Coord` `Codable`, plus a **tagged
+      encoding for the `any Topology` existential** (store kind + params, rebuild
+      via a factory — don't encode the protocol). Save the *exact* placed mine
+      layout (`Set<Coord>` + `minesPlaced`); mines are first-click-safe and must
+      not be re-randomized. Store config + accumulated elapsed too. Use a
+      **compact format** (mines/revealed/flagged as coord sets or a bitset, not
+      the full `[Coord: Cell]` dict) — a 1000×1000 save is large otherwise; this
+      dovetails with the v0.3 data-model rework below.
 
 ## v0.3.0 — Big boards
 
-The "huge zoomable maps" pillar. Mostly a rendering/perf effort behind the
-existing `BoardScene` seam.
+The "huge zoomable maps" pillar — targeting **500×500 (250k) up to 1000×1000
+(1M) cells**. Both a data-model and a rendering/perf effort; profile with
+Instruments (Allocations + Leaks) at those sizes throughout.
 
-- [ ] Viewport culling in `BoardScene.rebuild` (only build visible cells)
-- [ ] Incremental re-render (update changed cells instead of full rebuild)
-- [ ] Large presets (e.g. 50×50, 100×100) + smooth pan/zoom at scale
-- [ ] Minimap / overview for navigation
+**Data model (Core):**
+
+- [ ] Replace `Board`'s `[Coord: Cell]` storage — a dict keyed by a struct is
+      ~100MB+ and slow at 1M entries. For bounded rectangular topologies use a
+      **flat `[Cell]` of size w·h** indexed `y·w + x`; pack `Cell` tight (state
+      2 bits + mine 1 + adjacency 0–8 in 4 bits ≈ 1 byte/cell → 1000×1000 ≈ 1MB).
+      Keep the `Topology` seam (dict path can stay for sparse/odd topologies).
+- [ ] Kill the O(n) full-board scans: `Game.checkWin` (scans every cell per
+      reveal), `Board.mineCount`/`flagCount` (reduce over all cells per call) →
+      **incremental counters** (`revealedSafeCount`, flag count). Win is then an
+      O(1) check. (The progress-% feature introduces `revealedSafeCount` first.)
+
+**Rendering (Kit):**
+
+- [ ] Viewport culling in `BoardScene.rebuild` — only build nodes for cells in
+      the camera rect (+ margin); refresh the visible set on pan/zoom. Today it
+      makes one `SKShapeNode` (+ `SKLabelNode`) per cell → millions of nodes at
+      scale.
+- [ ] Incremental re-render (update changed cells instead of full `rebuild()`,
+      which currently re-runs on every palette push / tick).
+- [ ] Node reuse / pooling as the viewport moves; consider `SKTileMapNode` or a
+      drawn texture instead of per-cell `SKShapeNode` (shape nodes are pricey).
+- [ ] Leak audit: `BoardScene` ↔ `GameViewModel` retain, long-lived scene
+      teardown on config change, effects-node cleanup.
+
+**Navigation / window:**
+
+- [ ] Large presets (e.g. 50×50, 100×100, … up to 1000²) + smooth pan/zoom.
+- [ ] Minimap / overview for navigation.
 - [ ] Rethink macOS window grow-to-fit (from v0.1): huge boards don't "fit" a
       window, so the grow-to-fit / cell-cap / fit-zoom model needs a pan-first
       alternative here (and again for edgeless wrapped boards in v0.4).
