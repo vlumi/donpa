@@ -16,24 +16,40 @@ struct MangaPanelView: View {
         case win
         /// A win that set a new best time, in centiseconds — gets a record badge.
         case record(centiseconds: Int)
-        case loss
+        /// A loss, carrying the fraction (0...1) of safe cells cleared, shown as
+        /// a consolation score ("cleared 87%").
+        case loss(progress: Double)
 
-        var imageName: String { self == .loss ? "PanelLoss" : "PanelWin" }
-        var accent: Color { self == .loss ? .red : .green }
-        var isWin: Bool { self != .loss }
+        var isWin: Bool {
+            if case .loss = self { return false }
+            return true
+        }
+        var imageName: String { isWin ? "PanelWin" : "PanelLoss" }
+        var accent: Color { isWin ? .green : .red }
         /// Spoken description for VoiceOver (the art conveys nothing to it).
         var a11yLabel: String {
             switch self {
             case .win: return "Minefield cleared"
             case .record(let cs):
                 return "New record! Minefield cleared in \(TimeFormat.mmsst(centiseconds: cs))"
-            case .loss: return "Boom — you stepped on a mine"
+            case .loss(let progress):
+                return "Boom — you stepped on a mine. Cleared \(Self.percent(progress))."
             }
         }
         /// The new-best time, if this is a record win.
         var recordCentiseconds: Int? {
             if case .record(let cs) = self { return cs }
             return nil
+        }
+        /// The cleared fraction to show, if this is a loss.
+        var lossProgress: Double? {
+            if case .loss(let p) = self { return p }
+            return nil
+        }
+
+        /// Whole-percent string, e.g. `87%`.
+        static func percent(_ fraction: Double) -> String {
+            "\(Int((fraction * 100).rounded()))%"
         }
     }
 
@@ -95,6 +111,7 @@ struct MangaPanelView: View {
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .overlay(alignment: .top) { recordBadge }
+            .overlay(alignment: .bottom) { lossCaption }
             // Coloured accent glow — the roadmap's "accent applied in code over
             // the mono art", kept subtle so it frames rather than tints.
             .shadow(color: kind.accent.opacity(0.7), radius: 28)
@@ -161,6 +178,23 @@ struct MangaPanelView: View {
             .rotationEffect(.degrees(-6))
             .offset(y: 14)
             .scaleEffect(appeared ? 1 : 0.5)
+        }
+    }
+
+    /// On a loss, a small consolation banner showing how much of the board was
+    /// cleared — the score for boards rarely won outright.
+    @ViewBuilder private var lossCaption: some View {
+        if let progress = kind.lossProgress {
+            Text("Cleared \(Kind.percent(progress))")
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(kind.accent.opacity(0.95)))
+                .overlay(Capsule().stroke(.white, lineWidth: 2))
+                .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
+                .offset(y: 12)
+                .scaleEffect(appeared ? 1 : 0.5)
         }
     }
 

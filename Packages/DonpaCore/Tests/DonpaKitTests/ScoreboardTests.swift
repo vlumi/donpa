@@ -92,6 +92,42 @@ final class ScoreboardTests: XCTestCase {
         XCTAssertEqual(r?.bestCentiseconds, 20)
     }
 
+    // MARK: Progress %
+
+    func testEmptyHasNoBestProgress() {
+        let board = Scoreboard(defaults: defaults)
+        XCTAssertNil(board.bestProgress(for: .beginner))
+    }
+
+    func testLossProgressIsRecordedAndOnlyRises() {
+        let board = Scoreboard(defaults: defaults)
+        XCTAssertTrue(board.submitLossProgress(0.5, for: .beginner))
+        XCTAssertEqual(board.bestProgress(for: .beginner) ?? 0, 0.5, accuracy: 1e-9)
+        // A worse loss doesn't lower it.
+        XCTAssertFalse(board.submitLossProgress(0.3, for: .beginner))
+        XCTAssertEqual(board.bestProgress(for: .beginner) ?? 0, 0.5, accuracy: 1e-9)
+        // A better loss raises it.
+        XCTAssertTrue(board.submitLossProgress(0.8, for: .beginner))
+        XCTAssertEqual(board.bestProgress(for: .beginner) ?? 0, 0.8, accuracy: 1e-9)
+    }
+
+    func testWinImpliesFullProgressRegardlessOfLosses() {
+        let board = Scoreboard(defaults: defaults)
+        board.submitLossProgress(0.6, for: .beginner)
+        XCTAssertEqual(board.bestProgress(for: .beginner) ?? 0, 0.6, accuracy: 1e-9)
+        board.submit(42, for: .beginner)  // a win
+        XCTAssertEqual(
+            board.bestProgress(for: .beginner) ?? 0, 1.0, accuracy: 1e-9,
+            "any win means the board has been fully cleared")
+    }
+
+    func testProgressPersistsAcrossInstances() {
+        let first = Scoreboard(defaults: defaults)
+        first.submitLossProgress(0.42, for: .expert)
+        let second = Scoreboard(defaults: defaults)
+        XCTAssertEqual(second.bestProgress(for: .expert) ?? 0, 0.42, accuracy: 1e-9)
+    }
+
     // MARK: Persistence
 
     func testStatsPersistAcrossInstances() {
