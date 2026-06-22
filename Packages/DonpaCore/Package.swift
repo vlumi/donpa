@@ -3,6 +3,9 @@ import PackageDescription
 
 let package = Package(
     name: "DonpaCore",
+    // Enables localized resources (String Catalogs) in this package's targets;
+    // EN is the development/base language.
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v16),
         .macOS(.v13),
@@ -14,11 +17,17 @@ let package = Package(
         .library(name: "DonpaKit", targets: ["DonpaKit"]),
     ],
     targets: [
-        .target(name: "DonpaCore"),
+        .target(
+            name: "DonpaCore",
+            resources: [.process("Resources/Localizable.xcstrings")]
+        ),
         .target(
             name: "DonpaKit",
             dependencies: ["DonpaCore"],
-            resources: [.process("Resources/Panels.xcassets")]
+            resources: [
+                .process("Resources/Panels.xcassets"),
+                .process("Resources/Localizable.xcstrings"),
+            ]
         ),
         // Dev-only tool: simulates the solver over candidate board configs to
         // pick difficulty tiers. Run with `swift run TierAnalysis`. Not shipped.

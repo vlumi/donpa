@@ -17,7 +17,7 @@ struct ScoreboardView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("High Scores").font(.title2.bold())
+            Text("High Scores", bundle: .module).font(.title2.bold())
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -30,29 +30,47 @@ struct ScoreboardView: View {
             .frame(maxHeight: 360)
 
             HStack {
-                Button("Reset", role: .destructive) { confirmingReset = true }
+                Button(role: .destructive) {
+                    confirmingReset = true
+                } label: {
+                    Text("Reset", bundle: .module)
+                }
                 Spacer()
-                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Done", bundle: .module)
+                }
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(24)
         .frame(minWidth: 320)
-        .confirmationDialog("Clear all high scores?", isPresented: $confirmingReset) {
-            Button("Clear scores", role: .destructive) { scoreboard.reset() }
-            Button("Cancel", role: .cancel) {}
+        .confirmationDialog(
+            Text("Clear all high scores?", bundle: .module), isPresented: $confirmingReset
+        ) {
+            Button(role: .destructive) {
+                scoreboard.reset()
+            } label: {
+                Text("Clear scores", bundle: .module)
+            }
+            Button(role: .cancel) {
+            } label: {
+                Text("Cancel", bundle: .module)
+            }
         }
     }
 
-    private func section(_ title: String, configs: [GameConfig]) -> some View {
+    private func section(_ title: LocalizedStringKey, configs: [GameConfig]) -> some View {
         VStack(spacing: 0) {
             HStack {
-                Text(title).font(.caption.bold()).foregroundStyle(.secondary)
+                Text(title, bundle: .module).font(.caption.bold()).foregroundStyle(.secondary)
                 Spacer()
-                Text("Cleared").font(.caption).foregroundStyle(.secondary)
+                Text("Cleared", bundle: .module).font(.caption).foregroundStyle(.secondary)
                     .frame(width: 62, alignment: .trailing)
-                Text("Best %").font(.caption).foregroundStyle(.secondary)
+                Text("Best %", bundle: .module).font(.caption).foregroundStyle(.secondary)
                     .frame(width: 52, alignment: .trailing)
-                Text("Best").font(.caption).foregroundStyle(.secondary)
+                Text("Best", bundle: .module).font(.caption).foregroundStyle(.secondary)
                     .frame(width: 72, alignment: .trailing)
             }
             .padding(.vertical, 4)
@@ -66,7 +84,7 @@ struct ScoreboardView: View {
 
     private func row(_ config: GameConfig) -> some View {
         HStack {
-            Text(config.label)
+            Text(verbatim: config.label)  // already localized by GameConfig
             Spacer()
             Text("\(scoreboard.wins(for: config))")
                 .font(.body.monospaced())
@@ -98,20 +116,40 @@ struct SettingsView: View {
     @ObservedObject var settings: Settings
     @Environment(\.dismiss) private var dismiss
     @State private var showingAbout = false
+    /// The language in effect when this sheet appeared. If the picker moves away
+    /// from it, the app needs a restart to actually switch — surfaced loudly.
+    @State private var launchLanguage: LanguagePreference?
+
+    private var languageChanged: Bool {
+        launchLanguage != nil && settings.language != launchLanguage
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Settings").font(.title2.bold())
+            Text("Settings", bundle: .module).font(.title2.bold())
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Appearance").font(.headline)
+                Text("Appearance", bundle: .module).font(.headline)
                 Picker("Appearance", selection: $settings.appearance) {
                     ForEach(AppearancePreference.allCases) { pref in
-                        Text(pref.label).tag(pref)
+                        Text(verbatim: pref.label).tag(pref)  // label localized in Settings
                     }
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Language", bundle: .module).font(.headline)
+                Picker("Language", selection: $settings.language) {
+                    ForEach(LanguagePreference.allCases) { lang in
+                        Text(verbatim: lang.label).tag(lang)
+                    }
+                }
+                .labelsHidden()
+                if languageChanged {
+                    restartNotice
+                }
             }
 
             // macOS surfaces About via the app menu ("About Donpa Squad"); iOS
@@ -120,13 +158,22 @@ struct SettingsView: View {
             Button {
                 showingAbout = true
             } label: {
-                Label("About Donpa Squad", systemImage: "info.circle")
+                Label {
+                    Text("About Donpa Squad", bundle: .module)
+                } icon: {
+                    Image(systemName: "info.circle")
+                }
             }
             #endif
 
             HStack {
                 Spacer()
-                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Done", bundle: .module)
+                }
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(24)
@@ -134,5 +181,24 @@ struct SettingsView: View {
         .sheet(isPresented: $showingAbout) {
             AboutView()
         }
+        .onAppear { launchLanguage = settings.language }
+        .animation(.easeInOut(duration: 0.2), value: languageChanged)
+    }
+
+    /// Prominent notice shown once the language picker is changed: a tinted
+    /// callout making clear the app must be restarted to switch language.
+    private var restartNotice: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            Text("Restart the app to change the language.", bundle: .module)
+                .font(.callout.weight(.semibold))
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(.orange.opacity(0.5), lineWidth: 1))
+        .transition(.opacity)
     }
 }

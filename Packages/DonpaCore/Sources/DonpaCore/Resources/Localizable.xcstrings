@@ -1,0 +1,211 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Beginner": {
+      "comment": "Classic difficulty preset (9x9, 10 mines). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aloittelija"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "初級"
+          }
+        }
+      }
+    },
+    "Intermediate": {
+      "comment": "Classic difficulty preset (16x16, 40 mines). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Keskitaso"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "中級"
+          }
+        }
+      }
+    },
+    "Expert": {
+      "comment": "Classic difficulty preset (30x16, 99 mines). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vaativa"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "上級"
+          }
+        }
+      }
+    },
+    "Small": {
+      "comment": "Modern board size (9x9). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "小"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S"
+          }
+        }
+      }
+    },
+    "Medium": {
+      "comment": "Modern board size (16x16). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "中"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M"
+          }
+        }
+      }
+    },
+    "Large": {
+      "comment": "Modern board size (25x25). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "大"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L"
+          }
+        }
+      }
+    },
+    "Trainee": {
+      "comment": "Difficulty tier 1/5 (easiest), sapper skill ladder. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alokas"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "しんぺい"
+          }
+        }
+      }
+    },
+    "Sapper": {
+      "comment": "Difficulty tier 2/5, sapper skill ladder (the character's own role). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pioneeri"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "こうへい"
+          }
+        }
+      }
+    },
+    "Veteran": {
+      "comment": "Difficulty tier 3/5, sapper skill ladder. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Veteraani"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ベテラン"
+          }
+        }
+      }
+    },
+    "Ace": {
+      "comment": "Difficulty tier 4/5, sapper skill ladder. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ässä"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "エース"
+          }
+        }
+      }
+    },
+    "Legend": {
+      "comment": "Difficulty tier 5/5 (hardest), sapper skill ladder. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Legenda"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "でんせつ"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

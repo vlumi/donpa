@@ -6,6 +6,7 @@ options:
     iOS: "16.0"
     macOS: "13.0"
   createIntermediateGroups: true
+  developmentLanguage: en
 
 packages:
   DonpaCore:

@@ -38,8 +38,8 @@ struct TitleScreen: View {
         .modifier(StartKeyShortcuts(onStart: onStart))
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
-        .accessibilityLabel("Donpa Squad")
-        .accessibilityHint("Tap to start")
+        .accessibilityLabel(Text("App name", bundle: .module))
+        .accessibilityHint(Text("Tap to start", bundle: .module))
     }
 }
 

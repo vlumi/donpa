@@ -1,0 +1,13 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Home-screen app name. Japanese uses the kana ドンパ隊.",
+      "localizations" : {
+        "fi" : { "stringUnit" : { "state" : "translated", "value" : "Donpa Squad" } },
+        "ja" : { "stringUnit" : { "state" : "needs_review", "value" : "ドンパ隊" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

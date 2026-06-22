@@ -29,11 +29,17 @@ struct MangaPanelView: View {
         /// Spoken description for VoiceOver (the art conveys nothing to it).
         var a11yLabel: String {
             switch self {
-            case .win: return "Minefield cleared"
+            case .win:
+                return String(localized: "Minefield cleared", bundle: .module)
             case .record(let cs):
-                return "New record! Minefield cleared in \(TimeFormat.mmsst(centiseconds: cs))"
+                return String(
+                    localized:
+                        "New record! Minefield cleared in \(TimeFormat.mmsst(centiseconds: cs))",
+                    bundle: .module)
             case .loss(let progress):
-                return "Boom — you stepped on a mine. Cleared \(Self.percent(progress))."
+                return String(
+                    localized: "Boom — you stepped on a mine. Cleared \(Self.percent(progress)).",
+                    bundle: .module)
             }
         }
         /// The new-best time, if this is a record win.
@@ -164,9 +170,10 @@ struct MangaPanelView: View {
     @ViewBuilder private var recordBadge: some View {
         if let cs = kind.recordCentiseconds {
             VStack(spacing: 2) {
-                Text("新記録")
+                // Kana headline kept verbatim in all languages — a manga flourish.
+                Text(verbatim: "新記録")
                     .font(.system(size: 24, weight: .black, design: .rounded))
-                Text("NEW RECORD · \(TimeFormat.mmsst(centiseconds: cs))")
+                Text("NEW RECORD · \(TimeFormat.mmsst(centiseconds: cs))", bundle: .module)
                     .font(.system(size: 13, weight: .heavy, design: .rounded))
             }
             .foregroundStyle(.white)
@@ -185,7 +192,7 @@ struct MangaPanelView: View {
     /// cleared — the score for boards rarely won outright.
     @ViewBuilder private var lossCaption: some View {
         if let progress = kind.lossProgress {
-            Text("Cleared \(Kind.percent(progress))")
+            Text("Cleared \(Kind.percent(progress))", bundle: .module)
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
