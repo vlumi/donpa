@@ -56,6 +56,7 @@ targets:
       path: Sources/macOS/Info.plist
       properties:
         CFBundleDisplayName: Donpa Squad
+        CFBundleName: Donpa Squad  # menu-bar app name (else PRODUCT_NAME)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
