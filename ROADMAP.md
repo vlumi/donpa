@@ -81,46 +81,37 @@ builds on the existing logical solver.
       tiers); `Game.revealedSafeCount` made win detection O(1); backward-compatible
       `bestLossProgress` scoreboard field; shown in the scoreboard + loss panel.
 
-## Navigation restructure — title as home / selection off the game screen (planned)
+## Navigation restructure — title as home hub (in progress)
 
-Today the title card dismisses straight into the game, and the board config
-pickers (mode / size / density) live on the game screen — which eats space,
-especially on phone. Direction:
+The toolbar was overloaded — HUD (flag counter, timer) + primary action (new
+game) + input control (mode toggle) + navigation (scoreboard, settings) all in
+one cramped row (narrow windows clipped the timer until the macOS min size was
+raised to 420×560 as a stopgap). The fix: everything you do *between* games —
+**game-type selection, Settings, High Scores** — moves to the **title/home hub**;
+the game screen keeps only the board + a minimal HUD. To start a different game,
+you go back to the title.
 
-- **Title becomes a home/menu hub** that holds board selection. Flow:
-  Title/Home → (pick mode + size/difficulty) → Game. The game screen sheds the
-  picker bar and shows just the board + minimal chrome.
-- **Split "Restart" from "New Game"**: *Restart* replays the current board
-  (today's restart button / Space / Cmd-R); *New Game* returns to the selection
-  screen pre-filled with the current selections, then starts fresh. *Return to
-  title* already ships on the end-of-game result screen (Title button / Esc) and
-  the macOS menu (Cmd-T).
-- Groundwork already in place: `Navigator` (DonpaKit) holds `showingTitle` and is
-  injected into `GameView` so any host can drive navigation; the title screen is
-  an always-mounted overlay toggled by it.
+Done in phases (each its own PR):
 
-### Toolbar declutter (part of the same pass)
+- [x] **Phase 1 — macOS chrome.** Settings → app menu `⌘,`; High Scores → Game
+      menu (`⇧⌘S`); both removed from the macOS toolbar. Sheet state lifted to
+      `Navigator` so the menu bar can drive it. (iOS toolbar buttons kept until
+      Phase 2.)
+- [ ] **Phase 2 — title home hub.** The title screen holds game-type selection
+      (Classic/Modern + size/difficulty) + Settings + High Scores. The game
+      screen drops the bottom difficulty-picker bar and the iOS settings/
+      scoreboard buttons, and gains a persistent **Home** affordance (you reach
+      everything via the title now, so getting back matters more). Likely also
+      **split Restart from New Game**: Restart replays the current board
+      (button / Space / ⌘R); New Game → back to the hub to pick.
+- [ ] **Phase 3 — mode toggle.** Move the reveal/flag toggle out of the toolbar
+      to a **floating bottom-corner button**, with a **handedness setting
+      (left/right corner)** so it suits the user's grip/preference.
 
-The top toolbar currently mixes four different jobs and feels cramped (narrow
-windows clipped the timer until the macOS min size was raised to 420×560 as a
-stopgap). It holds: the **HUD** (flag/mine counter, timer), a **primary action**
-(new game), an **input control** (reveal/flag mode toggle), and **navigation**
-(trophy = scoreboard, gear = settings). The last two are parked there only
-because there's no better home yet. Proposed homes:
-
-- **Settings (gear):** macOS → a proper `Settings` scene via the app menu
-  (`⌘,`); iOS → reach it from the title/home hub rather than in-game. Off the
-  toolbar.
-- **Scoreboard (trophy):** it's a between-games view, not an in-game action —
-  move to the title/home hub and the macOS menu.
-- **Mode toggle (reveal/flag):** the awkward one — it's an input *modifier*, not
-  HUD. Options to evaluate: a control docked near the board, a corner button, or
-  reconsidering whether it needs a persistent slot vs. long-press. Open question.
-- **Keep in the toolbar:** flag counter, timer, new-game — the real in-game HUD.
-
-This is a UX restructure (touches both platforms + navigation); design before
-building. Once settled, the toolbar should comfortably fit small windows/phones
-without the raised-min-size stopgap doing the work.
+Groundwork: `Navigator` (DonpaKit) holds `showingTitle` / `showingScores` /
+`showingSettings`, injected into `GameView` so any host (macOS menu bar, title
+hub) can drive navigation. Once done, the toolbar fits small windows/phones
+without the raised-min-size stopgap.
 
 ## Session quality-of-life (planned — pause/persist wanted sooner for mobile)
 
