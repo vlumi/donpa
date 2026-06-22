@@ -69,6 +69,10 @@ targets:
         # record, so it needs its own bundle ID. Locked in before registering
         # IDs with Apple (changing it afterward is painful).
         PRODUCT_BUNDLE_IDENTIFIER: fi.misaki.donpa.mac
+        # The app's user-visible name everywhere the OS shows it (Dock,
+        # Cmd-Tab switcher, .app filename). Without this it's the target name
+        # "Donpa-macOS". The module name stays Donpa_macOS (PRODUCT_MODULE_NAME).
+        PRODUCT_NAME: Donpa Squad
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: NO
