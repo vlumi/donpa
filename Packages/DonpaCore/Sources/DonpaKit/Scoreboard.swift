@@ -92,7 +92,11 @@ public final class Scoreboard: ObservableObject {
     @discardableResult
     public func submitLossProgress(_ progress: Double, for config: GameConfig) -> Bool {
         var record = records[config.storageKey] ?? ScoreRecord()
-        let isBest = progress > (record.bestLossProgress ?? 0)
+        // A win is implicitly 100%, so once the board has ever been cleared a
+        // loss can't be a "new best" — compare against the displayed best, which
+        // is 1.0 when there's a win.
+        let currentBest = record.wins > 0 ? 1.0 : (record.bestLossProgress ?? 0)
+        let isBest = progress > currentBest
         if isBest {
             record.bestLossProgress = progress
             records[config.storageKey] = record

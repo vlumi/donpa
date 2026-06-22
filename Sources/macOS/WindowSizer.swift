@@ -46,8 +46,8 @@ enum WindowSizer {
             content.width = min(content.width, frame.width - 40)
             content.height = min(content.height, frame.height - 40)
         }
-        content.width = max(content.width, 360)
-        content.height = max(content.height, 480)
+        content.width = max(content.width, 420)
+        content.height = max(content.height, 560)
 
         // Nothing to do if the window already fits (avoids a no-op nudge).
         guard content.width > current.width + 1 || content.height > current.height + 1 else {

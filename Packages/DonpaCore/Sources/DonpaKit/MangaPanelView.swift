@@ -16,9 +16,10 @@ struct MangaPanelView: View {
         case win
         /// A win that set a new best time, in centiseconds — gets a record badge.
         case record(centiseconds: Int)
-        /// A loss, carrying the fraction (0...1) of safe cells cleared, shown as
-        /// a consolation score ("cleared 87%").
-        case loss(progress: Double)
+        /// A loss, carrying the fraction (0...1) of safe cells cleared and
+        /// whether it beat the previous best — a "new best %" pill shows only
+        /// when `isBest`.
+        case loss(progress: Double, isBest: Bool)
 
         var isWin: Bool {
             if case .loss = self { return false }
@@ -36,7 +37,7 @@ struct MangaPanelView: View {
                     localized:
                         "New record! Minefield cleared in \(TimeFormat.mmsst(centiseconds: cs))",
                     bundle: .module)
-            case .loss(let progress):
+            case .loss(let progress, _):
                 return String(
                     localized: "Boom — you stepped on a mine. Cleared \(Self.percent(progress)).",
                     bundle: .module)
@@ -47,9 +48,9 @@ struct MangaPanelView: View {
             if case .record(let cs) = self { return cs }
             return nil
         }
-        /// The cleared fraction to show, if this is a loss.
-        var lossProgress: Double? {
-            if case .loss(let p) = self { return p }
+        /// The cleared fraction — only when it's a new best loss (worth a pill).
+        var bestLossProgress: Double? {
+            if case .loss(let p, let isBest) = self, isBest { return p }
             return nil
         }
 
@@ -62,8 +63,10 @@ struct MangaPanelView: View {
     let kind: Kind
     let reduceMotion: Bool
     /// Dismiss the result screen to inspect the finished board (also the
-    /// tap-anywhere action). Restarting is Space / Cmd-R, not a button.
+    /// tap-anywhere action).
     let onContinue: () -> Void
+    /// Replay the same board (also Space / Cmd-R).
+    let onRestart: () -> Void
     /// Back to the title screen.
     let onReturnToTitle: () -> Void
 
@@ -79,15 +82,20 @@ struct MangaPanelView: View {
                     .onTapGesture { onContinue() }
                     .accessibilityHidden(true)
 
-                VStack(spacing: 18) {
+                VStack(spacing: 14) {
+                    // Cap the art's height so the buttons always have room — on a
+                    // short/small window the art shrinks instead of pushing the
+                    // buttons off-screen.
                     panelImage
+                        .frame(maxWidth: panelWidth(in: geo.size))
                     buttons
                 }
-                .padding(24)
-                // Scale with the window: fill most of it, but bounded by both
-                // width and (roughly-square art + buttons) height so it stays a
-                // sensible size from small windows up to full screen.
-                .frame(maxWidth: panelWidth(in: geo.size))
+                // Whole panel fits within the window (minus margins), so nothing
+                // is clipped at the macOS minimum size or on a small phone.
+                .frame(
+                    maxWidth: min(panelWidth(in: geo.size), geo.size.width - 24),
+                    maxHeight: geo.size.height - 24
+                )
                 .scaleEffect(scale)
                 .opacity(appeared ? 1 : 0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -101,7 +109,7 @@ struct MangaPanelView: View {
     /// the window is wide or tall — then clamp so it's never tiny or absurd.
     private func panelWidth(in size: CGSize) -> CGFloat {
         let shorter = min(size.width, size.height)
-        return min(max(shorter * 0.82, 280), 900)
+        return min(max(shorter * 0.82, 220), 900)
     }
 
     private var panelImage: some View {
@@ -110,14 +118,11 @@ struct MangaPanelView: View {
             .interpolation(.high)
             .antialiased(true)
             .scaledToFit()
-            // Opaque white backing: the art is black ink on white, and the
-            // outside-only transparency can leak into interior light regions — a
-            // white plate makes any such leak read as page-white in both
-            // appearances rather than punching a hole to the board.
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .overlay(alignment: .top) { recordBadge }
-            .overlay(alignment: .bottom) { lossCaption }
+            // No white backing: the art's panel interior is baked opaque-white and
+            // only the area *outside* its drawn border is transparent — so the
+            // rounded corners show the dimmed board through, as intended.
+            .overlay(alignment: .topLeading) { recordBadge }
+            .overlay(alignment: .topLeading) { bestLossPill }
             // Coloured accent glow — the roadmap's "accent applied in code over
             // the mono art", kept subtle so it frames rather than tints.
             .shadow(color: kind.accent.opacity(0.7), radius: 28)
@@ -131,23 +136,46 @@ struct MangaPanelView: View {
     }
 
     private var buttons: some View {
-        HStack(spacing: 14) {
-            // A matched pair of solid capsules: neutral Title, accent Continue —
-            // both clearly visible on the dark backdrop. Continue just dismisses
-            // the panel to inspect the board; restart is Space / Cmd-R.
-            capsuleButton(
-                "Title", icon: "house.fill", fill: Color(white: 0.92), text: .black,
-                action: onReturnToTitle
-            )
-            .keyboardShortcut(.cancelAction)  // Esc returns to title
-
-            capsuleButton(
-                "Continue", icon: "checkmark", fill: kind.accent, text: .white,
-                action: onContinue
-            )
-            .keyboardShortcut(.defaultAction)  // Return also continues
+        // Title (labeled) · Restart (icon-only, matching the toolbar's new-game
+        // button) · Continue (accent). Continue dismisses to inspect the board;
+        // Restart replays (also Space / Cmd-R). ViewThatFits lays them out in a
+        // row when there's width, and stacks them vertically when the window is
+        // too narrow (small iPhone / minimum macOS window) so nothing is clipped.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 14) { buttonRow }.frame(maxWidth: 400)
+            VStack(spacing: 10) { buttonRow }.frame(maxWidth: 280)
         }
-        .frame(maxWidth: 360)
+    }
+
+    @ViewBuilder private var buttonRow: some View {
+        capsuleButton(
+            "Title", icon: "house.fill", fill: Color(white: 0.92), text: .black,
+            action: onReturnToTitle
+        )
+        .keyboardShortcut(.cancelAction)  // Esc returns to title
+
+        restartButton
+
+        capsuleButton(
+            "Continue", icon: "checkmark", fill: kind.accent, text: .white,
+            action: onContinue
+        )
+        .keyboardShortcut(.defaultAction)  // Return also continues
+    }
+
+    /// Icon-only replay button (mirrors the toolbar's new-game icon). A
+    /// VoiceOver label still names it since the glyph alone says nothing.
+    private var restartButton: some View {
+        Button(action: onRestart) {
+            Image(systemName: "arrow.clockwise")
+                .font(.headline)
+                .foregroundStyle(.black)
+                .frame(width: 52)
+                .padding(.vertical, 12)
+                .background(Color(white: 0.92), in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Restart", bundle: .module))
     }
 
     private func capsuleButton(
@@ -169,44 +197,52 @@ struct MangaPanelView: View {
         .buttonStyle(.plain)
     }
 
-    /// Code-drawn "new record" flourish over the win art — a tilted ribbon with
-    /// the kana headline and the best time, so a record win reads as more than a
-    /// plain clear without needing separate art.
+    /// Code-drawn "new record" flourish — a compact tilted ribbon tucked into the
+    /// top-left corner so it reads as a stamp without covering the character.
     @ViewBuilder private var recordBadge: some View {
         if let cs = kind.recordCentiseconds {
-            VStack(spacing: 2) {
+            VStack(spacing: 0) {
                 // Kana headline kept verbatim in all languages — a manga flourish.
                 Text(verbatim: "新記録")
-                    .font(.system(size: 24, weight: .black, design: .rounded))
-                Text("NEW RECORD · \(TimeFormat.mmsst(centiseconds: cs))", bundle: .module)
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    .font(.system(size: 16, weight: .black, design: .rounded))
+                Text(verbatim: TimeFormat.mmsst(centiseconds: cs))
+                    .font(.system(size: 11, weight: .heavy, design: .monospaced))
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
             .background(Capsule().fill(kind.accent.opacity(0.95)))
-            .overlay(Capsule().stroke(.white, lineWidth: 2))
-            .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
-            .rotationEffect(.degrees(-6))
-            .offset(y: 14)
-            .scaleEffect(appeared ? 1 : 0.5)
+            .overlay(Capsule().stroke(.white, lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+            .rotationEffect(.degrees(-8))
+            .padding(.top, 10)
+            .padding(.leading, 8)
+            .scaleEffect(appeared ? 1 : 0.5, anchor: .topLeading)
         }
     }
 
-    /// On a loss, a small consolation banner showing how much of the board was
-    /// cleared — the score for boards rarely won outright.
-    @ViewBuilder private var lossCaption: some View {
-        if let progress = kind.lossProgress {
-            Text("Cleared \(Kind.percent(progress))", bundle: .module)
-                .font(.system(size: 15, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(Capsule().fill(kind.accent.opacity(0.95)))
-                .overlay(Capsule().stroke(.white, lineWidth: 2))
-                .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
-                .offset(y: 12)
-                .scaleEffect(appeared ? 1 : 0.5)
+    /// On a loss that beat the previous best %, a small red corner pill — mirrors
+    /// the record badge so a "new best %" reads as an achievement, not just text.
+    /// (A plain loss shows nothing; the live readout covers the unimproved case.)
+    @ViewBuilder private var bestLossPill: some View {
+        if let progress = kind.bestLossProgress {
+            VStack(spacing: 0) {
+                Text(verbatim: Kind.percent(progress))
+                    .font(.system(size: 17, weight: .black, design: .rounded))
+                Text("best", bundle: .module)
+                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .textCase(.uppercase)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(Color.red.opacity(0.95)))
+            .overlay(Capsule().stroke(.white, lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+            .rotationEffect(.degrees(-8))
+            .padding(.top, 10)
+            .padding(.leading, 8)
+            .scaleEffect(appeared ? 1 : 0.5, anchor: .topLeading)
         }
     }
 

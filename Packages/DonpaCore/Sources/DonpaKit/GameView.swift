@@ -142,10 +142,16 @@ private struct GameContent: View {
                 kind: panel,
                 reduceMotion: reduceMotion,
                 onContinue: { dismissPanel() },
+                onRestart: { restartFromPanel() },
                 onReturnToTitle: { returnToTitleFromPanel() }
             )
             .transition(.opacity)
         }
+    }
+
+    private func restartFromPanel() {
+        dismissPanel()
+        viewModel.newGame()
     }
 
     private func returnToTitleFromPanel() {
@@ -170,10 +176,11 @@ private struct GameContent: View {
             let isRecord = scoreboard.submit(centiseconds, for: config)
             kind = isRecord ? .record(centiseconds: centiseconds) : .win
         case .lost:
-            // Record how much of the board was cleared as a consolation score.
+            // Record how much of the board was cleared as a consolation score;
+            // a "new best %" pill shows only when this loss beat the prior best.
             let progress = viewModel.game.progress
-            scoreboard.submitLossProgress(progress, for: viewModel.config)
-            kind = .loss(progress: progress)
+            let isBest = scoreboard.submitLossProgress(progress, for: viewModel.config)
+            kind = .loss(progress: progress, isBest: isBest)
         }
         showPanel(kind)
 

@@ -121,6 +121,15 @@ final class ScoreboardTests: XCTestCase {
             "any win means the board has been fully cleared")
     }
 
+    func testLossAfterWinIsNeverANewBest() {
+        let board = Scoreboard(defaults: defaults)
+        board.submit(42, for: .beginner)  // a win → effective best is 100%
+        // A subsequent loss, however far it got, can't beat a cleared board.
+        XCTAssertFalse(
+            board.submitLossProgress(0.58, for: .beginner),
+            "a loss can't be a new best once the board has been won")
+    }
+
     func testProgressPersistsAcrossInstances() {
         let first = Scoreboard(defaults: defaults)
         first.submitLossProgress(0.42, for: .expert)

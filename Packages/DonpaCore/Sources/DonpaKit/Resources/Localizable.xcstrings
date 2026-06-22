@@ -855,6 +855,40 @@
           }
         }
       }
+    },
+    "Restart": {
+      "comment": "Result-screen button: replay the same board. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uudelleen"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "もう一度"
+          }
+        }
+      }
+    },
+    "best": {
+      "comment": "Tiny label under the new-best-% loss pill (lowercase). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "paras"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最高"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
