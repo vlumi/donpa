@@ -1,16 +1,22 @@
 import DonpaCore
 import Foundation
 
-/// Per-config stats: how many games have been cleared, and the best time.
+/// Per-config stats: how many games have been cleared, the best time, and the
+/// best partial progress (for boards rarely cleared outright).
 public struct ScoreRecord: Codable, Equatable, Sendable {
     /// Total games cleared on this config.
     public var wins: Int
     /// Fastest winning time in centiseconds (hundredths), or nil if none yet.
     public var bestCentiseconds: Int?
+    /// Best fraction (0...1) of safe cells revealed in a *losing* game. A win is
+    /// implicitly 100%, so this only tracks losses; `wins > 0` means 100% at
+    /// display time. Optional so old saved records (without it) decode cleanly.
+    public var bestLossProgress: Double?
 
-    public init(wins: Int = 0, bestCentiseconds: Int? = nil) {
+    public init(wins: Int = 0, bestCentiseconds: Int? = nil, bestLossProgress: Double? = nil) {
         self.wins = wins
         self.bestCentiseconds = bestCentiseconds
+        self.bestLossProgress = bestLossProgress
     }
 }
 
@@ -51,6 +57,15 @@ public final class Scoreboard: ObservableObject {
         records[config.storageKey]?.wins ?? 0
     }
 
+    /// Best progress (0...1) to display for this config: 1.0 once the board has
+    /// ever been cleared (a win is implicitly full), otherwise the best partial
+    /// progress from a loss. `nil` if the config has never been finished.
+    public func bestProgress(for config: GameConfig) -> Double? {
+        guard let record = records[config.storageKey] else { return nil }
+        if record.wins > 0 { return 1.0 }
+        return record.bestLossProgress
+    }
+
     /// True if `centiseconds` would beat (or set) the best time for this config.
     public func isNewRecord(_ centiseconds: Int, for config: GameConfig) -> Bool {
         guard let best = records[config.storageKey]?.bestCentiseconds else { return true }
@@ -67,6 +82,22 @@ public final class Scoreboard: ObservableObject {
         if isBest { record.bestCentiseconds = centiseconds }
         records[config.storageKey] = record
         persist()
+        return isBest
+    }
+
+    /// Record the safe-cell progress (0...1) from a *losing* game, keeping it
+    /// only if it beats the stored best loss-progress. Wins are recorded via
+    /// `submit(_:for:)` (a win is implicitly 100%, so don't call this on a win).
+    /// Returns true if it set a new best loss-progress.
+    @discardableResult
+    public func submitLossProgress(_ progress: Double, for config: GameConfig) -> Bool {
+        var record = records[config.storageKey] ?? ScoreRecord()
+        let isBest = progress > (record.bestLossProgress ?? 0)
+        if isBest {
+            record.bestLossProgress = progress
+            records[config.storageKey] = record
+            persist()
+        }
         return isBest
     }
 

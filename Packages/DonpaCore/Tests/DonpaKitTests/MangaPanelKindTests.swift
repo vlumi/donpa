@@ -10,24 +10,36 @@ final class MangaPanelKindTests: XCTestCase {
     func testImageName() {
         XCTAssertEqual(MangaPanelView.Kind.win.imageName, "PanelWin")
         XCTAssertEqual(MangaPanelView.Kind.record(centiseconds: 1234).imageName, "PanelWin")
-        XCTAssertEqual(MangaPanelView.Kind.loss.imageName, "PanelLoss")
+        XCTAssertEqual(MangaPanelView.Kind.loss(progress: 0.5).imageName, "PanelLoss")
     }
 
     func testIsWin() {
         XCTAssertTrue(MangaPanelView.Kind.win.isWin)
         XCTAssertTrue(MangaPanelView.Kind.record(centiseconds: 1).isWin)
-        XCTAssertFalse(MangaPanelView.Kind.loss.isWin)
+        XCTAssertFalse(MangaPanelView.Kind.loss(progress: 0.5).isWin)
+    }
+
+    func testLossProgress() {
+        XCTAssertEqual(MangaPanelView.Kind.loss(progress: 0.42).lossProgress, 0.42)
+        XCTAssertNil(MangaPanelView.Kind.win.lossProgress)
+        XCTAssertNil(MangaPanelView.Kind.record(centiseconds: 1).lossProgress)
+    }
+
+    func testPercentRounds() {
+        XCTAssertEqual(MangaPanelView.Kind.percent(0.0), "0%")
+        XCTAssertEqual(MangaPanelView.Kind.percent(0.874), "87%")
+        XCTAssertEqual(MangaPanelView.Kind.percent(1.0), "100%")
     }
 
     func testRecordCentiseconds() {
         XCTAssertEqual(MangaPanelView.Kind.record(centiseconds: 4242).recordCentiseconds, 4242)
         XCTAssertNil(MangaPanelView.Kind.win.recordCentiseconds)
-        XCTAssertNil(MangaPanelView.Kind.loss.recordCentiseconds)
+        XCTAssertNil(MangaPanelView.Kind.loss(progress: 0.5).recordCentiseconds)
     }
 
     func testAccessibilityLabels() {
         XCTAssertEqual(MangaPanelView.Kind.win.a11yLabel, "Minefield cleared")
-        XCTAssertTrue(MangaPanelView.Kind.loss.a11yLabel.contains("Boom"))
+        XCTAssertTrue(MangaPanelView.Kind.loss(progress: 0.5).a11yLabel.contains("Boom"))
         // The record label embeds the formatted time (12.34s = 1234 cs).
         XCTAssertTrue(
             MangaPanelView.Kind.record(centiseconds: 1234).a11yLabel.contains(

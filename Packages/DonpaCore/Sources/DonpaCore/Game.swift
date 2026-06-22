@@ -17,6 +17,21 @@ public struct Game: Sendable {
     public private(set) var status: GameStatus = .notStarted
     public let mineCount: Int
 
+    /// Count of non-mine cells revealed so far, tracked incrementally so win
+    /// detection and progress are O(1) rather than an O(n) board scan (matters
+    /// for huge boards). A win is exactly `revealedSafeCount == safeCellCount`.
+    public private(set) var revealedSafeCount: Int = 0
+
+    /// Total non-mine cells on the board — the denominator for progress.
+    public var safeCellCount: Int { board.cellCount - mineCount }
+
+    /// Fraction of safe cells revealed, 0...1. 1.0 means the board is cleared
+    /// (a win). Useful as a score on hard boards that are rarely fully cleared.
+    public var progress: Double {
+        let safe = safeCellCount
+        return safe > 0 ? Double(revealedSafeCount) / Double(safe) : 0
+    }
+
     /// The mine that ended the game on a loss — the specific cell whose reveal
     /// detonated (even when reached via a chord). `nil` unless the game is lost.
     /// Lets the renderer focus the loss animation on the cell the player hit.
@@ -107,6 +122,7 @@ public struct Game: Sendable {
 
         while let c = queue.popLast() {
             board[c].state = .revealed
+            revealedSafeCount += 1  // flood-fill only ever reveals non-mine cells
             guard board[c].adjacentMines == 0 else { continue }
             for n in topology.neighbors(of: c) where !enqueued.contains(n) {
                 guard board[n].state == .hidden, !board[n].isMine else { continue }
@@ -153,10 +169,9 @@ public struct Game: Sendable {
     // MARK: - Win/lose helpers
 
     private mutating func checkWin() {
-        // Win when every non-mine cell is revealed.
-        for c in board.allCoords where !board[c].isMine && board[c].state != .revealed {
-            return
-        }
+        // Win when every non-mine cell is revealed — an O(1) counter check
+        // rather than scanning the whole board (which is costly on huge boards).
+        guard revealedSafeCount == safeCellCount else { return }
         status = .won
         flagAllMines()
     }

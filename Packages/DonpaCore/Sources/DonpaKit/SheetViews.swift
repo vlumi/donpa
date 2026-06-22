@@ -48,7 +48,9 @@ struct ScoreboardView: View {
                 Text(title).font(.caption.bold()).foregroundStyle(.secondary)
                 Spacer()
                 Text("Cleared").font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 70, alignment: .trailing)
+                    .frame(width: 62, alignment: .trailing)
+                Text("Best %").font(.caption).foregroundStyle(.secondary)
+                    .frame(width: 52, alignment: .trailing)
                 Text("Best").font(.caption).foregroundStyle(.secondary)
                     .frame(width: 72, alignment: .trailing)
             }
@@ -67,7 +69,15 @@ struct ScoreboardView: View {
             Spacer()
             Text("\(scoreboard.wins(for: config))")
                 .font(.body.monospaced())
-                .frame(width: 70, alignment: .trailing)
+                .frame(width: 62, alignment: .trailing)
+            Group {
+                if let progress = scoreboard.bestProgress(for: config) {
+                    Text("\(Int((progress * 100).rounded()))%").font(.body.monospaced())
+                } else {
+                    Text("—").foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 52, alignment: .trailing)
             Group {
                 if let best = scoreboard.best(for: config) {
                     Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())

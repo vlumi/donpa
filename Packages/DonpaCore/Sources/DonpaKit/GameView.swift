@@ -173,7 +173,10 @@ private struct GameContent: View {
             let isRecord = scoreboard.submit(centiseconds, for: config)
             kind = isRecord ? .record(centiseconds: centiseconds) : .win
         case .lost:
-            kind = .loss
+            // Record how much of the board was cleared as a consolation score.
+            let progress = viewModel.game.progress
+            scoreboard.submitLossProgress(progress, for: viewModel.config)
+            kind = .loss(progress: progress)
         }
         showPanel(kind)
 
