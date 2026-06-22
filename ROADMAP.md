@@ -200,6 +200,14 @@ Everything composes: square **or** hex, bounded **or** wrapped, any size.
 - [ ] Documentation + screenshots for each mode
 - [ ] Performance validated on the largest supported boards
 - [ ] Release builds for iOS + macOS
+- [ ] **UI smoke tests (XCUITest)** — a small happy-path suite (launch →
+      start → board, win → result panel, About opens, restart) as a
+      pre-release regression guard. Deferred from v0.1: needs a new CI job that
+      builds the `.xcodeproj` and boots a simulator (today CI only runs the SPM
+      `swift test`), plus accessibility IDs on key elements; not worth the
+      flakiness/maintenance mid-iteration. Logic is already unit-tested at the
+      `Game`/`Scoreboard`/`MangaPanelView.Kind` seams; visual issues are caught
+      by running the app. Revisit when the app is feature-stable near 1.0.
 
 ## Publishing & distribution (planned — gated on a paid account)
 
