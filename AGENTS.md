@@ -18,6 +18,11 @@ AI coding agents working in this repo.
 
 ## Architecture: classic-first, epic-ready
 
+The load-bearing design decisions and their rationale live in
+[ARCHITECTURE.md](ARCHITECTURE.md) (module split, state model, why native
+SpriteKit input, no-Catalyst, persistence format, the deliberate UI workarounds).
+The essentials:
+
 Two seams isolate all "epic" variation; everything else is written once.
 
 - **`Topology`** — the logical "who are my neighbours?" relation (square ↔ hex,

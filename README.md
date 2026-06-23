@@ -9,7 +9,8 @@ huge zoomable maps, wrapped/torus edges, and hex grids — added later without
 touching the game logic.
 
 The first release will be **v0.1.0** (classic mode); see [ROADMAP.md](ROADMAP.md)
-for the path to v1.0 and [CHANGELOG.md](CHANGELOG.md) for changes.
+for the path to v1.0, [CHANGELOG.md](CHANGELOG.md) for changes, and
+[ARCHITECTURE.md](ARCHITECTURE.md) for the key design decisions.
 
 ## How it's built to stay flexible
 
