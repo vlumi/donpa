@@ -156,24 +156,44 @@ How the apps reach the stores once a paid Apple Developer account exists:
   purchase" is a deliberate Catalyst/SwiftUI-app setup, not automatic.)
 - **App age rating**: 4+ / PEGI 3 (set via the App Store Connect questionnaire;
   nothing in the feature set pushes it higher).
-- [ ] **AI-generated disclosure (open question).** Decide how/whether to mark
-      the app as AI-assisted. The App Store has **no dedicated "AI-generated"
-      flag** today; relevant levers are the description text, and — for any
-      AI-generated *art* — whether to credit/label it. Code being AI-written is
-      not something Apple asks about. Action: revisit near submission; likely a
-      short note in the description + the repo README rather than a store field.
-      (Tie in with the art-licensing question below if art ends up AI-made.)
-- [ ] **Art assets — repo/licensing strategy (open question).** When better
-      graphics arrive, decide where they live and under what terms. Options:
-      (a) **same repo, split license** — code stays open (current license),
-      art under a separate, more-restrictive license file (e.g. CC-BY-NC or
-      all-rights-reserved) with a clear `ASSETS-LICENSE` and per-folder note;
-      (b) **separate private repo** for source art, with only export-ready
-      assets vendored into this repo (keeps WIP/source files private);
-      (c) **git submodule** referencing a private art repo. Leaning (a) for
-      simplicity unless the source files are large/sensitive, then (b). Decide
-      before importing non-AI or commissioned art (provenance matters for the
-      AI-disclosure question above).
+- **AI disclosure.** The README carries an honest "AI assistance" note
+      (human-directed; code largely AI-written; current art AI-generated;
+      procedural chrome is AI-written code, not generated images). Remaining
+      action **at submission**: mirror a short version into the App Store
+      description. Apple has no dedicated "AI-generated" flag and doesn't ask
+      about AI-written code, so the description text is the only store-side lever.
+- [ ] **Art assets — repo/licensing strategy (open question).** Decision for
+      **now: keep everything in this repo** under the current blanket MIT — the
+      assets are AI-generated PNGs with no sensitive source files, so a private
+      repo / placeholders would add friction for no gain (and anything shipped in
+      the `.app` is extractable regardless).
+
+      **The concern is commissioned art**: MIT lets anyone copy/modify/redistribute
+      (even commercially) with only attribution — that is *wrong* for art you pay
+      an artist to make. So **before committing any commissioned or hand-made
+      art**, split the licensing (a single repo can carry two — standard for OSS
+      games):
+      - **`LICENSE` (MIT)** scoped to *code*, with a carve-out line pointing to
+        the asset license.
+      - **`ASSETS-LICENSE`** for the art. Default for paid commissioned work:
+        **all-rights-reserved / proprietary** (no reuse). Looser alternatives if
+        desired: CC BY-NC (non-commercial + credit) or CC BY-NC-ND (also no
+        derivatives).
+      - A short `README` in the asset folder(s) naming which license applies.
+      - **Upstream piece (most important): the commission contract** must grant
+        you the rights you need — ideally a full copyright assignment, or a broad
+        exclusive licence to ship *and sublicense within the app*. How you then
+        license to the public (above) is downstream of owning those rights.
+      - **Caveat:** do the split *before* the first commissioned-art commit — git
+        history would otherwise retain it under the old blanket MIT. And an
+        all-rights-reserved licence makes reuse unlawful, not impossible (shipped
+        `.app` pixels are still extractable) — a private *source* repo (option b)
+        only protects unshipped WIP/source files, not the shipped images.
+
+      Repo options if source files ever need privacy: (b) **separate private repo**
+      for source art, export-ready assets vendored here; (c) **git submodule** to
+      a private art repo. Leaning split-license-same-repo, escalating to (b) only
+      if source files are large/sensitive. (Ties into the AI-disclosure note.)
 
 (The **two-native-targets, no-Catalyst** decision and the distinct Mac bundle id
 that follows from it are recorded in [ARCHITECTURE.md](ARCHITECTURE.md).)

@@ -159,6 +159,16 @@ The ⚙️ button opens settings. Appearance can be set to **System**, **Light**
 or **Dark** — the board and chrome share one palette that follows the choice
 (System tracks the OS). The selection is saved between launches.
 
+## AI assistance
+
+Donpa Squad is built with substantial AI assistance, and that's stated openly
+here rather than hidden. The project is human-directed — design, gameplay, and
+every visual decision are the author's — but the **code is largely AI-written**
+and the **current art (app icon, title, and result panels) is AI-generated**
+(DALL·E). The procedural chrome (the manga toolbar glyphs and board screentone)
+is AI-written code, not generated images. If hand-made or commissioned art
+replaces the generated pieces later, this note will be updated to credit it.
+
 ## License
 
 [MIT](LICENSE).
