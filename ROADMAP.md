@@ -66,8 +66,10 @@ Ship a polished classic Minesweeper on iOS and macOS.
         viewport so small boards fill big windows without blowing up. **Revisit
         for v0.3 huge maps / v0.4 wrapping** — this still assumes a board that
         fits a window, which huge/edgeless boards reject (panned, not framed).
-  - [ ] Localization: Japanese + Finnish + English (Settings has a language row;
-        also affects the App Store listing)
+  - [x] Localization: Japanese + Finnish + English (Settings has a language row;
+        also affects the App Store listing). **Considered done for 0.1** — JA/FI
+        are my drafts (`needs_review`); revisit if native/test-audience feedback
+        comes in, not blocking.
   - [ ] Tag v0.1.0, signed builds — note: any version string is fine for the
         App Store (no "must be 1.0"); the build number must increment per
         upload. Currently `MARKETING_VERSION = 0.1.0` (not marked pre-release;
@@ -153,25 +155,20 @@ full game state and tracking elapsed time as accumulated segments rather than
 and resume later, and a backgrounded app can be killed by the OS — so persistence
 isn't just nice-to-have.
 
-- [ ] **Segmented timer** (prerequisite for both): replace the single `startDate`
-      in `GameViewModel` with `accumulatedCentiseconds` + an optional
-      `runningSince`. Pause folds the running span into the accumulated total;
-      resume restarts the span. Persists cleanly (store the number, never a
-      wall-clock delta).
-- [ ] **Pause**: stop the clock, hide/blur the board so it can't be studied
-      while paused; resume continues the same game. Bind to **Esc** on macOS
-      (distinct from Esc = "return to title" on the *result* screen — pause is
-      mid-play).
-- [ ] **Persist & restore on quit**: save the in-progress game on
-      background/quit (iOS `scenePhase`) and offer to resume it on next launch.
-      Needs `Game` / `Board` / `Cell` / `Coord` `Codable`, plus a **tagged
-      encoding for the `any Topology` existential** (store kind + params, rebuild
-      via a factory — don't encode the protocol). Save the *exact* placed mine
-      layout (`Set<Coord>` + `minesPlaced`); mines are first-click-safe and must
-      not be re-randomized. Store config + accumulated elapsed too. Use a
-      **compact format** (mines/revealed/flagged as coord sets or a bitset, not
-      the full `[Coord: Cell]` dict) — a 1000×1000 save is large otherwise; this
-      dovetails with the v0.3 data-model rework below.
+- [x] **Segmented timer**: `GameViewModel` now uses `accumulatedCentiseconds` +
+      optional `runningSince`; pause folds the live span in, resume restarts it.
+      Persists as a plain number, never a wall-clock delta.
+- [x] **Pause**: a ⏸ button on the control strip (live game only) and Esc on
+      macOS freeze the clock and cover the board with a blurred "Paused / Tap to
+      resume" overlay; input is gated in the view model. Tapping / Esc resumes.
+- [x] **Persist & restore on quit**: `GameSnapshot` (versioned, `Codable`) stores
+      the config (which carries the tagged topology — the `any Topology`
+      existential is never encoded), the exact first-click-safe mine layout, and
+      revealed/flagged cells as compact coord sets (not the full dict). Saved
+      **atomically** by `SaveStore` (temp-then-rename, so a mid-save crash can't
+      corrupt it; tolerant decode discards bad/old saves). Autosaves on every
+      move; auto-pauses + saves on backgrounding (`scenePhase`); a launch alert
+      offers Resume / Discard; the save clears on finish / new game / home.
 
 ## v0.3.0 — Big boards
 
@@ -367,6 +364,9 @@ heavier ink, custom number styling).
 - **Manga-style toolbar icons** — the status-bar chrome (trophy, gear, mode
   toggle, new-game) still uses plain SF Symbols; matching them to the manga
   style would tie the in-game look to the panels/title.
+- **Pause panel art** — a "squad taking a rest" manga frame on the pause overlay
+  (same panel slot as win/loss). The current blurred "Paused" overlay is the
+  placeholder; pairs with the next art batch (DALL·E → `.local` → `Panels.xcassets`).
 - **Art sources** — current panels/title/icon are DALL·E (commercial-use OK via
   OpenAI TOS on a personal account; verify before ship). If iterating: keep the
   *icon* a single bold focal subject, no baked title text, readable at 64px.

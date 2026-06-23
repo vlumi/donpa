@@ -56,6 +56,27 @@ public struct Board: Sendable {
     public var allCoords: AnySequence<Coord> { topology.allCoords() }
     public var cellCount: Int { topology.cellCount }
 
+    /// Coordinate sets for persistence — compact alternative to encoding the full
+    /// cell dict (a 1000² save would be huge otherwise).
+    public var mineCoords: Set<Coord> { coords { $0.isMine } }
+    public var revealedCoords: Set<Coord> { coords { $0.state == .revealed } }
+    public var flaggedCoords: Set<Coord> { coords { $0.state == .flagged } }
+
+    private func coords(where match: (Cell) -> Bool) -> Set<Coord> {
+        var result: Set<Coord> = []
+        for (c, cell) in cells where match(cell) { result.insert(c) }
+        return result
+    }
+
+    /// Rebuild a board from a saved layout: place `mines` (recomputing adjacency),
+    /// then set the given cells revealed / flagged. Used to restore a persisted
+    /// in-progress game without re-randomizing the (first-click-safe) mines.
+    public mutating func restore(mines: Set<Coord>, revealed: Set<Coord>, flagged: Set<Coord>) {
+        placeMines(at: mines)
+        for c in revealed { self[c].state = .revealed }
+        for c in flagged { self[c].state = .flagged }
+    }
+
     /// Places mines on the given coordinates and recomputes every adjacency count.
     public mutating func placeMines(at mineCoords: Set<Coord>) {
         for c in topology.allCoords() {

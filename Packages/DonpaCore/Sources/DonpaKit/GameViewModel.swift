@@ -62,7 +62,16 @@ public final class GameViewModel: ObservableObject {
     @Published public var inputMode: InputMode = .reveal
 
     private var timer: AnyCancellable?
-    private var startDate: Date?
+    /// Segmented clock: time banked from previous running spans, plus the start
+    /// of the current span when running. `elapsed = accumulated + (now - runningSince)`.
+    /// Pausing folds the live span into `accumulated`; this persists cleanly (a
+    /// plain number, never a wall-clock delta) and supports pause/resume.
+    private var accumulatedCentiseconds = 0
+    private var runningSince: Date?
+
+    /// Whether the clock is paused mid-game (running game, clock stopped). Drives
+    /// the pause overlay; distinct from `.notStarted`/finished states.
+    @Published public private(set) var isPaused = false
 
     public init(config: GameConfig = .classic(.beginner)) {
         self.config = config
@@ -77,7 +86,7 @@ public final class GameViewModel: ObservableObject {
     // MARK: Actions
 
     public func reveal(_ c: Coord) {
-        guard game.status == .notStarted || game.status == .playing else { return }
+        guard !isPaused, game.status == .notStarted || game.status == .playing else { return }
         let wasNotStarted = game.status == .notStarted
         game.reveal(c)
         if wasNotStarted, game.status == .playing { startTimer() }
@@ -86,16 +95,16 @@ public final class GameViewModel: ObservableObject {
     }
 
     public func toggleFlag(_ c: Coord) {
-        guard game.status == .notStarted || game.status == .playing else { return }
+        guard !isPaused, game.status == .notStarted || game.status == .playing else { return }
         game.toggleFlag(c)
         bump()
     }
 
     public func chord(_ c: Coord) {
-        // Once the game is over, input is inert — chording a revealed cell must
-        // not re-publish the result (which would replay the end-game animation
-        // and panel on every post-loss click).
-        guard game.status == .playing else { return }
+        // Once the game is over (or paused), input is inert — chording a revealed
+        // cell must not re-publish the result (which would replay the end-game
+        // animation and panel on every post-loss click).
+        guard !isPaused, game.status == .playing else { return }
         game.chord(c)
         finishIfEnded()
         bump()
@@ -108,7 +117,31 @@ public final class GameViewModel: ObservableObject {
         lastWin = nil
         lastResult = nil
         inputMode = .reveal  // every game starts in reveal mode
-        stopTimer()
+        resetTimer()
+        gameID &+= 1
+        bump()
+    }
+
+    /// A `GameSnapshot` of the current game, or nil if it's not a live game worth
+    /// saving. The live timer span is folded in so the saved elapsed is exact.
+    public func snapshot() -> GameSnapshot? {
+        GameSnapshot(game: game, config: config, elapsedCentiseconds: currentCentiseconds())
+    }
+
+    /// Restore a persisted game: rebuild the board/state, set the clock to the
+    /// saved elapsed (and resume running it), and bump so views/scene redraw.
+    public func restore(from snapshot: GameSnapshot) {
+        config = snapshot.config
+        game = snapshot.makeGame()
+        lastWin = nil
+        lastResult = nil
+        inputMode = .reveal
+        // Restore the banked time and resume the clock from there.
+        timer?.cancel()
+        accumulatedCentiseconds = snapshot.elapsedCentiseconds
+        elapsedCentiseconds = snapshot.elapsedCentiseconds
+        isPaused = false
+        if game.status == .playing { startTimer() } else { runningSince = nil }
         gameID &+= 1
         bump()
     }
@@ -118,8 +151,11 @@ public final class GameViewModel: ObservableObject {
     private func finishIfEnded() {
         guard game.status == .won || game.status == .lost else { return }
         // Capture the precise final time from the wall clock before stopping.
-        let finalCentiseconds = centisecondsSinceStart()
-        stopTimer()
+        let finalCentiseconds = currentCentiseconds()
+        timer?.cancel()
+        timer = nil
+        runningSince = nil
+        accumulatedCentiseconds = finalCentiseconds
         elapsedCentiseconds = finalCentiseconds
         let result: GameResult
         if game.status == .won {
@@ -134,28 +170,56 @@ public final class GameViewModel: ObservableObject {
 
     // MARK: Timer
 
+    /// Pause the clock mid-game: bank the live span and stop ticking, leaving the
+    /// game playable-but-frozen. No-op unless a game is actually in progress.
+    public func pause() {
+        guard game.status == .playing, !isPaused else { return }
+        foldRunningSpan()
+        timer?.cancel()
+        timer = nil
+        isPaused = true
+    }
+
+    /// Resume a paused clock: start a fresh running span and tick again.
+    public func resume() {
+        guard isPaused else { return }
+        isPaused = false
+        startTimer()
+    }
+
     private func startTimer() {
-        elapsedCentiseconds = 0
-        startDate = Date()
+        runningSince = Date()
         // Refresh ~10×/sec for a smooth tenths display; the value itself is
         // computed from the wall clock, so it never drifts.
         timer = Timer.publish(every: 0.1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.elapsedCentiseconds = self.centisecondsSinceStart()
+                self.elapsedCentiseconds = self.currentCentiseconds()
             }
     }
 
-    private func centisecondsSinceStart() -> Int {
-        guard let startDate else { return elapsedCentiseconds }
-        return max(0, Int((Date().timeIntervalSince(startDate) * 100).rounded()))
+    /// `accumulated` + the live span (if running).
+    private func currentCentiseconds() -> Int {
+        guard let runningSince else { return accumulatedCentiseconds }
+        let span = max(0, Int((Date().timeIntervalSince(runningSince) * 100).rounded()))
+        return accumulatedCentiseconds + span
     }
 
-    private func stopTimer() {
+    /// Move the live running span into `accumulated` and clear it.
+    private func foldRunningSpan() {
+        accumulatedCentiseconds = currentCentiseconds()
+        runningSince = nil
+        elapsedCentiseconds = accumulatedCentiseconds
+    }
+
+    private func resetTimer() {
         timer?.cancel()
         timer = nil
-        startDate = nil
+        accumulatedCentiseconds = 0
+        runningSince = nil
+        isPaused = false
+        elapsedCentiseconds = 0
     }
 
     private func bump() { revision &+= 1 }

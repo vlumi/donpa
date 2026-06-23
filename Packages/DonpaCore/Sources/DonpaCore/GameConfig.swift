@@ -22,7 +22,7 @@ public struct BoardDimensions: Equatable, Sendable {
     public let mines: Int
 }
 
-public enum ClassicPreset: String, CaseIterable, Sendable {
+public enum ClassicPreset: String, CaseIterable, Sendable, Codable {
     case beginner, intermediate, expert
 
     var dimensions: BoardDimensions {
@@ -43,7 +43,7 @@ public enum ClassicPreset: String, CaseIterable, Sendable {
 }
 
 /// Modern board sizes (square). Side lengths chosen via solver analysis.
-public enum BoardSize: String, CaseIterable, Sendable {
+public enum BoardSize: String, CaseIterable, Sendable, Codable {
     case small, medium, large
 
     var side: Int {
@@ -65,7 +65,7 @@ public enum BoardSize: String, CaseIterable, Sendable {
 
 /// Modern difficulty = mine density (fraction of cells). Tiers chosen via solver
 /// analysis to ramp from fair (Easy) to near-unsolvable-by-logic (Insane).
-public enum Density: String, CaseIterable, Sendable {
+public enum Density: String, CaseIterable, Sendable, Codable {
     case easy, normal, hard, brutal, insane
 
     var fraction: Double {
@@ -98,7 +98,7 @@ public enum Density: String, CaseIterable, Sendable {
 public enum BoardShape: String, Sendable { case square = "sq" }
 public enum BoardEdges: String, Sendable { case bounded }
 
-public enum GameConfig: Hashable, Sendable {
+public enum GameConfig: Hashable, Sendable, Codable {
     case classic(ClassicPreset)
     case modern(BoardSize, Density)
 
