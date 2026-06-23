@@ -27,6 +27,12 @@ public struct ScoreRecord: Codable, Equatable, Sendable {
 public final class Scoreboard: ObservableObject {
     @Published public private(set) var records: [String: ScoreRecord]
 
+    /// Storage key of the config whose record was just set, so the scoreboard can
+    /// highlight that row. Set by `submit`/`submitLossProgress` on a new best;
+    /// cleared by `clearRecentRecord()` when the next game ends (so an accidental
+    /// restart before checking scores doesn't lose the highlight). Not persisted.
+    @Published public private(set) var recentRecord: String?
+
     private let defaults: UserDefaults
     // Key bumped from the old name-keyed store; entries are now keyed by
     // `GameConfig.storageKey` (geometry-bearing, versioned). Pre-release, so the
@@ -79,7 +85,10 @@ public final class Scoreboard: ObservableObject {
         var record = records[config.storageKey] ?? ScoreRecord()
         record.wins += 1
         let isBest = record.bestCentiseconds.map { centiseconds < $0 } ?? true
-        if isBest { record.bestCentiseconds = centiseconds }
+        if isBest {
+            record.bestCentiseconds = centiseconds
+            recentRecord = config.storageKey
+        }
         records[config.storageKey] = record
         persist()
         return isBest
@@ -100,13 +109,20 @@ public final class Scoreboard: ObservableObject {
         if isBest {
             record.bestLossProgress = progress
             records[config.storageKey] = record
+            recentRecord = config.storageKey
             persist()
         }
         return isBest
     }
 
+    /// Clear the just-set-record highlight. Called when the next game ends.
+    public func clearRecentRecord() {
+        recentRecord = nil
+    }
+
     public func reset() {
         records = [:]
+        recentRecord = nil
         persist()
     }
 

@@ -151,6 +151,43 @@ final class ScoreboardTests: XCTestCase {
         XCTAssertEqual(board.wins(for: .expert), 0, "without a win")
     }
 
+    // MARK: Recent-record highlight
+
+    func testNewBestTimeMarksRecentRecord() {
+        let board = Scoreboard(defaults: defaults)
+        XCTAssertNil(board.recentRecord)
+        board.submit(42, for: .beginner)
+        XCTAssertEqual(board.recentRecord, GameConfig.beginner.storageKey)
+    }
+
+    func testSlowerTimeDoesNotMarkRecentRecord() {
+        let board = Scoreboard(defaults: defaults)
+        board.submit(30, for: .beginner)
+        board.clearRecentRecord()
+        board.submit(45, for: .beginner)  // a win, but not a new best
+        XCTAssertNil(board.recentRecord)
+    }
+
+    func testNewBestLossProgressMarksRecentRecord() {
+        let board = Scoreboard(defaults: defaults)
+        board.submitLossProgress(0.5, for: .expert)
+        XCTAssertEqual(board.recentRecord, GameConfig.expert.storageKey)
+    }
+
+    func testClearRecentRecordClearsIt() {
+        let board = Scoreboard(defaults: defaults)
+        board.submit(42, for: .beginner)
+        board.clearRecentRecord()
+        XCTAssertNil(board.recentRecord)
+    }
+
+    func testResetClearsRecentRecord() {
+        let board = Scoreboard(defaults: defaults)
+        board.submit(42, for: .beginner)
+        board.reset()
+        XCTAssertNil(board.recentRecord)
+    }
+
     // MARK: Persistence
 
     func testStatsPersistAcrossInstances() {
