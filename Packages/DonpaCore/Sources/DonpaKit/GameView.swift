@@ -22,7 +22,7 @@ struct GameContent: View {
     @State var restartPop = false
     @State private var windowSize: CGSize = .zero
     /// Atomic, crash-safe store for the in-progress game (save/restore on quit).
-    @State private var saveStore = SaveStore()
+    @State private var saveStore = SaveStore.appSupport()
     /// A saved game found on launch, awaiting the user's Resume/Discard choice.
     @State private var pendingResume: GameSnapshot?
     @Environment(\.colorScheme) private var colorScheme

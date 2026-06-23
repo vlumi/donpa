@@ -13,16 +13,21 @@ public struct SaveStore {
     private let fileManager: FileManager
 
     public init(
-        directory: URL? = nil, fileManager: FileManager = .default,
+        directory: URL, fileManager: FileManager = .default,
         filename: String = "currentGame.json"
     ) {
         self.fileManager = fileManager
-        let base =
-            directory
-            ?? (try? fileManager.url(
+        self.url = directory.appendingPathComponent(filename)
+    }
+
+    /// The production store, in Application Support (temp dir as a last resort if
+    /// it's somehow unavailable). Tests construct `SaveStore(directory:)` directly.
+    public static func appSupport(fileManager: FileManager = .default) -> SaveStore {
+        let dir =
+            (try? fileManager.url(
                 for: .applicationSupportDirectory, in: .userDomainMask,
                 appropriateFor: nil, create: true)) ?? fileManager.temporaryDirectory
-        self.url = base.appendingPathComponent(filename)
+        return SaveStore(directory: dir, fileManager: fileManager)
     }
 
     /// Atomically write the snapshot. Failures are swallowed — a save that didn't
