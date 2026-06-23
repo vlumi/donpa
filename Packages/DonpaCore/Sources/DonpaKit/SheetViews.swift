@@ -171,7 +171,10 @@ struct ScoreboardView: View {
                 .frame(width: 56, alignment: .trailing)
             Group {
                 if let progress = scoreboard.bestProgress(for: config) {
-                    Text("\(Int((progress * 100).rounded()))%").font(.body.monospaced())
+                    // Floor, not round: a 99.7%-cleared loss must not read "100%"
+                    // (which would be indistinguishable from an actual clear).
+                    // Only a genuine 1.0 shows 100%.
+                    Text("\(Int((progress * 100).rounded(.down)))%").font(.body.monospaced())
                 } else {
                     Text("—").foregroundStyle(.secondary)
                 }
