@@ -19,6 +19,7 @@ struct GameContent: View {
     @State private var panel: MangaPanelView.Kind?
     @State private var panelTask: Task<Void, Never>?
     @State private var restartPop = false
+    @State private var windowSize: CGSize = .zero
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -43,6 +44,14 @@ struct GameContent: View {
             boardArea
         }
         .background(palette.pageBackground)
+        // Track the window size so presented sheets can size to it.
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear { windowSize = geo.size }
+                    .onChange(of: geo.size) { windowSize = $0 }
+            }
+        )
         .onAppear {
             // Restore the persisted board selection on launch.
             if viewModel.config != settings.currentConfig {
@@ -56,7 +65,7 @@ struct GameContent: View {
         // Any new game (New Game / Retry / ⌘R) clears a lingering panel.
         .onChange(of: viewModel.gameID) { _ in dismissPanel() }
         .sheet(isPresented: $navigator.showingScores) {
-            ScoreboardView(scoreboard: scoreboard)
+            ScoreboardView(scoreboard: scoreboard, available: windowSize)
         }
         .sheet(isPresented: $navigator.showingSettings) {
             SettingsView(settings: settings)

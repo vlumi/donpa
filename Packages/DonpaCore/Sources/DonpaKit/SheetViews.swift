@@ -1,11 +1,20 @@
 import DonpaCore
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 /// The high-score table: clears + best time per config. Classic configs always
 /// show; Modern configs appear once they've been played (to avoid 15 empty
 /// rows). Stored by geometry, so re-tuned tiers would list as separate entries.
 struct ScoreboardView: View {
     @ObservedObject var scoreboard: Scoreboard
+    /// Size of the presenting window, so the sheet grows with it and never
+    /// overflows. `.zero` → fall back to the screen.
+    var available: CGSize = .zero
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingReset = false
 
@@ -19,15 +28,8 @@ struct ScoreboardView: View {
         VStack(spacing: 16) {
             Text("High Scores", bundle: .module).font(.title2.bold())
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    section("Classic", configs: GameConfig.classicConfigs)
-                    if !playedModern.isEmpty {
-                        section("Modern", configs: playedModern)
-                    }
-                }
-            }
-            .frame(maxHeight: 360)
+            scoreList
+                .frame(maxHeight: .infinity)
 
             HStack {
                 Button(role: .destructive) {
@@ -45,7 +47,11 @@ struct ScoreboardView: View {
             }
         }
         .padding(24)
-        .frame(minWidth: 320)
+        // Size to a bounded fraction of the available height so the sheet grows
+        // on a big screen but never overflows a small window. (A sheet sizes to
+        // its content, so we drive the height explicitly rather than fill.)
+        .frame(maxWidth: sheetWidth, maxHeight: sheetHeight)
+        .frame(minWidth: min(340, sheetWidth), minHeight: min(360, sheetHeight))
         .confirmationDialog(
             Text("Clear all high scores?", bundle: .module), isPresented: $confirmingReset
         ) {
@@ -61,17 +67,52 @@ struct ScoreboardView: View {
         }
     }
 
+    /// Container size to bound against: the presenting window, or the screen as a
+    /// fallback before the window size is known.
+    private var container: CGSize {
+        if available != .zero { return available }
+        #if os(macOS)
+        let h = NSScreen.main?.visibleFrame.height ?? 800
+        let w = NSScreen.main?.visibleFrame.width ?? 1000
+        #else
+        let h = UIScreen.main.bounds.height
+        let w = UIScreen.main.bounds.width
+        #endif
+        return CGSize(width: w, height: h)
+    }
+
+    /// Tall in a big window, short in a small one — bounded so it never overflows.
+    private var sheetHeight: CGFloat { min(760, max(360, container.height * 0.85)) }
+    /// Likewise for width, so a narrow window can't push the sheet off the sides.
+    private var sheetWidth: CGFloat { min(440, max(300, container.width * 0.9)) }
+
+    /// Gutter reserved to the right of the whole table so the scroll indicator
+    /// sits clear of it — rows *and* their divider hairlines end before the bar.
+    private static let scrollbarGutter: CGFloat = 16
+
+    private var scoreList: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                section("Classic", configs: GameConfig.classicConfigs)
+                if !playedModern.isEmpty {
+                    section("Modern", configs: playedModern)
+                }
+            }
+            .padding(.trailing, Self.scrollbarGutter)
+        }
+    }
+
     private func section(_ title: LocalizedStringKey, configs: [GameConfig]) -> some View {
         VStack(spacing: 0) {
             HStack {
                 Text(title, bundle: .module).font(.caption.bold()).foregroundStyle(.secondary)
                 Spacer()
                 Text("Cleared", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 62, alignment: .trailing)
+                    .frame(width: 56, alignment: .trailing)
                 Text("Best %", bundle: .module).font(.caption).foregroundStyle(.secondary)
                     .frame(width: 52, alignment: .trailing)
                 Text("Best", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 72, alignment: .trailing)
+                    .frame(width: 68, alignment: .trailing)
             }
             .padding(.vertical, 4)
 
@@ -88,7 +129,7 @@ struct ScoreboardView: View {
             Spacer()
             Text("\(scoreboard.wins(for: config))")
                 .font(.body.monospaced())
-                .frame(width: 62, alignment: .trailing)
+                .frame(width: 56, alignment: .trailing)
             Group {
                 if let progress = scoreboard.bestProgress(for: config) {
                     Text("\(Int((progress * 100).rounded()))%").font(.body.monospaced())
@@ -104,7 +145,7 @@ struct ScoreboardView: View {
                     Text("—").foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 72, alignment: .trailing)
+            .frame(width: 68, alignment: .trailing)
         }
         .padding(.vertical, 10)
     }
