@@ -369,6 +369,9 @@ heavier ink, custom number styling).
 - **Manga-style toolbar icons** — the status-bar chrome (trophy, gear, mode
   toggle, new-game) still uses plain SF Symbols; matching them to the manga
   style would tie the in-game look to the panels/title.
+- **Pause panel art** — a "squad taking a rest" manga frame on the pause overlay
+  (same panel slot as win/loss). The current blurred "Paused" overlay is the
+  placeholder; pairs with the next art batch (DALL·E → `.local` → `Panels.xcassets`).
 - **Art sources** — current panels/title/icon are DALL·E (commercial-use OK via
   OpenAI TOS on a personal account; verify before ship). If iterating: keep the
   *icon* a single bold focal subject, no baked title text, readable at 64px.

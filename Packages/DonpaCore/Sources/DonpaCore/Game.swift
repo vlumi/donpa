@@ -1,5 +1,5 @@
 /// The overall play state.
-public enum GameStatus: Sendable, Equatable {
+public enum GameStatus: String, Sendable, Equatable, Codable {
     case notStarted
     case playing
     case won
@@ -73,6 +73,19 @@ public struct Game: Sendable {
         self.mineCount = mines.count
         self.minesPlaced = true
         self.status = .playing
+    }
+
+    /// Rebuild a game from a persisted snapshot. Mines are restored exactly (not
+    /// re-randomized — they're first-click-safe), cells set revealed/flagged, and
+    /// the derived game fields restored. The topology comes from the saved config.
+    public static func restored(from s: GameSnapshot) -> Game {
+        var game = Game(topology: s.config.topology, mineCount: s.config.mineCount)
+        game.board.restore(mines: s.mines, revealed: s.revealed, flagged: s.flagged)
+        game.minesPlaced = !s.mines.isEmpty
+        game.status = s.status
+        game.revealedSafeCount = s.revealedSafeCount
+        game.lossCoord = s.lossCoord
+        return game
     }
 
     public var flagsRemaining: Int { mineCount - board.flagCount }

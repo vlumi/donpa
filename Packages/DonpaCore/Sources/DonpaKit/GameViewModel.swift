@@ -122,6 +122,30 @@ public final class GameViewModel: ObservableObject {
         bump()
     }
 
+    /// A `GameSnapshot` of the current game, or nil if it's not a live game worth
+    /// saving. The live timer span is folded in so the saved elapsed is exact.
+    public func snapshot() -> GameSnapshot? {
+        GameSnapshot(game: game, config: config, elapsedCentiseconds: currentCentiseconds())
+    }
+
+    /// Restore a persisted game: rebuild the board/state, set the clock to the
+    /// saved elapsed (and resume running it), and bump so views/scene redraw.
+    public func restore(from snapshot: GameSnapshot) {
+        config = snapshot.config
+        game = snapshot.makeGame()
+        lastWin = nil
+        lastResult = nil
+        inputMode = .reveal
+        // Restore the banked time and resume the clock from there.
+        timer?.cancel()
+        accumulatedCentiseconds = snapshot.elapsedCentiseconds
+        elapsedCentiseconds = snapshot.elapsedCentiseconds
+        isPaused = false
+        if game.status == .playing { startTimer() } else { runningSince = nil }
+        gameID &+= 1
+        bump()
+    }
+
     /// Stop the clock when the game ends, capture a win for scoring, and publish
     /// the outcome for end-of-game feedback.
     private func finishIfEnded() {
