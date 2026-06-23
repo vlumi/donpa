@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld left": {
+      "comment": "Loss pill: safe tiles still unopened when the cleared % would round to 100. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld jäljellä"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残り%lld"
+          }
+        }
+      }
+    },
+    "So close — %lld tiles left": {
+      "comment": "Loss consolation line for a last-cell near miss. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Niin lähellä — %lld ruutua jäljellä"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "おしい！残り%lldマス"
+          }
+        }
+      }
+    },
+    "Cleared %@": {
+      "comment": "Loss consolation line: how much of the board was cleared. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Raivattu %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 除去"
+          }
+        }
+      }
+    },
     "": {},
     "—": {
       "comment": "A placeholder value for the best progress of a game.",
