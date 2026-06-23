@@ -199,8 +199,13 @@ Instruments (Allocations + Leaks) at those sizes throughout.
       which currently re-runs on every palette push / tick).
 - [ ] Node reuse / pooling as the viewport moves; consider `SKTileMapNode` or a
       drawn texture instead of per-cell `SKShapeNode` (shape nodes are pricey).
-- [ ] Leak audit: `BoardScene` ↔ `GameViewModel` retain, long-lived scene
-      teardown on config change, effects-node cleanup.
+- [x] Leak/retain audit (pre-v0.3 groundwork, June 2026): **clean** at current
+      scale. No `BoardScene` ↔ `GameViewModel` cycle (the scene references the VM,
+      not vice-versa — a DAG); the Combine timer uses `[weak self]`; effects are
+      declarative `SKAction`s with no `self` capture; gesture recognizers hold
+      their target (the scene) weakly by framework convention. The remaining perf
+      items below (flat cell storage, viewport culling, node pooling) are the real
+      v0.3 work; re-profile teardown with Instruments once huge boards land.
 
 **Navigation / window:**
 
