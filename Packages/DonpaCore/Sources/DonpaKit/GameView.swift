@@ -104,6 +104,10 @@ struct GameContent: View {
         guard let result = viewModel.lastResult?.result else { return }
         fireHaptic(for: result)
 
+        // A finished game clears the previous record highlight; submit() below
+        // re-sets it if *this* game was itself a record.
+        scoreboard.clearRecentRecord()
+
         let kind: MangaPanelView.Kind
         switch result {
         case .won(let centiseconds, let config):

@@ -45,8 +45,10 @@ struct ScoreboardView: View {
                 }
                 .keyboardShortcut(.defaultAction)
             }
+            .padding(.horizontal, Self.rowInset)  // align buttons with the row text
         }
-        .padding(24)
+        .padding(.vertical, 24)
+        .padding(.horizontal, 14)  // rest of the side margin lives on the rows
         // Size to a bounded fraction of the available height so the sheet grows
         // on a big screen but never overflows a small window. (A sheet sizes to
         // its content, so we drive the height explicitly rather than fill.)
@@ -89,6 +91,10 @@ struct ScoreboardView: View {
     /// Gutter reserved to the right of the whole table so the scroll indicator
     /// sits clear of it — rows *and* their divider hairlines end before the bar.
     private static let scrollbarGutter: CGFloat = 16
+    /// Horizontal breathing room inside each row, so the record-highlight band
+    /// (and the rows generally) aren't flush against the text. Pulled in from the
+    /// sheet's outer padding so the overall margin stays about the same.
+    private static let rowInset: CGFloat = 10
 
     private var scoreList: some View {
         ScrollView {
@@ -115,6 +121,7 @@ struct ScoreboardView: View {
                     .frame(width: 68, alignment: .trailing)
             }
             .padding(.vertical, 4)
+            .padding(.horizontal, Self.rowInset)
 
             ForEach(configs, id: \.self) { config in
                 row(config)
@@ -148,6 +155,18 @@ struct ScoreboardView: View {
             .frame(width: 68, alignment: .trailing)
         }
         .padding(.vertical, 10)
+        .padding(.horizontal, Self.rowInset)
+        .background(rowHighlight(for: config))
+    }
+
+    /// Tinted band behind the row whose record was just set, so a fresh best
+    /// stands out when the scoreboard opens. Persists until the next game ends.
+    @ViewBuilder private func rowHighlight(for config: GameConfig) -> some View {
+        if scoreboard.recentRecord == config.storageKey {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.accentColor.opacity(0.18))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor.opacity(0.5)))
+        }
     }
 }
 
