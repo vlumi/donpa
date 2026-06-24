@@ -48,8 +48,8 @@ struct DonpaApp: App {
                 Button("Restart Game") { viewModel.newGame() }
                     .keyboardShortcut("r", modifiers: .command)
                 Button("Title Screen") {
-                    viewModel.newGame()  // returning to title resets the board
-                    navigator.showingTitle = true
+                    // Pause + save (handled in GameContent), not discard.
+                    navigator.homeRequested &+= 1
                 }
                 .keyboardShortcut("t", modifiers: .command)
             }

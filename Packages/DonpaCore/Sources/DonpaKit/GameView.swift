@@ -27,8 +27,6 @@ struct GameContent: View {
     /// Support store.
     @State private var saveStore =
         SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
-    /// A saved game found on launch, awaiting the user's Resume/Discard choice.
-    @State private var pendingResume: GameSnapshot?
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -87,36 +85,37 @@ struct GameContent: View {
         .sheet(isPresented: $navigator.showingAbout) {
             AboutView()
         }
-        // Exactly two choices. One button must carry the `.cancel` role or the OS
-        // synthesizes its own Cancel — so Discard *is* the cancel role (it's the
-        // "back out" action, and also handles Esc / click-away).
-        .alert(
-            Text("Resume your game?", bundle: .module),
-            isPresented: Binding(
-                get: { pendingResume != nil }, set: { if !$0 { pendingResume = nil } })
-        ) {
-            Button {
-                resumePending()
-            } label: {
-                Text("Resume", bundle: .module)
-            }
-            Button(role: .cancel) {
-                discardPending()
-            } label: {
-                Text("Discard", bundle: .module)
-            }
-        }
+        // Title art tapped: resume the saved game, or open the New Game popup.
+        .onChangeCompat(of: navigator.startRequested) { _ in handleStartRequest() }
+        // Home requested (in-game button / macOS ⌘T): pause + save, then title.
+        .onChangeCompat(of: navigator.homeRequested) { _ in goHome() }
     }
 
     // MARK: Save / restore lifecycle
 
-    /// On launch: offer to resume a saved in-progress game; otherwise restore the
-    /// persisted board selection as before.
+    /// On launch we stay on the title hub (no resume/discard prompt). A saved game
+    /// is resumed only when the player taps the title art (see `handleStartRequest`);
+    /// until then the board is primed with the persisted config so an immediate
+    /// New Game matches their last selection.
     private func onLaunch() {
-        if let snapshot = saveStore.load() {
-            pendingResume = snapshot
-        } else if viewModel.config != settings.currentConfig {
+        if saveStore.load() == nil, viewModel.config != settings.currentConfig {
             viewModel.newGame(config: settings.currentConfig)
+        }
+    }
+
+    /// Title art tapped ("press start"): leave the title for the game screen. If a
+    /// saved game exists, resume it directly; otherwise reveal the (last-config,
+    /// not-started) board and open the New Game popup over it — so dismissing the
+    /// popup leaves a ready-to-play board rather than a dead screen. This is the
+    /// single place the resume decision lives, since `saveStore` is owned here.
+    private func handleStartRequest() {
+        navigator.showingTitle = false
+        if let snapshot = saveStore.load() {
+            viewModel.restore(from: snapshot)
+        } else {
+            // The board is already primed with the last-used config (onLaunch /
+            // the previous newGame); just offer the chooser over it.
+            navigator.showingNewGame = true
         }
     }
 
@@ -127,19 +126,6 @@ struct GameContent: View {
         } else {
             saveStore.clear()
         }
-    }
-
-    private func resumePending() {
-        guard let snapshot = pendingResume else { return }
-        pendingResume = nil
-        viewModel.restore(from: snapshot)
-        navigator.showingTitle = false
-    }
-
-    private func discardPending() {
-        pendingResume = nil
-        saveStore.clear()
-        viewModel.newGame(config: settings.currentConfig)
     }
 
     // MARK: Result feedback (manga result screen + restart pop + haptics)
@@ -159,11 +145,14 @@ struct GameContent: View {
         }
     }
 
-    /// Return to the home hub. Resets the board so picking/starting from the hub
-    /// gives a fresh game rather than the just-played one. Internal — the chrome
-    /// extension's Home button calls it.
+    /// Return to the home hub WITHOUT ending the game: pause it and save, so the
+    /// title art's "press start" can resume right where it left off. (Previously
+    /// this reset the board, which silently discarded an in-progress game — the
+    /// exact footgun this avoids.) Discarding is now an explicit New Game instead.
+    /// Internal — the chrome extension's Home button calls it.
     func goHome() {
-        viewModel.newGame()
+        viewModel.pause()
+        autosave()
         navigator.showingTitle = true
     }
 

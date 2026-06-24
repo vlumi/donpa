@@ -79,8 +79,38 @@ final class DonpaUITests: XCTestCase {
         waitFor(startButton)
     }
 
+    /// Going Home from an in-progress game saves it (rather than discarding), and
+    /// tapping the title art resumes that game directly — no New Game popup. This
+    /// is the save-on-home behaviour; the regression it guards is Home silently
+    /// ending the game.
+    func testHomeSavesAndTitleResumes() {
+        startGame()
+        // Make a move so there's a genuine in-progress (playing) game to save.
+        XCTAssertTrue(
+            app.buttons["newgame.start"].waitForNonExistence(timeout: 5),
+            "New Game popup dismissed")
+        app.otherElements["game.board"].tap()
+        // Go home — should pause + save, not discard.
+        app.buttons["game.home"].tap()
+        waitFor(startButton)
+        // Tapping the title resumes straight into the game (Home button present),
+        // and must NOT open the New Game popup (that would mean nothing was saved).
+        startButton.tap()
+        waitFor(app.buttons["game.home"])
+        XCTAssertFalse(
+            app.buttons["newgame.start"].exists,
+            "resumed directly, no New Game popup")
+    }
+
     func testPauseAndResume() {
         startGame()
+        // Wait for the New Game popup to finish fading out — its dimmed scrim
+        // captures taps until then, so tapping the board too early hits the scrim
+        // (no first move, no pause). The popup's Start button vanishing is the
+        // "popup gone" signal.
+        XCTAssertTrue(
+            app.buttons["newgame.start"].waitForNonExistence(timeout: 5),
+            "New Game popup dismissed")
         // Pause only exists once the game is actually playing, so reveal a cell
         // first (tap the board to make the first move).
         app.otherElements["game.board"].tap()
