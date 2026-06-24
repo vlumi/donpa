@@ -37,8 +37,12 @@ targets:
           UIImageName: LaunchImage
           UIImageRespectsSafeAreaInsets: true
           UIColorName: LaunchBackground
+        # All four orientations: a universal (iPhone + iPad) app must support them
+        # for iPad multitasking, or App Store validation rejects the build. The
+        # board is orientation-agnostic, so upside-down portrait is harmless.
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
     settings:
