@@ -69,7 +69,7 @@ up the dependencies. To work in Xcode instead, `make generate && open Donpa.xcod
 ## Modes
 
 A **Classic / Modern** switch in the **New Game popup** chooses the board (open
-it from the title art, the in-game **New Game** button, the result screen, or
+it from the title art, the in-game **config badge**, the result screen, or
 `⌘N`):
 
 - **Classic** — the original Beginner / Intermediate / Expert presets.
@@ -96,7 +96,7 @@ long-press is always the opposite primary action.
 The board chrome is split in two: a thin top strip shows a tappable **config
 badge** (the current game — its rank insignia + size — which opens the New Game
 popup to switch) and read-only metrics — the flag counter, a live **clear-%**,
-the timer, and the 🏆 High Scores button — while a strip beside or below the
+the timer, and the 🎖️ High Scores button — while a strip beside or below the
 board (whichever the board's shape leaves room for) holds the **Retry / Pause /
 Home** actions plus the dig/flag toggle. Unopened tiles carry a faint manga
 screentone keyed to the toggle (dots for dig, hatch for flag).
@@ -136,7 +136,7 @@ fits on screen, panning is disabled.
 ## Start and end of a game
 
 The app opens on a **title screen** that doubles as the home hub: tapping the
-art opens the **New Game popup** to pick a board and start. The 🏆 High Scores,
+art opens the **New Game popup** to pick a board and start. The 🎖️ High Scores,
 ⚙️ Settings, and ⓘ About buttons sit on the art's corner. You can return to the
 title any
 time from the in-game **Home** button or the **Title Screen** menu item (⌘T) on
@@ -155,10 +155,10 @@ live:
 
 ## Scores
 
-Per-board stats are kept locally (via `UserDefaults`) and shown from the 🏆
+Per-board stats are kept locally (via `UserDefaults`) and shown from the 🎖️
 button (in the top strip in-game, or on the title art): your best time and how
 many games you've cleared on each board. A new best is celebrated on the result
-panel; the full table is always available from the 🏆 button.
+panel; the full table is always available from the 🎖️ button.
 
 Stats are keyed by board geometry, not by tier name, so the format stays stable
 toward the "epic" variants: adding wrapped or hex boards — or re-tuning a tier —
@@ -175,10 +175,11 @@ or **Dark** — the board and chrome share one palette that follows the choice
 Donpa Squad is built with substantial AI assistance, and that's stated openly
 here rather than hidden. The project is human-directed — design, gameplay, and
 every visual decision are the author's — but the **code is largely AI-written**
-and the **current art (app icon, title, and result panels) is AI-generated**
-(DALL·E). The procedural chrome (the manga UI glyphs and board screentone)
-is AI-written code, not generated images. If hand-made or commissioned art
-replaces the generated pieces later, this note will be updated to credit it.
+and the **current scene art (the title, result, and pause panels) is
+AI-generated** (DALL·E). The procedural visuals — the app icon, the manga UI
+glyphs, and the board screentone — are AI-*written code*, not generated images. If hand-made or
+commissioned art replaces the generated pieces later, this note will be updated
+to credit it.
 
 ## License
 
