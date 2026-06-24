@@ -51,6 +51,10 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Signing: the personal paid-account team. Automatic signing lets Xcode
+        # manage the certs/profiles for archive + TestFlight upload.
+        DEVELOPMENT_TEAM: U84DT7P75P
+        CODE_SIGN_STYLE: Automatic
     dependencies:
       - package: DonpaCore
         product: DonpaKit
@@ -107,6 +111,9 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_HARDENED_RUNTIME: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Signing: same personal paid-account team as iOS; automatic signing.
+        DEVELOPMENT_TEAM: U84DT7P75P
+        CODE_SIGN_STYLE: Automatic
     dependencies:
       - package: DonpaCore
         product: DonpaKit
