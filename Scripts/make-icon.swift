@@ -150,10 +150,15 @@ if launch {
         writePNG(image, to: "\(outDir)/launch\(suffix).png")
     }
 } else {
-    // Every pixel size the catalog references: iOS 1024 plus the macOS
-    // 16/32/128/256/512 set at @1x and @2x. Keys match the Contents.json names.
+    // Every pixel size the catalog references, keyed by pixel dimension so the
+    // names match Contents.json: the macOS set (16/32/64/128/256/512), the iOS
+    // iPhone/iPad set (40/58/60/76/80/87/120/152/167/180), and the shared 1024
+    // marketing icon.
     let palette = mono ? Palette.mono : Palette.color
-    for px in [16, 32, 64, 128, 256, 512, 1024] {
+    let sizes = [
+        16, 20, 29, 32, 40, 58, 60, 64, 76, 80, 87, 120, 128, 152, 167, 180, 256, 512, 1024,
+    ]
+    for px in sizes {
         writePNG(renderIcon(size: px, palette: palette), to: "\(outDir)/icon-\(px).png")
     }
 }
