@@ -52,10 +52,10 @@ public struct GameView: View {
             // first layout underneath, making the status bar visibly settle.
             TitleScreen(
                 settings: settings,
-                // "Press start": tapping the art opens the New Game config popup
-                // rather than starting immediately, so the title and the in-game
-                // New Game button share one chooser.
-                onStart: { navigator.showingNewGame = true },
+                // "Press start": resume the saved game if there is one, else open
+                // the New Game config popup. The save lives in GameContent, so the
+                // tap just signals intent (a counter bump) and GameContent decides.
+                onStart: { navigator.startRequested &+= 1 },
                 onSettings: { navigator.showingSettings = true },
                 onScores: { navigator.showingScores = true },
                 onAbout: { navigator.showingAbout = true }

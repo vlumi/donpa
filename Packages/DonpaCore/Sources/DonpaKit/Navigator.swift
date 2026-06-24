@@ -15,10 +15,23 @@ public final class Navigator: ObservableObject {
     /// Whether the About sheet is presented (the title screen's "i" button, and
     /// the macOS app menu's "About").
     @Published public var showingAbout = false
-    /// Whether the New Game config popup is presented. Opened both by the in-game
-    /// "New Game" action and by tapping the title art ("press start"); picking a
-    /// config and confirming starts a fresh game and dismisses the title.
+    /// Whether the New Game config popup is presented. Opened by the in-game
+    /// "New Game" action, the result screen, and — when there's no saved game to
+    /// resume — by the title art tap; picking a config and confirming starts a
+    /// fresh game and dismisses the title.
     @Published public var showingNewGame = false
+
+    /// Bumped when the title art is tapped ("press start"). The decision of what
+    /// that does — resume a saved game, or open the New Game popup — depends on
+    /// the save store, which `GameContent` owns; it watches this counter and
+    /// routes accordingly. A counter (not a Bool) so repeated taps always fire.
+    @Published public var startRequested = 0
+
+    /// Bumped to request "go home" (the in-game Home button and the macOS "Title
+    /// Screen" menu command). Routed through `GameContent` — rather than setting
+    /// `showingTitle` directly — so going home PAUSES AND SAVES the game instead
+    /// of discarding it. A counter so repeated requests always fire.
+    @Published public var homeRequested = 0
 
     public init(showingTitle: Bool = true) {
         self.showingTitle = showingTitle
