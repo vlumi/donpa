@@ -1,6 +1,12 @@
 import DonpaCore
 import SpriteKit
 
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 /// Board rendering: cell-node construction and **viewport culling**. Only cells
 /// within the camera's visible rect are built (kept in `cellNodes`), so the live
 /// node count stays ~one screenful regardless of board size — the path that makes
@@ -101,33 +107,27 @@ extension BoardScene {
         builtRange = range
     }
 
+    /// A cell as `SKSpriteNode`s over cached, shared textures (tile background +
+    /// number/mine glyph), so hundreds of visible cells batch into few draw calls
+    /// rather than each being a freshly-tessellated `SKShapeNode`. The rare drawn
+    /// glyphs — the swallowtail flag and the loss burst-mine — stay as their own
+    /// nodes (few on screen at once, not worth caching).
     private func cellNode(for coord: Coord, cell: Cell) -> SKNode {
         let size = layout.cellSize
         let container = SKNode()
-        let inset: CGFloat = 1
-        let rect = CGRect(
-            x: -size / 2 + inset, y: -size / 2 + inset,
-            width: size - inset * 2, height: size - inset * 2)
-        let tile = SKShapeNode(rect: rect, cornerRadius: 3)
-        tile.lineWidth = 0
-        tile.fillColor = fillColor(for: cell)
+
+        let tile = SKSpriteNode(texture: tileTexture(for: cell))
+        tile.size = CGSize(width: size, height: size)
         container.addChild(tile)
 
-        // The mine you hit gets the manga burst (icon motif, flat); other mines
-        // keep the plain ✸. Flagged cells get the swallowtail flag matching the
-        // toolbar toggle (a SpriteKit-drawn glyph, not a text character).
         if cell.state == .revealed, cell.isMine, coord == viewModel.game.lossCoord {
             container.addChild(burstMineNode(size: size))
         } else if cell.state == .flagged {
             container.addChild(flagNode(size: size, color: palette.flagGlyph))
         } else if let glyph = glyph(for: cell) {
-            let label = SKLabelNode(text: glyph.text)
-            label.fontName = "Menlo-Bold"
-            label.fontSize = size * 0.5
-            label.fontColor = glyph.color
-            label.verticalAlignmentMode = .center
-            label.horizontalAlignmentMode = .center
-            container.addChild(label)
+            let sprite = SKSpriteNode(texture: glyphTexture(glyph.text, color: glyph.color))
+            sprite.size = CGSize(width: size, height: size)
+            container.addChild(sprite)
         }
         return container
     }
@@ -152,5 +152,94 @@ extension BoardScene {
             guard cell.adjacentMines > 0 else { return nil }
             return (String(cell.adjacentMines), palette.number(cell.adjacentMines))
         }
+    }
+
+    // MARK: Cached cell textures
+
+    /// Cell-sized rounded-rect tile background (inset 1pt, corner 3pt — matching
+    /// the previous `SKShapeNode`), cached by fill colour + pixel size. ~3 distinct
+    /// textures (hidden / revealed / mine) shared across every tile on screen.
+    private func tileTexture(for cell: Cell) -> SKTexture {
+        let fill = fillColor(for: cell)
+        let px = max(4, Int(layout.cellSize.rounded()))
+        let key = "tile-\(px)-\(fill)"
+        if let cached = tileTextureCache[key] { return cached }
+
+        let scale: CGFloat = 2  // supersample for a crisp rounded corner
+        let dim = Int(CGFloat(px) * scale)
+        let inset = 1 * scale
+        let corner = 3 * scale
+        let img = drawCellImage(dim: dim) { ctx in
+            let rect = CGRect(
+                x: inset, y: inset, width: CGFloat(dim) - inset * 2,
+                height: CGFloat(dim) - inset * 2)
+            let path = CGPath(
+                roundedRect: rect, cornerWidth: corner, cornerHeight: corner,
+                transform: nil)
+            ctx.addPath(path)
+            ctx.setFillColor(fill.cgColor)
+            ctx.fillPath()
+        }
+        let texture = SKTexture(cgImage: img)
+        texture.filteringMode = .linear
+        tileTextureCache[key] = texture
+        return texture
+    }
+
+    /// A cell-sized texture of a centred glyph (a number or the `✸` mine), cached
+    /// by text + colour + pixel size, so all "3" cells (say) share one texture.
+    private func glyphTexture(_ text: String, color: SKColor) -> SKTexture {
+        let px = max(4, Int(layout.cellSize.rounded()))
+        let key = "glyph-\(text)-\(px)-\(color)"
+        if let cached = tileTextureCache[key] { return cached }
+
+        let scale: CGFloat = 2
+        let dim = Int(CGFloat(px) * scale)
+        let fontSize = CGFloat(px) * scale * 0.5
+        let img = drawCellImage(dim: dim) { ctx in
+            #if os(macOS)
+            let nsFont =
+                NSFont(name: "Menlo-Bold", size: fontSize)
+                ?? .monospacedSystemFont(ofSize: fontSize, weight: .bold)
+            let attrs: [NSAttributedString.Key: Any] = [.font: nsFont, .foregroundColor: color]
+            #else
+            let uiFont =
+                UIFont(name: "Menlo-Bold", size: fontSize)
+                ?? .monospacedSystemFont(ofSize: fontSize, weight: .bold)
+            let attrs: [NSAttributedString.Key: Any] = [.font: uiFont, .foregroundColor: color]
+            #endif
+            let str = NSAttributedString(string: text, attributes: attrs)
+            let bounds = str.size()
+            // Center the glyph in the cell.
+            let origin = CGPoint(
+                x: (CGFloat(dim) - bounds.width) / 2, y: (CGFloat(dim) - bounds.height) / 2)
+            #if os(macOS)
+            let gc = NSGraphicsContext(cgContext: ctx, flipped: false)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = gc
+            str.draw(at: origin)
+            NSGraphicsContext.restoreGraphicsState()
+            #else
+            UIGraphicsPushContext(ctx)
+            str.draw(at: origin)
+            UIGraphicsPopContext()
+            #endif
+        }
+        let texture = SKTexture(cgImage: img)
+        texture.filteringMode = .linear
+        tileTextureCache[key] = texture
+        return texture
+    }
+
+    /// Render a square `dim×dim` transparent image with `draw`, returning the
+    /// CGImage for an `SKTexture`. Shared by the tile + glyph texture builders.
+    private func drawCellImage(dim: Int, _ draw: (CGContext) -> Void) -> CGImage {
+        let cs = CGColorSpace(name: CGColorSpace.sRGB)!
+        let ctx = CGContext(
+            data: nil, width: dim, height: dim, bitsPerComponent: 8, bytesPerRow: 0,
+            space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.clear(CGRect(x: 0, y: 0, width: dim, height: dim))
+        draw(ctx)
+        return ctx.makeImage()!
     }
 }

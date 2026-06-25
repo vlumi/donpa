@@ -48,6 +48,12 @@ public final class BoardScene: SKScene {
     /// Cached halftone wash textures, keyed by mode + a cell-size/appearance tag,
     /// so the screentone is built once and reused across every hidden tile.
     var glowTextureCache: [String: SKTexture] = [:]
+    /// Cached tile-background and glyph textures, keyed by role + pixel size +
+    /// colour (so light/dark and size changes miss the cache and rebuild, like
+    /// the glow cache). Every visible cell is an `SKSpriteNode` sharing one of
+    /// these — SpriteKit batches same-texture sprites into one draw call, far
+    /// cheaper than a per-cell `SKShapeNode` (the old hot spot on big boards).
+    var tileTextureCache: [String: SKTexture] = [:]
 
     /// The active color palette. Set by the host when the system appearance
     /// changes; updating it recolors the background and rebuilds the cells.
@@ -127,6 +133,11 @@ public final class BoardScene: SKScene {
     /// A huge board opens showing fewer, tappable cells rather than a sea of
     /// untappable ones; the player can still zoom further out manually.
     private static let minStartCellSize: CGFloat = 28
+    /// When the board exceeds the viewport, the start zoom is nudged in by this
+    /// factor so edge cells are clipped mid-cell — signalling the board continues
+    /// past the edges instead of looking complete. <1 because scale is
+    /// world-units-per-point (smaller scale = more zoomed in).
+    private static let edgePeekZoom: CGFloat = 0.92
 
     // Internal so BoardScene+Pan (which owns pan/zoom/clamp) can reach them.
     func centerCamera() {
@@ -147,7 +158,14 @@ public final class BoardScene: SKScene {
         let cellCeiling = layout.cellSize / startCell
         // Prefer to fit the whole board, but clamp into [cellFloor, cellCeiling]:
         // never bigger than maxCell, never so small the viewport shows > the cap.
-        let scale = min(max(fitScale, cellFloor), cellCeiling)
+        var scale = min(max(fitScale, cellFloor), cellCeiling)
+        // When the board is bigger than the viewport (we're not fitting the whole
+        // thing), nudge the zoom in (smaller scale) so the edge cells are clipped
+        // mid-cell — a visual cue that the board continues past the edges. Skip it
+        // when the whole board fits (nothing beyond the edge to hint at).
+        if scale < fitScale {
+            scale *= Self.edgePeekZoom
+        }
         cameraNode.setScale(scale)
     }
 
