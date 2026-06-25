@@ -76,10 +76,12 @@ extension BoardScene {
         guard minimapNode == nil else { return }
         let container = SKNode()
         container.zPosition = 100  // above the board, below nothing else on camera
+        // Semi-transparent so it reads as an unobtrusive HUD overlay — the board
+        // shows through it, so it's less distracting and less in-the-way than an
+        // opaque panel covering the corner.
+        container.alpha = 0.68
 
-        // Opaque panel + border so the minimap reads as a distinct HUD element,
-        // not part of the board (the overview's tile greys otherwise blend into
-        // the board's). Sized to the image in `layoutMinimap`.
+        // Panel + border frame it as a HUD element. Sized in `layoutMinimap`.
         let panel = SKShapeNode()
         panel.fillColor = palette.sceneBackground
         panel.strokeColor = palette.flagGlyph

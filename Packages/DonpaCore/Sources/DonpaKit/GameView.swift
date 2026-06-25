@@ -93,12 +93,16 @@ struct GameContent: View {
 
     // MARK: Save / restore lifecycle
 
-    /// On launch we stay on the title hub (no resume/discard prompt). A saved game
-    /// is resumed only when the player taps the title art (see `handleStartRequest`);
-    /// until then the board is primed with the persisted config so an immediate
-    /// New Game matches their last selection.
+    /// On launch: if there's a saved in-progress game, resume straight into it
+    /// and skip the title (returning players want to keep playing — the title hub
+    /// and its High Scores/Settings/About are a tap away via Home). With no saved
+    /// game, stay on the title and prime the board with the persisted config so an
+    /// immediate New Game matches their last selection.
     private func onLaunch() {
-        if saveStore.load() == nil, viewModel.config != settings.currentConfig {
+        if let snapshot = saveStore.load() {
+            viewModel.restore(from: snapshot)
+            navigator.showingTitle = false
+        } else if viewModel.config != settings.currentConfig {
             viewModel.newGame(config: settings.currentConfig)
         }
     }
