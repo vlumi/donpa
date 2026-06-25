@@ -33,6 +33,13 @@ public final class Navigator: ObservableObject {
     /// of discarding it. A counter so repeated requests always fire.
     @Published public var homeRequested = 0
 
+    /// Whether any modal (a sheet or the New Game popup) is presented. Gameplay
+    /// commands (New Game / Restart / mode toggle / presets) are disabled while
+    /// one is up, so their keyboard shortcuts don't mutate the game underneath it.
+    public var isModalPresented: Bool {
+        showingScores || showingSettings || showingAbout || showingNewGame
+    }
+
     public init(showingTitle: Bool = true) {
         self.showingTitle = showingTitle
     }
