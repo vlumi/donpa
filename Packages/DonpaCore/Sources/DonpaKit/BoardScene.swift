@@ -26,11 +26,23 @@ public final class BoardScene: SKScene {
     private var lastRevision = -1
     private var lastGameID = -1
     private var lastAnimatedResultID = -1
+    /// The cell nodes currently built and parented under `boardLayer`, keyed by
+    /// coord. Only **visible** cells (camera rect + margin) are built — on a huge
+    /// board the live node count stays ~one screenful regardless of board size.
+    /// When the whole board fits the viewport (every small/classic board), the
+    /// visible range is the whole board, so this holds every cell exactly as a
+    /// full rebuild would — culling is invisible at those sizes.
+    private var cellNodes: [Coord: SKNode] = [:]
+    /// The cell range last built, so a viewport change only touches the delta.
+    private var builtRange: CellRange?
     // Mode-glow state, compared each frame so the glow only rebuilds on change.
     // Internal so the +Effects extension (which owns the glow) can read/write.
     var lastGlowMode: InputMode?
     var lastGlowLive: Bool?
     var lastGlowRevision = -1
+    /// The visible range the glow was last stamped for — so it re-stamps when the
+    /// viewport scrolls new hidden tiles in, not only on mode/revision change.
+    var lastGlowRange: CellRange?
     /// Cached halftone wash textures, keyed by mode + a cell-size/appearance tag,
     /// so the screentone is built once and reused across every hidden tile.
     var glowTextureCache: [String: SKTexture] = [:]
@@ -75,6 +87,10 @@ public final class BoardScene: SKScene {
 
     public override func update(_ currentTime: TimeInterval) {
         rebuildIfNeeded()
+        // Cull to the current viewport every frame: cheap no-op unless the camera
+        // moved (guarded by `builtRange`), and it catches pan, zoom, and the
+        // animated spring-back without each having to call in.
+        buildVisibleCells()
         refreshModeGlow()
     }
 
@@ -100,14 +116,79 @@ public final class BoardScene: SKScene {
         }
     }
 
+    /// An inclusive rectangular range of cell coordinates (the visible window).
+    /// Internal so the +Effects extension can cull the mode-glow to the same range.
+    struct CellRange: Equatable {
+        let minX, maxX, minY, maxY: Int
+        func contains(_ c: Coord) -> Bool {
+            c.x >= minX && c.x <= maxX && c.y >= minY && c.y <= maxY
+        }
+        /// Visit every coordinate in the range (row-major).
+        func forEach(_ body: (Coord) -> Void) {
+            guard minX <= maxX, minY <= maxY else { return }
+            for y in minY...maxY {
+                for x in minX...maxX { body(Coord(x, y)) }
+            }
+        }
+    }
+
+    /// The cells currently within the camera's viewport, plus a one-cell margin so
+    /// a cell is built just before it scrolls in. Clamped to the board bounds, so
+    /// for a board that fits the viewport this is the whole board (culling no-op).
+    /// Internal so the +Effects extension can reuse it for glow culling.
+    func visibleRange() -> CellRange {
+        let w = viewModel.boardWidth
+        let h = viewModel.boardHeight
+        let scale = cameraNode.xScale
+        // Visible world half-extents: scene is `size` points, scaled by the camera.
+        let halfW = size.width / 2 * scale
+        let halfH = size.height / 2 * scale
+        let cam = cameraNode.position
+        let cell = layout.cellSize
+        // World rect → cell indices (SquareLayout: cell = floor(world / cellSize)).
+        // +1 cell of margin each side so cells appear before scrolling fully in.
+        let minX = max(0, Int(((cam.x - halfW) / cell).rounded(.down)) - 1)
+        let maxX = min(w - 1, Int(((cam.x + halfW) / cell).rounded(.down)) + 1)
+        let minY = max(0, Int(((cam.y - halfH) / cell).rounded(.down)) - 1)
+        let maxY = min(h - 1, Int(((cam.y + halfH) / cell).rounded(.down)) + 1)
+        return CellRange(minX: minX, maxX: maxX, minY: minY, maxY: maxY)
+    }
+
+    /// Full rebuild: drop all cell nodes and rebuild those in the visible range.
+    /// Called on a board-state change (`revision`) or palette change.
     private func rebuild() {
         boardLayer.removeAllChildren()
+        cellNodes.removeAll(keepingCapacity: true)
+        builtRange = nil
+        buildVisibleCells()
+    }
+
+    /// Bring the built cell nodes in line with the current visible range: add
+    /// newly-visible cells, remove newly-hidden ones. O(visible), not O(board) —
+    /// the core of culling. Idempotent, so it's safe to call on every viewport
+    /// change (pan/zoom) and after a rebuild.
+    func buildVisibleCells() {
+        let range = visibleRange()
+        guard range != builtRange else { return }
         let game = viewModel.game
-        for c in game.board.allCoords {
-            let node = cellNode(for: c, cell: game.board[c])
-            node.position = layout.center(of: c)
-            boardLayer.addChild(node)
+
+        // Remove cells that have scrolled out of view.
+        for (c, node) in cellNodes where !range.contains(c) {
+            node.removeFromParent()
+            cellNodes[c] = nil
         }
+        // Add cells that have scrolled into view (skip any already built).
+        for y in range.minY...range.maxY {
+            for x in range.minX...range.maxX {
+                let c = Coord(x, y)
+                guard cellNodes[c] == nil else { continue }
+                let node = cellNode(for: c, cell: game.board[c])
+                node.position = layout.center(of: c)
+                boardLayer.addChild(node)
+                cellNodes[c] = node
+            }
+        }
+        builtRange = range
     }
 
     private func cellNode(for coord: Coord, cell: Cell) -> SKNode {
