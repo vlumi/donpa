@@ -25,3 +25,29 @@ public protocol Topology: Sendable {
     /// Every playable coordinate, in a stable order.
     func allCoords() -> AnySequence<Coord>
 }
+
+/// A topology whose cells form a dense `width × height` rectangle addressed by
+/// `(x, y)` with `0 ≤ x < width`, `0 ≤ y < height`. This is exactly the property
+/// that licenses **flat array storage** (`index = y·width + x`) instead of a
+/// dictionary — the memory- and speed-critical path for huge boards. Square
+/// grids (bounded and wrapped) are rectangular; a future non-grid topology (e.g.
+/// a sparse or irregular board) simply wouldn't conform, and `Board` falls back
+/// to dictionary storage for it.
+public protocol RectangularTopology: Topology {
+    var width: Int { get }
+    var height: Int { get }
+}
+
+extension RectangularTopology {
+    /// Row-major flat index for an in-bounds coordinate, or nil if off-board.
+    /// `cellCount == width * height`, so indices are `0 ..< cellCount`.
+    public func index(of c: Coord) -> Int? {
+        guard c.x >= 0, c.x < width, c.y >= 0, c.y < height else { return nil }
+        return c.y * width + c.x
+    }
+
+    /// The coordinate at a flat index (inverse of `index(of:)`).
+    public func coord(at index: Int) -> Coord {
+        Coord(index % width, index / width)
+    }
+}

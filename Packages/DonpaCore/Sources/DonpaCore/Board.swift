@@ -13,14 +13,80 @@ public struct Cell: Sendable {
     public var adjacentMines: Int = 0
 }
 
+/// Cell storage, abstracted so a board can hold its cells either as a dense flat
+/// array (for rectangular topologies — `index = y·width + x`, the memory/speed
+/// path for huge boards) or as a dictionary (the general fallback for any
+/// topology that isn't a dense `width × height` rectangle). Same semantics either
+/// way: get returns a default `Cell` for an unknown coord; set stores it.
+///
+/// This is a **struct** (not an enum with an associated array): a flat write must
+/// mutate the array in place via copy-on-write. Holding the array in an enum case
+/// would force `self = .flat(cells, …)` on every write, which un-uniques the
+/// array reference and copies all N cells per write → O(n²). Two optionals (one
+/// of which is always set) keep the in-place mutation COW-friendly.
+private struct CellStore: Sendable {
+    /// Flat row-major array; set iff the topology is rectangular.
+    private var flat: [Cell]?
+    /// Coordinate-keyed dictionary; set iff the topology is not rectangular.
+    private var sparse: [Coord: Cell]?
+    /// The `Coord ↔ index` mapping for the flat case.
+    private let rect: RectangularTopology?
+
+    init(topology: any Topology) {
+        if let rect = topology as? RectangularTopology {
+            self.flat = Array(repeating: Cell(), count: rect.cellCount)
+            self.sparse = nil
+            self.rect = rect
+        } else {
+            var cells: [Coord: Cell] = [:]
+            cells.reserveCapacity(topology.cellCount)
+            for c in topology.allCoords() { cells[c] = Cell() }
+            self.sparse = cells
+            self.flat = nil
+            self.rect = nil
+        }
+    }
+
+    subscript(_ c: Coord) -> Cell {
+        get {
+            if let rect {
+                guard let i = rect.index(of: c), let flat else { return Cell() }
+                return flat[i]
+            }
+            return sparse?[c] ?? Cell()
+        }
+        set {
+            if let rect {
+                // In-place array write: `flat` is the sole reference here, so COW
+                // mutates without copying — O(1) per write even on a 1M board.
+                guard let i = rect.index(of: c) else { return }
+                flat?[i] = newValue
+            } else {
+                sparse?[c] = newValue
+            }
+        }
+    }
+
+    /// All (coord, cell) pairs — for the persistence/derived accessors.
+    func forEach(_ body: (Coord, Cell) -> Void) {
+        if let rect, let flat {
+            for (i, cell) in flat.enumerated() { body(rect.coord(at: i), cell) }
+        } else if let sparse {
+            for (c, cell) in sparse { body(c, cell) }
+        }
+    }
+}
+
 /// The grid of cells plus the mine layout, indexed by `Coord`.
 ///
 /// `Board` knows *what* is in each cell and how to recompute adjacency, but it
 /// holds no game rules (those live in `Game`). All neighbour questions are
-/// delegated to the injected `Topology`, so the board is geometry-agnostic.
+/// delegated to the injected `Topology`, so the board is geometry-agnostic. Cells
+/// are held in a flat array for rectangular topologies (huge-board path) and a
+/// dictionary otherwise — see `CellStore`; the public API is identical either way.
 public struct Board: Sendable {
     public let topology: any Topology
-    private var cells: [Coord: Cell]
+    private var cells: CellStore
 
     /// Mines on the board — set once in `placeMines`. Tracked rather than scanned
     /// so it's O(1) (matters on huge boards).
@@ -31,20 +97,15 @@ public struct Board: Sendable {
 
     public init(topology: any Topology) {
         self.topology = topology
-        var cells: [Coord: Cell] = [:]
-        cells.reserveCapacity(topology.cellCount)
-        for c in topology.allCoords() {
-            cells[c] = Cell()
-        }
-        self.cells = cells
+        self.cells = CellStore(topology: topology)
     }
 
     public subscript(_ c: Coord) -> Cell {
-        get { cells[c] ?? Cell() }
+        get { cells[c] }
         set {
             // Keep flagCount in step with any state change — all cell mutation
             // funnels through here, so the counter can't drift.
-            let was = cells[c]?.state
+            let was = cells[c].state
             if was != newValue.state {
                 if was == .flagged { flagCount -= 1 }
                 if newValue.state == .flagged { flagCount += 1 }
@@ -69,7 +130,7 @@ public struct Board: Sendable {
 
     private func coords(where match: (Cell) -> Bool) -> Set<Coord> {
         var result: Set<Coord> = []
-        for (c, cell) in cells where match(cell) { result.insert(c) }
+        cells.forEach { c, cell in if match(cell) { result.insert(c) } }
         return result
     }
 
@@ -90,13 +151,13 @@ public struct Board: Sendable {
     /// Places mines on the given coordinates and recomputes every adjacency count.
     public mutating func placeMines(at mineCoords: Set<Coord>) {
         for c in topology.allCoords() {
-            cells[c]?.isMine = mineCoords.contains(c)
+            cells[c].isMine = mineCoords.contains(c)
         }
         for c in topology.allCoords() {
             let count = topology.neighbors(of: c).reduce(0) { acc, n in
-                acc + (cells[n]?.isMine == true ? 1 : 0)
+                acc + (cells[n].isMine ? 1 : 0)
             }
-            cells[c]?.adjacentMines = count
+            cells[c].adjacentMines = count
         }
         mineCount = mineCoords.count
     }

@@ -1,7 +1,7 @@
 /// A `width × height` square grid whose edges wrap — topologically a torus.
 /// `normalize` folds coordinates with modulo (never `nil`), so every cell has
 /// 8 neighbours and there are no edges or corners.
-public struct WrappedSquareTopology: Topology {
+public struct WrappedSquareTopology: RectangularTopology {
     public let width: Int
     public let height: Int
 
