@@ -32,12 +32,14 @@ struct DonpaApp: App {
             // Replace the standard "About <app>" with our own panel.
             CommandGroup(replacing: .appInfo) {
                 Button("About Donpa Squad") { showingAbout = true }
+                    .disabled(modalOpen)
             }
             // Settings lives in the app menu at the standard ⌘, slot (no toolbar
             // gear on macOS). Presented as the in-window sheet via the navigator.
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") { navigator.showingSettings = true }
                     .keyboardShortcut(",", modifiers: .command)
+                    .disabled(modalOpen)
             }
             CommandGroup(replacing: .newItem) {
                 // New Game opens the config popup (pick mode/size, then Start);
@@ -45,17 +47,21 @@ struct DonpaApp: App {
                 // straight to a fresh game with a chosen classic config.
                 Button("New Game…") { navigator.showingNewGame = true }
                     .keyboardShortcut("n", modifiers: .command)
+                    .disabled(modalOpen)
                 Button("Restart Game") { viewModel.newGame() }
                     .keyboardShortcut("r", modifiers: .command)
+                    .disabled(modalOpen)
                 Button("Title Screen") {
                     // Pause + save (handled in GameContent), not discard.
                     navigator.homeRequested &+= 1
                 }
                 .keyboardShortcut("t", modifiers: .command)
+                .disabled(modalOpen)
             }
             CommandMenu("Game") {
                 Button("High Scores") { navigator.showingScores = true }
                     .keyboardShortcut("s", modifiers: [.command, .shift])
+                    .disabled(modalOpen)
 
                 Divider()
 
@@ -67,6 +73,7 @@ struct DonpaApp: App {
                     viewModel.inputMode.toggle()
                 }
                 .keyboardShortcut("f", modifiers: .command)
+                .disabled(modalOpen)
 
                 Divider()
 
@@ -77,6 +84,13 @@ struct DonpaApp: App {
         }
     }
 
+    /// True while any modal (a navigator sheet/popup, or the macOS About sheet) is
+    /// presented — used to disable the menu commands and their keyboard shortcuts
+    /// so they don't mutate or navigate the game hidden beneath the modal.
+    private var modalOpen: Bool {
+        navigator.isModalPresented || showingAbout
+    }
+
     private func classicButton(_ preset: ClassicPreset, key: KeyEquivalent) -> some View {
         Button(preset.label) {
             settings.mode = .classic
@@ -84,5 +98,6 @@ struct DonpaApp: App {
             viewModel.newGame(config: .classic(preset))
         }
         .keyboardShortcut(key, modifiers: .command)
+        .disabled(modalOpen)
     }
 }
