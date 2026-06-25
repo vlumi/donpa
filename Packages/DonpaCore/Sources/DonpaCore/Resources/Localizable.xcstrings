@@ -205,6 +205,29 @@
           }
         }
       }
+    },
+    "Huge": {
+      "comment": "Modern board size (100x100). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XL"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "XL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "特大"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

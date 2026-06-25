@@ -23,17 +23,37 @@ public final class BoardScene: SKScene {
     /// sibling above `boardLayer` so it tints over the tiles, below `effectsLayer`
     /// so end-game effects win. Never wiped by `rebuild()`.
     let glowLayer = SKNode()
-    private var lastRevision = -1
-    private var lastGameID = -1
-    private var lastAnimatedResultID = -1
+    // Render state — read/written by the rendering methods in BoardScene+Render
+    // (a separate file), so these are internal rather than private.
+    var lastRevision = -1
+    var lastGameID = -1
+    var lastAnimatedResultID = -1
+    /// The cell nodes currently built and parented under `boardLayer`, keyed by
+    /// coord. Only **visible** cells (camera rect + margin) are built — on a huge
+    /// board the live node count stays ~one screenful regardless of board size.
+    /// When the whole board fits the viewport (every small/classic board), the
+    /// visible range is the whole board, so this holds every cell exactly as a
+    /// full rebuild would — culling is invisible at those sizes.
+    var cellNodes: [Coord: SKNode] = [:]
+    /// The cell range last built, so a viewport change only touches the delta.
+    var builtRange: CellRange?
     // Mode-glow state, compared each frame so the glow only rebuilds on change.
     // Internal so the +Effects extension (which owns the glow) can read/write.
     var lastGlowMode: InputMode?
     var lastGlowLive: Bool?
     var lastGlowRevision = -1
+    /// The visible range the glow was last stamped for — so it re-stamps when the
+    /// viewport scrolls new hidden tiles in, not only on mode/revision change.
+    var lastGlowRange: CellRange?
     /// Cached halftone wash textures, keyed by mode + a cell-size/appearance tag,
     /// so the screentone is built once and reused across every hidden tile.
     var glowTextureCache: [String: SKTexture] = [:]
+    /// Cached tile-background and glyph textures, keyed by role + pixel size +
+    /// colour (so light/dark and size changes miss the cache and rebuild, like
+    /// the glow cache). Every visible cell is an `SKSpriteNode` sharing one of
+    /// these — SpriteKit batches same-texture sprites into one draw call, far
+    /// cheaper than a per-cell `SKShapeNode` (the old hot spot on big boards).
+    var tileTextureCache: [String: SKTexture] = [:]
 
     /// The active color palette. Set by the host when the system appearance
     /// changes; updating it recolors the background and rebuilds the cells.
@@ -75,93 +95,14 @@ public final class BoardScene: SKScene {
 
     public override func update(_ currentTime: TimeInterval) {
         rebuildIfNeeded()
+        // Cull to the current viewport every frame: cheap no-op unless the camera
+        // moved (guarded by `builtRange`), and it catches pan, zoom, and the
+        // animated spring-back without each having to call in.
+        buildVisibleCells()
         refreshModeGlow()
     }
 
-    // MARK: Rendering
-
-    private func rebuildIfNeeded() {
-        if viewModel.gameID != lastGameID {
-            lastGameID = viewModel.gameID
-            lastAnimatedResultID = -1  // a fresh game can animate its own result
-            effectsLayer.removeAllChildren()
-            boardLayer.position = .zero  // clear any leftover shake offset
-            centerCamera()
-        }
-        if viewModel.revision != lastRevision {
-            lastRevision = viewModel.revision
-            rebuild()
-        }
-        // After the board reflects the final state, play the end-game effect
-        // once. No further revisions occur post-end, so this fires exactly once.
-        if let event = viewModel.lastResult, event.id != lastAnimatedResultID {
-            lastAnimatedResultID = event.id
-            playEndGameEffects(event.result)
-        }
-    }
-
-    private func rebuild() {
-        boardLayer.removeAllChildren()
-        let game = viewModel.game
-        for c in game.board.allCoords {
-            let node = cellNode(for: c, cell: game.board[c])
-            node.position = layout.center(of: c)
-            boardLayer.addChild(node)
-        }
-    }
-
-    private func cellNode(for coord: Coord, cell: Cell) -> SKNode {
-        let size = layout.cellSize
-        let container = SKNode()
-        let inset: CGFloat = 1
-        let rect = CGRect(
-            x: -size / 2 + inset, y: -size / 2 + inset,
-            width: size - inset * 2, height: size - inset * 2)
-        let tile = SKShapeNode(rect: rect, cornerRadius: 3)
-        tile.lineWidth = 0
-        tile.fillColor = fillColor(for: cell)
-        container.addChild(tile)
-
-        // The mine you hit gets the manga burst (icon motif, flat); other mines
-        // keep the plain ✸. Flagged cells get the swallowtail flag matching the
-        // toolbar toggle (a SpriteKit-drawn glyph, not a text character).
-        if cell.state == .revealed, cell.isMine, coord == viewModel.game.lossCoord {
-            container.addChild(burstMineNode(size: size))
-        } else if cell.state == .flagged {
-            container.addChild(flagNode(size: size, color: palette.flagGlyph))
-        } else if let glyph = glyph(for: cell) {
-            let label = SKLabelNode(text: glyph.text)
-            label.fontName = "Menlo-Bold"
-            label.fontSize = size * 0.5
-            label.fontColor = glyph.color
-            label.verticalAlignmentMode = .center
-            label.horizontalAlignmentMode = .center
-            container.addChild(label)
-        }
-        return container
-    }
-
-    private func fillColor(for cell: Cell) -> SKColor {
-        switch cell.state {
-        case .hidden, .flagged:
-            return palette.hiddenTile
-        case .revealed:
-            return cell.isMine ? palette.mineTile : palette.revealedTile
-        }
-    }
-
-    private func glyph(for cell: Cell) -> (text: String, color: SKColor)? {
-        switch cell.state {
-        case .flagged:
-            return nil  // drawn as a swallowtail flagNode, not a text glyph
-        case .hidden:
-            return nil
-        case .revealed:
-            if cell.isMine { return ("✸", palette.mineGlyph) }
-            guard cell.adjacentMines > 0 else { return nil }
-            return (String(cell.adjacentMines), palette.number(cell.adjacentMines))
-        }
-    }
+    // MARK: Rendering — cell nodes + viewport culling live in BoardScene+Render.
 
     /// Play a one-shot end-game animation (implemented in BoardScene+Effects).
     func playEndGameEffects(_ result: GameResult) {
@@ -181,20 +122,51 @@ public final class BoardScene: SKScene {
     private static let maxCellFractionOfViewport: CGFloat = 0.22
     /// Absolute ceiling so even on a huge display cells stay reasonable.
     private static let absoluteMaxCellSize: CGFloat = 140
+    /// Cap on how many cells the *initial* zoom shows at once. The render cost is
+    /// per-visible-cell (one SKNode each, culled to the viewport), so bounding the
+    /// visible count — not the cell size — is what keeps a fresh huge board fast
+    /// regardless of window size. A bigger window shows the same ~count of bigger
+    /// cells, not more cells.
+    private static let maxStartVisibleCells: CGFloat = 600
+    /// Absolute floor so a cell never *starts* smaller than comfortably tappable
+    /// (~28pt — a bit under the 44pt HIG target, fine for a grid you can zoom).
+    /// A huge board opens showing fewer, tappable cells rather than a sea of
+    /// untappable ones; the player can still zoom further out manually.
+    private static let minStartCellSize: CGFloat = 28
+    /// When the board exceeds the viewport, the start zoom is nudged in by this
+    /// factor so edge cells are clipped mid-cell — signalling the board continues
+    /// past the edges instead of looking complete. <1 because scale is
+    /// world-units-per-point (smaller scale = more zoomed in).
+    private static let edgePeekZoom: CGFloat = 0.92
 
     // Internal so BoardScene+Pan (which owns pan/zoom/clamp) can reach them.
     func centerCamera() {
         let board = layout.boardSize(width: viewModel.boardWidth, height: viewModel.boardHeight)
         cameraNode.position = CGPoint(x: board.width / 2, y: board.height / 2)
-        // Camera scale = world-units-per-point; bigger = more zoomed out.
-        // `fitScale` fits the whole board; the floor keeps cells from exceeding
-        // the max on-screen size (relative to the window) when the window is
-        // larger than the board.
+        // Camera scale = world-units-per-point; a larger scale is more zoomed out,
+        // and on-screen cell size = layout.cellSize / scale.
         let viewportMin = min(size.width, size.height)
+        // Biggest cells allowed (don't let a tiny board blow up) → smallest scale.
         let maxCell = min(
             Self.absoluteMaxCellSize, max(40, viewportMin * Self.maxCellFractionOfViewport))
         let cellFloor = layout.cellSize / maxCell
-        cameraNode.setScale(max(fitScale, cellFloor))
+        // Smallest on-screen cell the start zoom uses: large enough that no more
+        // than `maxStartVisibleCells` fit the viewport (so the node count is
+        // bounded on any window size), but never below the legibility floor.
+        let area = max(1, size.width * size.height)
+        let startCell = max(Self.minStartCellSize, (area / Self.maxStartVisibleCells).squareRoot())
+        let cellCeiling = layout.cellSize / startCell
+        // Prefer to fit the whole board, but clamp into [cellFloor, cellCeiling]:
+        // never bigger than maxCell, never so small the viewport shows > the cap.
+        var scale = min(max(fitScale, cellFloor), cellCeiling)
+        // When the board is bigger than the viewport (we're not fitting the whole
+        // thing), nudge the zoom in (smaller scale) so the edge cells are clipped
+        // mid-cell — a visual cue that the board continues past the edges. Skip it
+        // when the whole board fits (nothing beyond the edge to hint at).
+        if scale < fitScale {
+            scale *= Self.edgePeekZoom
+        }
+        cameraNode.setScale(scale)
     }
 
     /// Smallest scale that still fits the whole board (the zoomed-out limit).

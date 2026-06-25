@@ -20,11 +20,10 @@ struct DonpaApp: App {
             // from being clipped when the user shrinks the window.
             .frame(minWidth: 420, minHeight: 560)
             .onChange(of: viewModel.config) { _, config in
-                WindowSizer.growToFit(forBoard: config.width, by: config.height)
+                WindowSizer.growToFit(for: config)
             }
             .onAppear {
-                WindowSizer.growToFit(
-                    forBoard: viewModel.config.width, by: viewModel.config.height)
+                WindowSizer.growToFit(for: viewModel.config)
             }
             .sheet(isPresented: $showingAbout) { AboutView() }
         }

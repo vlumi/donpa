@@ -110,15 +110,17 @@ extension BoardScene {
         // mode, so a finished board keeps its texture instead of going flat.
         let visible = !viewModel.isPaused
         let mode = viewModel.inputMode
-        // The board revision changes as cells open, so the wash tracks which
-        // tiles are still hidden.
+        let range = visibleRange()
+        // Rebuilt when mode / live-visibility / board revision changes (which tiles
+        // are still hidden), OR when the viewport scrolls (new tiles in view).
         guard
             mode != lastGlowMode || visible != lastGlowLive
-                || viewModel.revision != lastGlowRevision
+                || viewModel.revision != lastGlowRevision || range != lastGlowRange
         else { return }
         lastGlowMode = mode
         lastGlowLive = visible
         lastGlowRevision = viewModel.revision
+        lastGlowRange = range
         glowLayer.removeAllChildren()
         guard visible else { return }
 
@@ -130,9 +132,11 @@ extension BoardScene {
         // too. The glow layer sits above the board (where the cell's flag glyph
         // lives), so for flagged tiles we re-stamp the flag on top of the wash
         // here — keeping the flag visible above its own halftone.
-        for c in viewModel.game.board.allCoords {
+        // Only the visible window (same cull as the tiles), so a huge board stamps
+        // ~one screenful of glow tiles, not one per hidden cell board-wide.
+        range.forEach { c in
             let state = viewModel.game.board[c].state
-            guard state == .hidden || state == .flagged else { continue }
+            guard state == .hidden || state == .flagged else { return }
             let center = layout.center(of: c)
             let tile = SKShapeNode(
                 rect: CGRect(x: -side / 2, y: -side / 2, width: side, height: side),

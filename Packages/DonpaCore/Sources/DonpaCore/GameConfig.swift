@@ -42,15 +42,18 @@ public enum ClassicPreset: String, CaseIterable, Sendable, Codable {
     }
 }
 
-/// Modern board sizes (square). Side lengths chosen via solver analysis.
+/// Modern board sizes (square). Side lengths chosen via solver analysis; `huge`
+/// is the big-board tier (100×100 = 10k cells) — far larger than any viewport, so
+/// it's panned/zoomed rather than shown whole, and it exercises viewport culling.
 public enum BoardSize: String, CaseIterable, Sendable, Codable {
-    case small, medium, large
+    case small, medium, large, huge
 
     var side: Int {
         switch self {
         case .small: return 9
         case .medium: return 16
         case .large: return 25
+        case .huge: return 100
         }
     }
 
@@ -59,6 +62,7 @@ public enum BoardSize: String, CaseIterable, Sendable, Codable {
         case .small: return String(localized: "Small", bundle: .module)
         case .medium: return String(localized: "Medium", bundle: .module)
         case .large: return String(localized: "Large", bundle: .module)
+        case .huge: return String(localized: "Huge", bundle: .module)
         }
     }
 }
