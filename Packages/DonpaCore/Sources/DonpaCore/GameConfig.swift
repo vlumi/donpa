@@ -142,8 +142,9 @@ public enum GameConfig: Hashable, Sendable, Codable {
     }
 
     /// The board geometry to play on. Square + bounded today; the shape/edges
-    /// axes will select hex/wrapped topologies later.
-    public var topology: any Topology {
+    /// axes will select hex/wrapped topologies later (all dense rectangles —
+    /// hence `RectangularTopology`, which `Board` requires for flat storage).
+    public var topology: any RectangularTopology {
         BoundedSquareTopology(width: width, height: height)
     }
 

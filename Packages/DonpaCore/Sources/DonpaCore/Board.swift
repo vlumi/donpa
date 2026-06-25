@@ -19,9 +19,8 @@ public struct Cell: Sendable {
 ///
 /// Every board topology is a dense `width × height` rectangle (bounded square,
 /// wrapped/torus square, and — when it lands — hex via offset storage), so this
-/// requires `RectangularTopology`. A non-rectangular topology is a programming
-/// error, not a supported case, so the init traps rather than carrying a sparse
-/// fallback.
+/// takes a `RectangularTopology`: the constraint is in the type, not a runtime
+/// check, so a non-rectangular board is simply unrepresentable.
 ///
 /// It's a **struct holding the array directly** (not an enum with an associated
 /// array): a write mutates the array in place via copy-on-write. An enum case
@@ -32,14 +31,9 @@ private struct CellStore: Sendable {
     private var cells: [Cell]
     private let rect: any RectangularTopology
 
-    init(topology: any Topology) {
-        guard let rect = topology as? RectangularTopology else {
-            preconditionFailure(
-                "Board requires a RectangularTopology (dense w×h storage); "
-                    + "\(type(of: topology)) is not one.")
-        }
-        self.rect = rect
-        self.cells = Array(repeating: Cell(), count: rect.cellCount)
+    init(topology: any RectangularTopology) {
+        self.rect = topology
+        self.cells = Array(repeating: Cell(), count: topology.cellCount)
     }
 
     subscript(_ c: Coord) -> Cell {
@@ -69,7 +63,7 @@ private struct CellStore: Sendable {
 /// are held in a flat row-major array (see `CellStore`) — every supported
 /// topology is a dense `width × height` rectangle.
 public struct Board: Sendable {
-    public let topology: any Topology
+    public let topology: any RectangularTopology
     private var cells: CellStore
 
     /// Mines on the board — set once in `placeMines`. Tracked rather than scanned
@@ -79,7 +73,7 @@ public struct Board: Sendable {
     /// mutation goes through the subscript), so it's O(1) per query.
     public private(set) var flagCount: Int = 0
 
-    public init(topology: any Topology) {
+    public init(topology: any RectangularTopology) {
         self.topology = topology
         self.cells = CellStore(topology: topology)
     }
