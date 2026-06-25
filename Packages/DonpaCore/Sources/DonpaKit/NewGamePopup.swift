@@ -41,9 +41,6 @@ struct NewGamePopup: View {
 
             card
                 .overlay(alignment: .topTrailing) { closeButton }
-                // Swallow taps on the card so they don't reach the backdrop.
-                .contentShape(Rectangle())
-                .onTapGesture {}
                 .padding(24)
         }
         #if os(macOS)

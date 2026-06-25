@@ -1,10 +1,17 @@
 import AppKit
+import DonpaCore
 
 /// Grows the key window when a board needs more room than the current window
 /// gives it — but never shrinks. Picking a bigger board enlarges the window to
 /// fit; picking a smaller one (or one that already fits) leaves the window
 /// alone, so a maximized or manually-sized window is respected. The board view
 /// itself centers and caps cell size within whatever space it's given.
+///
+/// **Classic boards only.** Classic presets vary in shape (9×9 … 30×16), so
+/// matching the window to the board is a nice fit. Modern boards are all square
+/// and range up to huge (100×100), where growing the window to fit would
+/// maximize it off-puttingly — so Modern keeps the current window and is
+/// panned/zoomed within it (the board is a viewport, not a frame).
 enum WindowSizer {
     /// Target board area (points) used to derive a comfortable cell size, so a
     /// freshly-opened small window lands at a substantial size rather than tiny.
@@ -19,7 +26,14 @@ enum WindowSizer {
     private static let chromeHeight: CGFloat = 140
     private static let boardPadding: CGFloat = 24
 
-    static func growToFit(forBoard cols: Int, by rows: Int) {
+    static func growToFit(for config: GameConfig) {
+        // Modern boards are square and can be huge — never resize the window for
+        // them; they're panned/zoomed inside whatever window the user has.
+        guard case .classic = config else { return }
+        growToFit(forBoard: config.width, by: config.height)
+    }
+
+    private static func growToFit(forBoard cols: Int, by rows: Int) {
         guard let window = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible }) else {
             return
         }

@@ -31,13 +31,21 @@ struct CounterReadout: View {
             a11y: "Mines remaining", tint: tint)
     }
 
-    /// The classic 3-digit whole-second timer (e.g. `047`), capped at 999 like
-    /// the original. The stored time keeps counting past that; precise tenths
-    /// (`m:ss.t`) appear in results, not here.
+    /// The whole-second timer. Under 1000s it's the classic zero-padded 3-digit
+    /// readout (e.g. `047`) — the nostalgic look for normal games. Beyond that
+    /// (long huge-board games easily exceed 999s) it rolls over to `m:ss`
+    /// (e.g. `17:23`) instead of sticking at 999. Capped at 99:59 so the field
+    /// can't grow without bound.
     static func time(centiseconds: Int, tint: Color) -> CounterReadout {
-        let seconds = min(999, max(0, centiseconds / 100))
-        return CounterReadout(
-            glyph: "⏱", value: String(format: "%03d", seconds), a11y: "Time, seconds", tint: tint)
+        let seconds = max(0, centiseconds / 100)
+        let value: String
+        if seconds < 1000 {
+            value = String(format: "%03d", seconds)
+        } else {
+            let capped = min(seconds, 99 * 60 + 59)
+            value = String(format: "%d:%02d", capped / 60, capped % 60)
+        }
+        return CounterReadout(glyph: "⏱", value: value, a11y: "Time, seconds", tint: tint)
     }
 }
 
