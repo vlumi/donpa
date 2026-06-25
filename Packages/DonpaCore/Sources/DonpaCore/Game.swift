@@ -37,7 +37,7 @@ public struct Game: Sendable {
     /// Lets the renderer focus the loss animation on the cell the player hit.
     public private(set) var lossCoord: Coord?
 
-    private let topology: any Topology
+    private let topology: any RectangularTopology
     private var minesPlaced = false
 
     public init(difficulty: Difficulty) {
@@ -56,7 +56,7 @@ public struct Game: Sendable {
     }
 
     /// For epic variants / tests: inject any topology directly.
-    public init(topology: any Topology, mineCount: Int) {
+    public init(topology: any RectangularTopology, mineCount: Int) {
         self.topology = topology
         self.board = Board(topology: topology)
         self.mineCount = mineCount
@@ -65,7 +65,7 @@ public struct Game: Sendable {
     /// Test seam: start a game with a known mine layout already placed, as if
     /// the first click had happened. Lets tests (and the solver suite) reason
     /// about specific boards deterministically. Not part of the public API.
-    init(topology: any Topology, mines: Set<Coord>) {
+    init(topology: any RectangularTopology, mines: Set<Coord>) {
         self.topology = topology
         var board = Board(topology: topology)
         board.placeMines(at: mines)

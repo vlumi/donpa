@@ -3,7 +3,7 @@
 /// 8-connected (Moore neighbourhood). Coordinates outside the rectangle are
 /// off-board, so `normalize` returns `nil` for them and `neighbors` simply
 /// omits them — this is what gives the board its edges and corners.
-public struct BoundedSquareTopology: Topology {
+public struct BoundedSquareTopology: RectangularTopology {
     public let width: Int
     public let height: Int
 
