@@ -181,8 +181,10 @@ extension BoardScene {
             y: halfH - pad - mm.height / 2 - framePad)
 
         // Viewport rectangle: map the visible cell range onto the minimap image.
-        // Board row 0 renders at the minimap's TOP (matching the image), so the
-        // viewport rect maps board-y from the top down: minimap-top minus y.
+        // `SKTexture(cgImage:)` renders the overview with board row 0 at the
+        // minimap BOTTOM on both platforms (verified on device: the image looks
+        // correct, the rect was the mirrored one). So map board-y bottom-up —
+        // minimap-bottom (−h/2) plus y — to track the image.
         let cellW = mm.width / CGFloat(boardW)
         let cellH = mm.height / CGFloat(boardH)
         let rw = CGFloat(range.maxX - range.minX + 1) * cellW
@@ -193,6 +195,6 @@ extension BoardScene {
         let midY = CGFloat(range.minY + range.maxY) / 2 + 0.5
         minimapViewport.position = CGPoint(
             x: -mm.width / 2 + midX * cellW,
-            y: mm.height / 2 - midY * cellH)
+            y: -mm.height / 2 + midY * cellH)
     }
 }
