@@ -2,10 +2,10 @@ import XCTest
 
 @testable import DonpaCore
 
-/// Big-board groundwork: `Board` stores cells in a flat array for rectangular
-/// topologies (the huge-board memory/speed path) and a dictionary otherwise.
-/// These pin the new seam — index mapping, storage parity, and that a 1M-cell
-/// board is actually usable (i.e. cell writes are O(1), not O(n) array copies).
+/// Big-board groundwork: `Board` stores cells in a flat row-major array, the
+/// huge-board memory/speed path. These pin the new seam — index mapping, storage
+/// behaviour, and that a 1M-cell board is actually usable (cell writes O(1), not
+/// O(n) array copies).
 final class FlatStorageTests: XCTestCase {
     // MARK: RectangularTopology index mapping
 

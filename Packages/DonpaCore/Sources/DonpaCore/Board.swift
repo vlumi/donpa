@@ -13,67 +13,51 @@ public struct Cell: Sendable {
     public var adjacentMines: Int = 0
 }
 
-/// Cell storage, abstracted so a board can hold its cells either as a dense flat
-/// array (for rectangular topologies — `index = y·width + x`, the memory/speed
-/// path for huge boards) or as a dictionary (the general fallback for any
-/// topology that isn't a dense `width × height` rectangle). Same semantics either
-/// way: get returns a default `Cell` for an unknown coord; set stores it.
+/// Dense flat cell storage for a rectangular board — `index = y·width + x`, the
+/// memory/speed path for huge boards (a 1000² dict was ~100MB+ and slow). Get
+/// returns a default `Cell` for an off-board coord; set ignores it.
 ///
-/// This is a **struct** (not an enum with an associated array): a flat write must
-/// mutate the array in place via copy-on-write. Holding the array in an enum case
-/// would force `self = .flat(cells, …)` on every write, which un-uniques the
-/// array reference and copies all N cells per write → O(n²). Two optionals (one
-/// of which is always set) keep the in-place mutation COW-friendly.
+/// Every board topology is a dense `width × height` rectangle (bounded square,
+/// wrapped/torus square, and — when it lands — hex via offset storage), so this
+/// requires `RectangularTopology`. A non-rectangular topology is a programming
+/// error, not a supported case, so the init traps rather than carrying a sparse
+/// fallback.
+///
+/// It's a **struct holding the array directly** (not an enum with an associated
+/// array): a write mutates the array in place via copy-on-write. An enum case
+/// would force `self = .flat(cells, …)` on every write, un-uniquing the array
+/// reference and copying all N cells per write → O(n²) (measured: 27s for a
+/// 500² placeMines; the struct form is ~0.5s).
 private struct CellStore: Sendable {
-    /// Flat row-major array; set iff the topology is rectangular.
-    private var flat: [Cell]?
-    /// Coordinate-keyed dictionary; set iff the topology is not rectangular.
-    private var sparse: [Coord: Cell]?
-    /// The `Coord ↔ index` mapping for the flat case.
-    private let rect: RectangularTopology?
+    private var cells: [Cell]
+    private let rect: any RectangularTopology
 
     init(topology: any Topology) {
-        if let rect = topology as? RectangularTopology {
-            self.flat = Array(repeating: Cell(), count: rect.cellCount)
-            self.sparse = nil
-            self.rect = rect
-        } else {
-            var cells: [Coord: Cell] = [:]
-            cells.reserveCapacity(topology.cellCount)
-            for c in topology.allCoords() { cells[c] = Cell() }
-            self.sparse = cells
-            self.flat = nil
-            self.rect = nil
+        guard let rect = topology as? RectangularTopology else {
+            preconditionFailure(
+                "Board requires a RectangularTopology (dense w×h storage); "
+                    + "\(type(of: topology)) is not one.")
         }
+        self.rect = rect
+        self.cells = Array(repeating: Cell(), count: rect.cellCount)
     }
 
     subscript(_ c: Coord) -> Cell {
         get {
-            if let rect {
-                guard let i = rect.index(of: c), let flat else { return Cell() }
-                return flat[i]
-            }
-            return sparse?[c] ?? Cell()
+            guard let i = rect.index(of: c) else { return Cell() }
+            return cells[i]
         }
         set {
-            if let rect {
-                // In-place array write: `flat` is the sole reference here, so COW
-                // mutates without copying — O(1) per write even on a 1M board.
-                guard let i = rect.index(of: c) else { return }
-                flat?[i] = newValue
-            } else {
-                sparse?[c] = newValue
-            }
+            // In-place array write: `cells` is uniquely referenced here, so COW
+            // mutates without copying — O(1) per write even on a 1M board.
+            guard let i = rect.index(of: c) else { return }
+            cells[i] = newValue
         }
     }
 
     /// All (coord, cell) pairs — for the persistence/derived accessors.
     func forEach(_ body: (Coord, Cell) -> Void) {
-        if let rect, let flat {
-            for (i, cell) in flat.enumerated() { body(rect.coord(at: i), cell) }
-        } else if let sparse {
-            for (c, cell) in sparse { body(c, cell) }
-        }
+        for (i, cell) in cells.enumerated() { body(rect.coord(at: i), cell) }
     }
 }
 
@@ -82,8 +66,8 @@ private struct CellStore: Sendable {
 /// `Board` knows *what* is in each cell and how to recompute adjacency, but it
 /// holds no game rules (those live in `Game`). All neighbour questions are
 /// delegated to the injected `Topology`, so the board is geometry-agnostic. Cells
-/// are held in a flat array for rectangular topologies (huge-board path) and a
-/// dictionary otherwise — see `CellStore`; the public API is identical either way.
+/// are held in a flat row-major array (see `CellStore`) — every supported
+/// topology is a dense `width × height` rectangle.
 public struct Board: Sendable {
     public let topology: any Topology
     private var cells: CellStore
