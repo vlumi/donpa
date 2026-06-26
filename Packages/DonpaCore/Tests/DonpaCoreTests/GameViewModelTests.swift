@@ -11,10 +11,12 @@ import XCTest
 final class GameViewModelTests: XCTestCase {
 
     /// Start a game with a safe first reveal at the origin (mines avoid the first
-    /// click), so the board is `.playing` with a known mine layout.
-    private func startedGame(_ config: GameConfig = .beginner) -> GameViewModel {
+    /// click), so the board is `.playing` with a known mine layout. Reveal computes
+    /// off the main thread, so await it before inspecting the board.
+    private func startedGame(_ config: GameConfig = .beginner) async -> GameViewModel {
         let vm = GameViewModel(config: config)
         vm.reveal(Coord(0, 0))
+        await vm.awaitPendingWork()
         return vm
     }
 
@@ -39,10 +41,11 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertGreaterThan(vm.revision, rev0, "a fresh game bumps revision (redraw)")
     }
 
-    func testRevealBumpsRevision() {
+    func testRevealBumpsRevision() async {
         let vm = GameViewModel(config: .beginner)
         let rev0 = vm.revision
         vm.reveal(Coord(0, 0))
+        await vm.awaitPendingWork()
         XCTAssertGreaterThan(vm.revision, rev0, "a reveal asks the scene to redraw")
     }
 
@@ -57,8 +60,8 @@ final class GameViewModelTests: XCTestCase {
 
     // MARK: Flag accounting
 
-    func testToggleFlagAdjustsFlagsRemaining() {
-        let vm = startedGame()
+    func testToggleFlagAdjustsFlagsRemaining() async {
+        let vm = await startedGame()
         let before = vm.flagsRemaining
         // Flag a still-hidden cell far from the opened origin region.
         let target = aHiddenCell(vm)
@@ -70,8 +73,8 @@ final class GameViewModelTests: XCTestCase {
 
     // MARK: Input guards — paused
 
-    func testRevealIsInertWhilePaused() {
-        let vm = startedGame()
+    func testRevealIsInertWhilePaused() async {
+        let vm = await startedGame()
         vm.pause()
         let revBefore = vm.revision
         let revealedBefore = vm.game.revealedSafeCount
@@ -82,16 +85,16 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertEqual(vm.revision, revBefore, "paused reveal must not request a redraw")
     }
 
-    func testToggleFlagIsInertWhilePaused() {
-        let vm = startedGame()
+    func testToggleFlagIsInertWhilePaused() async {
+        let vm = await startedGame()
         vm.pause()
         let flagsBefore = vm.flagsRemaining
         vm.toggleFlag(aHiddenCell(vm))
         XCTAssertEqual(vm.flagsRemaining, flagsBefore, "paused flag toggle must be inert")
     }
 
-    func testResumeReenablesInput() {
-        let vm = startedGame()
+    func testResumeReenablesInput() async {
+        let vm = await startedGame()
         vm.pause()
         vm.resume()
         let revBefore = vm.revision
@@ -103,16 +106,17 @@ final class GameViewModelTests: XCTestCase {
 
     /// After the first reveal the mine layout is fixed and public, so we can force
     /// a loss without relying on chance.
-    private func forceLoss(_ vm: GameViewModel) {
+    private func forceLoss(_ vm: GameViewModel) async {
         guard let mine = vm.game.board.mineCoords.first else {
             return XCTFail("no mines placed after first reveal")
         }
         vm.reveal(mine)
+        await vm.awaitPendingWork()
     }
 
-    func testForcedLossPublishesLossResultWithCoord() {
-        let vm = startedGame()
-        forceLoss(vm)
+    func testForcedLossPublishesLossResultWithCoord() async {
+        let vm = await startedGame()
+        await forceLoss(vm)
         XCTAssertEqual(vm.status, .lost)
         guard case .lost(let at)? = vm.lastResult?.result else {
             return XCTFail("a loss must publish a .lost result")
@@ -120,9 +124,9 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertEqual(at, vm.game.lossCoord, "the published loss coord matches the detonated mine")
     }
 
-    func testLossStopsTheClockAtAFixedValue() {
-        let vm = startedGame()
-        forceLoss(vm)
+    func testLossStopsTheClockAtAFixedValue() async {
+        let vm = await startedGame()
+        await forceLoss(vm)
         let frozen = vm.elapsedCentiseconds
         // The clock is stopped on game-over, so the value can't keep climbing.
         XCTAssertEqual(vm.elapsedCentiseconds, frozen, "elapsed is frozen once the game ends")
@@ -136,8 +140,8 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertNil(vm.snapshot(), "an untouched game produces no snapshot")
     }
 
-    func testRestoreRebuildsTheGameState() {
-        let vm = startedGame()
+    func testRestoreRebuildsTheGameState() async {
+        let vm = await startedGame()
         // Make some moves so the restored state is non-trivial.
         vm.toggleFlag(aHiddenCell(vm))
         let snapshot = try? XCTUnwrap(vm.snapshot())
@@ -157,14 +161,14 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertFalse(restored.isPaused, "a freshly restored game is live, not paused")
     }
 
-    func testRestoreClearsAnyPriorResult() {
+    func testRestoreClearsAnyPriorResult() async {
         // A finished VM that then restores a live snapshot must drop the stale result.
-        let live = startedGame()
+        let live = await startedGame()
         let snapshot = try? XCTUnwrap(live.snapshot())
         guard let snapshot else { return }
 
-        let other = startedGame()
-        forceLoss(other)
+        let other = await startedGame()
+        await forceLoss(other)
         XCTAssertNotNil(other.lastResult)
         other.restore(from: snapshot)
         XCTAssertNil(other.lastResult, "restoring a live game clears the prior outcome")
@@ -173,15 +177,15 @@ final class GameViewModelTests: XCTestCase {
 
     // MARK: Camera save/restore wiring
 
-    func testSnapshotCarriesTheLiveCameraView() {
-        let vm = startedGame()
+    func testSnapshotCarriesTheLiveCameraView() async {
+        let vm = await startedGame()
         let camera = CameraView(centerX: 0.4, centerY: 0.6, scale: 1.8)
         vm.cameraView = camera  // the scene keeps this current each frame
         XCTAssertEqual(vm.snapshot()?.camera, camera, "snapshot persists the live camera view")
     }
 
-    func testRestoreQueuesThePendingCameraForTheScene() {
-        let vm = startedGame()
+    func testRestoreQueuesThePendingCameraForTheScene() async {
+        let vm = await startedGame()
         let camera = CameraView(centerX: 0.2, centerY: 0.9, scale: 3.0)
         vm.cameraView = camera
         let snapshot = try? XCTUnwrap(vm.snapshot())
@@ -194,8 +198,8 @@ final class GameViewModelTests: XCTestCase {
             "restore queues the saved view for the scene to apply on rebuild")
     }
 
-    func testNewGameClearsThePendingCamera() {
-        let vm = startedGame()
+    func testNewGameClearsThePendingCamera() async {
+        let vm = await startedGame()
         vm.pendingCameraRestore = CameraView(centerX: 0.5, centerY: 0.5, scale: 2)
         vm.newGame()
         XCTAssertNil(vm.pendingCameraRestore, "a fresh game centres on its own fit, not a resume")

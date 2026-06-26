@@ -106,8 +106,36 @@ extension GameContent {
         // Result screen dims the board ONLY, leaving the control strip live.
         .overlay { mangaPanel }
         .overlay { pauseOverlay }
+        .overlay { processingOverlay }
         .animation(.easeInOut(duration: 0.2), value: viewModel.isPaused)
+        .animation(.easeInOut(duration: 0.15), value: viewModel.isComputing)
         .clipped()  // keep the dimmed backdrop within the board's bounds
+    }
+
+    /// Shown while a reveal/chord is being computed off the main thread (a big
+    /// board's flood-fill / mine placement). Board input is blocked meanwhile (the
+    /// view model's `canTakeInput`), so this both signals "working" and explains
+    /// why taps don't register — the UI stays responsive rather than freezing. A
+    /// small unobtrusive badge, not a full-screen block: the board shows through.
+    @ViewBuilder var processingOverlay: some View {
+        if viewModel.isComputing {
+            VStack {
+                Spacer()
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Working…", bundle: .module)
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(palette.counter)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.bottom, 24)
+            }
+            .transition(.opacity)
+            .allowsHitTesting(false)  // never intercept; input is gated in the model
+        }
     }
 
     /// Covers the board while paused so it can't be studied; tap (or the strip's

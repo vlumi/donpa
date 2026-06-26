@@ -75,6 +75,14 @@ public final class GameViewModel: ObservableObject {
     /// the pause overlay; distinct from `.notStarted`/finished states.
     @Published public private(set) var isPaused = false
 
+    /// True while a reveal/chord is being computed OFF the main thread (the heavy
+    /// flood-fill / mine placement on a huge board). The UI shows a processing
+    /// indicator and blocks further board input while this is set — so the screen
+    /// never freezes, but you also can't open a tile against a board that hasn't
+    /// finished updating (which could be a guaranteed mine). Cleared when the
+    /// computed result is applied.
+    @Published public private(set) var isComputing = false
+
     /// Whether the board currently extends beyond the viewport (so there's
     /// off-screen board a minimap could map). Published by `BoardScene` each frame
     /// as the camera pans/zooms; the chrome uses it to enable/disable the minimap
@@ -105,29 +113,79 @@ public final class GameViewModel: ObservableObject {
 
     // MARK: Actions
 
+    /// Board input is accepted only when not paused and not mid-compute. The
+    /// compute gate is what stops a tap landing on a board that hasn't finished
+    /// updating (e.g. opening a cell that the in-flight reveal is about to change).
+    private var canTakeInput: Bool { !isPaused && !isComputing }
+
+    /// Run a heavy, board-mutating action OFF the main thread, then apply the
+    /// result back on the main actor. `mutate` does the expensive work (flood-fill
+    /// / mine placement) on a *copy* of the game — `Game` is a `Sendable` value, so
+    /// this is safe — while the UI stays responsive and shows a processing
+    /// indicator (`isComputing`). `afterApply` runs on the main actor once the new
+    /// state is installed (timer start, end-game detection). A redraw is bumped at
+    /// the end. Input is gated by `canTakeInput`, so only one compute runs at once.
+    /// The in-flight compute, if any — held so tests can deterministically await
+    /// it (`await viewModel.awaitPendingWork()`). Not for production callers; the
+    /// scene just observes `isComputing`/`revision`.
+    private var pendingWork: Task<Void, Never>?
+
+    /// Await the current reveal/chord compute (test-only synchronization point).
+    public func awaitPendingWork() async {
+        await pendingWork?.value
+    }
+
+    private func computeOffMain(
+        _ mutate: @Sendable @escaping (inout Game) -> Void,
+        afterApply: @escaping () -> Void
+    ) {
+        isComputing = true
+        let snapshot = game  // O(1) COW copy; the mutation in the task triggers the copy
+        let generation = gameID  // if a new/restored game starts meanwhile, discard
+        pendingWork = Task {
+            // Do the expensive mutation off the main thread on a copy, then return
+            // the new value. `Game` is Sendable, so it crosses back safely.
+            let updated = await Task.detached {
+                var working = snapshot
+                mutate(&working)
+                return working
+            }.value
+            // A newGame/restore during the compute bumps gameID; its fresh board
+            // must not be clobbered by this now-stale result.
+            guard self.gameID == generation else { return }
+            self.game = updated
+            afterApply()
+            self.isComputing = false
+            self.bump()
+        }
+    }
+
     public func reveal(_ c: Coord) {
-        guard !isPaused, game.status == .notStarted || game.status == .playing else { return }
+        guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         let wasNotStarted = game.status == .notStarted
-        game.reveal(c)
-        if wasNotStarted, game.status == .playing { startTimer() }
-        finishIfEnded()
-        bump()
+        computeOffMain({ game in game.reveal(c) }) { [weak self] in
+            // The first reveal places mines and starts the clock.
+            if wasNotStarted, self?.game.status == .playing { self?.startTimer() }
+            self?.finishIfEnded()
+        }
     }
 
     public func toggleFlag(_ c: Coord) {
-        guard !isPaused, game.status == .notStarted || game.status == .playing else { return }
+        // Flagging is O(1), so it stays synchronous — but still blocked mid-compute
+        // (the board is changing under it) and when paused/finished.
+        guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         game.toggleFlag(c)
         bump()
     }
 
     public func chord(_ c: Coord) {
-        // Once the game is over (or paused), input is inert — chording a revealed
-        // cell must not re-publish the result (which would replay the end-game
-        // animation and panel on every post-loss click).
-        guard !isPaused, game.status == .playing else { return }
-        game.chord(c)
-        finishIfEnded()
-        bump()
+        // Once the game is over (or paused/computing), input is inert — chording a
+        // revealed cell must not re-publish the result (which would replay the
+        // end-game animation and panel on every post-loss click).
+        guard canTakeInput, game.status == .playing else { return }
+        computeOffMain({ game in game.chord(c) }) { [weak self] in
+            self?.finishIfEnded()
+        }
     }
 
     public func newGame(config: GameConfig? = nil) {
@@ -140,6 +198,9 @@ public final class GameViewModel: ObservableObject {
         // A brand-new game centres on its own default fit, not a resumed view.
         pendingCameraRestore = nil
         cameraView = nil
+        // gameID bumps below, so any in-flight reveal compute discards its result;
+        // clear the gate so the fresh board takes input immediately.
+        isComputing = false
         resetTimer()
         gameID &+= 1
         bump()
@@ -172,6 +233,7 @@ public final class GameViewModel: ObservableObject {
         accumulatedCentiseconds = snapshot.elapsedCentiseconds
         elapsedCentiseconds = snapshot.elapsedCentiseconds
         isPaused = false
+        isComputing = false  // discard any in-flight compute (gameID bumps below)
         if game.status == .playing { startTimer() } else { runningSince = nil }
         gameID &+= 1
         bump()
