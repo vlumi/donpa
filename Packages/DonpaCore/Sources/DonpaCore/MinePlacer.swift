@@ -15,7 +15,7 @@ public struct MinePlacer {
     ///     are kept mine-free.
     ///   - rng: injected for reproducible tests.
     public static func placeMines<R: RandomNumberGenerator>(
-        topology: any Topology,
+        topology: any RectangularTopology,
         mineCount: Int,
         firstClick: Coord,
         using rng: inout R
@@ -23,18 +23,32 @@ public struct MinePlacer {
         var safeZone: Set<Coord> = [firstClick]
         safeZone.formUnion(topology.neighbors(of: firstClick))
 
-        var candidates = topology.allCoords().filter { !safeZone.contains($0) }
+        let cellCount = topology.cellCount
+        let available = cellCount - safeZone.count
 
-        // If the board is so dense that mines can't all avoid the safe zone,
-        // fall back to allowing the neighbour ring (but never the clicked cell).
+        // Sparse case (the norm): rejection-sample random flat indices and skip the
+        // safe zone, until we have `mineCount` distinct mines. O(mineCount) and —
+        // crucially on a 1000² board — it never materializes or filters all 1M
+        // coords (the old `allCoords().filter`, slow through `AnySequence`). When
+        // the board is dense enough that rejection would thrash (few free cells
+        // left), fall back to shuffling the explicit candidate list.
+        if mineCount <= available, available > 0, mineCount * 4 <= available * 3 {
+            var mines = Set<Coord>()
+            mines.reserveCapacity(mineCount)
+            while mines.count < mineCount {
+                let c = topology.coord(at: Int.random(in: 0..<cellCount, using: &rng))
+                if !safeZone.contains(c) { mines.insert(c) }
+            }
+            return mines
+        }
+
+        // Dense fallback: build the candidate list (excluding the safe zone, or —
+        // if the board is so full that even that can't fit the mines — only the
+        // clicked cell), then partial-Fisher–Yates `mineCount` of them.
+        var candidates = topology.allCoords().filter { !safeZone.contains($0) }
         if candidates.count < mineCount {
             candidates = topology.allCoords().filter { $0 != firstClick }
         }
-
-        // Partial Fisher–Yates: we only need `mineCount` random elements, so shuffle
-        // just the first `mineCount` slots rather than the whole array. On a huge
-        // board that's O(mineCount) instead of O(cells) (e.g. ~130k vs ~1M swaps on
-        // a 1000² board), which is what made the first click slow at that size.
         let take = min(mineCount, candidates.count)
         for i in 0..<take {
             let j = Int.random(in: i..<candidates.count, using: &rng)

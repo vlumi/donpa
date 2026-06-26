@@ -39,4 +39,19 @@ final class MinePlacerTests: XCTestCase {
         XCTAssertEqual(mines.count, 8)
         XCTAssertFalse(mines.contains(firstClick))
     }
+
+    /// Placement on a 1M-cell board must scale with the mine count, not the cell
+    /// count — it rejection-samples indices rather than materializing + filtering
+    /// all 1,000,000 coords (the old `allCoords().filter`, slow through AnySequence).
+    func testHugeBoardPlacementIsFast() {
+        let t = BoundedSquareTopology(width: 1000, height: 1000)
+        var rng = SeededRNG(seed: 11)
+        let start = Date()
+        let mines = MinePlacer.placeMines(
+            topology: t, mineCount: 130_000, firstClick: Coord(500, 500), using: &rng)
+        let elapsed = Date().timeIntervalSince(start)
+        XCTAssertEqual(mines.count, 130_000)
+        // Generous ceiling for CI; the point is it's not an O(cells) blowup.
+        XCTAssertLessThan(elapsed, 2.0, "1M-board placement must scale with mines, not cells")
+    }
 }
