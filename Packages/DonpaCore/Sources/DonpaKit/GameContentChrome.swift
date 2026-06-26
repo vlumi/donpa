@@ -211,13 +211,14 @@ extension GameContent {
             .opacity(live || paused ? 1 : 0.4)
             .accessibilityIdentifier("game.pause")
         case .minimap:
-            // Toggle the corner minimap. Only meaningful when the board exceeds
-            // the viewport. On = accent tint + filled-in look; off = dim/secondary,
-            // so open/closed reads at a glance. (Opening the fullscreen overview
-            // is done from an expand icon ON the minimap, not the toolbar.)
+            // Toggle the corner minimap. Tint reflects ITS OWN on/off state — a
+            // fixed accent when shown, secondary when hidden — NOT `newGameTint`
+            // (that's the game-outcome colour for Retry; a map toggle has nothing
+            // to do with won/lost). Only meaningful when the board exceeds the
+            // viewport. (The fullscreen overview opens from an icon ON the minimap.)
             mapButton(
                 .minimap, help: "Overview map", id: "game.minimap",
-                tint: settings.showMinimap ? newGameTint : .secondary
+                tint: settings.showMinimap ? palette.counter : .secondary
             ) { settings.showMinimap.toggle() }
         }
     }
