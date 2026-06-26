@@ -288,8 +288,11 @@ extension BoardScene {
         #endif
     }
 
-    private var mineCoords: [Coord] {
-        viewModel.game.board.allCoords.filter { viewModel.game.board[$0].isMine }
+    // The board stores its mine set, so this is O(1) — not a full-board scan. (It
+    // was previously `allCoords.filter { isMine }`, which scanned all 1M cells on
+    // the main thread on every loss — the source of the XXXL detonation lag.)
+    private var mineCoords: Set<Coord> {
+        viewModel.game.board.mineCoords
     }
 
     func playLoss(trigger: Coord?, reduceMotion: Bool) {
@@ -340,9 +343,14 @@ extension BoardScene {
             return
         }
         // Ripple wave: each revealed cell flashes, delayed by distance from centre.
+        // Only VISIBLE revealed cells — iterating all of a won 1M board (and making
+        // a ripple node per revealed cell, ~900k) would freeze the main thread; the
+        // off-screen ripples are invisible anyway. Same cull as the loss shockwave.
         let speed = cell * 22
-        for c in viewModel.game.board.allCoords
-        where viewModel.game.board[c].state == .revealed {
+        let gameBoard = viewModel.game.board
+        let range = visibleRange()
+        range.forEach { c in
+            guard gameBoard[c].state == .revealed else { return }
             let p = layout.center(of: c)
             let delay = hypot(p.x - centre.x, p.y - centre.y) / speed
             effectsLayer.addChild(winRipple(at: p, size: cell, delay: delay))
