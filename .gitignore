@@ -23,3 +23,12 @@ coverage.lcov
 
 # Local Xcode build output (Makefile/Scripts run targets)
 .build-xcode/
+
+# Release artifacts + App Store Connect credentials (never committed).
+# The .p8 key lives in ~/.appstoreconnect/private_keys/, outside the repo;
+# .asc-config holds the (local) Key ID / Issuer ID.
+/dist/
+*.xcarchive
+*.ipa
+*.pkg
+Scripts/.asc-config

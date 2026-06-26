@@ -1,0 +1,13 @@
+# App Store Connect API credentials for Scripts/distribute.sh.
+#
+# Copy this to Scripts/.asc-config (gitignored) and fill in your key's IDs. The
+# .p8 itself is NOT referenced here — place it at
+#   ~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8
+# where `xcrun altool`/`notarytool` auto-discover it by Key ID.
+#
+# Get these once in App Store Connect → Users and Access → Integrations →
+# App Store Connect API: generate a key (App Manager role), note the Key ID and
+# the Issuer ID, and download the .p8 (downloadable only once).
+
+ASC_KEY_ID="XXXXXXXXXX"
+ASC_ISSUER_ID="00000000-0000-0000-0000-000000000000"
