@@ -292,23 +292,12 @@ extension BoardScene {
         viewModel.game.board.allCoords.filter { viewModel.game.board[$0].isMine }
     }
 
-    /// Fire the hit-tile explosion immediately on tap, before the off-thread reveal
-    /// runs (`playLoss` then skips re-detonating it and keeps the layer).
-    func detonateInstantly(at c: Coord) {
-        prefiredDetonation = c
-        effectsLayer.addChild(detonation(at: layout.center(of: c), size: layout.cellSize))
-    }
-
     func playLoss(trigger: Coord?, reduceMotion: Bool) {
         let cell = layout.cellSize
         let origin = trigger.map { layout.center(of: $0) }
 
-        // Detonate the hit tile FIRST so the explosion lands instantly — unless it
-        // was already pre-fired on tap (detonateInstantly), in which case don't
-        // double it.
-        let alreadyDetonated = (prefiredDetonation == trigger)
-        prefiredDetonation = nil
-        if let origin, !alreadyDetonated {
+        // Detonate the hit tile first so its explosion leads the shockwave.
+        if let origin {
             effectsLayer.addChild(detonation(at: origin, size: cell))
         }
         if reduceMotion {

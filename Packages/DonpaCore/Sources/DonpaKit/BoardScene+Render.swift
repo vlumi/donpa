@@ -17,7 +17,6 @@ extension BoardScene {
         if viewModel.gameID != lastGameID {
             lastGameID = viewModel.gameID
             lastAnimatedResultID = -1  // a fresh game can animate its own result
-            prefiredDetonation = nil  // a new game discards any pending hit-tile FX
             effectsLayer.removeAllChildren()
             boardLayer.position = .zero  // clear any leftover shake offset
             // A resumed game adopts its saved view as the sticky restore target
@@ -149,14 +148,14 @@ extension BoardScene {
     /// glyphs — the swallowtail flag and the loss burst-mine — stay as their own
     /// nodes (few on screen at once, not worth caching).
     /// Instant mine-hit feedback: swap the tapped cell's node to its revealed
-    /// hit-mine face (mine-tile background + burst-mine mark) and play the
-    /// detonation over it — synchronously on tap, before the off-thread reveal runs.
-    /// When that reveal lands and rebuilds, it produces the identical node, so this
-    /// is just an early preview of the final state, not a divergent one.
+    /// hit-mine face (mine-tile background + burst-mine mark) synchronously on tap,
+    /// before the off-thread reveal runs — so the burst-mine tile appears the moment
+    /// you click, not when the whole board finishes revealing. The detonation FX and
+    /// the other mines follow when the reveal lands (playLoss); we deliberately
+    /// DON'T play the explosion here, so it doesn't cover the just-shown tile.
+    /// The rebuild after the reveal produces an identical node, so the handoff is
+    /// seamless.
     func revealHitTileInstantly(at c: Coord) {
-        // The same revealed-mine face cellNode() builds for the loss coord once the
-        // reveal lands (mine-tile background + burst mark), so this early preview
-        // matches the final node.
         let size = layout.cellSize
         cellNodes[c]?.removeFromParent()
         let container = SKNode()
@@ -169,7 +168,6 @@ extension BoardScene {
         container.position = layout.center(of: c)
         boardLayer.addChild(container)
         cellNodes[c] = container
-        detonateInstantly(at: c)
     }
 
     private func cellNode(for coord: Coord, cell: Cell) -> SKNode {
