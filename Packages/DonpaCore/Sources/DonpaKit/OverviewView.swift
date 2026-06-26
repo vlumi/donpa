@@ -42,13 +42,9 @@ struct OverviewView: View {
                 let aspect = board.width / board.height
                 let w = min(maxW, maxH * aspect)
                 let h = w / aspect
-                let frame = CGRect(
-                    x: (geo.size.width - w) / 2, y: (geo.size.height - h) / 2,
-                    width: w, height: h)
 
                 overviewImage
                     .frame(width: w, height: h)
-                    .position(x: frame.midX, y: frame.midY)
                     .overlay(alignment: .topLeading) {
                         // The "you are here" rectangle, in the image's own space.
                         Rectangle()
@@ -58,17 +54,19 @@ struct OverviewView: View {
                                 width: max(6, viewport.width * w),
                                 height: max(6, viewport.height * h)
                             )
-                            .offset(
-                                x: frame.minX + viewport.minX * w, y: frame.minY + viewport.minY * h
-                            )
+                            .offset(x: viewport.minX * w, y: viewport.minY * h)
                             .allowsHitTesting(false)
                     }
-                    // Drag or tap anywhere on the board image → recentre there.
+                    // Drag/tap navigates — gesture is bound to the IMAGE only (in
+                    // its own 0…w/0…h space), so taps OUTSIDE the image fall through
+                    // to the backdrop and close the overview.
                     .contentShape(Rectangle())
                     .gesture(
                         DragGesture(minimumDistance: 0)
-                            .onChanged { value in jump(to: value.location, in: frame) }
+                            .onChanged { value in jumpInImage(value.location, w: w, h: h) }
                     )
+                    // Centre the image (and only the image) in the screen.
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
 
             closeButton
@@ -97,13 +95,12 @@ struct OverviewView: View {
         return max(1, min(maxDim / max(1, side), 6))
     }
 
-    /// Map a point in the image frame to a normalized board point and drive the
-    /// camera there live; re-read the resulting viewport so the box tracks it.
-    private func jump(to point: CGPoint, in frame: CGRect) {
-        guard frame.width > 0, frame.height > 0 else { return }
-        let nx = (point.x - frame.minX) / frame.width
-        let ny = (point.y - frame.minY) / frame.height
-        scene.centerCamera(onNormalizedPoint: CGPoint(x: nx, y: ny))
+    /// Map a point in the image's own space (0…w, 0…h) to a normalized board
+    /// point and drive the camera there live; re-read the resulting viewport so
+    /// the box tracks where the (clamped) camera landed.
+    private func jumpInImage(_ point: CGPoint, w: CGFloat, h: CGFloat) {
+        guard w > 0, h > 0 else { return }
+        scene.centerCamera(onNormalizedPoint: CGPoint(x: point.x / w, y: point.y / h))
         viewport = scene.visibleNormalizedRect()
     }
 

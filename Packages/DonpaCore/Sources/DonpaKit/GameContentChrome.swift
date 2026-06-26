@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The in-game action buttons, in their fixed far-edge → toggle order. (Starting
 /// a different game lives in the status-bar config badge, not here.)
-enum GameAction: Hashable { case home, retry, pause, minimap, overview }
+enum GameAction: Hashable { case home, retry, pause, minimap }
 
 /// The in-game chrome for `GameContent`: the thin top metrics strip, the board +
 /// its control strip (actions + flag toggle), and the pause overlay. Split out of
@@ -186,7 +186,7 @@ extension GameContent {
     /// The fixed action sequence, far-edge → toggle. Always the same set (so the
     /// control row never reflows); Pause and Minimap are just disabled when they
     /// don't apply (off-play / board fits the viewport).
-    private var actionOrder: [GameAction] { [.home, .retry, .pause, .minimap, .overview] }
+    private var actionOrder: [GameAction] { [.home, .retry, .pause, .minimap] }
 
     @ViewBuilder
     private func actionView(_ action: GameAction) -> some View {
@@ -211,17 +211,14 @@ extension GameContent {
             .opacity(live || paused ? 1 : 0.4)
             .accessibilityIdentifier("game.pause")
         case .minimap:
-            // Toggle the corner minimap; tint reflects on/off. Both map buttons
-            // are only meaningful when the board exceeds the viewport.
+            // Toggle the corner minimap. Only meaningful when the board exceeds
+            // the viewport. On = accent tint + filled-in look; off = dim/secondary,
+            // so open/closed reads at a glance. (Opening the fullscreen overview
+            // is done from an expand icon ON the minimap, not the toolbar.)
             mapButton(
                 .minimap, help: "Overview map", id: "game.minimap",
                 tint: settings.showMinimap ? newGameTint : .secondary
             ) { settings.showMinimap.toggle() }
-        case .overview:
-            // Open the fullscreen navigable overview.
-            mapButton(.expand, help: "Open overview", id: "game.overview") {
-                navigator.showingOverview = true
-            }
         }
     }
 
