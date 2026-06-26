@@ -115,6 +115,12 @@ extension BoardScene {
     func buildVisibleCells() {
         let range = visibleRange()
         guard range != builtRange else { return }
+        // An empty/inverted range (min > max) can occur transiently before the
+        // scene has a valid size or the camera has been clamped onto the board —
+        // e.g. a palette push during launch, or a restored camera mid-settle.
+        // `minY...maxY` would trap on an inverted range, so bail this frame; a
+        // later frame (with a real size / clamped camera) builds correctly.
+        guard range.minX <= range.maxX, range.minY <= range.maxY else { return }
         let game = viewModel.game
 
         // Remove cells that have scrolled out of view.
