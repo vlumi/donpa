@@ -8,10 +8,41 @@ import SpriteKit
 /// back to the margin edge when the gesture ends. On an axis where the board
 /// already fits the viewport the camera locks to centre (no drift).
 extension BoardScene {
-    /// Resting breathing room past each edge, in scene units.
-    private var edgeMargin: CGFloat { layout.cellSize / 2 }
-    /// How far past the margin a rubber-band pull can reach.
+    /// Base resting breathing room past each edge, in scene units — a small peek
+    /// past the board so you're not panning flush to the last row/column.
+    private var baseEdgeMargin: CGFloat { layout.cellSize / 2 }
+    /// How far past the resting margin a rubber-band pull can reach.
     private var maxPull: CGFloat { layout.cellSize * 2 }
+
+    /// Resting margin per edge, in SCENE units (loX/hiX = left/right, loY/hiY =
+    /// bottom/top, since scene y is up).
+    private struct EdgeMargins {
+        var loX: CGFloat
+        var hiX: CGFloat
+        var loY: CGFloat
+        var hiY: CGFloat
+    }
+
+    /// The minimap is a fixed-size HUD in the top-LEFT corner, so the left edge
+    /// (loX) and top edge (hiY) get enough extra margin that panning into that
+    /// corner rests the board edge clear of the minimap — it then covers empty
+    /// space, not cells. The minimap's footprint is in screen points, converted to
+    /// scene units at the current zoom, so the on-screen gap is consistent across
+    /// window size and zoom (the previous fixed scene-unit margin looked
+    /// window-relative because a constant world gap renders as a varying screen
+    /// gap). The other two edges keep the base peek.
+    private func edgeMargins() -> EdgeMargins {
+        let base = baseEdgeMargin
+        guard let mm = minimapCornerFootprint() else {
+            return EdgeMargins(loX: base, hiX: base, loY: base, hiY: base)
+        }
+        let scale = cameraNode.xScale
+        return EdgeMargins(
+            loX: max(base, mm.width * scale),  // left edge clears the minimap width
+            hiX: base,
+            loY: base,
+            hiY: max(base, mm.height * scale))  // top edge clears the minimap height
+    }
 
     /// Pan the camera by a view-space translation delta (recognizer units, which
     /// share the scene's point system under `.resizeFill`).
@@ -86,15 +117,15 @@ extension BoardScene {
     }
 
     /// Clamp a proposed camera centre to the resting bounds: the viewport may sit
-    /// up to `edgeMargin` past each board edge, no further. On an axis where the
-    /// board is smaller than the viewport the camera locks to the board centre,
+    /// up to the per-edge margin past each board edge, no further. On an axis where
+    /// the board is smaller than the viewport the camera locks to the board centre,
     /// so a stray drag can't nudge a board that already fits.
     func clampedCameraPosition(_ proposed: CGPoint) -> CGPoint {
-        axisMap(proposed) { center, halfBoard, halfView in
+        axisMap(proposed) { center, halfBoard, halfView, loMargin, hiMargin in
             let slack = halfBoard - halfView
             if slack <= 0 { return halfBoard }  // board fits this axis → lock to centre
             return min(
-                max(center, halfView - edgeMargin), 2 * halfBoard - halfView + edgeMargin)
+                max(center, halfView - loMargin), 2 * halfBoard - halfView + hiMargin)
         }
     }
 
@@ -102,11 +133,11 @@ extension BoardScene {
     /// (the further out, the more resistance), so a pull beyond the resting bound
     /// feels elastic. `panEnded()` springs it back to the margin afterward.
     private func rubberBandedCameraPosition(_ proposed: CGPoint) -> CGPoint {
-        axisMap(proposed) { center, halfBoard, halfView in
+        axisMap(proposed) { center, halfBoard, halfView, loMargin, hiMargin in
             let slack = halfBoard - halfView
             if slack <= 0 { return halfBoard }  // board fits → lock to centre
-            let lo = halfView - edgeMargin  // resting edges (margin applied)
-            let hi = 2 * halfBoard - halfView + edgeMargin
+            let lo = halfView - loMargin  // resting edges (per-edge margin applied)
+            let hi = 2 * halfBoard - halfView + hiMargin
             // Diminishing returns: overshoot d maps to maxPull*(1 - 1/(1+d/maxPull)).
             func resist(_ overshoot: CGFloat) -> CGFloat {
                 maxPull * (1 - 1 / (1 + overshoot / maxPull))
@@ -117,18 +148,21 @@ extension BoardScene {
         }
     }
 
-    /// Apply a per-axis transform of (proposed centre, half-board, half-view) to
-    /// both axes — the shared shape of the clamp and the rubber-band.
+    /// Apply a per-axis transform of (proposed centre, half-board, half-view, low-
+    /// edge margin, high-edge margin) to both axes — the shared shape of the clamp
+    /// and the rubber-band. Margins are per-edge (the minimap corner gets more).
     private func axisMap(
-        _ proposed: CGPoint, _ transform: (CGFloat, CGFloat, CGFloat) -> CGFloat
+        _ proposed: CGPoint,
+        _ transform: (CGFloat, CGFloat, CGFloat, CGFloat, CGFloat) -> CGFloat
     ) -> CGPoint {
         let board = layout.boardSize(width: viewModel.boardWidth, height: viewModel.boardHeight)
         let scale = cameraNode.xScale
+        let m = edgeMargins()
         let halfViewW = size.width / 2 * scale
         let halfViewH = size.height / 2 * scale
         return CGPoint(
-            x: transform(proposed.x, board.width / 2, halfViewW),
-            y: transform(proposed.y, board.height / 2, halfViewH)
+            x: transform(proposed.x, board.width / 2, halfViewW, m.loX, m.hiX),
+            y: transform(proposed.y, board.height / 2, halfViewH, m.loY, m.hiY)
         )
     }
 }
