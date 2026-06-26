@@ -100,8 +100,8 @@ data-model ceiling (proven in tests) but not yet a selectable preset.
 - [x] **Flat cell storage** (#86): `Board` uses a flat `[Cell]` (row-major
       `y·w+x`) for `RectangularTopology` boards instead of `[Coord: Cell]`. No
       dict fallback — every topology (incl. hex, later) is a dense rectangle, so
-      the constraint is in the type. (`Cell` not bit-packed yet — a plain struct
-      array is already ~100× the dict's headroom; pack only if profiling demands.)
+      the constraint is in the type. `Cell` is **bit-packed into one byte** (state
+      + isMine + adjacentMines), so a 1000² board's array is ~1MB, not ~16MB.
 - [x] **Viewport culling** (#87): `BoardScene` builds only the cells in the
       camera rect (+margin), refreshed each frame; the mode-glow is culled too.
 - [x] **Texture batching** (#87): cells are `SKSpriteNode`s over cached shared
@@ -128,8 +128,18 @@ data-model ceiling (proven in tests) but not yet a selectable preset.
       is the epic-but-finishable summit (~2–4h for a strong player, resumable via
       save). **XXXL (1000², 1M)** is the sandbox flex — effectively unwinnable
       (~15–40h, no undo), a "we go to a million" spectacle. Keys are geometry-based,
-      so the rename didn't touch existing scores. **XXXL unprofiled on real hardware
-      — confirm first-render/build at 1M in the device pass.**
+      so the rename didn't touch existing scores.
+- [x] **Made playable at 1M cells** (the XXL/XXXL fallout pass): reveal/chord
+      compute **off the main thread** (no UI freeze; a debounced processing overlay
+      gates input); mines **pre-armed off-thread on New Game** so the first tap is
+      instant (it only relocates mines under the click, keeping first-click safety);
+      placement + end-game reveal **scale with the mine count, not the cell count**
+      (rejection-sampled placement, `Board` stores its mine set, viewport-culled
+      loss/win effects); minimap overview **renders off the main thread**; autosave
+      debounced + written on a background actor. Plus an inverted-range crash fix
+      and a zoom-out overshoot fix. Mine-hit shows the burst tile instantly; Esc
+      closes the overview. **Still TODO on real hardware:** confirm the XXXL (1M)
+      first-arm/reveal feel and profile baseline memory (Instruments).
 
 **Deferred / still open (pick from these):**
 

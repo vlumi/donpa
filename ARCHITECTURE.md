@@ -46,6 +46,22 @@ Win/progress is **O(1)**: `Game.revealedSafeCount` is an incremental counter, so
 `checkWin` never scans the board. This matters for the v0.2 huge-board goal and
 already backs the progress-% feature.
 
+**Value semantics are what make the off-main compute safe.** On a 1M-cell board a
+reveal (flood-fill) or a new board (mine placement) is too heavy to run on the
+main thread without freezing the UI, so `GameViewModel` mutates a *copy* of the
+`Game` off the main thread (`computeOffMain`: snapshot the value — O(1) COW —
+mutate in a `Task.detached`, then assign the result back on the `@MainActor` and
+bump `revision`). Because `Game`/`Board` are `Sendable` value types this needs no
+locking. A `gameID` generation guard discards a stale result if a new/restored
+game started meanwhile; an `isComputing` flag gates input (and drives a debounced
+overlay) so a tap can't land on a board mid-update. Mines are **pre-armed** off
+the main thread on New Game (no safe zone yet), and the first reveal only
+*relocates* any mines under the click — so the cost is paid while the player looks
+at the fresh board, not on their first tap. To keep these paths O(mineCount) not
+O(cells): `Cell` is bit-packed to one byte (cheap copy), `Board` stores its mine
+set, placement rejection-samples indices, and the end-game effects are
+viewport-culled.
+
 ## SpriteKit board, owned by SwiftUI, input handled natively
 
 The board is a single long-lived `BoardScene` (`SKScene` + `SKCameraNode`) in a
