@@ -118,6 +118,16 @@ public final class GameViewModel: ObservableObject {
     /// updating (e.g. opening a cell that the in-flight reveal is about to change).
     private var canTakeInput: Bool { !isPaused && !isComputing }
 
+    /// Whether a reveal of `c` would detonate a mine right now — i.e. input is
+    /// accepted, the game is live, and `c` is a still-hidden mine. The scene uses
+    /// this to fire the explosion instantly on tap (before the off-thread reveal),
+    /// for immediate feedback. Mines exist only after the first click (always
+    /// safe), so this is false on the opening move.
+    public func canRevealHitMine(_ c: Coord) -> Bool {
+        guard canTakeInput, game.status == .playing else { return false }
+        return game.board[c].state == .hidden && game.board[c].isMine
+    }
+
     /// Run a heavy, board-mutating action OFF the main thread, then apply the
     /// result back on the main actor. `mutate` does the expensive work (flood-fill
     /// / mine placement) on a *copy* of the game — `Game` is a `Sendable` value, so

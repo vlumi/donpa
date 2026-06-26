@@ -292,13 +292,24 @@ extension BoardScene {
         viewModel.game.board.allCoords.filter { viewModel.game.board[$0].isMine }
     }
 
+    /// Fire the hit-tile explosion immediately on tap, before the off-thread reveal
+    /// runs, for instant feedback. `playLoss` then skips re-detonating it (and won't
+    /// clear the layer). Called from the tap handler when the cell is a known mine.
+    func detonateInstantly(at c: Coord) {
+        prefiredDetonation = c
+        effectsLayer.addChild(detonation(at: layout.center(of: c), size: layout.cellSize))
+    }
+
     func playLoss(trigger: Coord?, reduceMotion: Bool) {
         let cell = layout.cellSize
         let origin = trigger.map { layout.center(of: $0) }
 
-        // Detonate the hit tile FIRST so the explosion lands instantly, before any
-        // of the (potentially many) other-mine pulses are built.
-        if let origin {
+        // Detonate the hit tile FIRST so the explosion lands instantly — unless it
+        // was already pre-fired on tap (detonateInstantly), in which case don't
+        // double it.
+        let alreadyDetonated = (prefiredDetonation == trigger)
+        prefiredDetonation = nil
+        if let origin, !alreadyDetonated {
             effectsLayer.addChild(detonation(at: origin, size: cell))
         }
         if reduceMotion {

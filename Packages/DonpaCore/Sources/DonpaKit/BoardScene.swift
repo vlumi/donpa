@@ -28,6 +28,9 @@ public final class BoardScene: SKScene {
     var lastRevision = -1
     var lastGameID = -1
     var lastAnimatedResultID = -1
+    /// A mine tile whose explosion was fired on tap (instant feedback), so the loss
+    /// animation won't clear or re-detonate it. Cleared when that animation runs.
+    var prefiredDetonation: Coord?
     /// The cell nodes currently built and parented under `boardLayer`, keyed by
     /// coord. Only **visible** cells (camera rect + margin) are built — on a huge
     /// board the live node count stays ~one screenful regardless of board size.
@@ -145,7 +148,8 @@ public final class BoardScene: SKScene {
 
     /// Play a one-shot end-game animation (implemented in BoardScene+Effects).
     func playEndGameEffects(_ result: GameResult) {
-        effectsLayer.removeAllChildren()
+        // Keep a tap-prefired detonation; otherwise clear stale effects first.
+        if prefiredDetonation == nil { effectsLayer.removeAllChildren() }
         switch result {
         case .lost(let at): playLoss(trigger: at, reduceMotion: Self.prefersReducedMotion)
         case .won: playWin(reduceMotion: Self.prefersReducedMotion)
@@ -267,7 +271,11 @@ public final class BoardScene: SKScene {
             viewModel.chord(c)
         } else {
             switch viewModel.inputMode {
-            case .reveal: viewModel.reveal(c)
+            case .reveal:
+                // Fire the explosion now (before the off-thread reveal) on a known
+                // mine, for instant feedback. No-op on the always-safe first click.
+                if viewModel.canRevealHitMine(c) { detonateInstantly(at: c) }
+                viewModel.reveal(c)
             case .flag: viewModel.toggleFlag(c)
             }
         }

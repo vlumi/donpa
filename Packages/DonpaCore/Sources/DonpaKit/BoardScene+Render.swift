@@ -17,6 +17,7 @@ extension BoardScene {
         if viewModel.gameID != lastGameID {
             lastGameID = viewModel.gameID
             lastAnimatedResultID = -1  // a fresh game can animate its own result
+            prefiredDetonation = nil  // a new game discards any pending hit-tile FX
             effectsLayer.removeAllChildren()
             boardLayer.position = .zero  // clear any leftover shake offset
             // A resumed game adopts its saved view as the sticky restore target
