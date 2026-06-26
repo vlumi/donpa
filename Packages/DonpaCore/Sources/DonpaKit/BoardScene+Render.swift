@@ -148,6 +148,30 @@ extension BoardScene {
     /// rather than each being a freshly-tessellated `SKShapeNode`. The rare drawn
     /// glyphs — the swallowtail flag and the loss burst-mine — stay as their own
     /// nodes (few on screen at once, not worth caching).
+    /// Instant mine-hit feedback: swap the tapped cell's node to its revealed
+    /// hit-mine face (mine-tile background + burst-mine mark) and play the
+    /// detonation over it — synchronously on tap, before the off-thread reveal runs.
+    /// When that reveal lands and rebuilds, it produces the identical node, so this
+    /// is just an early preview of the final state, not a divergent one.
+    func revealHitTileInstantly(at c: Coord) {
+        // The same revealed-mine face cellNode() builds for the loss coord once the
+        // reveal lands (mine-tile background + burst mark), so this early preview
+        // matches the final node.
+        let size = layout.cellSize
+        cellNodes[c]?.removeFromParent()
+        let container = SKNode()
+        let tile = SKSpriteNode(texture: tileTexture(forFill: palette.mineTile))
+        tile.size = CGSize(width: size, height: size)
+        container.addChild(tile)
+        let burst = burstMineNode(size: size)
+        burst.zPosition = 1
+        container.addChild(burst)
+        container.position = layout.center(of: c)
+        boardLayer.addChild(container)
+        cellNodes[c] = container
+        detonateInstantly(at: c)
+    }
+
     private func cellNode(for coord: Coord, cell: Cell) -> SKNode {
         let size = layout.cellSize
         let container = SKNode()
@@ -208,7 +232,11 @@ extension BoardScene {
     /// the previous `SKShapeNode`), cached by fill colour + pixel size. ~3 distinct
     /// textures (hidden / revealed / mine) shared across every tile on screen.
     private func tileTexture(for cell: Cell) -> SKTexture {
-        let fill = fillColor(for: cell)
+        tileTexture(forFill: fillColor(for: cell))
+    }
+
+    /// The cached rounded-rect tile background for a given fill colour.
+    func tileTexture(forFill fill: SKColor) -> SKTexture {
         let px = max(4, Int(layout.cellSize.rounded()))
         let key = "tile-\(px)-\(fill)"
         if let cached = tileTextureCache[key] { return cached }
