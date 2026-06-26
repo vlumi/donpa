@@ -4,6 +4,8 @@ import SwiftUI
 
 #if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
 #endif
 
 /// The actual game surface. Lives below `GameView`'s `.preferredColorScheme`, so
@@ -38,6 +40,13 @@ struct GameContent: View {
     /// background, Home, pause — save immediately; this is the safety net.)
     private let autosaveHeartbeat =
         Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+
+    #if os(macOS)
+    /// Fires just before the app quits — the macOS save-on-exit hook (see body).
+    private var appWillTerminate: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
+    }
+    #endif
 
     /// One resolved scheme for both the chrome and the scene. Driven by the
     /// user's setting; `.system` reads the real OS appearance (see
@@ -95,6 +104,16 @@ struct GameContent: View {
         .onReceive(autosaveHeartbeat) { _ in
             if scenePhase == .active { autosave() }
         }
+        // macOS quit (⌘Q) doesn't reliably deliver a `scenePhase` change before the
+        // process exits, so the background-save above can miss it. `willTerminate`
+        // fires synchronously just before exit; the atomic write completes in time.
+        // (iOS gets this via the `scenePhase` background transition instead.)
+        #if os(macOS)
+        .onReceive(appWillTerminate) { _ in
+            viewModel.pause()
+            autosave()
+        }
+        #endif
         .sheet(isPresented: $navigator.showingScores) {
             ScoreboardView(scoreboard: scoreboard, available: windowSize)
         }
