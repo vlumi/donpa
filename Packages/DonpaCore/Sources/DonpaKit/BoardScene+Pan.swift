@@ -1,3 +1,4 @@
+import DonpaCore
 import SpriteKit
 
 /// Camera pan / zoom and the edge handling that keeps the board in view.
@@ -102,6 +103,34 @@ extension BoardScene {
 
     /// Reset camera to fit and center the whole board (e.g. on new game).
     public func resetCamera() { centerCamera() }
+
+    /// The current camera view (centre as a normalized board point + zoom scale),
+    /// for persistence. Normalized in scene space (camera y is up here, no flip),
+    /// so `applyCameraView` round-trips it without convention mismatch. nil when
+    /// the board has no size yet.
+    func currentCameraView() -> CameraView? {
+        let board = layout.boardSize(width: viewModel.boardWidth, height: viewModel.boardHeight)
+        guard board.width > 0, board.height > 0 else { return nil }
+        return CameraView(
+            centerX: Double(cameraNode.position.x / board.width),
+            centerY: Double(cameraNode.position.y / board.height),
+            scale: Double(cameraNode.xScale))
+    }
+
+    /// Apply a saved camera view: set the zoom, then place the centre by
+    /// denormalizing against the *current* board size and clamping to the current
+    /// viewport's resting bounds — so a view saved at one window size restores
+    /// sensibly at another (same board point centred, same zoom, never off-board).
+    func applyCameraView(_ view: CameraView) {
+        let board = layout.boardSize(width: viewModel.boardWidth, height: viewModel.boardHeight)
+        // Clamp the zoom into the same range manual zoom allows.
+        let scale = min(max(CGFloat(view.scale), 0.1), maxZoomOutScale)
+        cameraNode.setScale(scale)
+        let target = CGPoint(
+            x: CGFloat(view.centerX) * board.width,
+            y: CGFloat(view.centerY) * board.height)
+        cameraNode.position = clampedCameraPosition(target)
+    }
 
     /// Centre the camera on a normalized board point (0…1 in each axis), keeping
     /// the current zoom — the fullscreen overview drives this live as the player

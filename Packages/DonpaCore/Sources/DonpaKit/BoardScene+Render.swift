@@ -19,7 +19,14 @@ extension BoardScene {
             lastAnimatedResultID = -1  // a fresh game can animate its own result
             effectsLayer.removeAllChildren()
             boardLayer.position = .zero  // clear any leftover shake offset
-            centerCamera()
+            // A resumed game restores its saved view (consume the one-shot); any
+            // other new game centres on the default fit.
+            if let saved = viewModel.pendingCameraRestore {
+                viewModel.pendingCameraRestore = nil
+                applyCameraView(saved)
+            } else {
+                centerCamera()
+            }
         }
         if viewModel.revision != lastRevision {
             lastRevision = viewModel.revision

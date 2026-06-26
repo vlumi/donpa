@@ -128,6 +128,9 @@ public final class BoardScene: SKScene {
         buildVisibleCells()
         refreshModeGlow()
         refreshMinimap()
+        // Keep the view model's live camera view current (after any restore in
+        // rebuildIfNeeded), so an autosave persists where the player is looking.
+        viewModel.cameraView = currentCameraView()
     }
 
     // MARK: Rendering — cell nodes + viewport culling live in BoardScene+Render.
