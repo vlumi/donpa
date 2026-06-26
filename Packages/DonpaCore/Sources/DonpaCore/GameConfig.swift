@@ -42,27 +42,39 @@ public enum ClassicPreset: String, CaseIterable, Sendable, Codable {
     }
 }
 
-/// Modern board sizes (square). Side lengths chosen via solver analysis; `huge`
-/// is the big-board tier (100×100 = 10k cells) — far larger than any viewport, so
-/// it's panned/zoomed rather than shown whole, and it exercises viewport culling.
+/// Modern board sizes (square), named as shirt sizes (XS…XXXL). Side lengths
+/// chosen via solver analysis. XS–XL (9…100) are the "sane" playable tiers. XXL
+/// (300×300 = 90k cells) is the epic-but-finishable summit — a few resumable
+/// sessions for a strong player. XXXL (1000×1000 = 1M cells) is the sandbox flex:
+/// effectively unwinnable (~15–40h even on the easiest density, with no undo), a
+/// "we go to a million" spectacle rather than a tuned challenge. Both XXL/XXXL are
+/// far larger than any viewport — panned/zoomed via the minimap, and the stress
+/// case for viewport culling. Labels show verbatim in EN/FI; Japanese uses size
+/// words (極小…超巨大) instead of the Latin letters.
 public enum BoardSize: String, CaseIterable, Sendable, Codable {
-    case small, medium, large, huge
+    case xs, s, m, l, xl, xxl, xxxl
 
     var side: Int {
         switch self {
-        case .small: return 9
-        case .medium: return 16
-        case .large: return 25
-        case .huge: return 100
+        case .xs: return 9
+        case .s: return 16
+        case .m: return 25
+        case .l: return 50
+        case .xl: return 100
+        case .xxl: return 300
+        case .xxxl: return 1000
         }
     }
 
     public var label: String {
         switch self {
-        case .small: return String(localized: "Small", bundle: .module)
-        case .medium: return String(localized: "Medium", bundle: .module)
-        case .large: return String(localized: "Large", bundle: .module)
-        case .huge: return String(localized: "Huge", bundle: .module)
+        case .xs: return String(localized: "XS", bundle: .module)
+        case .s: return String(localized: "S", bundle: .module)
+        case .m: return String(localized: "M", bundle: .module)
+        case .l: return String(localized: "L", bundle: .module)
+        case .xl: return String(localized: "XL", bundle: .module)
+        case .xxl: return String(localized: "XXL", bundle: .module)
+        case .xxxl: return String(localized: "XXXL", bundle: .module)
         }
     }
 }

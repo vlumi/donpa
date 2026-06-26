@@ -15,16 +15,19 @@ final class GameConfigTests: XCTestCase {
     // MARK: Modern = size × density (mine = round(density × cells))
 
     func testModernMineCounts() {
-        // Medium 16×16 = 256 cells. easy .10→26, normal .13→33, hard .16→41,
+        // S = 16×16 = 256 cells. easy .10→26, normal .13→33, hard .16→41,
         // brutal .19→49, insane .22→56.
-        XCTAssertEqual(GameConfig.modern(.medium, .easy).mineCount, 26)
-        XCTAssertEqual(GameConfig.modern(.medium, .normal).mineCount, 33)
-        XCTAssertEqual(GameConfig.modern(.medium, .hard).mineCount, 41)
-        XCTAssertEqual(GameConfig.modern(.medium, .brutal).mineCount, 49)
-        XCTAssertEqual(GameConfig.modern(.medium, .insane).mineCount, 56)
-        // Square sizes.
-        XCTAssertEqual(tuple(GameConfig.modern(.small, .easy)).prefix(2), [9, 9])
-        XCTAssertEqual(tuple(GameConfig.modern(.large, .easy)).prefix(2), [25, 25])
+        XCTAssertEqual(GameConfig.modern(.s, .easy).mineCount, 26)
+        XCTAssertEqual(GameConfig.modern(.s, .normal).mineCount, 33)
+        XCTAssertEqual(GameConfig.modern(.s, .hard).mineCount, 41)
+        XCTAssertEqual(GameConfig.modern(.s, .brutal).mineCount, 49)
+        XCTAssertEqual(GameConfig.modern(.s, .insane).mineCount, 56)
+        // Square sizes across the ladder (XS=9, M=25, L=50, XL=100, XXL=300, XXXL=1000).
+        XCTAssertEqual(tuple(GameConfig.modern(.xs, .easy)).prefix(2), [9, 9])
+        XCTAssertEqual(tuple(GameConfig.modern(.m, .easy)).prefix(2), [25, 25])
+        XCTAssertEqual(tuple(GameConfig.modern(.l, .easy)).prefix(2), [50, 50])
+        XCTAssertEqual(tuple(GameConfig.modern(.xxl, .easy)).prefix(2), [300, 300])
+        XCTAssertEqual(tuple(GameConfig.modern(.xxxl, .easy)).prefix(2), [1000, 1000])
     }
 
     func testEveryModernConfigLeavesASafeCell() {
@@ -43,9 +46,10 @@ final class GameConfigTests: XCTestCase {
     }
 
     func testModernStorageKeyEncodesShapeEdgesAndGeometry() {
-        // Medium·Hard = 16×16, 41 mines, square + bounded.
+        // S·Hard = 16×16, 41 mines, square + bounded. The key is geometry-based,
+        // so renaming the size case (medium→s) leaves existing scores' keys intact.
         XCTAssertEqual(
-            GameConfig.modern(.medium, .hard).storageKey, "v1|modern|sq|bounded|16x16|m41")
+            GameConfig.modern(.s, .hard).storageKey, "v1|modern|sq|bounded|16x16|m41")
     }
 
     func testEveryConfigHasAUniqueStorageKey() {
@@ -62,20 +66,20 @@ final class GameConfigTests: XCTestCase {
     func testKeyIsGeometryBoundNotTierBound() {
         // Two modern configs with the same density token but different sizes
         // must have different keys (because geometry differs).
-        let small = GameConfig.modern(.small, .normal).storageKey
-        let large = GameConfig.modern(.large, .normal).storageKey
-        XCTAssertNotEqual(small, large)
+        let xs = GameConfig.modern(.xs, .normal).storageKey
+        let m = GameConfig.modern(.m, .normal).storageKey
+        XCTAssertNotEqual(xs, m)
         // And the key contains the concrete geometry, not the word "normal".
-        XCTAssertTrue(small.contains("9x9"))
-        XCTAssertFalse(small.contains("normal"))
+        XCTAssertTrue(xs.contains("9x9"))
+        XCTAssertFalse(xs.contains("normal"))
     }
 
     // MARK: Labels
 
     func testLabels() {
         XCTAssertEqual(GameConfig.classic(.beginner).label, "Beginner")
-        // Density labels are sapper-themed tiers (.hard => "Veteran").
-        XCTAssertEqual(GameConfig.modern(.medium, .hard).label, "Medium · Veteran")
+        // Size label is the shirt-size letter; density is a sapper tier.
+        XCTAssertEqual(GameConfig.modern(.s, .hard).label, "S · Veteran")
     }
 
     // MARK: Rank insignia + modern accessors
@@ -93,8 +97,8 @@ final class GameConfigTests: XCTestCase {
     }
 
     func testModernAccessors() {
-        let modern = GameConfig.modern(.large, .brutal)
-        XCTAssertEqual(modern.modernSize, .large)
+        let modern = GameConfig.modern(.m, .brutal)
+        XCTAssertEqual(modern.modernSize, .m)
         XCTAssertEqual(modern.modernDensity, .brutal)
         // Classic configs have neither.
         XCTAssertNil(GameConfig.classic(.expert).modernSize)
@@ -109,11 +113,11 @@ final class GameConfigTests: XCTestCase {
     // MARK: A config builds a playable, winnable game (integration sanity)
 
     func testModernConfigProducesAPlayableGame() {
-        var game = Game(config: .modern(.small, .easy))
+        var game = Game(config: .modern(.xs, .easy))
         var rng = SeededRNG(seed: 3)
         game.reveal(Coord(4, 4), using: &rng)
         XCTAssertNotEqual(game.status, .lost, "first click must be safe")
-        XCTAssertEqual(game.mineCount, GameConfig.modern(.small, .easy).mineCount)
+        XCTAssertEqual(game.mineCount, GameConfig.modern(.xs, .easy).mineCount)
     }
 
     private func tuple(_ c: GameConfig) -> [Int] { [c.width, c.height, c.mineCount] }

@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Ace": {
+      "comment": "Difficulty tier 4/5, sapper skill ladder. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ässä"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "達人"
+          }
+        }
+      }
+    },
     "Beginner": {
       "comment": "Classic difficulty preset (9x9, 10 mines). NEEDS REVIEW: ja/fi.",
       "localizations": {
@@ -14,23 +31,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "初級"
-          }
-        }
-      }
-    },
-    "Intermediate": {
-      "comment": "Classic difficulty preset (16x16, 40 mines). NEEDS REVIEW: ja/fi.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Keskitaso"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "中級"
           }
         }
       }
@@ -52,55 +52,32 @@
         }
       }
     },
-    "Small": {
-      "comment": "Modern board size (9x9). NEEDS REVIEW: ja/fi.",
+    "Intermediate": {
+      "comment": "Classic difficulty preset (16x16, 40 mines). NEEDS REVIEW: ja/fi.",
       "localizations": {
         "fi": {
           "stringUnit": {
-            "state": "translated",
-            "value": "S"
+            "state": "needs_review",
+            "value": "Keskitaso"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "小"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "S"
+            "value": "中級"
           }
         }
       }
     },
-    "Medium": {
-      "comment": "Modern board size (16x16). NEEDS REVIEW: ja/fi.",
+    "L": {
+      "comment": "Modern board size L (50x50). ja=大.",
       "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "M"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "中"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "M"
+            "value": "L"
           }
-        }
-      }
-    },
-    "Large": {
-      "comment": "Modern board size (25x25). NEEDS REVIEW: ja/fi.",
-      "localizations": {
+        },
         "fi": {
           "stringUnit": {
             "state": "translated",
@@ -111,80 +88,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "大"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L"
-          }
-        }
-      }
-    },
-    "Trainee": {
-      "comment": "Difficulty tier 1/5 (easiest), sapper skill ladder. NEEDS REVIEW: ja/fi.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Alokas"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "新兵"
-          }
-        }
-      }
-    },
-    "Sapper": {
-      "comment": "Difficulty tier 2/5, sapper skill ladder (the character's own role). NEEDS REVIEW: ja/fi.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Pioneeri"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "工兵"
-          }
-        }
-      }
-    },
-    "Veteran": {
-      "comment": "Difficulty tier 3/5, sapper skill ladder. NEEDS REVIEW: ja/fi.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Veteraani"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "古参兵"
-          }
-        }
-      }
-    },
-    "Ace": {
-      "comment": "Difficulty tier 4/5, sapper skill ladder. NEEDS REVIEW: ja/fi.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Ässä"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "達人"
           }
         }
       }
@@ -206,8 +109,105 @@
         }
       }
     },
-    "Huge": {
-      "comment": "Modern board size (100x100). NEEDS REVIEW: ja/fi.",
+    "M": {
+      "comment": "Modern board size M (25x25). ja=中.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "中"
+          }
+        }
+      }
+    },
+    "S": {
+      "comment": "Modern board size S (16x16). ja=小.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "小"
+          }
+        }
+      }
+    },
+    "Sapper": {
+      "comment": "Difficulty tier 2/5, sapper skill ladder (the character's own role). NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pioneeri"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "工兵"
+          }
+        }
+      }
+    },
+    "Trainee": {
+      "comment": "Difficulty tier 1/5 (easiest), sapper skill ladder. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alokas"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "新兵"
+          }
+        }
+      }
+    },
+    "Veteran": {
+      "comment": "Difficulty tier 3/5, sapper skill ladder. NEEDS REVIEW: ja/fi.",
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Veteraani"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "古参兵"
+          }
+        }
+      }
+    },
+    "XL": {
+      "comment": "Modern board size XL (100x100). ja=特大.",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -217,7 +217,7 @@
         },
         "fi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "XL"
           }
         },
@@ -225,6 +225,75 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "特大"
+          }
+        }
+      }
+    },
+    "XS": {
+      "comment": "Modern board size XS (9x9). ja=極小.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XS"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XS"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "極小"
+          }
+        }
+      }
+    },
+    "XXL": {
+      "comment": "Modern board size XXL (300x300, epic-finishable). ja=超特大.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XXL"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XXL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "超特大"
+          }
+        }
+      }
+    },
+    "XXXL": {
+      "comment": "Modern board size XXXL (1000x1000, sandbox). ja=超巨大.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XXXL"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XXXL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "超巨大"
           }
         }
       }
