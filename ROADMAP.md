@@ -100,8 +100,8 @@ data-model ceiling (proven in tests) but not yet a selectable preset.
 - [x] **Flat cell storage** (#86): `Board` uses a flat `[Cell]` (row-major
       `y·w+x`) for `RectangularTopology` boards instead of `[Coord: Cell]`. No
       dict fallback — every topology (incl. hex, later) is a dense rectangle, so
-      the constraint is in the type. (`Cell` not bit-packed yet — a plain struct
-      array is already ~100× the dict's headroom; pack only if profiling demands.)
+      the constraint is in the type. `Cell` is **bit-packed into one byte** (state
+      + isMine + adjacentMines), so a 1000² board's array is ~1MB, not ~16MB.
 - [x] **Viewport culling** (#87): `BoardScene` builds only the cells in the
       camera rect (+margin), refreshed each frame; the mode-glow is culled too.
 - [x] **Texture batching** (#87): cells are `SKSpriteNode`s over cached shared
@@ -122,6 +122,24 @@ data-model ceiling (proven in tests) but not yet a selectable preset.
       a normalized board point) + zoom, so resuming a saved game returns to where
       you were looking. Window-independent — re-clamped to the current viewport, so
       it restores sensibly even if the window/device changed since the save.
+- [x] **Full size ladder, shirt-sized**: `BoardSize` is XS/S/M/L/XL/XXL/XXXL
+      (9/16/25/50/100/300/1000²; ja 極小/小/中/大/特大/超特大/超巨大). XS-floor leaves
+      headroom below; the new **L (50²)** fills the old 25→100 gap. **XXL (300², 90k)**
+      is the epic-but-finishable summit (~2–4h for a strong player, resumable via
+      save). **XXXL (1000², 1M)** is the sandbox flex — effectively unwinnable
+      (~15–40h, no undo), a "we go to a million" spectacle. Keys are geometry-based,
+      so the rename didn't touch existing scores.
+- [x] **Made playable at 1M cells** (the XXL/XXXL fallout pass): reveal/chord
+      compute **off the main thread** (no UI freeze; a debounced processing overlay
+      gates input); mines **pre-armed off-thread on New Game** so the first tap is
+      instant (it only relocates mines under the click, keeping first-click safety);
+      placement + end-game reveal **scale with the mine count, not the cell count**
+      (rejection-sampled placement, `Board` stores its mine set, viewport-culled
+      loss/win effects); minimap overview **renders off the main thread**; autosave
+      debounced + written on a background actor. Plus an inverted-range crash fix
+      and a zoom-out overshoot fix. Mine-hit shows the burst tile instantly; Esc
+      closes the overview. **Still TODO on real hardware:** confirm the XXXL (1M)
+      first-arm/reveal feel and profile baseline memory (Instruments).
 
 **Deferred / still open (pick from these):**
 
@@ -129,11 +147,13 @@ data-model ceiling (proven in tests) but not yet a selectable preset.
 - [ ] **Minimap drag-to-reposition** — move the HUD out of the way (the toggle
       hides it; dragging relocates it). Immediate next minimap follow-up.
 - [ ] **Zoomed-all-the-way-out perf** (slice 2c): `SKTileMapNode` / single drawn
-      texture for when the whole huge board is visible (culling can't help then —
-      every cell is on screen). Partly mitigated by bounded zoom-out; only needed
-      to *allow* fully-zoomed-out on very large boards.
-- [ ] **Large presets beyond 100²** (up to 1000²) — now unblocked by the minimap;
-      extend `BoardSize` (XXL/XXXL · 超特大…). Likely wants slice 2c first.
+      texture for when the whole huge board is visible. **Likely superseded:**
+      bounded zoom-out clamps cells to ≥22pt, so you can never get every cell of a
+      huge board on screen at once (the visible node count is capped by viewport
+      area ÷ 22² ≈ 3k–18k regardless of board size), and the whole-board glance is
+      served by the minimap/overview texture. Only needed if we ever *lift* the
+      zoom-out cap on giant boards. Confirm the node-count ceiling is smooth in the
+      real-device pass before closing this out.
 - [ ] **Minimap polish** — higher-contrast revealed shading; handedness-aware
       corner.
 - [ ] **Real-device test pass before 1.0** — everything so far is iPhone-15-sim +

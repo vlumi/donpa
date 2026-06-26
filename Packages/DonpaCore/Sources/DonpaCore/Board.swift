@@ -5,12 +5,46 @@ public enum CellState: Sendable {
     case flagged
 }
 
-/// One cell's full state.
+/// One cell's full state, bit-packed into a single byte — `state` (2 bits),
+/// `isMine` (1 bit), `adjacentMines` (4 bits, 0…8). On a 1000² board this makes
+/// the cell array 1MB instead of 16MB (the unpacked struct strides 16 bytes), so
+/// the whole board copies ~16× cheaper (matters for the per-move COW copy and
+/// overall memory). The public API is unchanged — `state`/`isMine`/`adjacentMines`
+/// are still settable vars — so nothing outside this file is affected.
 public struct Cell: Sendable {
-    public var state: CellState = .hidden
-    public var isMine: Bool = false
+    private var bits: UInt8 = 0  // [ adjacent:4 | mine:1 | state:2 ], bit 7 unused
+
+    public init() {}
+
+    public var state: CellState {
+        get {
+            switch bits & 0b11 {
+            case 1: return .revealed
+            case 2: return .flagged
+            default: return .hidden
+            }
+        }
+        set {
+            let code: UInt8
+            switch newValue {
+            case .hidden: code = 0
+            case .revealed: code = 1
+            case .flagged: code = 2
+            }
+            bits = (bits & ~0b11) | code
+        }
+    }
+
+    public var isMine: Bool {
+        get { bits & 0b100 != 0 }
+        set { bits = newValue ? (bits | 0b100) : (bits & ~0b100) }
+    }
+
     /// Number of mines among this cell's neighbours. Valid once mines are placed.
-    public var adjacentMines: Int = 0
+    public var adjacentMines: Int {
+        get { Int(bits >> 3) }
+        set { bits = (bits & 0b111) | (UInt8(newValue) << 3) }
+    }
 }
 
 /// Dense flat cell storage for a rectangular board — `index = y·width + x`, the
@@ -66,6 +100,10 @@ public struct Board: Sendable {
     public let topology: any RectangularTopology
     private var cells: CellStore
 
+    /// The mine coordinates, stored once in `placeMines`. Kept as a set so the
+    /// "reveal/flag every mine" end-game paths and `mineCoords` iterate only the
+    /// mines (e.g. ~130k) rather than scanning every cell (e.g. 1M) on a huge board.
+    private var minePositions: Set<Coord> = []
     /// Mines on the board — set once in `placeMines`. Tracked rather than scanned
     /// so it's O(1) (matters on huge boards).
     public private(set) var mineCount: Int = 0
@@ -97,7 +135,7 @@ public struct Board: Sendable {
 
     /// Coordinate sets for persistence — compact alternative to encoding the full
     /// cell dict (a 1000² save would be huge otherwise).
-    public var mineCoords: Set<Coord> { coords { $0.isMine } }
+    public var mineCoords: Set<Coord> { minePositions }
     public var revealedCoords: Set<Coord> { coords { $0.state == .revealed } }
     public var flaggedCoords: Set<Coord> { coords { $0.state == .flagged } }
 
@@ -126,17 +164,54 @@ public struct Board: Sendable {
         for c in flagged where onBoard.contains(c) { self[c].state = .flagged }
     }
 
-    /// Places mines on the given coordinates and recomputes every adjacency count.
+    /// Places mines on the given coordinates and recomputes adjacency counts.
+    ///
+    /// Both passes iterate only the MINES, not every cell — so on a huge board the
+    /// cost scales with the mine count (e.g. ~130k), not the cell count (1M). Mines
+    /// are flagged in one pass; adjacency is then *scattered* outward (each mine
+    /// bumps its neighbours' counts) rather than gathered per cell (each cell
+    /// summing its neighbours), turning an N×8 scan into mines×8.
+    ///
+    /// Assumes a clean board (fresh `Board`, or a fresh one in `restore`): cells
+    /// start with `isMine == false` and `adjacentMines == 0`, so no reset pass is
+    /// needed. `placeMines` is only ever called once per board, on a clean one.
     public mutating func placeMines(at mineCoords: Set<Coord>) {
-        for c in topology.allCoords() {
-            cells[c].isMine = mineCoords.contains(c)
-        }
-        for c in topology.allCoords() {
-            let count = topology.neighbors(of: c).reduce(0) { acc, n in
-                acc + (cells[n].isMine ? 1 : 0)
-            }
-            cells[c].adjacentMines = count
-        }
+        minePositions = mineCoords
         mineCount = mineCoords.count
+        for c in mineCoords {
+            cells[c].isMine = true
+            for n in topology.neighbors(of: c) {
+                cells[n].adjacentMines += 1
+            }
+        }
+    }
+
+    /// Move any mines inside `safeZone` to random cells outside it, fixing adjacency
+    /// locally — so a board whose mines were placed *before* the first click (no
+    /// safe zone known then) can still guarantee a clear opening region. Only the
+    /// moved mines and their neighbours are touched (a handful), so it's O(1)-ish
+    /// regardless of board size — the point of pre-placing the board off-thread and
+    /// doing only this cheap fix-up on the first tap. Assumes mines are already
+    /// placed; `safeZone` is small (the clicked cell + its neighbours).
+    public mutating func relocateMines<R: RandomNumberGenerator>(
+        outOf safeZone: Set<Coord>, using rng: inout R
+    ) {
+        let toMove = minePositions.intersection(safeZone)
+        guard !toMove.isEmpty else { return }
+        let cellCount = topology.cellCount
+        for old in toMove {
+            // Remove the mine at `old`.
+            cells[old].isMine = false
+            for n in topology.neighbors(of: old) { cells[n].adjacentMines -= 1 }
+            minePositions.remove(old)
+            // Find a fresh home: a non-safe, currently-mine-free cell.
+            var new = topology.coord(at: Int.random(in: 0..<cellCount, using: &rng))
+            while safeZone.contains(new) || cells[new].isMine || new == old {
+                new = topology.coord(at: Int.random(in: 0..<cellCount, using: &rng))
+            }
+            cells[new].isMine = true
+            for n in topology.neighbors(of: new) { cells[n].adjacentMines += 1 }
+            minePositions.insert(new)
+        }
     }
 }

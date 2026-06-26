@@ -175,7 +175,11 @@ public final class Settings: ObservableObject {
             defaults.string(forKey: appearanceKey).flatMap(AppearancePreference.init(rawValue:))
             ?? .system
         mode = defaults.string(forKey: modeKey).flatMap(GameMode.init(rawValue:)) ?? .classic
-        modernSize = defaults.string(forKey: sizeKey).flatMap(BoardSize.init(rawValue:)) ?? .medium
+        // Size raw values were renamed to shirt sizes (small/medium/… → xs/s/…),
+        // so a value persisted under an old name no longer decodes; it falls back
+        // to `.s` (16², the long-time default). Self-healing — the next size pick
+        // persists the new name.
+        modernSize = defaults.string(forKey: sizeKey).flatMap(BoardSize.init(rawValue:)) ?? .s
         modernDensity =
             defaults.string(forKey: densityKey).flatMap(Density.init(rawValue:)) ?? .normal
         classicPreset =

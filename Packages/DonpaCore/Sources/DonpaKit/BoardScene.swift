@@ -267,7 +267,11 @@ public final class BoardScene: SKScene {
             viewModel.chord(c)
         } else {
             switch viewModel.inputMode {
-            case .reveal: viewModel.reveal(c)
+            case .reveal:
+                // On a known mine, show the hit-mine tile + explosion instantly
+                // (before the off-thread reveal). No-op on the safe first click.
+                if viewModel.canRevealHitMine(c) { revealHitTileInstantly(at: c) }
+                viewModel.reveal(c)
             case .flag: viewModel.toggleFlag(c)
             }
         }

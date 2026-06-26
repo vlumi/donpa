@@ -288,14 +288,18 @@ extension BoardScene {
         #endif
     }
 
-    private var mineCoords: [Coord] {
-        viewModel.game.board.allCoords.filter { viewModel.game.board[$0].isMine }
+    // The board stores its mine set, so this is O(1) — not a full-board scan. (It
+    // was previously `allCoords.filter { isMine }`, which scanned all 1M cells on
+    // the main thread on every loss — the source of the XXXL detonation lag.)
+    private var mineCoords: Set<Coord> {
+        viewModel.game.board.mineCoords
     }
 
     func playLoss(trigger: Coord?, reduceMotion: Bool) {
         let cell = layout.cellSize
         let origin = trigger.map { layout.center(of: $0) }
 
+        // Detonate the hit tile first so its explosion leads the shockwave.
         if let origin {
             effectsLayer.addChild(detonation(at: origin, size: cell))
         }
@@ -303,9 +307,12 @@ extension BoardScene {
             if let origin { effectsLayer.addChild(flash(at: origin, size: cell)) }
             return
         }
-        // Other mines pulse, staggered outward from the trigger.
+        // Other mines pulse, staggered outward — but ONLY visible ones. Off-screen
+        // pulses are invisible, so building one per mine on a huge board (~130k)
+        // froze the main thread; culling to the viewport keeps it to a screenful.
+        let range = visibleRange()
         let speed = cell * 18  // points/sec the shock wave travels
-        for c in mineCoords where c != trigger {
+        for c in mineCoords where c != trigger && range.contains(c) {
             let p = layout.center(of: c)
             let delay = origin.map { hypot(p.x - $0.x, p.y - $0.y) / speed } ?? 0
             let pulse = minePulse(at: p, size: cell)
@@ -336,9 +343,14 @@ extension BoardScene {
             return
         }
         // Ripple wave: each revealed cell flashes, delayed by distance from centre.
+        // Only VISIBLE revealed cells — iterating all of a won 1M board (and making
+        // a ripple node per revealed cell, ~900k) would freeze the main thread; the
+        // off-screen ripples are invisible anyway. Same cull as the loss shockwave.
         let speed = cell * 22
-        for c in viewModel.game.board.allCoords
-        where viewModel.game.board[c].state == .revealed {
+        let gameBoard = viewModel.game.board
+        let range = visibleRange()
+        range.forEach { c in
+            guard gameBoard[c].state == .revealed else { return }
             let p = layout.center(of: c)
             let delay = hypot(p.x - centre.x, p.y - centre.y) / speed
             effectsLayer.addChild(winRipple(at: p, size: cell, delay: delay))
@@ -353,7 +365,11 @@ extension BoardScene {
         burst.position = p
         burst.fillColor = SKColor(red: 1, green: 0.5, blue: 0.2, alpha: 1)
         burst.lineWidth = 0
-        burst.blendMode = .add
+        // Above the tiles and starting bigger than one (1.4×), so a pre-fired
+        // burst reads as a real explosion on the first frame — not a faint ring
+        // hidden behind/within the unrevealed tile until its scale-up animates in.
+        burst.zPosition = 10
+        burst.setScale(1.4)
         burst.run(
             .sequence([
                 .group([

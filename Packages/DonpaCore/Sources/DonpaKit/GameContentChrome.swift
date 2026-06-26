@@ -106,8 +106,36 @@ extension GameContent {
         // Result screen dims the board ONLY, leaving the control strip live.
         .overlay { mangaPanel }
         .overlay { pauseOverlay }
+        .overlay { processingOverlay }
         .animation(.easeInOut(duration: 0.2), value: viewModel.isPaused)
+        .animation(.easeInOut(duration: 0.15), value: showProcessing)
         .clipped()  // keep the dimmed backdrop within the board's bounds
+    }
+
+    /// Shown while a reveal/chord/new-board is being computed off the main thread (a
+    /// big board's mine placement / flood-fill). Board input is blocked meanwhile
+    /// (the view model's `canTakeInput`), so this must make "disabled" obvious — a
+    /// dim wash over the whole board plus a centred spinner, not a subtle corner
+    /// badge that left taps feeling broken. Dimmer than the pause overlay (it's
+    /// transient, the board needn't be hidden), but unmistakably "not now".
+    @ViewBuilder var processingOverlay: some View {
+        if showProcessing {
+            ZStack {
+                Rectangle()
+                    .fill(palette.pageBackground.opacity(0.4))
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .controlSize(.large)
+                    Text("Working…", bundle: .module)
+                        .font(.headline)
+                        .foregroundStyle(palette.counter)
+                }
+                .padding(24)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+            }
+            .transition(.opacity)
+            .allowsHitTesting(false)  // never intercept; input is gated in the model
+        }
     }
 
     /// Covers the board while paused so it can't be studied; tap (or the strip's

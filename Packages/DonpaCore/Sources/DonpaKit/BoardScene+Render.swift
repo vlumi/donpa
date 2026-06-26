@@ -32,8 +32,10 @@ extension BoardScene {
             lastRevision = viewModel.revision
             rebuild()
         }
-        // After the board reflects the final state, play the end-game effect
-        // once. No further revisions occur post-end, so this fires exactly once.
+        // After the board reflects the final state, play the end-game effect once
+        // (no further revisions occur post-end). It runs in the same turn as the
+        // rebuild so the shockwave radiates over the just-revealed mines in sync —
+        // the minimap render that used to stall this turn now happens off-thread.
         if let event = viewModel.lastResult, event.id != lastAnimatedResultID {
             lastAnimatedResultID = event.id
             playEndGameEffects(event.result)
@@ -115,6 +117,12 @@ extension BoardScene {
     func buildVisibleCells() {
         let range = visibleRange()
         guard range != builtRange else { return }
+        // An empty/inverted range (min > max) can occur transiently before the
+        // scene has a valid size or the camera has been clamped onto the board —
+        // e.g. a palette push during launch, or a restored camera mid-settle.
+        // `minY...maxY` would trap on an inverted range, so bail this frame; a
+        // later frame (with a real size / clamped camera) builds correctly.
+        guard range.minX <= range.maxX, range.minY <= range.maxY else { return }
         let game = viewModel.game
 
         // Remove cells that have scrolled out of view.
@@ -141,6 +149,29 @@ extension BoardScene {
     /// rather than each being a freshly-tessellated `SKShapeNode`. The rare drawn
     /// glyphs — the swallowtail flag and the loss burst-mine — stay as their own
     /// nodes (few on screen at once, not worth caching).
+    /// Instant mine-hit feedback: swap the tapped cell's node to its revealed
+    /// hit-mine face (mine-tile background + burst-mine mark) synchronously on tap,
+    /// before the off-thread reveal runs — so the burst-mine tile appears the moment
+    /// you click, not when the whole board finishes revealing. The detonation FX and
+    /// the other mines follow when the reveal lands (playLoss); we deliberately
+    /// DON'T play the explosion here, so it doesn't cover the just-shown tile.
+    /// The rebuild after the reveal produces an identical node, so the handoff is
+    /// seamless.
+    func revealHitTileInstantly(at c: Coord) {
+        let size = layout.cellSize
+        cellNodes[c]?.removeFromParent()
+        let container = SKNode()
+        let tile = SKSpriteNode(texture: tileTexture(forFill: palette.mineTile))
+        tile.size = CGSize(width: size, height: size)
+        container.addChild(tile)
+        let burst = burstMineNode(size: size)
+        burst.zPosition = 1
+        container.addChild(burst)
+        container.position = layout.center(of: c)
+        boardLayer.addChild(container)
+        cellNodes[c] = container
+    }
+
     private func cellNode(for coord: Coord, cell: Cell) -> SKNode {
         let size = layout.cellSize
         let container = SKNode()
@@ -201,7 +232,11 @@ extension BoardScene {
     /// the previous `SKShapeNode`), cached by fill colour + pixel size. ~3 distinct
     /// textures (hidden / revealed / mine) shared across every tile on screen.
     private func tileTexture(for cell: Cell) -> SKTexture {
-        let fill = fillColor(for: cell)
+        tileTexture(forFill: fillColor(for: cell))
+    }
+
+    /// The cached rounded-rect tile background for a given fill colour.
+    func tileTexture(forFill fill: SKColor) -> SKTexture {
         let px = max(4, Int(layout.cellSize.rounded()))
         let key = "tile-\(px)-\(fill)"
         if let cached = tileTextureCache[key] { return cached }
