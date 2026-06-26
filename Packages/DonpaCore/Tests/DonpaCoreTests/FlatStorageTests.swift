@@ -75,6 +75,17 @@ final class FlatStorageTests: XCTestCase {
         XCTAssertEqual(board[Coord(2, 2)].adjacentMines, 0)
     }
 
+    /// Adjacency is *scattered* from each mine onto its neighbours, so overlapping
+    /// neighbourhoods must accumulate: the centre of a 3×3 with two corner mines
+    /// counts both. Pins the scatter (vs. the old gather-per-cell) math.
+    func testAdjacencyAccumulatesFromMultipleMines() {
+        var board = Board(topology: BoundedSquareTopology(width: 3, height: 3))
+        board.placeMines(at: [Coord(0, 0), Coord(2, 2)])
+        XCTAssertEqual(board[Coord(1, 1)].adjacentMines, 2, "centre touches both corner mines")
+        XCTAssertEqual(board[Coord(1, 0)].adjacentMines, 1, "edge touches only the near mine")
+        XCTAssertEqual(board.mineCoords, [Coord(0, 0), Coord(2, 2)])
+    }
+
     func testOffBoardWriteIsIgnored() {
         var board = Board(topology: BoundedSquareTopology(width: 4, height: 4))
         board[Coord(99, 99)].state = .revealed  // off-board: no-op, no crash
@@ -97,10 +108,10 @@ final class FlatStorageTests: XCTestCase {
         XCTAssertEqual(board.flagCount, (n * n) / 1000)
     }
 
-    /// `placeMines` writes EVERY cell twice (isMine pass + adjacency pass) — the
-    /// heaviest board operation. It must stay O(n): if flat storage copies the
-    /// array per write (e.g. an enum-cased array losing copy-on-write), this turns
-    /// O(n²) and a 250k-cell board takes tens of seconds. Guards that regression.
+    /// `placeMines` scatters adjacency from each mine onto its neighbours, so it
+    /// scales with the mine count, not the cell count — and each write must stay
+    /// O(1) (if flat storage lost copy-on-write-in-place, per-write array copies
+    /// would make this O(n²): a 250k-cell board took ~27s). Guards that regression.
     func testPlaceMinesScalesLinearly() {
         var board = Board(topology: BoundedSquareTopology(width: 500, height: 500))
         var mines: Set<Coord> = []

@@ -192,13 +192,13 @@ public struct Game: Sendable {
     }
 
     private mutating func revealAllMines() {
-        for c in board.allCoords where board[c].isMine {
+        for c in board.mineCoords {
             board[c].state = .revealed
         }
     }
 
     private mutating func flagAllMines() {
-        for c in board.allCoords where board[c].isMine {
+        for c in board.mineCoords {
             board[c].state = .flagged
         }
     }

@@ -31,7 +31,15 @@ public struct MinePlacer {
             candidates = topology.allCoords().filter { $0 != firstClick }
         }
 
-        candidates.shuffle(using: &rng)
-        return Set(candidates.prefix(mineCount))
+        // Partial Fisher–Yates: we only need `mineCount` random elements, so shuffle
+        // just the first `mineCount` slots rather than the whole array. On a huge
+        // board that's O(mineCount) instead of O(cells) (e.g. ~130k vs ~1M swaps on
+        // a 1000² board), which is what made the first click slow at that size.
+        let take = min(mineCount, candidates.count)
+        for i in 0..<take {
+            let j = Int.random(in: i..<candidates.count, using: &rng)
+            candidates.swapAt(i, j)
+        }
+        return Set(candidates.prefix(take))
     }
 }

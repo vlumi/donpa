@@ -66,6 +66,10 @@ public struct Board: Sendable {
     public let topology: any RectangularTopology
     private var cells: CellStore
 
+    /// The mine coordinates, stored once in `placeMines`. Kept as a set so the
+    /// "reveal/flag every mine" end-game paths and `mineCoords` iterate only the
+    /// mines (e.g. ~130k) rather than scanning every cell (e.g. 1M) on a huge board.
+    private var minePositions: Set<Coord> = []
     /// Mines on the board — set once in `placeMines`. Tracked rather than scanned
     /// so it's O(1) (matters on huge boards).
     public private(set) var mineCount: Int = 0
@@ -97,7 +101,7 @@ public struct Board: Sendable {
 
     /// Coordinate sets for persistence — compact alternative to encoding the full
     /// cell dict (a 1000² save would be huge otherwise).
-    public var mineCoords: Set<Coord> { coords { $0.isMine } }
+    public var mineCoords: Set<Coord> { minePositions }
     public var revealedCoords: Set<Coord> { coords { $0.state == .revealed } }
     public var flaggedCoords: Set<Coord> { coords { $0.state == .flagged } }
 
@@ -126,17 +130,25 @@ public struct Board: Sendable {
         for c in flagged where onBoard.contains(c) { self[c].state = .flagged }
     }
 
-    /// Places mines on the given coordinates and recomputes every adjacency count.
+    /// Places mines on the given coordinates and recomputes adjacency counts.
+    ///
+    /// Both passes iterate only the MINES, not every cell — so on a huge board the
+    /// cost scales with the mine count (e.g. ~130k), not the cell count (1M). Mines
+    /// are flagged in one pass; adjacency is then *scattered* outward (each mine
+    /// bumps its neighbours' counts) rather than gathered per cell (each cell
+    /// summing its neighbours), turning an N×8 scan into mines×8.
+    ///
+    /// Assumes a clean board (fresh `Board`, or a fresh one in `restore`): cells
+    /// start with `isMine == false` and `adjacentMines == 0`, so no reset pass is
+    /// needed. `placeMines` is only ever called once per board, on a clean one.
     public mutating func placeMines(at mineCoords: Set<Coord>) {
-        for c in topology.allCoords() {
-            cells[c].isMine = mineCoords.contains(c)
-        }
-        for c in topology.allCoords() {
-            let count = topology.neighbors(of: c).reduce(0) { acc, n in
-                acc + (cells[n].isMine ? 1 : 0)
-            }
-            cells[c].adjacentMines = count
-        }
+        minePositions = mineCoords
         mineCount = mineCoords.count
+        for c in mineCoords {
+            cells[c].isMine = true
+            for n in topology.neighbors(of: c) {
+                cells[n].adjacentMines += 1
+            }
+        }
     }
 }
