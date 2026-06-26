@@ -8,8 +8,11 @@ import SpriteKit
 /// back to the margin edge when the gesture ends. On an axis where the board
 /// already fits the viewport the camera locks to centre (no drift).
 extension BoardScene {
-    /// Resting breathing room past each edge, in scene units.
-    private var edgeMargin: CGFloat { layout.cellSize / 2 }
+    /// Resting breathing room past each edge, in scene units. A few cells wide so
+    /// you can pan a little past the board on every side — enough that the corner
+    /// HUD (minimap) rests over empty space rather than covering edge cells, and
+    /// so panning at the edge has room to keep moving rather than hitting a wall.
+    private var edgeMargin: CGFloat { layout.cellSize * 3 }
     /// How far past the margin a rubber-band pull can reach.
     private var maxPull: CGFloat { layout.cellSize * 2 }
 
