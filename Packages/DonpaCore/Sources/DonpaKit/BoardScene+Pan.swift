@@ -48,6 +48,7 @@ extension BoardScene {
     /// Pan the camera by a view-space translation delta (recognizer units, which
     /// share the scene's point system under `.resizeFill`).
     public func pan(byTranslation delta: CGPoint) {
+        restoreCameraTarget = nil  // the player took over; stop re-applying the saved view
         let scale = cameraNode.xScale
         let proposed = CGPoint(
             x: cameraNode.position.x - delta.x * scale,
@@ -82,6 +83,7 @@ extension BoardScene {
     /// camera by the difference — so we never hand-derive the projection and it
     /// stays correct regardless of `anchorPoint` / Y-flip conventions.
     public func zoom(by factor: CGFloat, aroundViewPoint viewAnchor: CGPoint?) {
+        restoreCameraTarget = nil  // the player took over; stop re-applying the saved view
         let old = cameraNode.xScale
         let new = min(max(old / factor, 0.1), maxZoomOutScale)
         guard new != old else { return }
@@ -117,6 +119,20 @@ extension BoardScene {
             scale: Double(cameraNode.xScale))
     }
 
+    /// Place the camera for a (re)layout: honour a held restore target if one is
+    /// pending (re-clamped to the current size), else fall back to the default
+    /// fit. Called from every spot that would otherwise auto-centre — `didMove`,
+    /// `didChangeSize`, the new-game rebuild — so the restored view survives the
+    /// window settling to its frame on launch (which fires those after the scene
+    /// has already applied the restore).
+    func applyDesiredCameraOrCenter() {
+        if let target = restoreCameraTarget {
+            applyCameraView(target)
+        } else {
+            centerCamera()
+        }
+    }
+
     /// Apply a saved camera view: set the zoom, then place the centre by
     /// denormalizing against the *current* board size and clamping to the current
     /// viewport's resting bounds — so a view saved at one window size restores
@@ -137,6 +153,7 @@ extension BoardScene {
     /// drags/taps the viewport rectangle. Clamped to the resting bounds so it
     /// can't scroll past the edges. (0,0) = top-left of the board.
     public func centerCamera(onNormalizedPoint p: CGPoint) {
+        restoreCameraTarget = nil  // overview navigation is a deliberate move
         let board = layout.boardSize(width: viewModel.boardWidth, height: viewModel.boardHeight)
         let nx = min(max(p.x, 0), 1)
         let ny = min(max(p.y, 0), 1)
