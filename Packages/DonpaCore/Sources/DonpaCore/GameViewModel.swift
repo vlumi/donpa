@@ -147,7 +147,7 @@ public final class GameViewModel: ObservableObject {
 
     private func computeOffMain(
         _ mutate: @Sendable @escaping (inout Game) -> Void,
-        afterApply: @escaping () -> Void
+        afterApply: @escaping () -> Void = {}
     ) {
         isComputing = true
         let snapshot = game  // O(1) COW copy; the mutation in the task triggers the copy
@@ -214,6 +214,20 @@ public final class GameViewModel: ObservableObject {
         resetTimer()
         gameID &+= 1
         bump()
+        armBoard()
+    }
+
+    /// Pre-place the mines OFF the main thread right after a new game, so the heavy
+    /// placement (and adjacency) on a huge board happens while the player looks at
+    /// the fresh board — not on their first tap. The first reveal then only has to
+    /// relocate any mines under the click (cheap; see `Game.reveal`). The board
+    /// shows immediately (empty) and takes the brief `isComputing` gate while
+    /// arming; a tap during arming is blocked, then opens once placement lands.
+    private func armBoard() {
+        computeOffMain({ game in
+            var rng = SystemRandomNumberGenerator()
+            game.placeMinesEagerly(using: &rng)
+        })
     }
 
     /// A `GameSnapshot` of the current game, or nil if it's not a live game worth

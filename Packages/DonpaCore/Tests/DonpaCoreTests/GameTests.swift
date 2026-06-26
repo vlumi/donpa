@@ -24,6 +24,27 @@ final class GameTests: XCTestCase {
         }
     }
 
+    /// The pre-armed path: mines are placed BEFORE the first click (no safe zone),
+    /// then the first reveal relocates any under the click. The same first-click
+    /// safety guarantee must hold — clicked cell is a 0, opens a region, never a loss.
+    func testPreArmedFirstClickAlsoOpensARegion() {
+        for seed in UInt64(0)..<100 {
+            var game = Game(difficulty: .beginner)
+            var rng = SeededRNG(seed: seed)
+            game.placeMinesEagerly(using: &rng)  // armed with no safe zone
+            XCTAssertEqual(game.board.mineCoords.count, game.mineCount, "all mines placed")
+            let click = Coord(4, 4)
+            game.reveal(click, using: &rng)  // relocates the safe zone, then opens
+            XCTAssertNotEqual(game.status, .lost, "seed \(seed): pre-armed first click lost")
+            XCTAssertEqual(
+                game.board[click].adjacentMines, 0, "seed \(seed): first click not a 0")
+            XCTAssertEqual(
+                game.board.mineCoords.count, game.mineCount, "relocation preserves mine count")
+            let revealed = game.board.allCoords.filter { game.board[$0].state == .revealed }.count
+            XCTAssertGreaterThan(revealed, 1, "seed \(seed): no region opened")
+        }
+    }
+
     func testFloodFillStopsAtNumbers() {
         var game = Game(difficulty: .beginner)
         var rng = SeededRNG(seed: 3)

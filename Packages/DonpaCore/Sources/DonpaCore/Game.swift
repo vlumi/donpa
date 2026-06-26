@@ -102,16 +102,36 @@ public struct Game: Sendable {
     }
 
     /// Testable variant with an injectable RNG.
+    /// Place all mines now, with NO safe zone — for arming the board *before* the
+    /// first click (off the main thread), since the first click isn't known yet.
+    /// The first reveal then relocates any mines under it (see `reveal`). Idempotent
+    /// guard: only places on a fresh board.
+    public mutating func placeMinesEagerly<R: RandomNumberGenerator>(using rng: inout R) {
+        guard !minesPlaced else { return }
+        let mines = MinePlacer.randomMines(topology: topology, mineCount: mineCount, using: &rng)
+        board.placeMines(at: mines)
+        minesPlaced = true
+    }
+
     public mutating func reveal<R: RandomNumberGenerator>(_ c: Coord, using rng: inout R) {
         guard status == .notStarted || status == .playing else { return }
         guard topology.normalize(c) != nil else { return }
         guard board[c].state == .hidden else { return }
 
         if !minesPlaced {
+            // Not pre-armed (direct construction / tests): place now, excluding the
+            // first-click safe zone in one shot.
             let mines = MinePlacer.placeMines(
                 topology: topology, mineCount: mineCount, firstClick: c, using: &rng)
             board.placeMines(at: mines)
             minesPlaced = true
+            status = .playing
+        } else if status == .notStarted {
+            // Pre-armed off-thread (no safe zone then); now that we know the first
+            // click, move any mines out of its neighbourhood so it opens a region.
+            var safeZone: Set<Coord> = [c]
+            safeZone.formUnion(topology.neighbors(of: c))
+            board.relocateMines(outOf: safeZone, using: &rng)
             status = .playing
         }
 

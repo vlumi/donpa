@@ -7,8 +7,11 @@ final class GameResultTests: XCTestCase {
 
     /// Reveal and await the off-thread compute, so the result is applied before the
     /// caller inspects state. Reveal/chord now compute off the main thread (see
-    /// GameViewModel.computeOffMain), so tests must await each one.
+    /// GameViewModel.computeOffMain), so tests must await each one. Await first too,
+    /// so a newGame's off-thread mine pre-arming has finished — otherwise the reveal
+    /// is blocked by the `isComputing` gate and silently dropped.
     private func reveal(_ vm: GameViewModel, _ c: Coord) async {
+        await vm.awaitPendingWork()
         vm.reveal(c)
         await vm.awaitPendingWork()
     }

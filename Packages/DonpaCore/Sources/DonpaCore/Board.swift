@@ -185,4 +185,33 @@ public struct Board: Sendable {
             }
         }
     }
+
+    /// Move any mines inside `safeZone` to random cells outside it, fixing adjacency
+    /// locally — so a board whose mines were placed *before* the first click (no
+    /// safe zone known then) can still guarantee a clear opening region. Only the
+    /// moved mines and their neighbours are touched (a handful), so it's O(1)-ish
+    /// regardless of board size — the point of pre-placing the board off-thread and
+    /// doing only this cheap fix-up on the first tap. Assumes mines are already
+    /// placed; `safeZone` is small (the clicked cell + its neighbours).
+    public mutating func relocateMines<R: RandomNumberGenerator>(
+        outOf safeZone: Set<Coord>, using rng: inout R
+    ) {
+        let toMove = minePositions.intersection(safeZone)
+        guard !toMove.isEmpty else { return }
+        let cellCount = topology.cellCount
+        for old in toMove {
+            // Remove the mine at `old`.
+            cells[old].isMine = false
+            for n in topology.neighbors(of: old) { cells[n].adjacentMines -= 1 }
+            minePositions.remove(old)
+            // Find a fresh home: a non-safe, currently-mine-free cell.
+            var new = topology.coord(at: Int.random(in: 0..<cellCount, using: &rng))
+            while safeZone.contains(new) || cells[new].isMine || new == old {
+                new = topology.coord(at: Int.random(in: 0..<cellCount, using: &rng))
+            }
+            cells[new].isMine = true
+            for n in topology.neighbors(of: new) { cells[n].adjacentMines += 1 }
+            minePositions.insert(new)
+        }
+    }
 }
