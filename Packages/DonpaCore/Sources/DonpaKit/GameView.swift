@@ -27,6 +27,13 @@ struct GameContent: View {
     @State private var autosaveTask: Task<Void, Never>?
     // Internal so the chrome extension (GameContentChrome) can read it.
     @State var restartPop = false
+    /// Whether to actually SHOW the processing overlay — debounced off
+    /// `viewModel.isComputing` so a fast compute never flashes it. (The input gate
+    /// uses `isComputing` directly and flips instantly; only the *visual* waits.)
+    /// Driven by `driveProcessingOverlay`. Internal: the chrome reads it.
+    @State var showProcessing = false
+    @State private var processingTask: Task<Void, Never>?
+    @State private var processingShownAt: Date?
     @State private var windowSize: CGSize = .zero
     /// Atomic, crash-safe store for the in-progress game (save/restore on quit).
     /// Under the UI-test launch arg it's a clean ephemeral store, so tests never
@@ -125,6 +132,9 @@ struct GameContent: View {
         .onChangeCompat(of: viewModel.isPaused) { paused in
             if paused { autosave() }
         }
+        // Debounce the processing overlay so a fast compute never flashes it (the
+        // input gate uses isComputing directly; only the visual is delayed).
+        .onChangeCompat(of: viewModel.isComputing) { driveProcessingOverlay(computing: $0) }
         // Periodic crash-protection save while the app is active — bounds how much
         // a crash can lose (esp. pan/zoom, which doesn't bump `revision`).
         .onReceive(autosaveHeartbeat) { _ in
@@ -200,6 +210,34 @@ struct GameContent: View {
             Task { await saveWriter.write(snapshot) }
         } else {
             Task { await saveWriter.clear() }
+        }
+    }
+
+    /// Debounce the processing overlay so it never flashes. A fixed time threshold
+    /// alone can't win — short flashes on fast hardware, long flashes worse on slow
+    /// (the work finishes just past it). So: when compute starts, wait a grace
+    /// period; only show the overlay if it's STILL computing after that. Once shown,
+    /// keep it up for a minimum duration even if compute finishes sooner, so it's
+    /// never a one-frame blip. Both together are hardware-independent.
+    private func driveProcessingOverlay(computing: Bool) {
+        let grace: TimeInterval = 0.12  // don't show for quick work
+        let minVisible: TimeInterval = 0.3  // once shown, don't blip
+        processingTask?.cancel()
+        processingTask = Task {
+            if computing {
+                // Show only if STILL computing after the grace period.
+                try? await Task.sleep(nanoseconds: UInt64(grace * 1e9))
+                guard !Task.isCancelled, viewModel.isComputing, !showProcessing else { return }
+                showProcessing = true
+                processingShownAt = Date()
+            } else if showProcessing {
+                // Hide, but not before the minimum visible time has elapsed.
+                let elapsed = processingShownAt.map { Date().timeIntervalSince($0) } ?? minVisible
+                let remaining = minVisible - elapsed
+                if remaining > 0 { try? await Task.sleep(nanoseconds: UInt64(remaining * 1e9)) }
+                guard !Task.isCancelled else { return }
+                showProcessing = false
+            }
         }
     }
 

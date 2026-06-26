@@ -108,7 +108,7 @@ extension GameContent {
         .overlay { pauseOverlay }
         .overlay { processingOverlay }
         .animation(.easeInOut(duration: 0.2), value: viewModel.isPaused)
-        .animation(.easeInOut(duration: 0.15), value: viewModel.isComputing)
+        .animation(.easeInOut(duration: 0.15), value: showProcessing)
         .clipped()  // keep the dimmed backdrop within the board's bounds
     }
 
@@ -119,7 +119,7 @@ extension GameContent {
     /// badge that left taps feeling broken. Dimmer than the pause overlay (it's
     /// transient, the board needn't be hidden), but unmistakably "not now".
     @ViewBuilder var processingOverlay: some View {
-        if viewModel.isComputing {
+        if showProcessing {
             ZStack {
                 Rectangle()
                     .fill(palette.pageBackground.opacity(0.4))
