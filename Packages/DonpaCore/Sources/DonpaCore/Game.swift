@@ -212,7 +212,11 @@ public struct Game: Sendable {
     }
 
     private mutating func revealAllMines() {
-        for c in board.mineCoords {
+        for c in board.mineCoords where board[c].state != .flagged {
+            // Leave correctly-flagged mines flagged: the player marked them, so the
+            // flag should stay shown — and revealing them would clear the flag,
+            // making `flagsRemaining` jump back up (the "mines left" counter surged
+            // after a loss). Untouched flags keep `flagCount` intact.
             board[c].state = .revealed
         }
     }
