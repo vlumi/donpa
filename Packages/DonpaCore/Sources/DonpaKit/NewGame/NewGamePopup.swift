@@ -18,6 +18,10 @@ struct NewGamePopup: View {
     @State private var focusedRow: Int?
     #endif
 
+    /// Measured natural height of the scrollable content, so the card hugs it
+    /// until it would exceed the available height (then the ScrollView scrolls).
+    @State private var contentHeight: CGFloat = 0
+
     var body: some View {
         ZStack {
             // Dimmed backdrop: blocks what's behind and dismisses when tapped.
@@ -26,9 +30,15 @@ struct NewGamePopup: View {
                 .contentShape(Rectangle())
                 .onTapGesture { onClose() }
 
-            card
-                .overlay(alignment: .topTrailing) { closeButton }
-                .padding(24)
+            // Cap the card to the available height (minus the 24pt inset on each
+            // side) so on a short window it scrolls instead of clipping, and on a
+            // tall screen it grows to fit everything — no forced scroll either way.
+            GeometryReader { geo in
+                card(maxHeight: geo.size.height - 48)
+                    .overlay(alignment: .topTrailing) { closeButton }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(24)
+            }
         }
         #if os(macOS)
         // AppKit key-catcher: @FocusState can't reliably take first responder from
@@ -52,43 +62,73 @@ struct NewGamePopup: View {
     }
     #endif
 
-    private var card: some View {
+    /// The card hugs its content but never exceeds `maxHeight`; past that the
+    /// content scrolls (the title stays pinned, so the selectors are always
+    /// reachable). On a roomy screen everything fits and the ScrollView never
+    /// engages.
+    private func card(maxHeight: CGFloat) -> some View {
         VStack(spacing: 20) {
             Text("New game", bundle: .module).font(.title2.bold())
 
-            #if os(macOS)
-            BoardSelectionPicker(
-                settings: settings, focusedRow: focusedRow,
-                onFocusRow: { focusedRow = $0 })
-            Text("Arrows to choose · Return to start", bundle: .module)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            #else
-            BoardSelectionPicker(settings: settings)
-            #endif
-
-            Button {
-                onStart()
-            } label: {
-                Label {
-                    Text("Start", bundle: .module)
-                } icon: {
-                    Image(systemName: "play.fill")
-                }
-                .font(.title3.weight(.bold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color.accentColor, in: Capsule())
-                .foregroundStyle(.white)
-            }
-            .buttonStyle(.plain)
-            .keyboardShortcut(.defaultAction)
-            .accessibilityIdentifier("newgame.start")
+            scrollableContent
+                // Hug content until it would overflow; only then cap + scroll.
+                .frame(height: min(contentHeight, max(0, maxHeight)))
+                .onPreferenceChange(ContentHeightKey.self) { contentHeight = $0 }
         }
         .padding(24)
         .frame(maxWidth: 460)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
+    }
+
+    /// The picker + Start button in a ScrollView (engages only when the card hits
+    /// its height cap; suppresses rubber-banding when it doesn't, where available).
+    @ViewBuilder private var scrollableContent: some View {
+        let scroll = ScrollView {
+            VStack(spacing: 20) {
+                #if os(macOS)
+                BoardSelectionPicker(
+                    settings: settings, focusedRow: focusedRow,
+                    onFocusRow: { focusedRow = $0 })
+                Text("Arrows to choose · Return to start", bundle: .module)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                #else
+                BoardSelectionPicker(settings: settings)
+                #endif
+
+                startButton
+            }
+            .background(
+                GeometryReader { proxy in
+                    Color.clear.preference(key: ContentHeightKey.self, value: proxy.size.height)
+                })
+        }
+        if #available(iOS 16.4, macOS 13.3, *) {
+            scroll.scrollBounceBehavior(.basedOnSize)
+        } else {
+            scroll
+        }
+    }
+
+    private var startButton: some View {
+        Button {
+            onStart()
+        } label: {
+            Label {
+                Text("Start", bundle: .module)
+            } icon: {
+                Image(systemName: "play.fill")
+            }
+            .font(.title3.weight(.bold))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.accentColor, in: Capsule())
+            .foregroundStyle(.white)
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.defaultAction)
+        .accessibilityIdentifier("newgame.start")
     }
 
     private var closeButton: some View {
@@ -129,4 +169,12 @@ struct NewGamePopup: View {
         return all[next]
     }
     #endif
+}
+
+/// Carries the scrollable content's natural height up to the card.
+private struct ContentHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
 }
