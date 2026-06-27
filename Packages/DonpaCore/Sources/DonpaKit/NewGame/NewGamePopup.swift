@@ -1,33 +1,20 @@
 import DonpaCore
 import SwiftUI
 
-/// The board-config chooser, presented as a self-contained modal overlay: a
-/// dimmed backdrop (tap outside to dismiss) over a card holding
-/// `BoardSelectionPicker` (Classic/Modern + size/difficulty, bound to `Settings`),
-/// a Start button, and a close (X) in the corner.
-///
-/// This is the single place a new game is configured — reached both from the
-/// in-game "New Game" action and by tapping the title art ("press start"). On
-/// Start it begins a game with the chosen config and dismisses; the picker binds
-/// to `Settings`, so the selection persists as the player's last choice.
-///
-/// Presented as an overlay rather than a `.sheet` so the dismiss affordances
-/// (tap-outside + X) are consistent across iOS and macOS, matching the result
-/// screen's pattern. On macOS it's keyboard-drivable: up/down move between the
-/// picker rows (Mode / Size / Difficulty), left/right cycle the selection within
-/// the focused row, Return starts, Esc closes.
+/// The new-game config chooser as a modal overlay: a dimmed backdrop (tap to
+/// dismiss) over a card holding `BoardSelectionPicker`, a Start button, and a
+/// close (X). The single place a new game is configured. An overlay rather than a
+/// `.sheet` so the dismiss affordances match the result screen across platforms.
+/// On macOS it's keyboard-drivable: arrows move/cycle, Return starts, Esc closes.
 struct NewGamePopup: View {
     @ObservedObject var settings: Settings
-    /// Begin a game with the current selection. The host clears the title and
-    /// starts the view model.
+    /// Begin a game with the current selection.
     let onStart: () -> Void
     /// Dismiss without starting (X, backdrop tap, or Escape).
     let onClose: () -> Void
 
     #if os(macOS)
-    /// Keyboard-focused picker row: 0 = Mode, then Size/Difficulty depending on
-    /// mode. nil until the first arrow press, so the highlight only appears once
-    /// the player starts using the keyboard.
+    /// Keyboard-focused picker row (0 = Mode). nil until the first arrow press.
     @State private var focusedRow: Int?
     #endif
 
@@ -44,9 +31,8 @@ struct NewGamePopup: View {
                 .padding(24)
         }
         #if os(macOS)
-        // An AppKit key-catcher takes first responder from the SpriteKit board
-        // and routes arrows/Return/Esc — SwiftUI @FocusState can't reliably pry
-        // it loose, especially after a game ends.
+        // AppKit key-catcher: @FocusState can't reliably take first responder from
+        // the SpriteKit board, especially after a game ends.
         .background(KeyCatcher { handleKey($0) })
         #endif
     }
@@ -73,7 +59,7 @@ struct NewGamePopup: View {
             #if os(macOS)
             BoardSelectionPicker(
                 settings: settings, focusedRow: focusedRow,
-                onFocusRow: { focusedRow = $0 })  // clicking a control focuses its row
+                onFocusRow: { focusedRow = $0 })
             Text("Arrows to choose · Return to start", bundle: .module)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -119,9 +105,8 @@ struct NewGamePopup: View {
     }
 
     #if os(macOS)
-    /// Cycle the selection in the given row. Row 0 is always Mode; rows 1+ are
-    /// Difficulty (Classic), or Difficulty then Size (Modern — difficulty first to
-    /// match Classic's row 1).
+    /// Cycle the selection in the given row. Row 0 is Mode; rows 1+ are Difficulty
+    /// (Classic), or Difficulty then Size (Modern).
     private func cycleSelection(in row: Int, by step: Int) {
         switch (settings.mode, row) {
         case (_, 0):
@@ -135,9 +120,8 @@ struct NewGamePopup: View {
         }
     }
 
-    /// Next/previous case of a `CaseIterable` enum, CLAMPED at the ends (no wrap) —
-    /// matching the carousel, where the ends stop flush rather than wrapping, so
-    /// arrowing left on the easiest/smallest stays put.
+    /// Next/previous case of a `CaseIterable` enum, clamped at the ends (no wrap),
+    /// matching the carousel.
     private static func stepped<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
         let all = Array(T.allCases)
         guard let i = all.firstIndex(of: value), !all.isEmpty else { return value }
