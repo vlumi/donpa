@@ -47,7 +47,14 @@ struct CarouselPicker: View {
 
     var body: some View {
         rowContent
+            .frame(maxWidth: .infinity)
             .frame(height: height)
+            // Fade the row's edges instead of hard-clipping: keeps the drum's
+            // off-centre cards from bleeding past the modal (a plain clip guillotines
+            // a card mid-width, which looks broken) while the peeking neighbours
+            // softly fade out — reading as "more this way". The mask also bounds the
+            // content to the row width, so nothing spills outside the modal.
+            .mask(edgeFade)
             // Edge chevrons hint "there's more this way" and step the selection
             // when tapped. They fade at the ends (no left arrow on the first card,
             // no right on the last) and overlay without affecting layout.
@@ -76,6 +83,20 @@ struct CarouselPicker: View {
                 @unknown default: break
                 }
             }
+    }
+
+    /// A horizontal mask that's opaque in the middle and fades to clear at the
+    /// left/right edges, so peeking cards dissolve rather than getting clipped.
+    private var edgeFade: some View {
+        let fade = 0.10  // fraction of width that fades on each side
+        return LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black, location: fade),
+                .init(color: .black, location: 1 - fade),
+                .init(color: .clear, location: 1),
+            ],
+            startPoint: .leading, endPoint: .trailing)
     }
 
     private enum Edge { case left, right }
@@ -210,7 +231,11 @@ private struct DrumScroll<Content: View>: UIViewRepresentable {
         scroll.showsHorizontalScrollIndicator = false
         scroll.decelerationRate = .fast
         scroll.delegate = context.coordinator
-        scroll.clipsToBounds = false
+        // Clip to the row's own bounds so off-centre cards don't bleed past the New
+        // Game modal's edges on a narrow iPhone. Neighbours still peek — the scroll
+        // view spans the full row width (wider than one card), so adjacent cards
+        // show *inside* the frame; they just can't spill outside it.
+        scroll.clipsToBounds = true
         scroll.cardWidth = cardWidth
         scroll.step = step
         scroll.indexProvider = { selection }
