@@ -103,6 +103,12 @@ committed `main` so the stamp is meaningful.
      --prerelease --notes "Marketing version 0.1.0 · Apple build 0.1.0 (3) · commit <sha>"
    ```
 
+6. **Record the beta in `CHANGELOG.md`.** Each version heading carries a
+   `_Betas:_` line listing its tagged betas with dates (there's no single release
+   date — the project is beta-only, per-platform). Add the new one, e.g.
+   `iOS beta.2 (2026-06-25)`. The version headings link to the filtered releases
+   list (`/releases?q=v0.1.0`), so no per-tag link upkeep.
+
 ## TestFlight notes
 
 - **Export compliance** is pre-declared (`ITSAppUsesNonExemptEncryption: false`)
