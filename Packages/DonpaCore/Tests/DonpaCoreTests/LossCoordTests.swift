@@ -24,6 +24,22 @@ final class LossCoordTests: XCTestCase {
         XCTAssertEqual(game.lossCoord, Coord(0, 0))
     }
 
+    /// A flagged mine stays flagged when the board reveals on a loss, so the flag
+    /// count (and thus `flagsRemaining` / the "mines left" readout) is preserved —
+    /// regression for the counter jumping back up after hitting a mine.
+    func testFlaggedMinesStayFlaggedOnLoss() {
+        var game = Game(
+            topology: BoundedSquareTopology(width: 4, height: 4),
+            mines: [Coord(0, 0), Coord(3, 3)])
+        var rng = SeededRNG(seed: 1)
+        game.toggleFlag(Coord(0, 0))  // correctly flag one mine
+        XCTAssertEqual(game.flagsRemaining, 1)  // 2 mines − 1 flag
+        game.reveal(Coord(3, 3), using: &rng)  // hit the OTHER mine → loss
+        XCTAssertEqual(game.status, .lost)
+        XCTAssertEqual(game.board[Coord(0, 0)].state, .flagged, "the flag survives the loss")
+        XCTAssertEqual(game.flagsRemaining, 1, "flag count isn't reset by revealing mines")
+    }
+
     /// On a losing chord, lossCoord is the specific neighbour that detonated,
     /// not the chorded number cell.
     func testSetToTheDetonatingNeighbourOnLosingChord() {

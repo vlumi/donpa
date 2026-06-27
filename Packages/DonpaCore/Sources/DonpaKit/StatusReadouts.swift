@@ -56,7 +56,10 @@ struct ProgressReadout: View {
     let tint: Color
 
     var body: some View {
-        let pct = Int((progress * 100).rounded())
+        // Floor, not round-to-nearest — matching the scoreboard's "Best %": you
+        // haven't reached 4% until you've actually cleared 4%, so 3.6% reads "3%".
+        // (Rounding here made the live readout disagree with the scoreboard.)
+        let pct = Int((progress * 100).rounded(.down))
         // Zero-pad to a fixed 3-digit field (e.g. `072%`, `100%`) so the readout's
         // width never jitters as the value crosses 1→2→3 digits — matching the
         // zero-padded 3-digit mine/timer counters.
