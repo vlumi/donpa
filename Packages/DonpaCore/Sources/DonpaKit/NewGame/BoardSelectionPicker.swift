@@ -94,8 +94,11 @@ struct BoardSelectionPicker: View {
                 Text(verbatim: tagline).italic().foregroundStyle(.primary.opacity(0.75))
             }
             .font(.body)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
+            // Wrap rather than shrink — so a longer line (e.g. the difficulty
+            // detail) keeps the SAME font size as a shorter one (the size detail),
+            // instead of scaling down to fit one line.
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
             // The line content swaps as the selection scrolls by — keep it from
             // reflowing the layout while the drum animates.
             .frame(maxWidth: .infinity)
