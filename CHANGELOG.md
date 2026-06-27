@@ -4,13 +4,28 @@ All notable changes to Donpa are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] — in progress
 
-Work toward **v0.2.0** — cross-device sync & big boards (see ROADMAP.md). The
-big-board pillar largely landed; iCloud score sync is still open.
+**Cross-device sync & big boards** (see ROADMAP.md). Both pillars have landed;
+cross-device sync awaits a real two-device verification pass. `MARKETING_VERSION`
+is already `0.2.0`.
+
+_Betas:_ iOS beta.1 (2026-06-26) · macOS beta.1 (2026-06-26).
 
 ### Added
 
+- **Cross-device scoreboard sync (iCloud).** High scores and career totals follow
+  the player across their devices via iCloud Key-Value Storage. Opt-in (off by
+  default), in a footer toggle on the stats sheet; silent and account-free
+  otherwise, degrading to local-only when signed out. The merge is conflict-free —
+  each device owns its slot; counters sum across devices and best times merge by
+  min — so concurrent play on two devices Just Works. Turning sync off (or
+  resetting) removes this device's contribution everywhere. In-progress games stay
+  local.
+- **Stats sheet, reworked.** The scoreboard is now a single "Service Record" sheet
+  — "Tour of Duty" (career totals) beside "Commendations" (per-board high scores),
+  two-column on a wide window — with the sync control in the footer. Lifetime
+  totals use locale digit-grouping and localized time units.
 - **Big boards, XS–XXXL.** The Modern size ladder is now XS / S / M / L / XL /
   XXL / XXXL (9 / 16 / 25 / 50 / 100 / 300 / 1000²; ja 極小…超巨大). XS is the new
   floor, L (50²) fills the old gap, XXL (300²) is an epic-but-finishable summit,
@@ -28,8 +43,8 @@ big-board pillar largely landed; iCloud score sync is still open.
   click moves keyboard focus to that row.
 - **Cumulative career stats.** Per-device, conflict-free running totals (games
   played, tiles opened, flags placed, mines hit, mines disarmed, playtime) shown
-  in the scoreboard — no win/loss ratio. Built on a grow-only `DeviceCounter`,
-  ready for the planned cross-device sync.
+  in the scoreboard — no win/loss ratio. Built on a grow-only `DeviceCounter` (the
+  foundation the cross-device sync above builds on).
 - **Mouse + keyboard zoom (macOS).** ⌘-scroll and ⌘+/⌘− zoom the board; ⌘0 opens
   the board overview.
 
@@ -58,9 +73,13 @@ big-board pillar largely landed; iCloud score sync is still open.
   `Scripts/distribute.sh` archives → exports → uploads to App Store Connect via an
   ASC API key (credentials kept outside the repo).
 
-## [0.1.0] - 2026-06-27
+## [0.1.0] — TestFlight beta
 
-First release — classic Minesweeper on iOS and macOS (TestFlight pre-release).
+First release — classic Minesweeper on iOS and macOS. TestFlight pre-release
+only (no single public release date; shipped as rolling per-platform betas).
+
+_Betas:_ iOS beta.1 (2026-06-24) · beta.2 (2026-06-25);
+macOS beta.1 (2026-06-24) · beta.2 (2026-06-25).
 
 ### Added
 
@@ -171,5 +190,9 @@ First release — classic Minesweeper on iOS and macOS (TestFlight pre-release).
   cleared-cell count from the board, so a corrupt or tampered save can't produce a
   broken or unwinnable game.
 
-[Unreleased]: https://github.com/vlumi/donpa/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/vlumi/donpa/releases/tag/v0.1.0
+<!-- Releases are tagged per platform as betas (ios/vX.Y.Z-beta.N,
+mac/vX.Y.Z-beta.N) — there's no single plain vX.Y.Z tag — so each version links to
+its filtered list of GitHub releases rather than one tag. -->
+
+[0.2.0]: https://github.com/vlumi/donpa/releases?q=v0.2.0
+[0.1.0]: https://github.com/vlumi/donpa/releases?q=v0.1.0

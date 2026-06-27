@@ -12,14 +12,12 @@ import AppKit
 /// rows). Stored by geometry, so re-tuned tiers would list as separate entries.
 struct ScoreboardView: View {
     @ObservedObject var scoreboard: Scoreboard
+    @ObservedObject var settings: Settings
     /// Size of the presenting window, so the sheet grows with it and never
     /// overflows. `.zero` → fall back to the screen.
     var available: CGSize = .zero
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingReset = false
-    @State private var tab: Tab = .scores
-
-    private enum Tab: Hashable { case scores, career }
 
     /// Modern configs the player has played at all — has a win *or* a recorded
     /// best progress from a loss (so partially-cleared hard boards still show).
@@ -50,10 +48,21 @@ struct ScoreboardView: View {
     @ViewBuilder private var sheetChrome: some View {
         #if os(iOS)
         NavigationStack {
-            tabbedContent
+            content
                 .padding(.vertical, 8)
                 .padding(.horizontal, 14)
-                .navigationTitle(Text("High Scores", bundle: .module))
+                // Sync control pinned to the bottom so it's always visible, not
+                // buried under the scrolling stats.
+                .safeAreaInset(edge: .bottom) {
+                    VStack(spacing: 0) {
+                        Divider()
+                        SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                    }
+                    .background(.bar)
+                }
+                .navigationTitle(Text("Service Record", bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .destructiveAction) {
@@ -75,18 +84,20 @@ struct ScoreboardView: View {
         }
         #else
         VStack(spacing: 16) {
-            Text("High Scores", bundle: .module).font(.title2.bold())
+            Text("Service Record", bundle: .module).font(.title2.bold())
 
-            tabbedContent
-                .frame(maxHeight: .infinity)
+            content  // sizes to content; capped by the sheet's maxHeight below
 
-            HStack {
+            Divider()
+            // Footer: sync control on the left, Reset / Done on the right.
+            HStack(spacing: 12) {
+                SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                Spacer()
                 Button(role: .destructive) {
                     confirmingReset = true
                 } label: {
                     Text("Reset", bundle: .module)
                 }
-                Spacer()
                 Button {
                     dismiss()
                 } label: {
@@ -94,15 +105,16 @@ struct ScoreboardView: View {
                 }
                 .keyboardShortcut(.defaultAction)
             }
-            .padding(.horizontal, Self.rowInset)  // align buttons with the row text
+            .padding(.horizontal, Self.rowInset)  // align with the row text
         }
         .padding(.vertical, 24)
         .padding(.horizontal, 14)  // rest of the side margin lives on the rows
-        // Size to a bounded fraction of the available height so the sheet grows
-        // on a big screen but never overflows a small window. (A sheet sizes to
-        // its content, so we drive the height explicitly rather than fill.)
-        .frame(maxWidth: sheetWidth, maxHeight: sheetHeight)
-        .frame(minWidth: min(340, sheetWidth), minHeight: min(360, sheetHeight))
+        // Width is driven firmly (a sheet otherwise shrinks to content and never
+        // widens for two columns). Height is a CAP only — the sheet sizes to its
+        // content and only grows to `sheetHeight` (then the scores column scrolls),
+        // so a short table doesn't leave a tall empty sheet.
+        .frame(width: sheetWidth)
+        .frame(maxHeight: sheetHeight)
         #endif
     }
 
@@ -118,9 +130,11 @@ struct ScoreboardView: View {
     }
 
     /// Tall in a big window, short in a small one — bounded so it never overflows.
-    private var sheetHeight: CGFloat { min(760, max(360, container.height * 0.85)) }
+    private var sheetHeight: CGFloat { min(1100, max(380, container.height * 0.94)) }
     /// Likewise for width, so a narrow window can't push the sheet off the sides.
-    private var sheetWidth: CGFloat { min(440, max(300, container.width * 0.9)) }
+    /// Cap is comfortably past the two-column breakpoint so a roomy window gives
+    /// Career + High Scores side by side; a small window still shrinks to fit.
+    private var sheetWidth: CGFloat { min(820, max(300, container.width * 0.9)) }
     #endif
 
     /// Gutter reserved to the right of the whole table so the scroll indicator
@@ -131,42 +145,63 @@ struct ScoreboardView: View {
     /// sheet's outer padding so the overall margin stays about the same.
     private static let rowInset: CGFloat = 10
 
-    /// A segmented Scores / Career switch over the matching list. Career holds the
-    /// lifetime totals; Scores the per-board best-time/clear tables.
-    private var tabbedContent: some View {
-        VStack(spacing: 12) {
-            Picker("", selection: $tab) {
-                Text("Scores", bundle: .module).tag(Tab.scores)
-                Text("Career", bundle: .module).tag(Tab.career)
-            }
-            .labelsHidden()
-            .pickerStyle(.segmented)
-            .padding(.horizontal, Self.rowInset)
-
-            switch tab {
-            case .scores: scoreList
-            case .career: careerList
-            }
-        }
-    }
-
-    private var scoreList: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                section("Classic", configs: GameConfig.classicConfigs)
-                if !playedModern.isEmpty {
-                    section("Modern", configs: playedModern)
+    /// One scrolling sheet (no tabs): Career first, then High Scores, then the
+    /// sync footer. On a wide enough sheet the two stat groups sit side by side;
+    /// otherwise they stack. (A future Achievements section slots in after Career.)
+    @ViewBuilder private var content: some View {
+        // Decide columns from the known layout width (no GeometryReader — that's
+        // greedy on height and would force a tall, half-empty sheet). The sheet
+        // sizes to content; the scores column scrolls only once it exceeds the cap.
+        if layoutWidth >= Self.twoColumnMinWidth {
+            // Wide: Career is a fixed column (short, static); only the High Scores
+            // ROWS scroll — its header stays pinned above them. Both top-aligned so
+            // a short table doesn't stretch.
+            HStack(alignment: .top, spacing: 28) {
+                careerSection
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeader("Commendations")
+                    ScrollView {
+                        scoresRows
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.trailing, Self.scrollbarGutter)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.trailing, Self.scrollbarGutter)
+        } else {
+            // Narrow: one scroll over both, stacked (headers scroll with content).
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    careerSection
+                    scoresSection
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.trailing, Self.scrollbarGutter)
+            }
         }
     }
 
-    /// Lifetime totals across every config. Deliberately NO win rate / loss ratio —
-    /// raw, neutral counts (a win% only discourages); the figures are honest but
-    /// never framed as "you lose most games".
-    private var careerList: some View {
-        ScrollView {
+    /// Width to base the column decision on. macOS knows the sheet width; iOS uses
+    /// the presenting window (the sheet fills it on iPhone, is narrower on iPad).
+    private var layoutWidth: CGFloat {
+        #if os(macOS)
+        return sheetWidth
+        #else
+        return available.width
+        #endif
+    }
+
+    /// Below this width the two stat groups stack instead of going side-by-side.
+    /// Generous so two columns only appear when each is comfortably wide (no label
+    /// wrapping like "Aloittelija"/"Keskitaso").
+    private static let twoColumnMinWidth: CGFloat = 680
+
+    /// Lifetime totals. Deliberately NO win rate / loss ratio — raw, neutral counts
+    /// (a win% only discourages); honest but never framed as "you lose most games".
+    @ViewBuilder private var careerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader("Tour of Duty")
             if scoreboard.totalGamesPlayed > 0 {
                 VStack(spacing: 0) {
                     statRow("Games played", Self.grouped(scoreboard.totalGamesPlayed))
@@ -179,17 +214,44 @@ struct ScoreboardView: View {
                     Divider()
                     statRow("Mines hit", Self.grouped(scoreboard.totalMinesHit))
                     Divider()
-                    statRow("Time played", Self.durationLabel(scoreboard.totalPlaytimeCentiseconds))
+                    statRow(
+                        "Time played", Self.durationLabel(scoreboard.totalPlaytimeCentiseconds))
                 }
-                .padding(.trailing, Self.scrollbarGutter)
             } else {
                 Text("Play a game to start your career stats.", bundle: .module)
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 40)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
             }
         }
+    }
+
+    /// Per-board best time + clears, with the section header (used in the narrow
+    /// single-scroll layout, where the header scrolls with the rows).
+    @ViewBuilder private var scoresSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionHeader("Commendations")
+            scoresRows
+        }
+    }
+
+    /// Just the score tables (no header) — for the wide layout where the header is
+    /// pinned above the scroll. Classic always shows; Modern once played.
+    @ViewBuilder private var scoresRows: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            section("Classic", configs: GameConfig.classicConfigs)
+            if !playedModern.isEmpty {
+                section("Modern", configs: playedModern)
+            }
+        }
+    }
+
+    /// A bold section heading for the Career / High Scores groups.
+    private func sectionHeader(_ title: LocalizedStringKey) -> some View {
+        Text(title, bundle: .module)
+            .font(.title3.bold())
+            .padding(.horizontal, Self.rowInset)
     }
 
     private func statRow(_ label: LocalizedStringKey, _ value: String) -> some View {
@@ -212,9 +274,18 @@ struct ScoreboardView: View {
         let totalMinutes = centiseconds / 6000
         let h = totalMinutes / 60
         let m = totalMinutes % 60
-        if h > 0 { return "\(h)h \(m)m" }
-        if m > 0 { return "\(m)m" }
-        return "< 1m"
+        // Localized units (en "14h 23m" / fi "14 t 23 min" / ja "14時間23分").
+        if h > 0 {
+            return String(
+                localized: "\(h)h \(m)m", bundle: .module,
+                comment: "Playtime, hours+minutes: H hours M minutes")
+        }
+        if m > 0 {
+            return String(
+                localized: "\(m)m", bundle: .module, comment: "Playtime, minutes only: M minutes")
+        }
+        return String(
+            localized: "< 1m", bundle: .module, comment: "Playtime under a minute")
     }
 
     private func section(_ title: LocalizedStringKey, configs: [GameConfig]) -> some View {
@@ -288,150 +359,5 @@ struct ScoreboardView: View {
                 .fill(Color.accentColor.opacity(0.18))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor.opacity(0.5)))
         }
-    }
-}
-
-/// App settings. Currently just appearance; more rows (e.g. language) slot in
-/// under the same VStack later.
-struct SettingsView: View {
-    @ObservedObject var settings: Settings
-    @Environment(\.dismiss) private var dismiss
-    /// The language in effect when this sheet appeared. If the picker moves away
-    /// from it, the app needs a restart to actually switch — surfaced loudly.
-    @State private var launchLanguage: LanguagePreference?
-
-    private var languageChanged: Bool {
-        launchLanguage != nil && settings.language != launchLanguage
-    }
-
-    /// Measured natural height of the content, used to size the iOS sheet to fit
-    /// (a compact card) rather than the default near-fullscreen page sheet.
-    @State private var contentHeight: CGFloat = 0
-
-    var body: some View {
-        sheetChrome
-            .onAppear { launchLanguage = settings.language }
-            .animation(.easeInOut(duration: 0.2), value: languageChanged)
-    }
-
-    /// The settings rows, shared by both platforms.
-    private var settingsList: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            settingRow("Appearance") {
-                Picker("Appearance", selection: $settings.appearance) {
-                    ForEach(AppearancePreference.allCases) { pref in
-                        Text(verbatim: pref.label).tag(pref)  // label localized in Settings
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
-
-            settingRow("Toggle side") {
-                Picker("Toggle side", selection: $settings.handedness) {
-                    ForEach(Handedness.allCases) { h in
-                        Text(verbatim: h.label).tag(h)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
-
-            settingRow("Language") {
-                Picker("Language", selection: $settings.language) {
-                    ForEach(LanguagePreference.allCases) { lang in
-                        Text(verbatim: lang.label).tag(lang)
-                    }
-                }
-                .labelsHidden()
-                if languageChanged {
-                    restartNotice
-                }
-            }
-
-            // About lives on the title screen's "i" button now (cross-platform),
-            // plus the macOS app menu — so it's no longer a Settings row.
-        }
-    }
-
-    /// iOS wraps the rows in a NavigationStack with a "Done" toolbar item (reads
-    /// as chrome, not content) and a fit-content detent. macOS keeps the inline
-    /// title + bottom Done button, which look right in a macOS sheet.
-    @ViewBuilder private var sheetChrome: some View {
-        #if os(iOS)
-        NavigationStack {
-            settingsList
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(heightReader)
-                .navigationTitle(Text("Settings", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                        .accessibilityIdentifier("sheet.done")
-                    }
-                }
-        }
-        // Size the sheet to its content (compact card) instead of the default
-        // near-fullscreen page sheet. +64 leaves room for the nav bar + grabber.
-        .presentationDetents(contentHeight > 0 ? [.height(contentHeight + 64)] : [.medium])
-        #else
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Settings", bundle: .module).font(.title2.bold())
-            settingsList
-            Divider()
-            HStack {
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done", bundle: .module)
-                }
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(24)
-        .frame(minWidth: 320)
-        #endif
-    }
-
-    /// A labelled settings row: a headline over its control(s).
-    private func settingRow<Content: View>(
-        _ title: LocalizedStringKey, @ViewBuilder _ content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title, bundle: .module).font(.headline)
-            content()
-        }
-    }
-
-    /// Reports the content's natural height (for the iOS fit-content detent).
-    private var heightReader: some View {
-        GeometryReader { geo in
-            Color.clear.onAppear { contentHeight = geo.size.height }
-                .onChangeCompat(of: geo.size.height) { contentHeight = $0 }
-        }
-    }
-
-    /// Prominent notice shown once the language picker is changed: a tinted
-    /// callout making clear the app must be restarted to switch language.
-    private var restartNotice: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
-            Text("Restart the app to change the language.", bundle: .module)
-                .font(.callout.weight(.semibold))
-            Spacer(minLength: 0)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.orange.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(.orange.opacity(0.5), lineWidth: 1))
-        .transition(.opacity)
     }
 }

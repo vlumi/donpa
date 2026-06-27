@@ -30,89 +30,33 @@ Carry-over notes that still inform later milestones:
 ## v0.2.0 — Cross-device & big boards
 
 Two strands of "make the existing square game better and bigger" — grouped into
-one milestone rather than a minor each. Cloud sync (below) is independent of the
-big-board work and can land first.
+one milestone. Both have shipped; what remains for each is a real-device
+verification pass (below), folded into the pre-1.0 device testing.
 
 ### Cross-device scoreboard sync
 
-Make a player's progress follow them across their Mac, iPhone, and iPad, keyed
-by Apple ID — no accounts, no server, no UI.
+The "progress follows you across devices" pillar. **Shipped** — scores + career
+totals sync via iCloud Key-Value Storage, keyed by Apple ID. Each device owns one
+blob (its own counts); the display merges all devices conflict-free (counters sum,
+best times merge by min) — so concurrent multi-device play Just Works with no
+double-count. Opt-in (off by default) via a footer toggle on the stats sheet;
+degrades to local-only when signed out; in-progress games stay local. See
+[CHANGELOG.md](CHANGELOG.md) for the detail.
 
-#### Data model: two merge kinds (the design to build against)
+**Still open:**
 
-Stats split into two categories that merge differently. (`wins` is a cumulative
-count and uses the conflict-free counter below, not a `max` merge — so it's
-*correct*, never under-counted.)
-
-1. **"Best" fields** (`bestCentiseconds`, `bestLossProgress`) — idempotent
-   `min`/`max` merges, as before. Order-independent, no per-device data needed.
-
-2. **Cumulative counts** (`wins`, `gamesPlayed`, `tilesOpened`, `flagsPlaced`,
-   `minesHit`, `playtimeCentiseconds`) — a **grow-only counter (G-Counter)**: each
-   device tracks only its OWN running count and never merges another device's; the
-   value shown is the **sum** across devices. No device ever writes another's slot,
-   so there's no conflict to resolve — concurrent play on two devices Just Works,
-   with no double-counting and no per-event IDs (which is why we don't need the old
-   `max`-vs-`sum` compromise).
-   - **Local shape:** `DeviceCounter { mine, othersTotal }` — this device's precise
-     count plus a cached sum of all *other* devices (0 until sync exists, so today
-     `total == mine`). Bounded to two ints regardless of device count. *(Built.)*
-   - **Cloud layout (KVS):** one key per device per stat,
-     `stat.<deviceID> = count`. `othersTotal` = sum of those keys minus this
-     device's own. `dictionaryRepresentation` reads them all in one shot (no N
-     round-trips); pick out + sum the foreign keys.
-
-#### Device registry + churn (the "keep it sane" part)
-
-- A **device registry** in KVS — `{deviceID: lastUpdated}` — written when a device
-  pushes its counts. It identifies which per-device keys are *live* so `othersTotal`
-  sums only real contributors, and lets us **prune** stale slots.
-- **Reinstall churn is the real growth risk:** deleting/reinstalling (esp. on macOS,
-  where the persisted `DeviceID` is lost) mints a NEW device id, abandoning the old
-  key forever. Pruning is *deferred* — it's hard to tell a dead reinstall from a
-  device that's just offline, so dropping its history risks losing real data.
-  Revisit pruning only if churn proves a real problem; meanwhile use `lastUpdated`
-  conservatively (next bullet).
-- **Use `lastUpdated` to skip redundant re-sums, not to prune:** cache `othersTotal`
-  and recompute only when some device's registry `lastUpdated` has advanced since the
-  last read. No data loss (a stale device still counts) — just avoids re-summing
-  every key on every sync notification.
-- **KVS has no transactions:** the registry entry and a stat key are separate keys
-  that sync independently, so "atomic registry + counts" isn't achievable — accept
-  eventual consistency (a briefly-stale registry just mis-sums for a moment). Don't
-  design around atomicity KVS can't provide.
-- **DeviceID:** a stable per-install UUID persisted in `UserDefaults` (not
-  `identifierForVendor`, absent on macOS). Needed only for the cloud key; removed
-  from the local build until sync lands.
-
-#### Plumbing (the transport, independent of the merge kinds above)
-
-- [ ] **iCloud scoreboard sync** via `NSUbiquitousKeyValueStore` (iCloud KVS) —
-      right-sized for the small `Codable` scoreboard blob; CloudKit / Core Data
-      sync would be overkill. **Silent auto-sync** (no toggle); degrades to
-      local-only when not signed into iCloud (== today's behaviour).
-  - **Implementation seam is already clean:** `Scoreboard` funnels through one
-    `load()`/`persist()` and is injectable. Plan: abstract the backing store
-    behind a tiny protocol, dual-write to `UserDefaults` (fast local cache) AND
-    KVS (cross-device truth), merge-on-read, and observe
-    `didChangeExternallyNotification` so an open scoreboard updates live. The
-    versioned `StatsFile` envelope (the per-entry-tolerant format) carries over
-    as the wire format unchanged.
-  - **Entitlement / signing** is the one careful part: add the iCloud +
-    Key-Value Storage capability to BOTH app targets (regenerates the
-    provisioning profile; automatic signing handles it). Both targets now share
-    bundle id `fi.misaki.donpa` (Universal Purchase), so the KVS identifier
-    defaults to a shared value — but pin an explicit
-    `com.apple.developer.ubiquity-kvstore-identifier` on both to be safe. iOS has
-    no entitlements file yet; create one. PRIVACY.md gets a one-line note that
-    scores sync via the user's own iCloud (we still collect nothing).
-  - **In-progress games stay strictly local** — deliberately not synced. A
-    half-played board on two devices has no lossless merge (one would overwrite
-    the other), and it's transient by nature; only the high-stakes scoreboard is
-    worth syncing.
-  - **Testing:** the merge is a pure function → unit-tested headless (the
-    high-value tests). KVS itself can only be verified on real devices on the
-    same iCloud account (simulator KVS is unreliable).
+- [ ] **Real two-device verification** — simulator KVS is unreliable, so the
+      cross-device behaviour can only be confirmed on a real iPhone + Mac on one
+      iCloud account (a win on one appears on the other; concurrent offline play
+      reconciles without double-count; signed-out = local-only). Fold into the
+      pre-1.0 real-device pass.
+- [ ] **PRIVACY.md note** — one line that scores sync via the user's own iCloud
+      (we still collect nothing, no server).
+- [ ] **Churn / pruning** — a reinstall (esp. macOS, where the `DeviceID` is lost)
+      mints a new slot, abandoning the old blob in KVS. Deferred: a dead reinstall
+      can't be told from an offline device, and the blobs are tiny. Revisit only if
+      KVS key/size limits are ever approached (a device registry with `lastUpdated`
+      was specced but not built).
 
 ### Big boards
 
@@ -186,7 +130,12 @@ test wins a full game with unchanged rules. This release makes it playable.
 - [ ] Rendering that conveys wrap-around (edge ghosting / seamless scroll, or
       explicit "this edge connects to that one" affordance)
 - [ ] Pan behaviour for a seamless/torus surface (no hard edges to clamp to)
-- [ ] Scoreboards keyed by topology
+- [ ] Scoreboards keyed by topology — and **restructure the scoreboard UI** for
+      the new axis: the per-board High Scores tables roughly triple (square /
+      wrapped / hex × sizes), so scope them under a topology filter/toggle (mirrors
+      the New Game shape axis). Career totals stay global (summed across all). The
+      current section layout (Career + High Scores + sync footer) is the base; the
+      filter just narrows the High Scores section.
 
 ### Hex grids
 
