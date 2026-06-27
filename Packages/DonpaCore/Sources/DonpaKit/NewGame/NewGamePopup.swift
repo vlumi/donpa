@@ -71,7 +71,9 @@ struct NewGamePopup: View {
             Text("New game", bundle: .module).font(.title2.bold())
 
             #if os(macOS)
-            BoardSelectionPicker(settings: settings, focusedRow: focusedRow)
+            BoardSelectionPicker(
+                settings: settings, focusedRow: focusedRow,
+                onFocusRow: { focusedRow = $0 })  // clicking a control focuses its row
             Text("Arrows to choose · Return to start", bundle: .module)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -125,19 +127,21 @@ struct NewGamePopup: View {
         case (_, 0):
             settings.mode = settings.mode == .classic ? .modern : .classic
         case (.classic, _):
-            settings.classicPreset = Self.cycled(settings.classicPreset, by: step)
+            settings.classicPreset = Self.stepped(settings.classicPreset, by: step)
         case (.modern, 1):
-            settings.modernDensity = Self.cycled(settings.modernDensity, by: step)
+            settings.modernDensity = Self.stepped(settings.modernDensity, by: step)
         case (.modern, _):
-            settings.modernSize = Self.cycled(settings.modernSize, by: step)
+            settings.modernSize = Self.stepped(settings.modernSize, by: step)
         }
     }
 
-    /// Next/previous case of a `CaseIterable` enum, wrapping at the ends.
-    private static func cycled<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
+    /// Next/previous case of a `CaseIterable` enum, CLAMPED at the ends (no wrap) —
+    /// matching the carousel, where the ends stop flush rather than wrapping, so
+    /// arrowing left on the easiest/smallest stays put.
+    private static func stepped<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
         let all = Array(T.allCases)
         guard let i = all.firstIndex(of: value), !all.isEmpty else { return value }
-        let next = (i + step % all.count + all.count) % all.count
+        let next = min(max(i + step, 0), all.count - 1)
         return all[next]
     }
     #endif
