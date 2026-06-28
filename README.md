@@ -21,6 +21,7 @@ version history, [ROADMAP.md](ROADMAP.md) for the path to v1.0, and
 - [Scores](#scores)
 - [Settings](#settings)
 - [AI assistance](#ai-assistance)
+- [Version history](#version-history)
 - [Development](#development)
 - [License](#license)
 
@@ -141,6 +142,37 @@ AI-generated** (DALL·E). The procedural visuals — the app icon, the manga UI
 glyphs, and the board screentone — are AI-*written code*, not generated images.
 If hand-made or commissioned art replaces the generated pieces later, this note
 will be updated to credit it.
+
+## Version history
+
+High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
+in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
+
+### 0.2.0 — cross-device sync & big boards
+
+- **New:** iCloud cross-device sync for high scores and career totals (opt-in,
+  off by default; conflict-free, degrades to local-only when signed out).
+- **New:** lifetime career stats (games, tiles, flags, mines, playtime) in a
+  reworked one-sheet Service Record.
+- **New:** bigger Modern boards — the size ladder now runs XS to XXXL (up to a
+  million cells), panned/zoomed with a minimap.
+- **New:** the New Game difficulty/size pickers became a swipeable carousel; a
+  resumed game restores your camera position; macOS gained mouse/keyboard zoom.
+- **Changed:** huge boards stay responsive (reveal, mine placement, and the
+  minimap compute off the main thread; the first tap is always instant).
+- **Fixed:** the cleared-% and loss "best %" now floor consistently; flags
+  survive a loss; correctly-flagged mines don't detonate.
+
+### 0.1.0 — first release
+
+- Classic Minesweeper on iOS and macOS: first-click safety, flood-fill reveal,
+  flagging, and chording, with a dig/flag input-mode toggle.
+- Two board modes — **Classic** (Beginner / Intermediate / Expert) and
+  **Modern** (a difficulty × size grid), chosen in the New Game popup.
+- A SpriteKit board with pan/zoom, a manga theme (comic result, pause, and title
+  panels), and a procedural detonating-mine app icon.
+- Per-board best times + games-cleared stats, autosave/resume, pause, light/dark
+  appearance, haptics, and an About screen.
 
 ## Development
 
