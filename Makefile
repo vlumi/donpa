@@ -56,27 +56,51 @@ uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 	@Scripts/uitest.sh
 
 # ── Release lane ──────────────────────────────────────────────────────────────
-# Scripts/release.sh does the whole cut: bump versions (asks about the marketing
-# version on a `both` release; always bumps the shared build number), open an
-# auto-merging PR, wait for CI, then tag the merge commit (ios/ and/or mac/
-# vX.Y.Z-N) and archive/export — uploading to App Store Connect unless built via a
-# `*-build` target. Run from a clean, up-to-date main.
+# The cut is split by concern, one script each, chained here in order:
+#   preflight → publish → tag → distribute
+# The pure ends (preflight, tag, distribute) re-derive their inputs from git +
+# project.yml, so each runs standalone. The dirty middle (publish: version-bump
+# prompts + auto-merging PR + CI-wait) is the one stateful script; state crosses
+# to the later steps via the merged commit on main, not through Make.
+#
+# PLATFORM selects scope (default all); UPLOAD=0 stops after export (no ASC
+# upload). The steps are a linear dependency chain so they stay ordered even
+# under `make -j`. Run from a clean, up-to-date main.
+PLATFORM ?= all
+UPLOAD ?= 1
+DIST_FLAGS := $(if $(filter 0,$(UPLOAD)),--no-upload,)
 
+# `release` runs the four steps in order within one recipe (not as prerequisites)
+# so the individual step targets below stay independently runnable — e.g. re-run
+# `make release-tag` after fixing a stalled auto-merge, without re-opening a PR.
 .PHONY: release
-release:  ## Cut a release of BOTH apps (bump, PR, tag, distribute → App Store Connect)
-	@Scripts/release.sh both
+release:  ## Cut a release (PLATFORM=all|ios|macos, UPLOAD=0 to skip ASC)
+	@Scripts/release-preflight.sh
+	@Scripts/release-publish.sh $(PLATFORM)
+	@Scripts/release-tag.sh $(PLATFORM)
+	@Scripts/release-distribute.sh $(PLATFORM) $(DIST_FLAGS)
+	@echo "✓ release complete (PLATFORM=$(PLATFORM))."
 
 .PHONY: release-build
-release-build:  ## Like `release` but stop after export (no upload to App Store Connect)
-	@Scripts/release.sh both --no-upload
+release-build:  ## Like `release` but stop after export (no upload)
+	@$(MAKE) release UPLOAD=0
 
-.PHONY: release-ios
-release-ios:  ## Release iOS only (keeps the version; bumps the shared build number)
-	@Scripts/release.sh ios
+# The steps, individually runnable (each re-derives its inputs from git/project.yml).
+.PHONY: release-preflight
+release-preflight:  ## Release step 1: verify clean, up-to-date main
+	@Scripts/release-preflight.sh
 
-.PHONY: release-macos
-release-macos:  ## Release macOS only (keeps the version; bumps the shared build number)
-	@Scripts/release.sh macos
+.PHONY: release-publish
+release-publish:  ## Release step 2: bump, open auto-merging PR, wait for CI
+	@Scripts/release-publish.sh $(PLATFORM)
+
+.PHONY: release-tag
+release-tag:  ## Release step 3: tag the merge commit + publish GitHub releases
+	@Scripts/release-tag.sh $(PLATFORM)
+
+.PHONY: release-distribute
+release-distribute:  ## Release step 4: archive/export (+ upload unless UPLOAD=0)
+	@Scripts/release-distribute.sh $(PLATFORM) $(DIST_FLAGS)
 
 .PHONY: clean
 clean:  ## Remove the generated project + local build output
