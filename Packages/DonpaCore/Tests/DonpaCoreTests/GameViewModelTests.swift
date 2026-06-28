@@ -205,21 +205,23 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertEqual(restored.inputMode, .flag, "resuming keeps the dig/flag toggle")
     }
 
-    // MARK: Input-gate release decision (so the gate can't wedge shut)
+    // MARK: Finishing-compute outcome (apply board? release the input gate?)
 
-    func testShouldReleaseGateTruthTable() {
-        // Live task (its generation is still current) → release.
-        XCTAssertTrue(
-            GameViewModel.shouldReleaseGate(finished: 5, current: 5, latestStarted: 5))
-        // Stale task, and no newer compute armed the current gen → it must release.
-        XCTAssertTrue(
-            GameViewModel.shouldReleaseGate(finished: 4, current: 5, latestStarted: 4),
-            "a superseded compute releases when nothing is arming the new generation")
-        // Stale task, but a newer compute IS arming the current gen → leave it; the
-        // newer compute owns the release (don't open the gate mid-arm).
-        XCTAssertFalse(
-            GameViewModel.shouldReleaseGate(finished: 4, current: 5, latestStarted: 5),
-            "a superseded compute defers to the newer compute arming the new generation")
+    func testComputeOutcomeTruthTable() {
+        // Live task: its generation is still current → apply its board AND release.
+        let live = GameViewModel.computeOutcome(finished: 5, current: 5, latestStarted: 5)
+        XCTAssertTrue(live.applyResult)
+        XCTAssertTrue(live.releaseGate)
+        // Stale task, nothing arming the new generation → don't apply (would clobber
+        // the newer game) but DO release, else the gate wedges shut.
+        let orphan = GameViewModel.computeOutcome(finished: 4, current: 5, latestStarted: 4)
+        XCTAssertFalse(orphan.applyResult, "a superseded compute must not clobber the new board")
+        XCTAssertTrue(orphan.releaseGate, "it releases the gate when nothing else will")
+        // Stale task, but a newer compute IS arming the current generation → don't
+        // apply and don't release; the newer compute owns the gate.
+        let deferred = GameViewModel.computeOutcome(finished: 4, current: 5, latestStarted: 5)
+        XCTAssertFalse(deferred.applyResult)
+        XCTAssertFalse(deferred.releaseGate, "it defers the release to the newer compute mid-arm")
     }
 
     func testRestoreClearsAnyPriorResult() async {
