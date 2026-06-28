@@ -21,21 +21,17 @@ extension BoardScene {
         var hiY: CGFloat
     }
 
-    /// The minimap is a HUD in the top-LEFT corner, so the left (loX) and top (hiY)
-    /// edges get extra margin to clear it — it then covers empty space, not cells.
-    /// The footprint is in screen points, converted to scene units at the current
-    /// zoom so the on-screen gap stays consistent across window size and zoom.
+    /// Resting margin on every edge = the minimap footprint plus the base breathing
+    /// room, so edge tiles never sit flush to the window — whether the minimap is
+    /// shown or not, and on all four sides (not just the minimap's corner). The
+    /// footprint is in screen points, converted to scene units at the current zoom so
+    /// the on-screen gap stays consistent across window size and zoom.
     private func edgeMargins() -> EdgeMargins {
-        let base = baseEdgeMargin
-        guard let mm = minimapCornerFootprint() else {
-            return EdgeMargins(loX: base, hiX: base, loY: base, hiY: base)
-        }
         let scale = cameraNode.xScale
-        return EdgeMargins(
-            loX: max(base, mm.width * scale),  // left edge clears the minimap width
-            hiX: base,
-            loY: base,
-            hiY: max(base, mm.height * scale))  // top edge clears the minimap height
+        let mm = minimapCornerFootprint()
+        let x = baseEdgeMargin + mm.width * scale
+        let y = baseEdgeMargin + mm.height * scale
+        return EdgeMargins(loX: x, hiX: x, loY: y, hiY: y)
     }
 
     /// Pan the camera by a view-space translation delta.
