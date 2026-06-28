@@ -6,9 +6,9 @@
 # run. The pure steps that follow (tag, distribute) read the result back from the
 # merged commit on main — so nothing is passed between scripts.
 #
-# Versioning (project.yml, shared by both targets):
+# Versioning (project.yml, shared across all app targets):
 #   • MARKETING_VERSION — bumped only on an `all` release, and only if you say so.
-#   • CURRENT_PROJECT_VERSION — the build number, always bumped (both targets).
+#   • CURRENT_PROJECT_VERSION — the build number, always bumped on every target.
 #
 # Usage: release-publish.sh <ios|macos|all>
 # On CI failure it stops with the PR left open: no merge, and (since the later
@@ -57,10 +57,10 @@ EOF
              new_version="$answer" ;;
     esac
 else
-    echo "single-platform release ($platform): keeping version ${cur_version} (build still bumps both)."
+    echo "single-platform release ($platform): keeping version ${cur_version} (build still bumps every target)."
 fi
 new_build=$(( cur_build + 1 ))
-echo "release: version ${new_version}, build ${new_build} (build applies to both targets)"
+echo "release: version ${new_version}, build ${new_build} (build applies to every target)"
 
 # ── Apply the bump to project.yml ─────────────────────────────────────────────
 if [ "$new_version" != "$cur_version" ]; then
@@ -79,7 +79,7 @@ git commit --quiet -m "$(cat <<EOF
 Release v${new_version} build ${new_build} (${platform})
 
 Marketing version ${new_version}, shared build number ${new_build} (bumped
-on both targets). Opened by Scripts/release-publish.sh, which tags this merge
+on every target). Opened by Scripts/release-publish.sh, which tags this merge
 commit and distributes ${platform} once CI passes.
 EOF
 )"
@@ -88,7 +88,7 @@ git push --quiet -u origin "$rel_branch"
 say "Opening PR…"
 gh pr create \
     --title "Release v${new_version} build ${new_build} (${platform})" \
-    --body "Version **${new_version}**, build **${new_build}** (build bumped on both targets; release scope: **${platform}**). Opened by \`Scripts/release-publish.sh\`; set to auto-merge once CI passes. The resulting merge commit on main is tagged and distributed." \
+    --body "Version **${new_version}**, build **${new_build}** (build bumped on every target; release scope: **${platform}**). Opened by \`Scripts/release-publish.sh\`; set to auto-merge once CI passes. The resulting merge commit on main is tagged and distributed." \
     --head "$rel_branch" >/dev/null
 
 say "Enabling auto-merge (merge commit) — will merge when CI passes…"
