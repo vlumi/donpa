@@ -8,8 +8,8 @@ plus UI, without touching the game logic.
 Versions are indicative, not contractual; scope may shift between minor
 releases. Each minor groups **related** work into one meaty release rather than
 giving every feature its own number: v0.2.0 carries both cross-device sync and
-big boards; v0.3.0 both board-topology variants; v0.4.0 achievements (held late,
-once the feature set they reference is settled); v1.0.0 the composed epic set.
+big boards; v0.3.0 both board-topology variants; v0.4.0 achievements + practice mode (held
+late, once the feature set they reference is settled); v1.0.0 the composed epic set.
 The project ships **0.2.0** on TestFlight today (pre-release, not yet a public
 store release).
 
@@ -77,14 +77,11 @@ slot into whichever release they're ready for.
 
 **Gameplay fairness** (builds on the v0.1 logical solver):
 
-- **"No-guess" boards — questioned, probably not wanted.** The machinery is cheap
-  (the `Solver` + `TierAnalysis` already exist; generation would just resample
-  until solvable), but the *desire* is in doubt: a chance of a forced guess is part
-  of classic Minesweeper's character, and pure-deduction-only can feel sterile.
-  Left here as a deliberate maybe, not planned work — revisit only if play
-  testing says the guessing genuinely frustrates rather than spices. If it ever
-  lands, ship it as an **optional per-config toggle**, never the default, so the
-  classic risk stays the norm.
+- **"No-guess" generation is NOT a fairness fix for the normal game** — a chance
+  of a forced guess is part of classic Minesweeper's character, so the standard
+  modes keep it. The solver-gated no-guess machinery (cheap; `Solver` +
+  `TierAnalysis` already exist, generation just resamples until solvable) instead
+  finds its purpose as a **practice mode** — see v0.4.
 - [ ] Safe-reveal / question-mark flag cycle (classic third flag state).
 
 **Navigation / UX:**
@@ -150,19 +147,35 @@ The "hex grids" pillar — exercises the second seam.
 - [ ] Hex-aware tile/number rendering
 - [ ] Verify game logic is genuinely unchanged (same test pattern as torus)
 
-## v0.4.0 — Achievements
+## v0.4.0 — Achievements & practice mode
 
-Achievements come **late on purpose**: they're a layer *over* gameplay, and their
-IDs are permanent once shipped (like the scoreboard keys), so they're designed
-against the (by-now) settled feature set — square + hex + wrapped boards all
-exist, so achievements can reference the full variant matrix without churn. See
-the **Achievements** section below for the architecture, the no-leaderboards
-decision, and the design principles. The milestone is the build-out:
+Two engagement features grouped because both turn on the same "what counts toward
+stats" question. Held **late on purpose**: achievement IDs are permanent (like the
+scoreboard keys), so they're designed against the by-now settled feature set —
+square + hex + wrapped all exist, so they can reference the full variant matrix
+without churn.
+
+**Achievements** — see the **Achievements** section below for the architecture,
+the no-leaderboards decision, and the design principles. Build-out:
 
 - [ ] Internal achievement layer (events on game-end → local store) + in-app UI
 - [ ] Local + iCloud-KVS sync of the earned set (reuses the v0.2 sync blob)
 - [ ] Game Center reporter bolted on behind the layer (achievements only)
 - [ ] The curated achievement list defined (IDs locked) in App Store Connect
+
+**Practice mode (no-guess boards)** — a deduction-only **onboarding** mode, framed
+as *practice*, NOT as a "fairer" alternative to the real game (the standard modes
+keep the classic forced-guess risk). Solver-gated generation resamples until the
+board is fully deducible.
+
+- [ ] Generate guaranteed-solvable boards (reuse `Solver` / `TierAnalysis`)
+- [ ] Frame it clearly as **practice** in the New Game UI — its own thing, not a
+      difficulty or a default
+- [ ] **No hi-scores**: practice never writes a per-board best time (incomparable
+      to real boards + an easier guarantee). **Career totals DO count** (you still
+      played — tiles/flags/playtime accrue). Achievements: gentle/onboarding ones
+      may count; skill feats (speed, no-flag, Insane) excluded. Its own
+      geometry-bearing `GameConfig.storageKey` keeps it cleanly separated.
 
 ## v1.0.0 — The epic set
 
