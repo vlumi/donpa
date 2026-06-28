@@ -131,6 +131,17 @@ This format is **load-bearing, not cosmetic** — keep it strict:
 - **Build numbers are shared across platforms** (lock-step), so `ios/v0.2.0-5`
   and `mac/v0.2.0-5` name the same source.
 
+The **git tags are the source of truth** — immutable pointers to the exact commit
+each build shipped from. The GitHub releases are a presentation layer on top.
+
+> **Never delete an immutable GitHub release.** GitHub permanently reserves that
+> release's tag name — even after deletion you **cannot** create a new release on
+> the same tag (`tag_name was used by an immutable release`). To revise a
+> release's notes/title, *edit* it (the tag can't change); to re-point it, you'd
+> have to publish under a *new* tag. A delete is effectively irreversible for that
+> tag. (We learned this the hard way and restarted the release list from a later
+> build; the underlying git tags were kept.)
+
 `make release` creates these; you never tag by hand in the normal flow. The
 changelog for a release diffs against the **highest existing tag not newer than
 it** — so a forward release (0.3.0) diffs against the prior version (0.2.0), and
