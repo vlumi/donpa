@@ -205,6 +205,23 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertEqual(restored.inputMode, .flag, "resuming keeps the dig/flag toggle")
     }
 
+    // MARK: Input-gate release decision (so the gate can't wedge shut)
+
+    func testShouldReleaseGateTruthTable() {
+        // Live task (its generation is still current) → release.
+        XCTAssertTrue(
+            GameViewModel.shouldReleaseGate(finished: 5, current: 5, latestStarted: 5))
+        // Stale task, and no newer compute armed the current gen → it must release.
+        XCTAssertTrue(
+            GameViewModel.shouldReleaseGate(finished: 4, current: 5, latestStarted: 4),
+            "a superseded compute releases when nothing is arming the new generation")
+        // Stale task, but a newer compute IS arming the current gen → leave it; the
+        // newer compute owns the release (don't open the gate mid-arm).
+        XCTAssertFalse(
+            GameViewModel.shouldReleaseGate(finished: 4, current: 5, latestStarted: 5),
+            "a superseded compute defers to the newer compute arming the new generation")
+    }
+
     func testRestoreClearsAnyPriorResult() async {
         // A finished VM that then restores a live snapshot must drop the stale result.
         let live = await startedGame()

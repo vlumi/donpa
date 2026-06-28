@@ -166,11 +166,16 @@ public final class GameViewModel: ObservableObject {
                 return working
             }.value
             // A newGame/restore mid-compute bumps gameID; don't clobber its board.
-            // But still release the input gate, UNLESS a newer compute is now in
-            // flight for the current generation — so the gate can never wedge shut
-            // on `isComputing` regardless of which entry point bumped gameID.
+            // A stale task still releases the gate when no newer compute is arming
+            // the current generation, so `isComputing` can't wedge shut (see
+            // `shouldReleaseGate`).
             guard self.gameID == generation else {
-                if self.computeGeneration != self.gameID { self.isComputing = false }
+                if Self.shouldReleaseGate(
+                    finished: generation, current: self.gameID,
+                    latestStarted: self.computeGeneration)
+                {
+                    self.isComputing = false
+                }
                 return
             }
             self.game = updated
@@ -178,6 +183,20 @@ public final class GameViewModel: ObservableObject {
             self.isComputing = false
             self.bump()
         }
+    }
+
+    /// Whether a finishing compute should release the input gate (`isComputing`).
+    /// - `finished`: the gameID the finishing task belongs to.
+    /// - `current`: the live gameID now.
+    /// - `latestStarted`: the gameID of the most recently *started* compute.
+    ///
+    /// The live task (`finished == current`) always releases. A stale task (a
+    /// newGame/restore bumped gameID past it) releases only when no newer compute
+    /// is arming the current generation (`latestStarted != current`) — otherwise
+    /// that newer compute owns the release. This guarantees the gate can never
+    /// wedge shut regardless of which entry point bumped gameID.
+    static func shouldReleaseGate(finished: Int, current: Int, latestStarted: Int) -> Bool {
+        finished == current || latestStarted != current
     }
 
     public func reveal(_ c: Coord) {
