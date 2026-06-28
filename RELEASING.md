@@ -37,7 +37,7 @@ Two numbers, both set in [project.yml](project.yml) (the source of truth — the
 Both targets (`Donpa-iOS`, `Donpa-macOS`) carry their own copy of these. They're
 **one app across two platforms** (§ Platforms — a Universal Purchase sharing the
 bundle ID `fi.misaki.donpa`). The release lane keeps both numbers **in lock-step**:
-`make release` bumps `CURRENT_PROJECT_VERSION` on *both* targets together (even a
+`make release` bumps `CURRENT_PROJECT_VERSION` on *every* target together (even a
 single-platform release), and `MARKETING_VERSION` only on an all-platform release.
 So the two apps share one version and one build number — `0.2.0 (5)` means the
 same source on both. (Each still uploads its own binary; the shared numbers are a
@@ -65,7 +65,7 @@ need review — use an internal group for the fastest feedback loop.
 
 Every build stamps the git commit it came from into its Info.plist as
 `GitCommitSHA`, via [Scripts/embed-commit-sha.sh](Scripts/embed-commit-sha.sh)
-(a post-build phase on both app targets — fires on `xcodebuild` and on an Xcode
+(a post-build phase on every app target — fires on `xcodebuild` and on an Xcode
 Organizer archive). A dirty working tree gets a `-dirty` suffix; a non-git
 checkout writes `unknown`. The SHA is shown in **About** (under the version),
 so any installed build can be matched back to its source. Archive from a clean,
