@@ -138,6 +138,11 @@ public final class GameViewModel: ObservableObject {
     /// In-flight compute, held so tests can await it. Not for production callers.
     private var pendingWork: Task<Void, Never>?
 
+    /// The `gameID` the most recently started compute belongs to. Lets a stale
+    /// task tell whether a newer compute is arming the current generation (so it
+    /// leaves the gate alone) or not (so it must release `isComputing` itself).
+    private var computeGeneration = -1
+
     /// Await the current reveal/chord compute (test-only).
     public func awaitPendingWork() async {
         await pendingWork?.value
@@ -153,6 +158,7 @@ public final class GameViewModel: ObservableObject {
         isComputing = true
         let snapshot = game  // O(1) COW; the task's mutation triggers the copy
         let generation = gameID
+        computeGeneration = generation
         pendingWork = Task {
             let updated = await Task.detached {
                 var working = snapshot
@@ -160,7 +166,13 @@ public final class GameViewModel: ObservableObject {
                 return working
             }.value
             // A newGame/restore mid-compute bumps gameID; don't clobber its board.
-            guard self.gameID == generation else { return }
+            // But still release the input gate, UNLESS a newer compute is now in
+            // flight for the current generation — so the gate can never wedge shut
+            // on `isComputing` regardless of which entry point bumped gameID.
+            guard self.gameID == generation else {
+                if self.computeGeneration != self.gameID { self.isComputing = false }
+                return
+            }
             self.game = updated
             afterApply()
             self.isComputing = false
