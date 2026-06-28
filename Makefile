@@ -70,36 +70,34 @@ PLATFORM ?= all
 UPLOAD ?= 1
 DIST_FLAGS := $(if $(filter 0,$(UPLOAD)),--no-upload,)
 
-# `release` runs the four steps in order within one recipe (not as prerequisites)
-# so the individual step targets below stay independently runnable — e.g. re-run
-# `make release-tag` after fixing a stalled auto-merge, without re-opening a PR.
+# The steps form a linear dependency chain — each requires the previous — so
+# `make release` (an alias for the last step) runs them in order, and the order
+# holds even under `make -j`. Running an intermediate target pulls in its
+# predecessors; to repeat just one step (e.g. re-tag after a stalled merge),
+# call its script directly (Scripts/release-tag.sh all) — the scripts re-derive
+# their inputs from git + project.yml, so each stands alone.
 .PHONY: release
-release:  ## Cut a release (PLATFORM=all|ios|macos, UPLOAD=0 to skip ASC)
-	@Scripts/release-preflight.sh
-	@Scripts/release-publish.sh $(PLATFORM)
-	@Scripts/release-tag.sh $(PLATFORM)
-	@Scripts/release-distribute.sh $(PLATFORM) $(DIST_FLAGS)
+release: release-distribute  ## Cut a release (PLATFORM=all|ios|macos, UPLOAD=0 to skip ASC)
 	@echo "✓ release complete (PLATFORM=$(PLATFORM))."
 
 .PHONY: release-build
 release-build:  ## Like `release` but stop after export (no upload)
 	@$(MAKE) release UPLOAD=0
 
-# The steps, individually runnable (each re-derives its inputs from git/project.yml).
 .PHONY: release-preflight
 release-preflight:  ## Release step 1: verify clean, up-to-date main
 	@Scripts/release-preflight.sh
 
 .PHONY: release-publish
-release-publish:  ## Release step 2: bump, open auto-merging PR, wait for CI
+release-publish: release-preflight  ## Release step 2: bump, open auto-merging PR, wait for CI
 	@Scripts/release-publish.sh $(PLATFORM)
 
 .PHONY: release-tag
-release-tag:  ## Release step 3: tag the merge commit + publish GitHub releases
+release-tag: release-publish  ## Release step 3: tag the merge commit + publish GitHub releases
 	@Scripts/release-tag.sh $(PLATFORM)
 
 .PHONY: release-distribute
-release-distribute:  ## Release step 4: archive/export (+ upload unless UPLOAD=0)
+release-distribute: release-tag  ## Release step 4: archive/export (+ upload unless UPLOAD=0)
 	@Scripts/release-distribute.sh $(PLATFORM) $(DIST_FLAGS)
 
 .PHONY: clean
