@@ -62,11 +62,11 @@ extension BoardScene {
             : CGSize(width: longer * aspect, height: longer)
     }
 
-    /// The minimap's full on-screen footprint (image + frame + edge gap), or nil
-    /// when hidden. The pan clamp uses it to clear the corner so the board can rest
-    /// over empty margin. The `+ 6` mirrors `layoutMinimap`'s `framePad`.
-    func minimapCornerFootprint() -> CGSize? {
-        guard showMinimap, viewModel.boardExceedsViewport else { return nil }
+    /// The minimap's full on-screen footprint (image + frame + edge gap), regardless
+    /// of whether it's currently shown — the pan margin reserves this much on every
+    /// edge so edge tiles never sit flush to the window, minimap or not. The `+ 6`
+    /// mirrors `layoutMinimap`'s `framePad`.
+    func minimapCornerFootprint() -> CGSize {
         let mm = minimapSize(boardW: viewModel.boardWidth, boardH: viewModel.boardHeight)
         let extra = Self.minimapPadding + 6  // edge gap + frame border (framePad)
         return CGSize(width: mm.width + extra, height: mm.height + extra)
