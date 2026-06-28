@@ -138,6 +138,11 @@ public final class GameViewModel: ObservableObject {
     /// In-flight compute, held so tests can await it. Not for production callers.
     private var pendingWork: Task<Void, Never>?
 
+    /// The `gameID` the most recently started compute belongs to. Lets a stale
+    /// task tell whether a newer compute is arming the current generation (so it
+    /// leaves the gate alone) or not (so it must release `isComputing` itself).
+    private var computeGeneration = -1
+
     /// Await the current reveal/chord compute (test-only).
     public func awaitPendingWork() async {
         await pendingWork?.value
@@ -153,19 +158,43 @@ public final class GameViewModel: ObservableObject {
         isComputing = true
         let snapshot = game  // O(1) COW; the task's mutation triggers the copy
         let generation = gameID
+        computeGeneration = generation
         pendingWork = Task {
             let updated = await Task.detached {
                 var working = snapshot
                 mutate(&working)
                 return working
             }.value
-            // A newGame/restore mid-compute bumps gameID; don't clobber its board.
-            guard self.gameID == generation else { return }
-            self.game = updated
-            afterApply()
-            self.isComputing = false
-            self.bump()
+            let outcome = Self.computeOutcome(
+                finished: generation, current: self.gameID,
+                latestStarted: self.computeGeneration)
+            if outcome.applyResult {
+                self.game = updated
+                afterApply()
+                self.bump()
+            }
+            if outcome.releaseGate { self.isComputing = false }
         }
+    }
+
+    /// What a finishing off-main compute should do, decided purely so it's testable
+    /// (the async closure just applies the result, with no branching of its own).
+    /// - `finished`: the gameID the finishing task belongs to.
+    /// - `current`: the live gameID now.
+    /// - `latestStarted`: the gameID of the most recently *started* compute.
+    ///
+    /// `applyResult` — only the live task (`finished == current`) writes its board +
+    /// runs afterApply; a stale task (a newGame/restore bumped gameID past it) must
+    /// not clobber the newer game.
+    /// `releaseGate` — release `isComputing` for the live task, OR for a stale task
+    /// when no newer compute is arming the current generation (`latestStarted !=
+    /// current`); otherwise that newer compute owns the release. So the gate can
+    /// never wedge shut regardless of which entry point bumped gameID.
+    static func computeOutcome(finished: Int, current: Int, latestStarted: Int)
+        -> (applyResult: Bool, releaseGate: Bool)
+    {
+        let live = finished == current
+        return (applyResult: live, releaseGate: live || latestStarted != current)
     }
 
     public func reveal(_ c: Coord) {
