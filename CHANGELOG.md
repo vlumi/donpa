@@ -8,14 +8,18 @@ Grouped by **marketing version** (a roadmap milestone), then by **build number**
 within it — the version stays steady while the build climbs each TestFlight
 upload (see [RELEASING.md](RELEASING.md)). Newest first.
 
+Each version's top section, **Unreleased (next build)**, collects entries merged
+to `main` but not yet in a TestFlight build; cutting a release renames it to that
+build's heading and opens a fresh empty one. Keep that heading immediately
+followed by its list items (no prose between), so the release script can promote
+it with a one-line edit.
+
 ## [0.2.0] — Cross-device & big boards
 
 **Cross-device sync & big boards** (see ROADMAP.md). Both pillars have landed;
 cross-device sync awaits a real two-device verification pass.
 
 ### Unreleased (next build)
-
-Merged to `main`, not yet in a TestFlight build.
 
 ### build 8
 
