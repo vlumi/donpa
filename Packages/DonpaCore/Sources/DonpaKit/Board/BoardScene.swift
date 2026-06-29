@@ -73,6 +73,12 @@ public final class BoardScene: SKScene {
     var minimapHandleRects: [CGRect] = []
     /// Push a new minimap scale to the host, which persists it in Settings.
     var onMinimapScaleChange: ((CGFloat) -> Void)?
+    /// The in-flight minimap-overview render. A burst of board revisions (e.g. a big
+    /// flood-fill reveal on a huge board) would otherwise spawn one full 1M-cell
+    /// raster per revision and pile them onto the cooperative pool, pegging every
+    /// core long after the reveal finished. Cancel the prior render before starting
+    /// the next so only the latest runs.
+    var minimapRenderTask: Task<Void, Never>?
 
     /// A saved camera view to hold across the launch dance instead of the default
     /// fit. STICKY: the window settles to its restored frame *after* the scene
