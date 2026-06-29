@@ -174,6 +174,9 @@ struct GameContent: View {
     /// the title), else stay on the title with the board primed to the persisted
     /// config so an immediate New Game matches the last selection.
     private func onLaunch() {
+        // Persist a minimap resize back to Settings (survives new game / restart /
+        // save-restore). The scene drives the gesture; Settings is the store.
+        scene.onMinimapScaleChange = { settings.minimapScale = Double($0) }
         // Fold each live activity-flush delta (tiles/flags/time) into the lifetime
         // totals WITHOUT counting a game played — the outcome is recorded at end.
         // Wired before any newGame below so the first flush is caught.
