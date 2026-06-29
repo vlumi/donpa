@@ -14,6 +14,9 @@ struct ScoreboardView: View {
     @ObservedObject var settings: Settings
     /// Presenting window size, so the sheet grows with it. `.zero` → use the screen.
     var available: CGSize = .zero
+    /// The config the player is currently on (the storageKey), so its row gets a
+    /// persistent "you are here" marker. nil when opened from the title (browsing).
+    var currentConfigKey: String?
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingReset = false
 
@@ -148,7 +151,7 @@ struct ScoreboardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 VStack(alignment: .leading, spacing: 12) {
                     sectionHeader("Commendations")
-                    ScrollView {
+                    anchoredScroll {
                         scoresRows
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.trailing, Self.scrollbarGutter)
@@ -158,13 +161,36 @@ struct ScoreboardView: View {
             }
         } else {
             // Narrow: one scroll over both, stacked (headers scroll with content).
-            ScrollView {
+            anchoredScroll {
                 VStack(alignment: .leading, spacing: 24) {
                     careerSection
                     scoresSection
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.trailing, Self.scrollbarGutter)
+            }
+        }
+    }
+
+    /// A ScrollView that, when opened in-game (`currentConfigKey` set), jumps the
+    /// current config's row into view — so you land on the board you're playing.
+    /// Opened from the title (key nil) it stays at the top for plain browsing.
+    @ViewBuilder private func anchoredScroll<Content: View>(
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
+        let inner = content()
+        ScrollViewReader { proxy in
+            ScrollView {
+                inner
+            }
+            .onAppear {
+                guard let key = currentConfigKey else { return }
+                // A beat after layout so the target row exists before we scroll.
+                DispatchQueue.main.async {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo(key, anchor: .center)
+                    }
+                }
             }
         }
     }
@@ -281,65 +307,21 @@ struct ScoreboardView: View {
                 Text("Cleared", bundle: .module).font(.caption).foregroundStyle(.secondary)
                     .frame(width: 56, alignment: .trailing)
                 Text("Best %", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 52, alignment: .trailing)
+                    .frame(width: 64, alignment: .trailing)
                 Text("Best", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 68, alignment: .trailing)
+                    .frame(width: 80, alignment: .trailing)
             }
             .padding(.vertical, 4)
             .padding(.horizontal, Self.rowInset)
 
             ForEach(configs, id: \.self) { config in
-                row(config)
+                ScoreRow(
+                    scoreboard: scoreboard, config: config,
+                    currentConfigKey: currentConfigKey, rowInset: Self.rowInset
+                )
+                .id(config.storageKey)  // scroll anchor for the current-config jump
                 if config != configs.last { Divider() }
             }
-        }
-    }
-
-    private func row(_ config: GameConfig) -> some View {
-        HStack {
-            // Modern rows: rank insignia in a fixed-width column (so size letters
-            // line up), then the size name. Classic rows show their preset name.
-            if let size = config.modernSize, let density = config.modernDensity {
-                DensityInsignia.image(density)
-                    .resizable().scaledToFit().frame(width: 30, height: 20)
-                Text(verbatim: size.label)
-            } else {
-                Text(verbatim: config.label)  // already localized by GameConfig
-            }
-            Spacer()
-            Text(verbatim: Self.grouped(scoreboard.wins(for: config)))
-                .font(.body.monospaced())
-                .frame(width: 56, alignment: .trailing)
-            Group {
-                if let progress = scoreboard.bestProgress(for: config) {
-                    // Floor, not round: a 99.7%-cleared loss must not read "100%".
-                    Text("\(Int((progress * 100).rounded(.down)))%").font(.body.monospaced())
-                } else {
-                    Text("—").foregroundStyle(.secondary)
-                }
-            }
-            .frame(width: 52, alignment: .trailing)
-            Group {
-                if let best = scoreboard.best(for: config) {
-                    Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())
-                } else {
-                    Text("—").foregroundStyle(.secondary)
-                }
-            }
-            .frame(width: 68, alignment: .trailing)
-        }
-        .padding(.vertical, 10)
-        .padding(.horizontal, Self.rowInset)
-        .background(rowHighlight(for: config))
-    }
-
-    /// Tinted band behind the row whose record was just set. Persists until the
-    /// next game ends.
-    @ViewBuilder private func rowHighlight(for config: GameConfig) -> some View {
-        if scoreboard.recentRecord == config.storageKey {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.accentColor.opacity(0.18))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor.opacity(0.5)))
         }
     }
 }
