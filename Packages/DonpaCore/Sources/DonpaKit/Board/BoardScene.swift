@@ -51,16 +51,16 @@ public final class BoardScene: SKScene {
     var minimapPanel: SKShapeNode?
     var minimapImage: SKSpriteNode?
     var minimapViewport: SKShapeNode?
-    var minimapExpand: SKNode?
-    /// The expand icon's hit rect in CAMERA space (screen-fixed); nil while hidden.
-    var minimapExpandHitRect: CGRect?
+    /// The minimap image's rect in CAMERA space (screen-fixed) — the tap/drag hit
+    /// area for navigating the board via the minimap. nil while hidden.
+    var minimapImageRect: CGRect?
     var lastMinimapRevision = -1
     var lastMinimapBoard: CGSize = .zero
     /// Show the minimap when the board exceeds the viewport (user preference).
     var showMinimap = true
-    /// Called when the minimap's expand icon is tapped — the host opens the
-    /// fullscreen overview.
-    var onOpenOverview: (() -> Void)?
+    /// Whether a drag in progress began on the minimap, so the whole drag scrubs
+    /// the board via the minimap instead of panning.
+    var scrubbingMinimap = false
 
     /// A saved camera view to hold across the launch dance instead of the default
     /// fit. STICKY: the window settles to its restored frame *after* the scene
