@@ -157,6 +157,7 @@ public final class GameViewModel: ObservableObject {
     ) {
         isComputing = true
         let snapshot = game  // O(1) COW; the task's mutation triggers the copy
+        let tokenBefore = game.changeToken
         let generation = gameID
         computeGeneration = generation
         pendingWork = Task {
@@ -170,8 +171,14 @@ public final class GameViewModel: ObservableObject {
                 latestStarted: self.computeGeneration)
             if outcome.applyResult {
                 self.game = updated
-                afterApply()
-                self.bump()
+                // Skip the redraw/autosave/minimap-rebuild if nothing actually changed
+                // — e.g. chording a number whose flag count doesn't match does no work,
+                // and on a huge board a stream of such no-op taps would otherwise each
+                // queue a full-board snapshot + minimap raster and back up the app.
+                if updated.changeToken != tokenBefore {
+                    afterApply()
+                    self.bump()
+                }
             }
             if outcome.releaseGate { self.isComputing = false }
         }
