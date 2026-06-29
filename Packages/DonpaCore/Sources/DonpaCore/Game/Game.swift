@@ -20,6 +20,19 @@ public struct Game: Sendable {
 
     public var safeCellCount: Int { board.cellCount - mineCount }
 
+    /// A cheap (O(1)) fingerprint of player-visible state, so a no-op reveal/chord
+    /// (e.g. chording a number whose flags don't match) can be detected and skip the
+    /// expensive redraw/autosave/minimap-rebuild. Covers every mutation: a reveal
+    /// raises `revealedSafeCount` or ends the game; a flag changes `flagCount`; a
+    /// loss/win changes `status`. Compare before/after a mutation.
+    public var changeToken: Int {
+        var h = Hasher()
+        h.combine(revealedSafeCount)
+        h.combine(board.flagCount)
+        h.combine(status)
+        return h.finalize()
+    }
+
     /// Fraction of safe cells revealed, 0...1; 1.0 is a win.
     public var progress: Double {
         let safe = safeCellCount

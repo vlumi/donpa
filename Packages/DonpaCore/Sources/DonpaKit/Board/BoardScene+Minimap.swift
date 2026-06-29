@@ -189,15 +189,23 @@ extension BoardScene {
         let board = viewModel.game.board
         let colors = overviewColors
         let generation = lastMinimapRevision
-        Task {
-            let cg = await Task.detached {
-                Self.renderOverview(
-                    board: board, width: boardW, height: boardH, ppc: ppc, colors: colors)
-            }.value
-            guard let cg, generation == lastMinimapRevision else { return }
-            let texture = SKTexture(cgImage: cg)
-            texture.filteringMode = .nearest  // crisp cell blocks, no blur
-            minimapImage?.texture = texture
+        // Supersede any render still running for an older revision — its result would
+        // be discarded anyway, so don't let it finish burning a core. The render runs
+        // in this child task (NOT `Task.detached`, which wouldn't inherit
+        // cancellation) so `Task.isCancelled` inside `renderOverview` actually fires.
+        minimapRenderTask?.cancel()
+        minimapRenderTask = Task.detached { [weak self] in
+            let cg = Self.renderOverview(
+                board: board, width: boardW, height: boardH, ppc: ppc, colors: colors)
+            guard let cg else { return }
+            await MainActor.run {
+                guard let self, !Task.isCancelled,
+                    generation == self.lastMinimapRevision
+                else { return }
+                let texture = SKTexture(cgImage: cg)
+                texture.filteringMode = .nearest  // crisp cell blocks, no blur
+                self.minimapImage?.texture = texture
+            }
         }
     }
 
@@ -238,20 +246,32 @@ extension BoardScene {
 
         ctx.setFillColor(colors.hidden)
         ctx.fill(CGRect(x: 0, y: 0, width: pxW, height: pxH))
-        for y in 0..<boardH {
-            for x in 0..<boardW {
-                let cell = board[Coord(x, y)]
-                let color: CGColor?
-                switch cell.state {
-                case .revealed: color = cell.isMine ? colors.mine : colors.revealed
-                case .flagged: color = colors.flag
-                case .hidden: color = nil  // background already painted
-                }
-                guard let color else { continue }
-                ctx.setFillColor(color)
-                ctx.fill(CGRect(x: x * ppc, y: y * ppc, width: ppc, height: ppc))
+        // Walk the dense flat store by index — NOT `board[Coord(x,y)]`, which does a
+        // topology `index(of:)` + protocol-witness dispatch + ARC retain/release per
+        // cell. On a 1M-cell board that per-cell overhead WAS the runaway (profiled
+        // ~74% of all CPU in `Board.subscript`/`swift_retain`). Index → x,y directly.
+        var aborted = false
+        board.forEachCellIndexed { i, cell in
+            if aborted { return }
+            // Cancellation: a newer board revision supersedes this render. Check only
+            // periodically — `Task.isCancelled` per cell would itself be 1M calls.
+            if i & 0x3FFF == 0, Task.isCancelled {
+                aborted = true
+                return
             }
+            let color: CGColor?
+            switch cell.state {
+            case .revealed: color = cell.isMine ? colors.mine : colors.revealed
+            case .flagged: color = colors.flag
+            case .hidden: color = nil  // background already painted
+            }
+            guard let color else { return }
+            let x = i % boardW
+            let y = i / boardW
+            ctx.setFillColor(color)
+            ctx.fill(CGRect(x: x * ppc, y: y * ppc, width: ppc, height: ppc))
         }
+        if aborted { return nil }
         return ctx.makeImage()
     }
 

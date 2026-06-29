@@ -74,8 +74,30 @@ private struct CellStore: Sendable {
     }
 
     /// All (coord, cell) pairs — for the persistence/derived accessors.
+    ///
+    /// Hot path on a 1M-cell board, so it avoids two per-cell costs the profiler
+    /// caught: (1) `rect.coord(at:)` drags the heap-allocated `any RectangularTopology`
+    /// existential through ARC every iteration — instead capture the plain `Int` width
+    /// and compute `x,y` arithmetically (the store is dense row-major); (2) reading
+    /// `cells[i]` retains the array buffer per access — instead walk one
+    /// `withUnsafeBufferPointer` so the loop is pure value reads, zero ARC. (Debug
+    /// shows this as a `swift_retain`/`swift_release` storm; release elides most, but
+    /// the work is real on a weak CPU.)
     func forEach(_ body: (Coord, Cell) -> Void) {
-        for (i, cell) in cells.enumerated() { body(rect.coord(at: i), cell) }
+        let w = rect.width
+        cells.withUnsafeBufferPointer { buf in
+            for i in buf.indices { body(Coord(i % w, i / w), buf[i]) }
+        }
+    }
+
+    /// Row-major cells, yielded by flat index only — no per-cell `coord(at:)`
+    /// topology round-trip. For bulk scans (e.g. the minimap raster) where the
+    /// caller derives x,y from the index itself (`x = i % width`, `y = i / width`).
+    /// `withUnsafeBufferPointer` so the loop is pure value reads with no per-cell ARC.
+    func forEachIndexed(_ body: (Int, Cell) -> Void) {
+        cells.withUnsafeBufferPointer { buf in
+            for i in buf.indices { body(i, buf[i]) }
+        }
     }
 }
 
@@ -134,6 +156,14 @@ public struct Board: Sendable {
         var result: Set<Coord> = []
         cells.forEach { c, cell in if match(cell) { result.insert(c) } }
         return result
+    }
+
+    /// Visit every cell in row-major order, yielding only its flat index — the fast
+    /// path for whole-board scans (no `Coord` allocation, no topology `index(of:)`
+    /// per cell). The board is dense row-major, so `x = i % width`, `y = i / width`.
+    /// This is what makes the XXXL (1M-cell) minimap raster tractable.
+    public func forEachCellIndexed(_ body: (Int, Cell) -> Void) {
+        cells.forEachIndexed(body)
     }
 
     /// Rebuild a board from a saved layout without re-randomizing the (first-click-

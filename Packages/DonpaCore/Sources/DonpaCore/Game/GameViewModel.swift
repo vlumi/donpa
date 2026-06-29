@@ -157,6 +157,7 @@ public final class GameViewModel: ObservableObject {
     ) {
         isComputing = true
         let snapshot = game  // O(1) COW; the task's mutation triggers the copy
+        let tokenBefore = game.changeToken
         let generation = gameID
         computeGeneration = generation
         pendingWork = Task {
@@ -170,8 +171,14 @@ public final class GameViewModel: ObservableObject {
                 latestStarted: self.computeGeneration)
             if outcome.applyResult {
                 self.game = updated
-                afterApply()
-                self.bump()
+                // Skip the redraw/autosave/minimap-rebuild if nothing actually changed
+                // — e.g. chording a number whose flag count doesn't match does no work,
+                // and on a huge board a stream of such no-op taps would otherwise each
+                // queue a full-board snapshot + minimap raster and back up the app.
+                if updated.changeToken != tokenBefore {
+                    afterApply()
+                    self.bump()
+                }
             }
             if outcome.releaseGate { self.isComputing = false }
         }
@@ -263,6 +270,26 @@ public final class GameViewModel: ObservableObject {
     /// elapsed), or nil if there's nothing worth saving.
     public func snapshot() -> GameSnapshot? {
         GameSnapshot(
+            game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
+            camera: cameraView, inputMode: inputMode)
+    }
+
+    /// The `Sendable` inputs a snapshot needs, captured cheaply on the main actor so
+    /// the actual snapshot BUILD (which scans the whole board to derive the
+    /// revealed/flagged coord sets — heavy on a 1M-cell board) can run OFF the main
+    /// thread (see `GameSnapshot(inputs:)`).
+    public struct SnapshotInputs: Sendable {
+        public let game: Game
+        public let config: GameConfig
+        public let elapsedCentiseconds: Int
+        public let camera: CameraView?
+        public let inputMode: InputMode
+    }
+
+    /// Capture the snapshot inputs, or nil unless a save is worthwhile (in progress).
+    public func snapshotInputs() -> SnapshotInputs? {
+        guard game.status == .playing else { return nil }
+        return SnapshotInputs(
             game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
             camera: cameraView, inputMode: inputMode)
     }

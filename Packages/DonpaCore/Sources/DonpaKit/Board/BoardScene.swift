@@ -73,6 +73,12 @@ public final class BoardScene: SKScene {
     var minimapHandleRects: [CGRect] = []
     /// Push a new minimap scale to the host, which persists it in Settings.
     var onMinimapScaleChange: ((CGFloat) -> Void)?
+    /// The in-flight minimap-overview render. A burst of board revisions (e.g. a big
+    /// flood-fill reveal on a huge board) would otherwise spawn one full 1M-cell
+    /// raster per revision and pile them onto the cooperative pool, pegging every
+    /// core long after the reveal finished. Cancel the prior render before starting
+    /// the next so only the latest runs.
+    var minimapRenderTask: Task<Void, Never>?
 
     /// A saved camera view to hold across the launch dance instead of the default
     /// fit. STICKY: the window settles to its restored frame *after* the scene
@@ -125,6 +131,23 @@ public final class BoardScene: SKScene {
         #endif
     }
 
+    // Idle render throttle: a board that isn't animating is a STATIC image, but
+    // SpriteKit re-walks and re-batches every visible node 60×/sec regardless —
+    // ~30% CPU at rest on a huge board (release; far worse in debug), pure waste on a
+    // turn-based game. So drop the view's frame rate to a trickle once nothing has
+    // changed for a grace period, and snap back to full rate on any activity. The
+    // trickle keeps `update()` running so this self-resumes (vs. `isPaused`, which
+    // would halt `update()` and need waking from every input path).
+    // 10fps idle keeps worst-case input-wake latency ~100ms (imperceptible to start a
+    // grab-pan, which carries inertia anyway) while cutting idle render ~6×; the
+    // central activity check then snaps to 60 the same frame it sees the camera move.
+    private static let idleFPS = 10
+    private static let activeFPS = 60
+    private static let idleGrace: TimeInterval = 0.4  // settle before throttling
+    private var lastActiveTime: TimeInterval = 0
+    private var lastCameraSnapshot: CameraView?
+    private var lastActivityRevision = -1
+
     public override func update(_ currentTime: TimeInterval) {
         rebuildIfNeeded()
         // Cull to the viewport every frame (no-op unless the camera moved); catches
@@ -134,6 +157,36 @@ public final class BoardScene: SKScene {
         refreshMinimap()
         // Keep the live camera view current so an autosave persists the view.
         viewModel.cameraView = currentCameraView()
+
+        applyIdleThrottle(currentTime)
+    }
+
+    /// Anything that should keep the board redrawing: an in-flight action (end-game
+    /// FX, camera spring-back), a state change (a reveal/flag bumps `revision`, a new
+    /// game bumps `gameID`), or a camera move (pan/zoom/scroll — caught by comparing
+    /// the camera transform rather than hooking every input handler).
+    private func isAnimating() -> Bool {
+        if cameraNode.hasActions() || boardLayer.hasActions() { return true }
+        if !effectsLayer.children.isEmpty { return true }
+        if viewModel.revision != lastActivityRevision || viewModel.gameID != lastGameID {
+            return true
+        }
+        // Camera move (pan/zoom/scroll/spring) — compared via the transform rather
+        // than hooking every input handler, so no path can forget to wake the view.
+        return currentCameraView() != lastCameraSnapshot
+    }
+
+    private func applyIdleThrottle(_ currentTime: TimeInterval) {
+        if isAnimating() {
+            lastActiveTime = currentTime
+            lastActivityRevision = viewModel.revision
+            lastCameraSnapshot = currentCameraView()
+        }
+        let idle = currentTime - lastActiveTime > Self.idleGrace
+        let target = idle ? Self.idleFPS : Self.activeFPS
+        if view?.preferredFramesPerSecond != target {
+            view?.preferredFramesPerSecond = target
+        }
     }
 
     // MARK: Rendering — cell nodes + viewport culling live in BoardScene+Render.
