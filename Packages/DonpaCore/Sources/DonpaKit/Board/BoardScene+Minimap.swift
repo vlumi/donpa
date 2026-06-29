@@ -42,7 +42,7 @@ extension BoardScene {
         }
         guard exceeds, showMinimap else {
             minimapNode?.isHidden = true
-            minimapExpandHitRect = nil  // no stale tap target while hidden
+            minimapImageRect = nil  // no stale nav hit area while hidden
             return
         }
 
@@ -110,41 +110,8 @@ extension BoardScene {
         container.addChild(viewport)
         minimapViewport = viewport
 
-        // Expand badge (bottom-right): tapping its padded rect opens the fullscreen
-        // overview. Built once; positioned in `layoutMinimap`.
-        let expand = expandIconNode()
-        expand.zPosition = 3
-        container.addChild(expand)
-        minimapExpand = expand
-
         cameraNode.addChild(container)
         minimapNode = container
-    }
-
-    /// A small "expand to fullscreen" badge: a rounded square with outward corner
-    /// ticks, on an opaque disc so it reads against the map.
-    private func expandIconNode() -> SKNode {
-        let r: CGFloat = 12
-        let node = SKNode()
-        let disc = SKShapeNode(circleOfRadius: r)
-        disc.fillColor = palette.flagGlyph
-        disc.strokeColor = palette.sceneBackground
-        disc.lineWidth = 1.5
-        node.addChild(disc)
-        // Four outward corner ticks (the expand glyph).
-        let a = r * 0.42
-        for (sx, sy) in [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)] {
-            let path = CGMutablePath()
-            path.move(to: CGPoint(x: sx * a, y: sy * a * 0.4))
-            path.addLine(to: CGPoint(x: sx * a, y: sy * a))
-            path.addLine(to: CGPoint(x: sx * a * 0.4, y: sy * a))
-            let tick = SKShapeNode(path: path)
-            tick.strokeColor = palette.sceneBackground
-            tick.lineWidth = 2
-            tick.lineCap = .round
-            node.addChild(tick)
-        }
-        return node
     }
 
     /// Render the whole board to a small image for the minimap sprite.
@@ -263,27 +230,30 @@ extension BoardScene {
             x: -mm.width / 2 + midX * cellW,
             y: -mm.height / 2 + midY * cellH)
 
-        // Expand badge in the minimap's bottom-right corner (container-local).
-        let bx = mm.width / 2 - 2
-        let by = -mm.height / 2 + 2
-        minimapExpand?.position = CGPoint(x: bx, y: by)
-        // Tappable rect in CAMERA space = container + local pos ± a padded radius.
-        let hitR: CGFloat = 18
-        minimapExpandHitRect = CGRect(
-            x: minimapNode.position.x + bx - hitR, y: minimapNode.position.y + by - hitR,
-            width: hitR * 2, height: hitR * 2)
+        // The minimap image's rect in CAMERA space (container pos + local image
+        // half-extents) — the hit area for tap/drag-to-navigate.
+        minimapImageRect = CGRect(
+            x: minimapNode.position.x - mm.width / 2,
+            y: minimapNode.position.y - mm.height / 2,
+            width: mm.width, height: mm.height)
     }
 
-    /// Test a scene-space tap against the expand badge; if it hits, open the
-    /// overview and return true (so it's not treated as a board move).
-    func handleMinimapTap(atScenePoint p: CGPoint) -> Bool {
-        guard !(minimapNode?.isHidden ?? true), let hit = minimapExpandHitRect else { return false }
-        // Scene → camera-local: subtract the camera centre, divide by scale.
+    /// If a scene-space point lands inside the corner minimap, recenter the live
+    /// board on the matching board location and return true (so the caller doesn't
+    /// also treat it as a board tap/pan). The whole map interior navigates.
+    @discardableResult
+    func handleMinimapNavigation(atScenePoint p: CGPoint) -> Bool {
+        guard !(minimapNode?.isHidden ?? true), let rect = minimapImageRect else { return false }
+        // Scene → camera-local (camera children ignore the camera scale).
         let camLocal = CGPoint(
             x: (p.x - cameraNode.position.x) / cameraNode.xScale,
             y: (p.y - cameraNode.position.y) / cameraNode.yScale)
-        guard hit.contains(camLocal) else { return false }
-        onOpenOverview?()
+        guard rect.contains(camLocal) else { return false }
+        // Normalize within the image. centerCamera expects (0,0) = board TOP-left,
+        // but the minimap texture renders board row 0 at the BOTTOM — so flip y.
+        let nx = (camLocal.x - rect.minX) / rect.width
+        let ny = 1 - (camLocal.y - rect.minY) / rect.height
+        centerCamera(onNormalizedPoint: CGPoint(x: nx, y: ny))
         return true
     }
 }

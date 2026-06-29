@@ -174,7 +174,6 @@ struct GameContent: View {
     /// the title), else stay on the title with the board primed to the persisted
     /// config so an immediate New Game matches the last selection.
     private func onLaunch() {
-        scene.onOpenOverview = { navigator.showingOverview = true }
         // Fold each live activity-flush delta (tiles/flags/time) into the lifetime
         // totals WITHOUT counting a game played — the outcome is recorded at end.
         // Wired before any newGame below so the first flush is caught.
