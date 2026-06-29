@@ -29,6 +29,9 @@ public final class Navigator: ObservableObject {
     @Published public var zoomInRequested = 0
     @Published public var zoomOutRequested = 0
 
+    /// Bumped to toggle the minimap between its min and max size (macOS ⌘0).
+    @Published public var toggleMinimapRequested = 0
+
     /// Whether any modal is presented. Gameplay commands are disabled while one is
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {

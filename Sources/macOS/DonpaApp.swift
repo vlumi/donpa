@@ -78,6 +78,12 @@ struct DonpaApp: App {
 
                 Divider()
 
+                // ⌘0 toggles the corner minimap between its min and max size — it
+                // pairs with ⌘+/⌘− as the "fit / actual-size" slot many apps use.
+                Button("Toggle Minimap Size") { navigator.toggleMinimapRequested &+= 1 }
+                    .keyboardShortcut("0", modifiers: .command)
+                    .disabled(modalOpen)
+
                 // ⌘+ / ⌘− zoom the board (about its centre). Bind zoom-in to the
                 // "+" *character*, not a physical key: SwiftUI matches on the char
                 // the keystroke produces, so this follows "+" wherever a layout puts

@@ -166,6 +166,7 @@ struct GameContent: View {
         .onChangeCompat(of: navigator.homeRequested) { _ in goHome() }
         .onChangeCompat(of: navigator.zoomInRequested) { _ in scene.zoom(by: 1.25) }
         .onChangeCompat(of: navigator.zoomOutRequested) { _ in scene.zoom(by: 0.8) }
+        .onChangeCompat(of: navigator.toggleMinimapRequested) { _ in scene.toggleMinimapSize() }
     }
 
     // MARK: Save / restore lifecycle
