@@ -274,6 +274,26 @@ public final class GameViewModel: ObservableObject {
             camera: cameraView, inputMode: inputMode)
     }
 
+    /// The `Sendable` inputs a snapshot needs, captured cheaply on the main actor so
+    /// the actual snapshot BUILD (which scans the whole board to derive the
+    /// revealed/flagged coord sets — heavy on a 1M-cell board) can run OFF the main
+    /// thread (see `GameSnapshot(inputs:)`).
+    public struct SnapshotInputs: Sendable {
+        public let game: Game
+        public let config: GameConfig
+        public let elapsedCentiseconds: Int
+        public let camera: CameraView?
+        public let inputMode: InputMode
+    }
+
+    /// Capture the snapshot inputs, or nil unless a save is worthwhile (in progress).
+    public func snapshotInputs() -> SnapshotInputs? {
+        guard game.status == .playing else { return nil }
+        return SnapshotInputs(
+            game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
+            camera: cameraView, inputMode: inputMode)
+    }
+
     /// Restore a persisted game and resume its clock from the saved elapsed.
     public func restore(from snapshot: GameSnapshot) {
         config = snapshot.config

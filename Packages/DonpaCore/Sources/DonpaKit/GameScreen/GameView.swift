@@ -206,13 +206,20 @@ struct GameContent: View {
         }
     }
 
-    /// Persist the live game, or clear the save once it's no longer in progress. The
-    /// snapshot is BUILT here on the main actor; the encode + atomic write is handed
-    /// to `saveWriter` (which serializes writes) so disk work never stalls input.
+    /// Persist the live game, or clear the save once it's no longer in progress.
+    ///
+    /// Building the snapshot scans the whole board to derive the revealed/flagged
+    /// coord sets — heavy on a 1M-cell board, and it used to run on the main actor,
+    /// stalling input (a beachball on a weak CPU mid-reveal). So capture the cheap
+    /// Sendable inputs here, then build the snapshot AND encode/write off the main
+    /// thread via `saveWriter`. Falls back to clearing the save once not in progress.
     private func autosave() {
         autosaveTask?.cancel()  // an explicit save subsumes any pending debounce
-        if let snapshot = viewModel.snapshot() {
-            Task { await saveWriter.write(snapshot) }
+        if let inputs = viewModel.snapshotInputs() {
+            Task.detached(priority: .utility) {
+                guard let snapshot = GameSnapshot(inputs: inputs) else { return }
+                await saveWriter.write(snapshot)
+            }
         } else {
             Task { await saveWriter.clear() }
         }

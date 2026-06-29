@@ -84,6 +84,15 @@ public struct GameSnapshot: Codable, Sendable {
         self.inputMode = inputMode
     }
 
+    /// Build from captured inputs — used to construct the snapshot OFF the main
+    /// actor (the board scan is heavy on a huge board). `SnapshotInputs` is Sendable.
+    public init?(inputs: GameViewModel.SnapshotInputs) {
+        self.init(
+            game: inputs.game, config: inputs.config,
+            elapsedCentiseconds: inputs.elapsedCentiseconds, camera: inputs.camera,
+            inputMode: inputs.inputMode)
+    }
+
     /// Rebuild the `Game` this snapshot describes (topology from the config).
     public func makeGame() -> Game {
         Game.restored(from: self)
