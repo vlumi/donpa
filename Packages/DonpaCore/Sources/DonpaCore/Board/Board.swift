@@ -152,6 +152,22 @@ public struct Board: Sendable {
     /// recompute it rather than trust a persisted number.
     public var revealedSafeCount: Int { coords { $0.state == .revealed && !$0.isMine }.count }
 
+    /// Whether a revealed number has MORE flags around it than its value — a
+    /// guaranteed mistake (a cell can't border more mines than its count). Surfaced
+    /// as a passive error cue: it marks the impossible number, not which flag is
+    /// wrong, so it catches a slip without solving anything. False for hidden,
+    /// flagged, mine, or 0 cells (nothing to over-flag). O(neighbours) — local, so a
+    /// flag toggle only need re-check the toggled cell's neighbourhood.
+    public func isOverFlagged(_ c: Coord) -> Bool {
+        let cell = self[c]
+        guard cell.state == .revealed, !cell.isMine, cell.adjacentMines > 0 else { return false }
+        var flags = 0
+        for n in topology.neighbors(of: c) where self[n].state == .flagged {
+            flags += 1
+        }
+        return flags > cell.adjacentMines
+    }
+
     private func coords(where match: (Cell) -> Bool) -> Set<Coord> {
         var result: Set<Coord> = []
         cells.forEach { c, cell in if match(cell) { result.insert(c) } }

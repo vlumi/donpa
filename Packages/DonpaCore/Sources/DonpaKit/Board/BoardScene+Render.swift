@@ -177,6 +177,13 @@ extension BoardScene {
             overlay.zPosition = 1
             container.addChild(overlay)
         }
+        // Passive error cue: ring a revealed number that has more flags around it
+        // than its count (impossible — you slipped a flag). Above the glyph (z 2).
+        if viewModel.game.board.isOverFlagged(coord) {
+            let ring = overFlagRingSprite(size: size)
+            ring.zPosition = 2
+            container.addChild(ring)
+        }
         return container
     }
 
@@ -246,6 +253,48 @@ extension BoardScene {
         let sprite = SKSpriteNode(texture: flagTexture(color: color))
         sprite.size = CGSize(width: size, height: size)
         return sprite
+    }
+
+    /// A sprite ringing an over-flagged number (more flags around it than its count —
+    /// a definite error). A cached texture, not an `SKShapeNode`, so it batches and
+    /// never re-strokes per frame like everything else on the board. Kept faint: it's
+    /// a quiet "check this", not an alarm.
+    func overFlagRingSprite(size: CGFloat) -> SKSpriteNode {
+        let sprite = SKSpriteNode(texture: overFlagRingTexture(color: palette.mineGlyph))
+        sprite.size = CGSize(width: size, height: size)
+        sprite.alpha = 0.35
+        return sprite
+    }
+
+    /// Cell-sized hollow rounded-rect ring, cached by colour + pixel size. The cue is
+    /// a SHAPE (a ring inset from the tile edge), not a fill tint — so it reads
+    /// without relying on colour (the app's a11y stance), over the number glyph.
+    private func overFlagRingTexture(color: SKColor) -> SKTexture {
+        let px = max(4, Int(layout.cellSize.rounded()))
+        let key = "overflag-\(px)-\(color)"
+        if let cached = tileTextureCache[key] { return cached }
+
+        let scale: CGFloat = 2
+        let dim = Int(CGFloat(px) * scale)
+        let lineWidth = max(2, CGFloat(dim) * 0.06)
+        let inset = lineWidth  // ring sits just inside the tile edge
+        let corner = 4 * scale
+        let img = drawCellImage(dim: dim) { ctx in
+            let rect = CGRect(
+                x: inset, y: inset, width: CGFloat(dim) - inset * 2,
+                height: CGFloat(dim) - inset * 2)
+            ctx.addPath(
+                CGPath(
+                    roundedRect: rect, cornerWidth: corner, cornerHeight: corner,
+                    transform: nil))
+            ctx.setStrokeColor(color.cgColor)
+            ctx.setLineWidth(lineWidth)
+            ctx.strokePath()
+        }
+        let texture = SKTexture(cgImage: img)
+        texture.filteringMode = .linear
+        tileTextureCache[key] = texture
+        return texture
     }
 
     /// Cell-sized flag texture, cached by colour + pixel size. Mirrors `flagNode`'s

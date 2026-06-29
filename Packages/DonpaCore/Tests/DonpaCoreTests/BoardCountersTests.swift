@@ -54,4 +54,34 @@ final class BoardCountersTests: XCTestCase {
         XCTAssertEqual(board.flagCount, 0)
         XCTAssertEqual(board.flagCount, scannedFlags(board))
     }
+
+    // MARK: Over-flag detection (passive error cue)
+
+    /// A 3×3 with one corner mine makes the centre a "1". Revealed and given more
+    /// than one flag around it, it's over-flagged — a guaranteed mistake.
+    func testOverFlaggedFiresOnlyWhenFlagsExceedCount() {
+        var board = Board(topology: BoundedSquareTopology(width: 3, height: 3))
+        board.placeMines(at: [Coord(0, 0)])  // centre (1,1) → adjacentMines == 1
+        board[Coord(1, 1)].state = .revealed
+
+        XCTAssertFalse(board.isOverFlagged(Coord(1, 1)), "no flags → not over-flagged")
+        board[Coord(0, 1)].state = .flagged
+        XCTAssertFalse(board.isOverFlagged(Coord(1, 1)), "flags == count → satisfied, not over")
+        board[Coord(1, 0)].state = .flagged
+        XCTAssertTrue(board.isOverFlagged(Coord(1, 1)), "2 flags around a 1 → over-flagged")
+    }
+
+    /// Only revealed numbered cells qualify: hidden / flagged / a 0 never do, even
+    /// with flags nearby.
+    func testOverFlaggedIgnoresNonNumberedCells() {
+        var board = Board(topology: BoundedSquareTopology(width: 3, height: 3))
+        board.placeMines(at: [Coord(0, 0)])
+        board[Coord(0, 1)].state = .flagged
+        board[Coord(1, 0)].state = .flagged
+        // (2,2) is a revealed 0 — no count to exceed.
+        board[Coord(2, 2)].state = .revealed
+        XCTAssertFalse(board.isOverFlagged(Coord(2, 2)), "a revealed 0 is never over-flagged")
+        // The centre while still hidden doesn't qualify.
+        XCTAssertFalse(board.isOverFlagged(Coord(1, 1)), "a hidden cell is never over-flagged")
+    }
 }
