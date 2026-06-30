@@ -15,12 +15,21 @@ extension BoardScene {
     // MARK: Input mapping
 
     /// Scene-space point → board coordinate (accounting for the board layer).
+    ///
+    /// On a WRAPPED board a tap can land on an off-board screen position (the
+    /// surface tiles infinitely), so compute the screen cell arithmetically — which
+    /// may be negative or ≥ width/height — and fold it onto the real board with the
+    /// topology's `normalize`. Bounded keeps the layout's bounds-guarded mapping.
     public func coord(atScenePoint p: CGPoint) -> Coord? {
         let local = boardLayer.convert(p, from: self)
-        guard let c = layout.coord(at: local), viewModel.game.board.cellCount > 0 else {
-            return nil
+        guard viewModel.game.board.cellCount > 0 else { return nil }
+        if isWrapped {
+            let cell = layout.cellSize
+            let screen = Coord(
+                Int((local.x / cell).rounded(.down)), Int((local.y / cell).rounded(.down)))
+            return viewModel.game.board.topology.normalize(screen)
         }
-        return c
+        return layout.coord(at: local)
     }
 
     func flag(atScenePoint p: CGPoint) {
