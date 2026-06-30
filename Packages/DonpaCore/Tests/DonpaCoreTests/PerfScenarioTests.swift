@@ -20,4 +20,10 @@ final class PerfScenarioTests: XCTestCase {
         XCTAssertNil(
             PerfScenario.parse(["app", "-perf-scenario", "bogus"]), "unknown name → nil")
     }
+
+    func testCurrentReadsProcessArgsAndIsNilUnderTest() {
+        // The test runner isn't launched with -perf-scenario, so the live process
+        // reads as a normal launch. (Also exercises `current`'s ProcessInfo path.)
+        XCTAssertNil(PerfScenario.current, "a normal/test launch has no perf scenario")
+    }
 }
