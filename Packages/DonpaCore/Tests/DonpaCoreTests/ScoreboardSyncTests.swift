@@ -135,6 +135,22 @@ final class ScoreboardSyncTests: XCTestCase {
         XCTAssertFalse(a.isCloudActive)
     }
 
+    /// `isCloudAvailable` reflects iCloud reachability INDEPENDENT of the sync
+    /// preference — it's what lets the UI refuse to enable sync when it couldn't
+    /// work. So it's true for a reachable cloud even with sync off (unlike
+    /// `isCloudActive`, which also requires sync on), and false when unavailable.
+    func testIsCloudAvailableIsIndependentOfSyncPreference() {
+        let reachableOff = Scoreboard(
+            defaults: defaults("a"), cloud: FakeCloud(available: true), syncEnabled: false)
+        XCTAssertTrue(
+            reachableOff.isCloudAvailable, "reachable cloud is available even with sync off")
+        XCTAssertFalse(reachableOff.isCloudActive, "but not active until sync is on")
+
+        let signedOut = Scoreboard(
+            defaults: defaults("b"), cloud: FakeCloud(available: false), syncEnabled: true)
+        XCTAssertFalse(signedOut.isCloudAvailable, "unavailable cloud is not available")
+    }
+
     func testOthersTotalsSurviveGoingOffline() {
         // A merges in B's win, then A's cloud goes unavailable (airplane mode):
         // the combined total must stay (from the cache), not collapse to A's own.
