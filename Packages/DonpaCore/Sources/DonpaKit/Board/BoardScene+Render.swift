@@ -51,9 +51,24 @@ extension BoardScene {
         }
     }
 
+    /// Whether the board wraps (torus). Wrapped boards scroll seamlessly: the
+    /// viewport range is NOT clamped to bounds (it extends past the edges, with
+    /// off-board screen positions resolving to wrapped cells via `displayCoord`).
+    var isWrapped: Bool { viewModel.config.edges == .wrapped }
+
+    /// Map a *screen* cell position (which on a wrapped board can be negative or
+    /// ≥ width/height) to the logical board cell it shows. Identity when bounded.
+    func displayCoord(_ screen: Coord) -> Coord {
+        guard isWrapped else { return screen }
+        // `normalize` folds with modulo and never returns nil for a wrapped board.
+        return viewModel.game.board.topology.normalize(screen) ?? screen
+    }
+
     /// The cells currently within the camera's viewport, plus a one-cell margin so
-    /// a cell is built just before it scrolls in. Clamped to the board bounds, so
-    /// for a board that fits the viewport this is the whole board (culling no-op).
+    /// a cell is built just before it scrolls in. For a BOUNDED board this is
+    /// clamped to the board (the whole board when it fits — culling no-op); for a
+    /// WRAPPED board it's left unclamped so the surface tiles infinitely as you pan,
+    /// and each screen position resolves to a wrapped cell at build time.
     func visibleRange() -> CellRange {
         let w = viewModel.boardWidth
         let h = viewModel.boardHeight
@@ -65,11 +80,16 @@ extension BoardScene {
         let cell = layout.cellSize
         // World rect → cell indices, +1 cell of margin each side so cells appear
         // before fully scrolling in.
-        let minX = max(0, Int(((cam.x - halfW) / cell).rounded(.down)) - 1)
-        let maxX = min(w - 1, Int(((cam.x + halfW) / cell).rounded(.down)) + 1)
-        let minY = max(0, Int(((cam.y - halfH) / cell).rounded(.down)) - 1)
-        let maxY = min(h - 1, Int(((cam.y + halfH) / cell).rounded(.down)) + 1)
-        return CellRange(minX: minX, maxX: maxX, minY: minY, maxY: maxY)
+        let rawMinX = Int(((cam.x - halfW) / cell).rounded(.down)) - 1
+        let rawMaxX = Int(((cam.x + halfW) / cell).rounded(.down)) + 1
+        let rawMinY = Int(((cam.y - halfH) / cell).rounded(.down)) - 1
+        let rawMaxY = Int(((cam.y + halfH) / cell).rounded(.down)) + 1
+        guard !isWrapped else {
+            return CellRange(minX: rawMinX, maxX: rawMaxX, minY: rawMinY, maxY: rawMaxY)
+        }
+        return CellRange(
+            minX: max(0, rawMinX), maxX: min(w - 1, rawMaxX),
+            minY: max(0, rawMinY), maxY: min(h - 1, rawMaxY))
     }
 
     /// The camera's visible region as a normalized rect (0…1, y from the board TOP
@@ -116,12 +136,20 @@ extension BoardScene {
             node.removeFromParent()
             cellNodes[c] = nil
         }
-        // Add cells that have scrolled into view (skip any already built).
+        // Add cells that have scrolled into view (skip any already built). The key
+        // is the SCREEN position `c` (so a wrapped cell visible at two screen spots
+        // across a seam is two nodes); the cell shown is `displayCoord(c)` —
+        // identity when bounded, the wrapped cell when not. Node is laid out at the
+        // screen position, so off-board positions tile past the edges.
         for y in range.minY...range.maxY {
             for x in range.minX...range.maxX {
                 let c = Coord(x, y)
                 guard cellNodes[c] == nil else { continue }
-                let node = cellNode(for: c, cell: game.board[c])
+                // `c` is the screen position; `cell` is the logical cell it shows.
+                // Pass the logical coord to `cellNode` so its loss-coord / over-flag
+                // checks compare correctly; position the node at the screen spot.
+                let cell = displayCoord(c)
+                let node = cellNode(for: cell, cell: game.board[cell])
                 node.position = layout.center(of: c)
                 boardLayer.addChild(node)
                 cellNodes[c] = node

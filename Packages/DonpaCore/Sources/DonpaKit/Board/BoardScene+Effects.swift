@@ -90,7 +90,9 @@ extension BoardScene {
         // glow layer sits above the board's flag glyph, re-stamp the flag on top.
         // Only the visible window (same cull as the tiles).
         range.forEach { c in
-            let state = viewModel.game.board[c].state
+            // `c` is the screen position (drawn there); read state from the logical
+            // cell it shows (identity when bounded, wrapped cell when not).
+            let state = viewModel.game.board[displayCoord(c)].state
             guard state == .hidden || state == .flagged else { return }
             let center = layout.center(of: c)
             let tile = SKSpriteNode(texture: texture, size: CGSize(width: side, height: side))
