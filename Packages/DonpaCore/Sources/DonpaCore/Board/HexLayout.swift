@@ -34,21 +34,34 @@ public struct HexLayout: CellLayout {
 
     public func coord(at p: CGPoint) -> Coord? {
         guard p.x >= 0, p.y >= 0 else { return nil }
-        // A hex grid tiles the plane by nearest-centre (Voronoi = the hexagons), so
-        // the containing cell is whichever centre is closest. The true row is within
-        // ±1 of the naive estimate, and the column within ±1 once the row offset is
-        // known, so test the 3×2 candidate block and keep the nearest centre.
+        return nearestCell(to: p, clampToBoard: true)
+    }
+
+    public func unclampedCoord(at p: CGPoint) -> Coord {
+        // For a wrapped hex board: return the nearest cell for ANY point, including
+        // off-board (negative / past the edge) positions, so the caller can fold it
+        // onto the torus with `normalize`. Parity math extends to negative rows
+        // (two's-complement `&` keeps odd/even correct).
+        nearestCell(to: p, clampToBoard: false)
+    }
+
+    /// The hex whose centre is nearest `p`. A hex grid tiles the plane by nearest-
+    /// centre (Voronoi = the hexagons), so that IS the containing cell. The true row
+    /// is within ±1 of the naive estimate and the column within ±1 once the row
+    /// offset is known, so test the 3×3 candidate block and keep the nearest centre.
+    /// `clampToBoard` drops negative candidates (bounded hit-test); off = unclamped.
+    private func nearestCell(to p: CGPoint, clampToBoard: Bool) -> Coord {
         let approxRow = Int((p.y / rowPitch - 0.5).rounded())
-        var best: Coord?
+        var best = Coord(0, 0)
         var bestDist = CGFloat.greatestFiniteMagnitude
         for dy in -1...1 {
             let y = approxRow + dy
-            guard y >= 0 else { continue }
+            if clampToBoard, y < 0 { continue }
             let shift: CGFloat = Self.isShifted(y) ? 0.5 : 0
             let approxCol = Int((p.x / cellSize - 0.5 - shift).rounded())
             for dx in -1...1 {
                 let x = approxCol + dx
-                guard x >= 0 else { continue }
+                if clampToBoard, x < 0 { continue }
                 let centre = center(of: Coord(x, y))
                 let ddx = centre.x - p.x
                 let ddy = centre.y - p.y

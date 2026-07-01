@@ -23,8 +23,18 @@ development — entries land under Unreleased as they merge.
 
 - **Hex grids.** A new Modern **Shape** option: play on a hexagonal board where each
   cell has six neighbours instead of eight. Pick **Hex** in the New Game screen
-  (alongside size/difficulty). Scores are tracked separately from square boards.
-  (Hex is bounded-only for now; wrapped hex comes later.)
+  (alongside size/difficulty). Works with both bounded and **wrapped** edges — a hex
+  torus that scrolls seamlessly in every direction. Scores are tracked separately
+  from square boards.
+- **Board sizes rebalanced to powers of two** (8, 16, 32, 64, 128, 256, 1024). Every
+  board is now even-sided (which the wrapped-hex torus needs), and the size ladder is
+  cleaner. Mine-density tiers were re-tuned to 10/12/14/16/18% so the five
+  difficulties stay distinct on the larger boards. **These changes reset existing
+  high scores** — the board dimensions they were set on no longer exist. (Pre-1.0, so
+  a clean slate.)
+- **Screentone glow follows the hex shape.** The dig/flag pattern over unopened tiles
+  is now clipped to the cell outline, so on hex boards it hugs the hexagon instead of
+  overhanging as a square block.
 - **Minimap shows/hides reliably.** The corner minimap no longer pops in mid-game
   after a small pan on a board that fits (or stays hidden when it shouldn't) — its
   visibility now tracks the zoom level, not the camera position. Wrapped boards

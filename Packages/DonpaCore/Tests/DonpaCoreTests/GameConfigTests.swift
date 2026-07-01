@@ -15,21 +15,21 @@ final class GameConfigTests: XCTestCase {
     // MARK: Modern = size × density (mine = round(density × cells))
 
     func testModernMineCounts() {
-        // S = 16×16 = 256 cells. easy .10→26, normal .13→33, hard .16→41,
-        // brutal .19→49, insane .22→56.
+        // S = 16×16 = 256 cells. easy .10→26, normal .12→31, hard .14→36,
+        // brutal .16→41, insane .18→46.
         XCTAssertEqual(GameConfig.modern(.s, .easy, .bounded, .square).mineCount, 26)
-        XCTAssertEqual(GameConfig.modern(.s, .normal, .bounded, .square).mineCount, 33)
-        XCTAssertEqual(GameConfig.modern(.s, .hard, .bounded, .square).mineCount, 41)
-        XCTAssertEqual(GameConfig.modern(.s, .brutal, .bounded, .square).mineCount, 49)
-        XCTAssertEqual(GameConfig.modern(.s, .insane, .bounded, .square).mineCount, 56)
-        // Square sizes across the ladder (XS=9, M=25, L=50, XL=100, XXL=300, XXXL=1000).
-        XCTAssertEqual(tuple(GameConfig.modern(.xs, .easy, .bounded, .square)).prefix(2), [9, 9])
-        XCTAssertEqual(tuple(GameConfig.modern(.m, .easy, .bounded, .square)).prefix(2), [25, 25])
-        XCTAssertEqual(tuple(GameConfig.modern(.l, .easy, .bounded, .square)).prefix(2), [50, 50])
+        XCTAssertEqual(GameConfig.modern(.s, .normal, .bounded, .square).mineCount, 31)
+        XCTAssertEqual(GameConfig.modern(.s, .hard, .bounded, .square).mineCount, 36)
+        XCTAssertEqual(GameConfig.modern(.s, .brutal, .bounded, .square).mineCount, 41)
+        XCTAssertEqual(GameConfig.modern(.s, .insane, .bounded, .square).mineCount, 46)
+        // Power-of-two ladder (XS=8, M=32, L=64, XL=128, XXL=256, XXXL=1024).
+        XCTAssertEqual(tuple(GameConfig.modern(.xs, .easy, .bounded, .square)).prefix(2), [8, 8])
+        XCTAssertEqual(tuple(GameConfig.modern(.m, .easy, .bounded, .square)).prefix(2), [32, 32])
+        XCTAssertEqual(tuple(GameConfig.modern(.l, .easy, .bounded, .square)).prefix(2), [64, 64])
         XCTAssertEqual(
-            tuple(GameConfig.modern(.xxl, .easy, .bounded, .square)).prefix(2), [300, 300])
+            tuple(GameConfig.modern(.xxl, .easy, .bounded, .square)).prefix(2), [256, 256])
         XCTAssertEqual(
-            tuple(GameConfig.modern(.xxxl, .easy, .bounded, .square)).prefix(2), [1000, 1000])
+            tuple(GameConfig.modern(.xxxl, .easy, .bounded, .square)).prefix(2), [1024, 1024])
     }
 
     func testEveryModernConfigLeavesASafeCell() {
@@ -48,11 +48,11 @@ final class GameConfigTests: XCTestCase {
     }
 
     func testModernStorageKeyEncodesShapeEdgesAndGeometry() {
-        // S·Hard = 16×16, 41 mines, square + bounded. The key is geometry-based,
-        // so renaming the size case (medium→s) leaves existing scores' keys intact.
+        // S·Hard = 16×16, 36 mines (14%), square + bounded. The key is geometry-
+        // based, so renaming a size case leaves existing scores' keys intact.
         XCTAssertEqual(
             GameConfig.modern(.s, .hard, .bounded, .square).storageKey,
-            "v1|modern|sq|bounded|16x16|m41")
+            "v1|modern|sq|bounded|16x16|m36")
     }
 
     func testEveryConfigHasAUniqueStorageKey() {
@@ -73,7 +73,7 @@ final class GameConfigTests: XCTestCase {
         let m = GameConfig.modern(.m, .normal, .bounded, .square).storageKey
         XCTAssertNotEqual(xs, m)
         // And the key contains the concrete geometry, not the word "normal".
-        XCTAssertTrue(xs.contains("9x9"))
+        XCTAssertTrue(xs.contains("8x8"))
         XCTAssertFalse(xs.contains("normal"))
     }
 
@@ -212,14 +212,31 @@ final class GameConfigTests: XCTestCase {
         XCTAssertEqual(GameConfig.classic(.beginner).shape, .square)
     }
 
+    /// The full shape × edges matrix maps to the four topologies, including the
+    /// wrapped-hex torus (valid because every Modern size is even-sided).
+    func testShapeEdgesMatrixSelectsTopology() {
+        XCTAssertTrue(
+            GameConfig.modern(.s, .normal, .wrapped, .square).topology is WrappedSquareTopology)
+        XCTAssertTrue(
+            GameConfig.modern(.s, .normal, .wrapped, .hex).topology is WrappedHexTopology)
+        XCTAssertTrue(
+            GameConfig.modern(.s, .normal, .bounded, .hex).topology is HexTopology)
+        // Every Modern size is even-sided, so the wrapped-hex torus is always valid.
+        for size in BoardSize.allCases {
+            XCTAssertEqual(
+                GameConfig.modern(size, .normal, .wrapped, .hex).height % 2, 0,
+                "\(size) must be even-sided for a hex torus")
+        }
+    }
+
     /// Square and hex key distinctly (separate scoreboards), the hex key carries the
     /// `hex` shape token, and the square key is unchanged from before the hex axis.
     func testShapeDistinguishStorageKey() {
         let square = GameConfig.modern(.s, .normal, .bounded, .square).storageKey
         let hex = GameConfig.modern(.s, .normal, .bounded, .hex).storageKey
         XCTAssertNotEqual(square, hex)
-        XCTAssertEqual(square, "v1|modern|sq|bounded|16x16|m33")
-        XCTAssertEqual(hex, "v1|modern|hex|bounded|16x16|m33")
+        XCTAssertEqual(square, "v1|modern|sq|bounded|16x16|m31")
+        XCTAssertEqual(hex, "v1|modern|hex|bounded|16x16|m31")
     }
 
     /// Every shape case has a distinct, non-empty label (the New Game picker's

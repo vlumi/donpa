@@ -6,7 +6,7 @@ public enum CellState: Sendable {
 }
 
 /// One cell, bit-packed into a single byte — `state` (2 bits), `isMine` (1 bit),
-/// `adjacentMines` (4 bits, 0…8). On a 1000² board this is a 1MB cell array vs
+/// `adjacentMines` (4 bits, 0…8). On a 1024² board this is a 1MB cell array vs
 /// 16MB unpacked, so the per-move COW copy is ~16× cheaper.
 public struct Cell: Sendable {
     private var bits: UInt8 = 0  // [ adjacent:4 | mine:1 | state:2 ], bit 7 unused

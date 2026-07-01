@@ -217,15 +217,13 @@ public final class Settings: ObservableObject {
             ?? .system
     }
 
-    /// The `GameConfig` implied by the current mode + selections. Hex is bounded-
-    /// only for now, so a hex board forces `.bounded` regardless of the edges
-    /// setting — keeping its storage key (and topology) honest.
+    /// The `GameConfig` implied by the current mode + selections. All shape × edges
+    /// combinations are supported (every Modern size is even-sided, so the wrapped-
+    /// hex torus is valid).
     public var currentConfig: GameConfig {
         switch mode {
         case .classic: return .classic(classicPreset)
-        case .modern:
-            let edges: BoardEdges = modernShape == .hex ? .bounded : modernEdges
-            return .modern(modernSize, modernDensity, edges, modernShape)
+        case .modern: return .modern(modernSize, modernDensity, modernEdges, modernShape)
         }
     }
 }

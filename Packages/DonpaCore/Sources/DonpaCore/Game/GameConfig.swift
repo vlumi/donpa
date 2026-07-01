@@ -57,22 +57,23 @@ public enum ClassicPreset: String, CaseIterable, Sendable, Codable {
     }
 }
 
-/// Modern board sizes (square), shirt-sized XS…XXXL; side lengths chosen via
-/// solver analysis. XS–XL (9…100) are the playable tiers; XXL (300²) is the
-/// epic-but-finishable summit; XXXL (1000² = 1M cells) is effectively unwinnable
-/// and the stress case for viewport culling.
+/// Modern board sizes (square), shirt-sized XS…XXXL. Side lengths are powers of two
+/// (8…256, then 1024), so every board is even-sided — the property a hex torus
+/// needs for consistent wrap-around (odd height breaks hex adjacency symmetry). The
+/// top rung jumps ×4 to 1024² (~1M cells): the effectively-unwinnable stress case
+/// for viewport culling. XS–XXL are the playable tiers.
 public enum BoardSize: String, CaseIterable, Sendable, Codable {
     case xs, s, m, l, xl, xxl, xxxl
 
     var side: Int {
         switch self {
-        case .xs: return 9
+        case .xs: return 8
         case .s: return 16
-        case .m: return 25
-        case .l: return 50
-        case .xl: return 100
-        case .xxl: return 300
-        case .xxxl: return 1000
+        case .m: return 32
+        case .l: return 64
+        case .xl: return 128
+        case .xxl: return 256
+        case .xxxl: return 1024
         }
     }
 
@@ -109,21 +110,23 @@ public enum BoardSize: String, CaseIterable, Sendable, Codable {
     }
 }
 
-/// Modern difficulty = mine density (fraction of cells). Tiers chosen via solver
-/// analysis, from fair (easy) to near-unsolvable-by-logic (insane). Square and hex
-/// SHARE this table: hex (6 neighbours) plays a touch easier per tier but spreads
-/// difficulty more evenly across the five, so no shape-specific tuning (see the
-/// TierAnalysis dev tool, which measures both topologies).
+/// Modern difficulty = mine density (fraction of cells). Even 2-point steps
+/// (10/12/14/16/18%), from fair (easy) to near-unsolvable-by-logic (insane), chosen
+/// via solver analysis on the power-of-two size ladder: bigger boards saturate to
+/// ~100% forced-guess sooner, so the top tier is 18% (not higher) to keep all five
+/// distinct on the boards people actually play. Square and hex SHARE this table:
+/// hex (6 neighbours) plays a touch easier per tier but spreads difficulty more
+/// evenly, so no shape-specific tuning (see the TierAnalysis dev tool, both shapes).
 public enum Density: String, CaseIterable, Sendable, Codable {
     case easy, normal, hard, brutal, insane
 
     var fraction: Double {
         switch self {
         case .easy: return 0.10
-        case .normal: return 0.13
-        case .hard: return 0.16
-        case .brutal: return 0.19
-        case .insane: return 0.22
+        case .normal: return 0.12
+        case .hard: return 0.14
+        case .brutal: return 0.16
+        case .insane: return 0.18
         }
     }
 
@@ -240,14 +243,15 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// The board geometry to play on, selected by the shape × edges matrix (all
-    /// `RectangularTopology`, which `Board` requires for flat storage). Hex is
-    /// bounded-only for now; wrapped hex is a follow-up.
+    /// The board geometry to play on, the full shape × edges matrix (all
+    /// `RectangularTopology`, which `Board` requires for flat storage). Every Modern
+    /// size is even-sided (powers of two), so the wrapped-hex torus is always valid.
     public var topology: any RectangularTopology {
         switch (shape, edges) {
         case (.square, .bounded): return BoundedSquareTopology(width: width, height: height)
         case (.square, .wrapped): return WrappedSquareTopology(width: width, height: height)
-        case (.hex, _): return HexTopology(width: width, height: height)
+        case (.hex, .bounded): return HexTopology(width: width, height: height)
+        case (.hex, .wrapped): return WrappedHexTopology(width: width, height: height)
         }
     }
 

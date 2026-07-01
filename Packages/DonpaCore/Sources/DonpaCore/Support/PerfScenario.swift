@@ -8,7 +8,7 @@ import Foundation
 /// The app reads `current` at launch and, if set, jumps straight into the scenario
 /// instead of the title. See `Scripts/perf-profile.sh`.
 public enum PerfScenario: String, Sendable {
-    /// XXXL (1000², 1M cells) Modern board with a region opened at the centre — the
+    /// XXXL (1024², ~1M cells) Modern board with a region opened at the centre — the
     /// configuration the big-board CPU work targets (render load + autosave scan +
     /// idle timer churn).
     case xxxlOpened = "xxxl-opened"
