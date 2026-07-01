@@ -24,9 +24,10 @@ extension BoardScene {
         let local = boardLayer.convert(p, from: self)
         guard viewModel.game.board.cellCount > 0 else { return nil }
         if isWrapped {
-            let cell = layout.cellSize
-            let screen = Coord(
-                Int((local.x / cell).rounded(.down)), Int((local.y / cell).rounded(.down)))
+            // The layout maps the (possibly off-board) screen point to a screen cell
+            // — square arithmetic or nearest-hex-centre — which `normalize` folds
+            // onto the torus. Never nil for a wrapped topology.
+            let screen = layout.unclampedCoord(at: local)
             return viewModel.game.board.topology.normalize(screen)
         }
         return layout.coord(at: local)

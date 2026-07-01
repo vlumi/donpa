@@ -65,14 +65,13 @@ struct BoardSelectionPicker: View {
                 .pickerStyle(.segmented)
                 .modifier(FocusRing(focused: focusedRow == 3))
                 .onChange(of: settings.modernShape) { _ in onFocusRow?(3) }
-                // Row 4: edges (bounded vs wrapped torus). Modern only. Wrapped hex
-                // isn't supported yet, so a hex board is forced bounded here.
+                // Row 4: edges (bounded vs wrapped torus). Modern only; works for
+                // both shapes (every size is even-sided, so the hex torus is valid).
                 Picker("Edges", selection: $settings.modernEdges) {
                     ForEach(BoardEdges.allCases) { Text(verbatim: $0.label).tag($0) }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
-                .disabled(settings.modernShape == .hex)
                 .modifier(FocusRing(focused: focusedRow == 4))
                 .onChange(of: settings.modernEdges) { _ in onFocusRow?(4) }
             }

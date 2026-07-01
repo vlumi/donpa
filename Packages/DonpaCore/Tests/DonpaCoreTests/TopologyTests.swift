@@ -101,4 +101,34 @@ final class TopologyTests: XCTestCase {
         XCTAssertNil(t.normalize(Coord(3, 0)))
         XCTAssertEqual(t.normalize(Coord(2, 2)), Coord(2, 2))
     }
+
+    // MARK: WrappedHexTopology
+
+    func testWrappedHexHasNoEdges() {
+        // Every cell — corners included — has exactly 6 neighbours on a hex torus.
+        let t = WrappedHexTopology(width: 8, height: 8)
+        for c in t.allCoords() {
+            XCTAssertEqual(t.neighbors(of: c).count, 6, "cell \(c) should have 6 neighbours")
+        }
+    }
+
+    func testWrappedHexAdjacencyIsSymmetric() {
+        // The whole reason a hex torus needs even height: A→B must imply B→A across
+        // the wrap seams too, or adjacency counting breaks. Even height makes it hold.
+        let t = WrappedHexTopology(width: 8, height: 8)
+        for a in t.allCoords() {
+            for b in t.neighbors(of: a) {
+                XCTAssertTrue(
+                    t.neighbors(of: b).contains(a),
+                    "wrapped-hex adjacency must be symmetric: \(a)↔\(b)")
+            }
+        }
+    }
+
+    func testWrappedHexNormalizeFolds() {
+        let t = WrappedHexTopology(width: 8, height: 8)
+        XCTAssertEqual(t.normalize(Coord(-1, -1)), Coord(7, 7))
+        XCTAssertEqual(t.normalize(Coord(8, 8)), Coord(0, 0))
+        XCTAssertEqual(t.normalize(Coord(10, 3)), Coord(2, 3))
+    }
 }

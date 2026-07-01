@@ -107,4 +107,30 @@ final class CellLayoutTests: XCTestCase {
         XCTAssertNil(layout.coord(at: CGPoint(x: -1, y: 10)))
         XCTAssertNil(layout.coord(at: CGPoint(x: 10, y: -1)))
     }
+
+    /// The wrapped-hex path: `unclampedCoord(at:)` maps ANY point — including
+    /// off-board — to the nearest cell (which the torus then folds with normalize).
+    /// On-board points match `coord(at:)`; off-board ones return negative coords.
+    func testHexUnclampedCoordHandlesOffBoardPoints() {
+        let layout = HexLayout(cellSize: 30)
+        // On-board points agree with the bounded hit-test.
+        for x in 0..<6 {
+            for y in 0..<6 {
+                let c = Coord(x, y)
+                XCTAssertEqual(layout.unclampedCoord(at: layout.center(of: c)), c)
+            }
+        }
+        // A point below-left of the origin maps to a negative coord (not clamped/nil).
+        let off = layout.unclampedCoord(at: layout.center(of: Coord(-2, -2)))
+        XCTAssertEqual(off, Coord(-2, -2))
+    }
+
+    /// The square-grid default `unclampedCoord` floor-divides, so off-board points
+    /// give negative coords for the torus to fold.
+    func testSquareUnclampedCoord() {
+        let layout = SquareLayout(cellSize: 32)
+        XCTAssertEqual(layout.unclampedCoord(at: CGPoint(x: 16, y: 16)), Coord(0, 0))
+        XCTAssertEqual(layout.unclampedCoord(at: CGPoint(x: -1, y: -1)), Coord(-1, -1))
+        XCTAssertEqual(layout.unclampedCoord(at: CGPoint(x: 40, y: 8)), Coord(1, 0))
+    }
 }

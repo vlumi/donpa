@@ -145,6 +145,22 @@ final class GameTests: XCTestCase {
         XCTAssertEqual(game.status, .won, "hex game should be winnable with unchanged logic")
     }
 
+    func testGameLogicRunsUnchangedOnWrappedHexTopology() {
+        // Both seams at once: a 6-neighbour hex board whose edges wrap. Even height
+        // (8) is required for a consistent hex torus. Play a full game to a win.
+        let t = WrappedHexTopology(width: 8, height: 8)
+        var game = Game(topology: t, mineCount: 8)
+        var rng = SeededRNG(seed: 7)
+        let click = Coord(4, 4)
+        game.reveal(click, using: &rng)
+        XCTAssertNotEqual(game.status, .lost)
+        for c in game.board.allCoords where !game.board[c].isMine {
+            game.reveal(c, using: &rng)
+        }
+        XCTAssertEqual(
+            game.status, .won, "wrapped-hex game should be winnable with unchanged logic")
+    }
+
     // MARK: changeToken — cheap "did anything change" fingerprint
 
     /// The token must move when a reveal opens cells and when a flag toggles — the

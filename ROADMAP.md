@@ -113,13 +113,15 @@ to, tap/minimap wrap around), and topology-keyed scoreboards. Detail in
 
 ### Hex grids
 
-**In progress.** The bigger lift — a non-square layout touching `CellLayout`, cell
-drawing, hit-testing, and adjacency.
+**Shipped.** Pointy-top `HexTopology` (6-neighbour, odd-r offset) + `HexLayout`
+(nearest-centre hit-testing) + hex-aware tile/glow rendering, in both bounded and
+**wrapped** (torus) edges. The size ladder was moved to powers of two so every board
+is even-sided — the property a hex torus needs for consistent wrap. Difficulty tiers
+re-tuned across the new ladder (this reset pre-1.0 scores). Detail in
+[CHANGELOG.md](CHANGELOG.md).
 
-- [ ] `HexTopology` (6-neighbour adjacency, bounded + wrapped)
-- [ ] `HexLayout` (axial/offset coords → pixels + hit-testing)
-- [ ] Hex-aware tile/number rendering
-- [ ] Verify game logic is genuinely unchanged (same test pattern as torus)
+With square + hex × bounded + wrapped all playable, the **New Game + scoreboard
+redesign** (graphical shape/edge pickers over the full matrix) is the next UX pass.
 
 ## v0.4.0 — Achievements & practice mode
 
