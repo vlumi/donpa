@@ -57,10 +57,9 @@ for your grip. A tap on a revealed number always chords in either mode, and a
 long-press is always the opposite primary action.
 
 The board chrome is split in two: a thin top strip shows a tappable **config
-badge** (the current game — its rank insignia + size — which opens the New Game
-popup to switch) and read-only metrics — the flag counter, a live **clear-%**,
-the timer, and the 🎖️ High Scores button — while a strip beside or below the
-board (whichever the board's shape leaves room for) holds the **Retry / Pause /
+badge** (the current game's rank insignia + size, which opens the New Game popup)
+and read-only metrics — flag counter, live **clear-%**, timer, and the 🎖️ High
+Scores button — while a strip beside or below the board holds the **Retry / Pause /
 Home** actions plus the dig/flag toggle. Unopened tiles carry a faint manga
 screentone keyed to the toggle (dots for dig, hatch for flag).
 
@@ -135,14 +134,13 @@ or **Dark** — the board and chrome share one palette that follows the choice
 
 ## AI assistance
 
-Donpa Squad is built with substantial AI assistance, and that's stated openly
-here rather than hidden. The project is human-directed — design, gameplay, and
-every visual decision are the author's — but the **code is largely AI-written**
-and the **current scene art (the title, result, and pause panels) is
-AI-generated** (DALL·E). The procedural visuals — the app icon, the manga UI
-glyphs, and the board screentone — are AI-*written code*, not generated images.
-If hand-made or commissioned art replaces the generated pieces later, this note
-will be updated to credit it.
+Donpa Squad is built with substantial AI assistance, stated openly rather than
+hidden. The project is human-directed — design, gameplay, and every visual
+decision are the author's — but the **code is largely AI-written** and the
+**current scene art (title, result, pause panels) is AI-generated** (DALL·E). The
+procedural visuals (app icon, manga UI glyphs, board screentone) are AI-*written
+code*, not generated images. If commissioned art replaces the generated pieces
+later, this note will credit it.
 
 ## Version history
 
