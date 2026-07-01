@@ -1,73 +1,57 @@
 # Roadmap
 
-How Donpa gets from "classic Minesweeper" to the full "epic" vision at
-**v1.0**. The architecture (two seams — `Topology` for logical neighbours,
-`CellLayout` for pixel geometry) means most features land as a new conformer
-plus UI, without touching the game logic.
+How Donpa gets from classic Minesweeper to the full "epic" vision at **v1.0**.
+Two architectural seams — `Topology` (logical neighbours) and `CellLayout` (pixel
+geometry) — let most features land as a new conformer plus UI, without touching
+game logic.
 
-Versions are indicative, not contractual; scope may shift between minor
-releases. Each minor groups **related** work into one meaty release rather than
-giving every feature its own number: v0.2.0 carries both cross-device sync and
-big boards; v0.3.0 both board-topology variants; v0.4.0 achievements + practice mode (held
-late, once the feature set they reference is settled); v1.0.0 the composed epic set.
-The project ships **0.2.0** on TestFlight today (pre-release, not yet a public
-store release).
+Versions are indicative, not contractual. Each minor groups related work into one
+meaty release: v0.2.0 = cross-device sync + big boards; v0.3.0 = board-topology
+variants; v0.4.0 = achievements + practice mode; v1.0.0 = the composed epic set.
+**v0.1.0 and v0.2.0 have shipped to TestFlight; v0.3.0 (board variants) is in
+progress.**
 
 ---
 
 ## v0.1.0 — Classic release (shipped to TestFlight)
 
-The classic Minesweeper release on iOS + macOS — see [CHANGELOG.md](CHANGELOG.md)
-for what's in it. Pre-release on TestFlight; not yet a public store release.
-
-Carry-over notes that still inform later milestones:
+Classic Minesweeper on iOS + macOS (see [CHANGELOG.md](CHANGELOG.md)). TestFlight
+pre-release. Carry-over notes for later milestones:
 
 - **Per-cell board VoiceOver deferred** — needs a scalable cursor model (swiping
-  10k cells doesn't work on huge boards); co-design with big-board navigation.
-- **JA/FI strings are drafts** (`needs_review`) — refined continuously as
-  external-test feedback arrives; not a release gate.
+  10k cells doesn't scale); co-design with big-board navigation.
+- **JA/FI strings are drafts** (`needs_review`) — refined from test feedback; not
+  a release gate.
 
 ## v0.2.0 — Cross-device & big boards
 
-Two strands of "make the existing square game better and bigger" — grouped into
-one milestone. Both have shipped; what remains for each is a real-device
-verification pass (below), folded into the pre-1.0 device testing.
+Both strands shipped; only a real-device verification pass remains, folded into
+pre-1.0 device testing.
 
 ### Cross-device scoreboard sync
 
-The "progress follows you across devices" pillar. **Shipped** — scores + career
-totals sync via iCloud Key-Value Storage, keyed by Apple ID. Each device owns one
-blob (its own counts); the display merges all devices conflict-free (counters sum,
-best times merge by min) — so concurrent multi-device play Just Works with no
-double-count. Opt-in (off by default) via a footer toggle on the stats sheet;
-degrades to local-only when signed out; in-progress games stay local. See
-[CHANGELOG.md](CHANGELOG.md) for the detail.
+**Shipped.** Scores + career totals sync via iCloud KVS, keyed by Apple ID: each
+device owns one blob, the display merges all conflict-free (counters sum, best
+times by min), so concurrent play never double-counts. Opt-in, off by default;
+local-only when signed out; in-progress games stay local. Detail in
+[CHANGELOG.md](CHANGELOG.md).
 
 **Still open:**
 
-- [ ] **Real two-device verification** — simulator KVS is unreliable, so the
-      cross-device behaviour can only be confirmed on a real iPhone + Mac on one
-      iCloud account (a win on one appears on the other; concurrent offline play
-      reconciles without double-count; signed-out = local-only). Fold into the
-      pre-1.0 real-device pass.
-- [ ] **PRIVACY.md note** — one line that scores sync via the user's own iCloud
-      (we still collect nothing, no server).
-- [ ] **Churn / pruning** — a reinstall (esp. macOS, where the `DeviceID` is lost)
-      mints a new slot, abandoning the old blob in KVS. Deferred: a dead reinstall
-      can't be told from an offline device, and the blobs are tiny. Revisit only if
-      KVS key/size limits are ever approached (a device registry with `lastUpdated`
-      was specced but not built).
+- [ ] **Real two-device verification** — KVS is unreliable on the simulator;
+      confirm on a real iPhone + Mac (one Apple ID) in the pre-1.0 device pass.
+- [x] **PRIVACY.md note** — done (PRIVACY.md covers the iCloud-sync line).
+- [ ] **Churn / pruning** — a reinstall mints a new slot, orphaning the old KVS
+      blob. Deferred (a dead reinstall is indistinguishable from an offline device;
+      blobs are tiny). Revisit only near KVS limits.
 
 ### Big boards
 
-The "huge zoomable maps" pillar. **Largely shipped** — the full XS–XXXL size
-ladder (up to 1000² = 1M cells), flat bit-packed storage, viewport culling +
-texture batching, bounded zoom-out, the minimap overview, and the off-main-thread
-work that keeps a million-cell board responsive. See [CHANGELOG.md](CHANGELOG.md)
-for the detail.
-
-Done for this milestone. A few non-blocking follow-ups live in the Backlog
-(real-device pass, minimap polish) — none gate v0.2.0.
+**Shipped.** The full XS–XXXL ladder (up to 1000² = 1M cells), flat bit-packed
+storage, viewport culling + texture batching, bounded zoom-out, the minimap, and
+the off-main work that keeps a million-cell board responsive. Detail in
+[CHANGELOG.md](CHANGELOG.md). Non-blocking follow-ups (real-device pass, minimap
+polish) live in the Backlog.
 
 ## Backlog (unversioned)
 
@@ -119,28 +103,18 @@ slot into whichever release they're ready for.
 ## v0.3.0 — Board variants (wrapped + hex)
 
 The two board-topology pillars, grouped: both exercise the `Topology` /
-`CellLayout` seams the same way and share the "select a variant, score it
-separately" UI work, so they're one milestone rather than two minors.
+`CellLayout` seams and share the "select a variant, score it separately" UI work.
 
 ### Wrapped (torus) boards
 
-The "wrapped edges" pillar. Logic already proven — a `WrappedSquareTopology`
-test wins a full game with unchanged rules. This release makes it playable.
-
-- [ ] Mode selector exposing bounded vs wrapped
-- [ ] Rendering that conveys wrap-around (edge ghosting / seamless scroll, or
-      explicit "this edge connects to that one" affordance)
-- [ ] Pan behaviour for a seamless/torus surface (no hard edges to clamp to)
-- [ ] Scoreboards keyed by topology — and **restructure the scoreboard UI** for
-      the new axis: the per-board High Scores tables roughly triple (square /
-      wrapped / hex × sizes), so scope them under a topology filter/toggle (mirrors
-      the New Game shape axis). Career totals stay global (summed across all). The
-      current section layout (Career + High Scores + sync footer) is the base; the
-      filter just narrows the High Scores section.
+**Shipped.** Bounded/wrapped selector, seamless infinite scroll (no edges to clamp
+to, tap/minimap wrap around), and topology-keyed scoreboards. Detail in
+[CHANGELOG.md](CHANGELOG.md).
 
 ### Hex grids
 
-The "hex grids" pillar — exercises the second seam.
+**In progress.** The bigger lift — a non-square layout touching `CellLayout`, cell
+drawing, hit-testing, and adjacency.
 
 - [ ] `HexTopology` (6-neighbour adjacency, bounded + wrapped)
 - [ ] `HexLayout` (axial/offset coords → pixels + hit-testing)
@@ -151,9 +125,8 @@ The "hex grids" pillar — exercises the second seam.
 
 Two engagement features grouped because both turn on the same "what counts toward
 stats" question. Held **late on purpose**: achievement IDs are permanent (like the
-scoreboard keys), so they're designed against the by-now settled feature set —
-square + hex + wrapped all exist, so they can reference the full variant matrix
-without churn.
+scoreboard keys), so they're designed once the full variant matrix (square + hex +
+wrapped) exists and can be referenced without churn.
 
 **Achievements** — see the **Achievements** section below for the architecture,
 the no-leaderboards decision, and the design principles. Build-out:
@@ -209,102 +182,59 @@ public stores from here:
   record / Universal Purchase, not two. (Earlier this section assumed diverging
   IDs; that was reversed — see ARCHITECTURE.md.) Each platform still uploads its
   own binary under the shared record.
-- **App age rating**: 4+ / PEGI 3 (set via the App Store Connect questionnaire;
-  nothing in the feature set pushes it higher).
-- **App age rating**: 4+ / PEGI 3 (set via the App Store Connect questionnaire;
-  nothing in the feature set pushes it higher).
-- **Release/CD strategy.** A **local release lane** now does the whole cut:
-  `make release` bumps the version/build, opens an auto-merging PR, waits for CI,
-  tags the merge commit, publishes the GitHub release, and uploads to App Store
-  Connect (see [RELEASING.md](RELEASING.md)). Credentials (the ASC API key) stay
-  on the dev machine, outside the repo — so no secret management and it runs from
-  one command. **GitHub Actions CD** (tag-triggered, secrets scoped off fork PRs)
-  remains a *possible* later step only if the solo local cadence ever becomes a
-  bottleneck — not currently needed, since the lane already makes a release one
-  command. A separate private pipeline repo is only warranted if private material
-  appears (commissioned-art sources) — same trigger as the art-licensing question.
-- **AI disclosure.** The README carries an honest "AI assistance" note
-      (human-directed; code largely AI-written; current art AI-generated;
-      procedural chrome is AI-written code, not generated images). Remaining
-      action **at submission**: mirror a short version into the App Store
-      description. Apple has no dedicated "AI-generated" flag and doesn't ask
-      about AI-written code, so the description text is the only store-side lever.
-- [ ] **Art assets — repo/licensing strategy (open question).** Decision for
-      **now: keep everything in this repo** under the current blanket MIT — the
-      assets are AI-generated PNGs with no sensitive source files, so a private
-      repo / placeholders would add friction for no gain (and anything shipped in
-      the `.app` is extractable regardless).
-
-      **The concern is commissioned art**: MIT lets anyone copy/modify/redistribute
-      (even commercially) with only attribution — that is *wrong* for art you pay
-      an artist to make. So **before committing any commissioned or hand-made
-      art**, split the licensing (a single repo can carry two — standard for OSS
-      games):
-      - **`LICENSE` (MIT)** scoped to *code*, with a carve-out line pointing to
-        the asset license.
-      - **`ASSETS-LICENSE`** for the art. Default for paid commissioned work:
-        **all-rights-reserved / proprietary** (no reuse). Looser alternatives if
-        desired: CC BY-NC (non-commercial + credit) or CC BY-NC-ND (also no
-        derivatives).
-      - A short `README` in the asset folder(s) naming which license applies.
-      - **Upstream piece (most important): the commission contract** must grant
-        you the rights you need — ideally a full copyright assignment, or a broad
-        exclusive licence to ship *and sublicense within the app*. How you then
-        license to the public (above) is downstream of owning those rights.
-      - **Caveat:** do the split *before* the first commissioned-art commit — git
-        history would otherwise retain it under the old blanket MIT. And an
-        all-rights-reserved licence makes reuse unlawful, not impossible (shipped
-        `.app` pixels are still extractable) — a private *source* repo (option b)
-        only protects unshipped WIP/source files, not the shipped images.
-
-      Repo options if source files ever need privacy: (b) **separate private repo**
-      for source art, export-ready assets vendored here; (c) **git submodule** to
-      a private art repo. Leaning split-license-same-repo, escalating to (b) only
-      if source files are large/sensitive. (Ties into the AI-disclosure note.)
+- **App age rating**: 4+ / PEGI 3 (App Store Connect questionnaire; nothing in the
+  feature set pushes it higher).
+- **Release/CD strategy.** A **local release lane** does the whole cut: `make
+  release` bumps version/build, opens an auto-merging PR, waits for CI, tags,
+  publishes the GitHub release, and uploads to App Store Connect (see
+  [RELEASING.md](RELEASING.md)). Credentials stay on the dev machine, so no secret
+  management. **GitHub Actions CD** is a possible later step only if the local
+  cadence becomes a bottleneck — not needed now.
+- **AI disclosure.** The README carries an honest "AI assistance" note. Remaining
+  action **at submission**: mirror a short version into the App Store description
+  (Apple has no AI flag, so the description is the only store-side lever).
+- [ ] **Art assets — licensing (open question).** For now everything stays in
+      this repo under the blanket MIT — the assets are AI-generated PNGs with no
+      sensitive sources. The concern is **commissioned art**: MIT lets anyone
+      redistribute it, which is wrong for art you pay for. So **before the first
+      commissioned-art commit** (git history would otherwise retain it under MIT),
+      split the license: `LICENSE` (MIT) scoped to code with a carve-out pointing
+      to an `ASSETS-LICENSE` (default: all-rights-reserved). Upstream and most
+      important: the **commission contract** must actually grant those rights.
+      Escalate to a private source-art repo only if source files get
+      large/sensitive. (Ties into the AI-disclosure note.)
 
 (The **two-native-targets, no-Catalyst** decision and the distinct Mac bundle id
 that follows from it are recorded in [ARCHITECTURE.md](ARCHITECTURE.md).)
 
 ## Achievements (the v0.4 milestone — detail)
 
-Achievements via Game Center — mostly an event-plumbing job, but with real
-permanence to design around. The paid account now exists and the app ships to
-TestFlight, so this is no longer account-gated; what remains is the App Store
-Connect Game Center setup + the build-out.
+Mostly an event-plumbing job, but with real permanence to design around.
 
-**No leaderboards — deliberate.** Game Center *leaderboards* are out of scope, not
-just deferred. Scores here are local and **user-editable by design** (see Design
-principles — no anti-cheat), so a global leaderboard would fill with impossible
-times almost immediately and there's no honest way to police it without the
-server-side validation we've chosen not to build. Achievements don't have this
-problem: they're personal (between the player and their own play), not a ranked
-comparison, so a tampered local score only ever "cheats" yourself. So: Game Center
-**achievements yes, leaderboards no.**
+**No leaderboards — deliberate.** Scores are local and **user-editable by design**
+(see Design principles), so a global leaderboard would fill with impossible times
+and there's no honest way to police it without server-side validation we've chosen
+not to build. Achievements don't have this problem: they're personal, so tampering
+only cheats yourself. So: Game Center **achievements yes, leaderboards no.**
 
 **Prerequisites:**
 
 - App registered in **App Store Connect** with the **Game Center** capability
-  enabled (the paid account exists; this is just the ASC setup).
-- Each achievement defined in App Store Connect (ID, title, description, points,
-  hidden/visible, icon). Achievement **IDs are permanent once shipped** — like
-  the scoreboard keys, you can add but not cleanly rename/remove. Design the ID
-  scheme up front (e.g. `clear.modern.large.insane`, `streak.10`, `time.sub60`).
+  (the paid account exists; this is just the ASC setup).
+- Each achievement defined in ASC. **IDs are permanent once shipped** — add but
+  not cleanly rename/remove — so design the scheme up front (e.g.
+  `clear.modern.large.insane`, `streak.10`, `time.sub60`).
 
-**Design — keep it decoupled:**
+**Design — keep it decoupled:** the game emits to an **internal achievement layer**
+(an `AchievementEvent` per win carrying `GameConfig` + time + streak) with a local
+store and in-app display; Game Center bolts on later as one backend behind it, no
+rework. Achievements can thus be tracked and shown **offline now**. It crosses a
+line the app hasn't yet — **online + account-bound** — so the GC auth flow must
+degrade gracefully to the local layer when declined/failed.
 
-- Add an **internal achievement layer** the game emits to (an `AchievementEvent`
-  on each win carrying the `GameConfig` + time + streak), with a local store and
-  in-app display. Game Center becomes just *one backend* behind that layer.
-- This means achievements can be designed, tracked, and shown **offline now**,
-  and GameKit bolts on later as a thin reporter — no rework. (Same
-  forward-compatible instinct as `GameConfig.storageKey`.)
-- Note this crosses a line the app hasn't yet: **online + account-bound**. The
-  GC auth flow can be declined/fail — must degrade gracefully to the local layer.
-
-**Achievement design principles** (decide the actual list when building — IDs are
-permanent, so design carefully). Avoid filler: plain "clear each size/difficulty"
-is *inevitable, not earned* — attrition, no skill or surprise. Every achievement
-should reward one of:
+**Design principles** (decide the actual list when building). Avoid filler: plain
+"clear each size/difficulty" is *inevitable, not earned*. Every achievement should
+reward one of:
 
 - **Skill / mastery** — speed thresholds (sub-N seconds), no-flag wins (flag
   count stayed 0), efficiency (few clicks), conquering the near-unsolvable Insane
@@ -329,40 +259,29 @@ App Store Connect.
 
 ## Creative identity & theme
 
-**Shipped:** manga end-of-game result screen (win/loss/new-record panels), a
-"squad resting" pause panel, the interactive title screen, a procedural app
-icon, and **procedural manga chrome glyphs** (`MangaIcon`): a war-medal High
-Scores button, a Quonset-hut "home"
-barracks, a swallowtail flag, a pause/play toggle, and an army boot-print
-reveal/"dig" glyph (a CC0 silhouette baked to a tintable template via
-`Scripts/assets/make-boot.swift`). The mode toggle is a single-tap dig|flag segmented
-pair in distinct mode colours; the status bar carries a tappable config "change
-game" badge (replacing the separate New-Game button, mirroring the title splash).
-The **board's unopened tiles carry a faint manga screentone keyed to the input
-mode** — Ben-Day dots for dig, diagonal hatch for flag (opposite per-tile
-vignettes), the same patterns echoed on the mode-toggle segments. The cue is the
-*pattern*, not colour, so it's colour-blind safe; the ink is brightness-balanced
-per appearance so a screentoned tile averages back to the bare-tile gray. The
-manga flavour lives in these; the **board grid itself stays the classic look** (a
-tried full "inked paper" board theme wasn't distinct enough from classic to
-justify itself, so it was dropped — revisit only with a genuinely different
-treatment: heavier ink, custom number styling).
+**Shipped:** manga result screen (win/loss/new-record panels), a "squad resting"
+pause panel, the interactive title screen, a procedural app icon, and **procedural
+manga chrome glyphs** (`MangaIcon`: war-medal High Scores button, Quonset-hut home
+barracks, swallowtail flag, pause/play, boot-print "dig" glyph). The mode toggle is
+a dig|flag segmented pair in distinct mode colours; the status bar carries a
+tappable config "change game" badge. The **board's unopened tiles carry a faint
+manga screentone keyed to the input mode** — Ben-Day dots for dig, diagonal hatch
+for flag. The cue is the *pattern*, not colour, so it's colour-blind safe (ink is
+brightness-balanced so a screentoned tile averages back to the bare-tile gray).
+The manga flavour lives in the chrome; the **board grid stays the classic look**
+(a full "inked paper" board theme wasn't distinct enough to justify itself and was
+dropped — revisit only with a genuinely different treatment).
 
 **Ideas to revisit:**
 
-- **More screentone accents** — the dot/hatch screentone vocabulary could extend
-  to other UI (panels, buttons, backgrounds). Tempting, but easy to overdo: keep
-  it sparing and meaningful (it currently *means* "unopened / this mode") rather
-  than decorative everywhere, or the UI gets noisy.
-- **Art sources** — the scene panels (title / win / loss / pause) are DALL·E
-  (commercial-use OK via OpenAI TOS on a personal account; verify before ship);
-  the app icon is *procedural* (`Scripts/assets/make-icon.swift`), not DALL·E. If
-  iterating on an icon: keep it a single bold focal subject, no baked title text,
-  readable at 64px.
-  Alternatives to DALL·E worth a look when commissioning final art: a real manga
-  artist (Fiverr/commission for a consistent character sheet + assets), or other
-  gen tools — but a human pass to replace AI kana with proper typeset lettering
-  is recommended for production regardless.
+- **More screentone accents** — the dot/hatch vocabulary could extend to other UI,
+  but it's easy to overdo: keep it meaningful (it *means* "unopened / this mode"),
+  not decorative, or the UI gets noisy.
+- **Art sources** — the scene panels are DALL·E (commercial-use OK via OpenAI TOS;
+  verify before ship); the app icon is *procedural*, not DALL·E. When commissioning
+  final art, consider a real manga artist for a consistent character sheet — and a
+  human pass to replace AI kana with proper typeset lettering is recommended
+  regardless.
 
 Still open:
 
@@ -392,8 +311,7 @@ Still open:
 ## Deliberately out of scope
 
 Per project conventions: **no ads, no microtransactions, no pay-to-win**; no
-third-party dependencies; the older Intel Mac is not targeted. Online
-multiplayer is not planned for v1.0. (Cross-device *score* sync via the user's
-own iCloud **is** planned — see v0.2.0 — but that's local-iCloud KVS, not a
-server or social layer.) A **tip jar** — optional, content-neutral support — is
-the one monetization form under consideration; see Distribution & extras.
+third-party dependencies; the older Intel Mac is not targeted. No online
+multiplayer for v1.0. (Cross-device *score* sync ships in v0.2.0, but that's the
+user's own iCloud KVS — not a server or social layer.) A **tip jar** — optional,
+content-neutral support — is the one monetization form under consideration.
