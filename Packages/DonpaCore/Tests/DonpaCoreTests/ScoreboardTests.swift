@@ -270,6 +270,27 @@ final class ScoreboardTests: XCTestCase {
         XCTAssertEqual(board.wins(for: .intermediate), 0)
     }
 
+    /// A blob with no `epoch` field decodes as epoch 0 (the pre-upgrade baseline),
+    /// so the reset floor treats it as pre-wipe data.
+    func testDecodeEpochDefaultsToZeroWhenAbsent() {
+        let key = GameConfig.beginner.storageKey
+        let noEpoch = #"{"version":1,"records":{"\#(key)":{"wins":{"mine":1}}}}"#
+        XCTAssertEqual(Scoreboard.decodeEpoch(Data(noEpoch.utf8)), 0)
+        let withEpoch = #"{"version":1,"epoch":3,"records":{}}"#
+        XCTAssertEqual(Scoreboard.decodeEpoch(Data(withEpoch.utf8)), 3)
+    }
+
+    /// The legacy bare-dict fallback (records at the top level, before the versioned
+    /// envelope existed) still decodes — tested on the decoder directly, since the
+    /// load path's epoch floor would otherwise drop such a blob before this matters.
+    func testDecodeBlobReadsLegacyBareDict() {
+        let key = GameConfig.beginner.storageKey
+        let bare = #"{"\#(key)":{"wins":{"mine":4},"bestCentiseconds":700}}"#
+        let records = Scoreboard.decodeBlob(Data(bare.utf8))
+        XCTAssertEqual(records[key]?.wins.total, 4)
+        XCTAssertEqual(records[key]?.bestCentiseconds, 700)
+    }
+
     /// A save from a *newer* app (version > current) is not mis-read; rather than
     /// risk corrupting it we start empty (and a later write re-stamps it).
     func testRejectsNewerEnvelopeVersion() {

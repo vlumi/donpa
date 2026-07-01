@@ -42,11 +42,13 @@ public final class Scoreboard: ObservableObject {
     /// `GameConfig.storageKey` (geometry-bearing, so new variants add keys). `epoch`
     /// is the reset generation this blob was written under (see the wipe tombstone
     /// in `StatsSyncCoordinator`); a reader ignores blobs stamped below the current
-    /// epoch. Defaults to 0 so pre-epoch blobs decode as the baseline generation.
-    private struct StatsFile: Codable {
+    /// epoch. Only ever ENCODED (decoding reads the fields via `JSONSerialization` in
+    /// `decodeBlob`/`decodeEpoch`, which default a missing epoch to 0), so no
+    /// property default is needed here.
+    private struct StatsFile: Encodable {
         var version: Int
         var records: [String: ScoreRecord]
-        var epoch: Int = 0
+        var epoch: Int
     }
     /// Bump only for a *breaking* shape change (additive fields decode tolerantly);
     /// then add a `migrated(_:)` step.
