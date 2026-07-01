@@ -245,6 +245,19 @@ final class GameConfigTests: XCTestCase {
         XCTAssertEqual(cfg, .modern(.m, .hard, .wrapped, .square), "missing shape → square")
     }
 
+    /// A malformed config (neither classic nor modern) throws cleanly rather than
+    /// crashing — a corrupt save must fail its snapshot decode, not the process.
+    func testDecodesUnknownConfigCaseThrows() {
+        let junk = #"{"bogus":{"_0":"x"}}"#
+        XCTAssertThrowsError(
+            try JSONDecoder().decode(GameConfig.self, from: Data(junk.utf8))
+        ) { error in
+            guard case DecodingError.dataCorrupted = error else {
+                return XCTFail("expected dataCorrupted, got \(error)")
+            }
+        }
+    }
+
     /// A config round-trips through Codable with its edges intact.
     func testCodableRoundTripPreservesEdges() throws {
         for cfg in [
