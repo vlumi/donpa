@@ -107,16 +107,16 @@ extension ScoreRecord: Codable {
         chordsUsed = counter(.chordsUsed)
         noFlagWins = counter(.noFlagWins)
         noChordWins = counter(.noChordWins)
+        // `try?` on `decode` yields nil for a missing/mistyped key (no `?? nil`).
         topTimes = (try? c.decode([BestTime].self, forKey: .topTimes)) ?? []
-        bestLossProgress = try? c.decodeIfPresent(Double.self, forKey: .bestLossProgress) ?? nil
-        firstPlayed = try? c.decodeIfPresent(Date.self, forKey: .firstPlayed) ?? nil
-        lastPlayed = try? c.decodeIfPresent(Date.self, forKey: .lastPlayed) ?? nil
+        bestLossProgress = try? c.decode(Double.self, forKey: .bestLossProgress)
+        firstPlayed = try? c.decode(Date.self, forKey: .firstPlayed)
+        lastPlayed = try? c.decode(Date.self, forKey: .lastPlayed)
         // `best`: prefer the new pair; else lift a legacy scalar into a `BestTime`
         // (dated to firstPlayed, or the epoch as a neutral placeholder).
-        if let best = try? c.decodeIfPresent(BestTime.self, forKey: .best) ?? nil {
+        if let best = try? c.decode(BestTime.self, forKey: .best) {
             self.best = best
-        } else if let cs = try? c.decodeIfPresent(Int.self, forKey: .legacyBestCentiseconds) ?? nil
-        {
+        } else if let cs = try? c.decode(Int.self, forKey: .legacyBestCentiseconds) {
             best = BestTime(
                 centiseconds: cs, achievedAt: firstPlayed ?? Date(timeIntervalSince1970: 0))
         } else {

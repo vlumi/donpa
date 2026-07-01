@@ -281,8 +281,8 @@ final class ScoreboardTests: XCTestCase {
     }
 
     /// A win stamps first/last-played, keeps the best `topTimeLimit` times (fastest
-    /// first), and folds in the no-flag/no-chord mastery flags.
-    func testSubmitRecordsTimestampsTopTimesAndMastery() {
+    /// first), and folds in the no-flag/no-chord skill flags.
+    func testSubmitRecordsTimestampsTopTimesAndSkill() {
         let board = Scoreboard(defaults: defaults)
         let t0 = Date(timeIntervalSince1970: 1000)
         board.submit(300, for: .beginner, at: t0, noFlag: true, noChord: true)

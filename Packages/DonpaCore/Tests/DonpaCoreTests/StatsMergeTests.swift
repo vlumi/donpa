@@ -181,8 +181,8 @@ final class StatsMergeTests: XCTestCase {
         XCTAssertEqual(merged.lastPlayed, Date(timeIntervalSince1970: 900), "latest last-played")
     }
 
-    /// The new mastery counters sum across devices like the others.
-    func testMasteryCountersSumAcrossDevices() {
+    /// The new skill counters sum across devices like the others.
+    func testSkillCountersSumAcrossDevices() {
         var mine = ScoreRecord()
         mine.noFlagWins.add(2)
         mine.chordsUsed.add(10)
