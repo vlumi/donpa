@@ -42,10 +42,10 @@ extension GameContent {
     private var configButton: some View {
         Button(action: { navigator.showingNewGame = true }) {
             HStack(spacing: 6) {
-                // Modern config: rank insignia then size name (matching the
+                // Grid/Hive config: rank insignia then size name (matching the
                 // scoreboard / picker); classic shows its plain preset name.
-                if let size = viewModel.config.modernSize,
-                    let density = viewModel.config.modernDensity
+                if let size = viewModel.config.size,
+                    let density = viewModel.config.density
                 {
                     DensityInsignia.image(density)
                         .resizable().scaledToFit().frame(height: 24)

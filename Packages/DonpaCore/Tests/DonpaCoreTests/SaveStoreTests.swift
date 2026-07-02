@@ -23,7 +23,7 @@ final class SaveStoreTests: XCTestCase {
     }
 
     private func sampleSnapshot() -> GameSnapshot {
-        let config = GameConfig.classic(.beginner)
+        let config = GameConfig.basic(.beginner)
         var game = Game(config: config)
         game.reveal(Coord(0, 0))
         return GameSnapshot(game: game, config: config, elapsedCentiseconds: 500)!
@@ -37,7 +37,7 @@ final class SaveStoreTests: XCTestCase {
         let stale = try JSONDecoder().decode(
             GameSnapshot.self,
             from: Data(
-                #"{"config":{"classic":{"_0":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#.utf8)
+                #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#.utf8)
         )
         XCTAssertFalse(stale.isConsistent)
         store.save(stale)
@@ -59,7 +59,7 @@ final class SaveStoreTests: XCTestCase {
         // The saved camera view must survive an actual save→file→load cycle (the
         // real persistence path), not just an in-memory Codable round-trip — so a
         // resumed game after a quit/relaunch returns to where you were looking.
-        let config = GameConfig.classic(.beginner)
+        let config = GameConfig.basic(.beginner)
         var game = Game(config: config)
         game.reveal(Coord(0, 0))
         let camera = CameraView(centerX: 0.65, centerY: 0.25, scale: 2.2)
@@ -99,7 +99,7 @@ final class SaveStoreTests: XCTestCase {
         // change this build predates, so it's discarded rather than mis-read.
         let url = dir.appendingPathComponent(filename)
         let json =
-            #"{"version":999,"config":{"classic":{"_0":"beginner"}},"mines":[],"#
+            #"{"version":999,"config":{"basic":{"preset":"beginner"}},"mines":[],"#
             + #""revealed":[],"flagged":[],"status":"playing","revealedSafeCount":0,"#
             + #""elapsedCentiseconds":0}"#
         try Data(json.utf8).write(to: url)
@@ -113,11 +113,11 @@ final class SaveStoreTests: XCTestCase {
         let url = dir.appendingPathComponent(filename)
         let mines = ((0..<9).map { "[\($0),0]" } + ["[0,1]"]).joined(separator: ",")
         let json =
-            #"{"version":0,"config":{"classic":{"_0":"beginner"}},"mines":[\#(mines)]}"#
+            #"{"version":0,"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines)]}"#
         try Data(json.utf8).write(to: url)
         let loaded = store.load()
         XCTAssertNotNil(loaded, "an older, compatible save is preserved across upgrade")
-        XCTAssertEqual(loaded?.config, .classic(.beginner))
+        XCTAssertEqual(loaded?.config, .basic(.beginner))
     }
 
     // MARK: UI-test isolation

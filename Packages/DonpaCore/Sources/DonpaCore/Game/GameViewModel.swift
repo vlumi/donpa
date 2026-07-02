@@ -109,7 +109,7 @@ public final class GameViewModel: ObservableObject {
     /// survives until applied.
     public var pendingCameraRestore: CameraView?
 
-    public init(config: GameConfig = .classic(.beginner)) {
+    public init(config: GameConfig = .beginner) {
         self.config = config
         self.game = Game(config: config)
     }

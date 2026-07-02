@@ -7,8 +7,8 @@ import UIKit
 import AppKit
 #endif
 
-/// The high-score table: clears + best time per config. Classic always shows;
-/// Modern appears once played (to avoid 15 empty rows). Stored by geometry.
+/// The high-score table: clears + best time per config. Basic always shows;
+/// Grid/Hive appear once played (to avoid rows of empties). Stored by geometry.
 struct ScoreboardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
@@ -20,10 +20,17 @@ struct ScoreboardView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingReset = false
 
-    /// Modern configs the player has played at all — a win or a recorded best
-    /// progress from a loss.
-    private var playedModern: [GameConfig] {
-        GameConfig.modernConfigs.filter { scoreboard.record(for: $0) != nil }
+    /// The family's configs the player has played at all — a win or a recorded
+    /// best progress from a loss. Enumerates both edges per size × density (Flat
+    /// before Round), so Round boards get their rows too; the redesign's Family +
+    /// Edges filters will narrow this to one list.
+    private func played(_ family: BoardFamily) -> [GameConfig] {
+        BoardSize.allCases.flatMap { size in
+            Density.allCases.flatMap { density in
+                BoardEdges.allCases.compactMap { GameConfig.custom(family, size, density, $0) }
+            }
+        }
+        .filter { scoreboard.record(for: $0) != nil }
     }
 
     var body: some View {
@@ -270,12 +277,17 @@ struct ScoreboardView: View {
     }
 
     /// Score tables without the header — the wide layout, header pinned above the
-    /// scroll. Classic always shows; Modern once played.
+    /// scroll. Basic always shows; Grid/Hive once played.
     @ViewBuilder private var scoresRows: some View {
+        let playedGrid = played(.grid)
+        let playedHive = played(.hive)
         VStack(alignment: .leading, spacing: 16) {
-            section("Classic", configs: GameConfig.classicConfigs)
-            if !playedModern.isEmpty {
-                section("Modern", configs: playedModern)
+            section("Basic", configs: GameConfig.configs(family: .basic))
+            if !playedGrid.isEmpty {
+                section("Grid", configs: playedGrid)
+            }
+            if !playedHive.isEmpty {
+                section("Hive", configs: playedHive)
             }
         }
     }

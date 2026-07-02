@@ -28,7 +28,7 @@ public struct GameView: View {
     /// being pre-process) so the hand-off into the title is seamless.
     @State private var showSplash = true
 
-    public init(config: GameConfig = .classic(.beginner)) {
+    public init(config: GameConfig = .beginner) {
         // Scoreboard iCloud sync is gated by `syncScores` (opt-in, OFF by default);
         // the cloud store also no-ops when signed out.
         let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false

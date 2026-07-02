@@ -73,8 +73,8 @@ final class GameViewModelTests: XCTestCase {
 
     func testNewGameWithConfigSwitchesBoard() {
         let vm = GameViewModel(config: .beginner)
-        vm.newGame(config: .classic(.expert))
-        XCTAssertEqual(vm.config, .classic(.expert))
+        vm.newGame(config: .basic(.expert))
+        XCTAssertEqual(vm.config, .basic(.expert))
         XCTAssertEqual(vm.boardWidth, 30)
         XCTAssertEqual(vm.boardHeight, 16)
         XCTAssertEqual(vm.status, .notStarted)
@@ -243,7 +243,7 @@ final class GameViewModelTests: XCTestCase {
         let snapshot = try? XCTUnwrap(vm.snapshot())
         guard let snapshot else { return }
 
-        let restored = GameViewModel(config: .classic(.expert))  // different board
+        let restored = GameViewModel(config: .basic(.expert))  // different board
         restored.restore(from: snapshot)
 
         XCTAssertEqual(restored.config, vm.config, "restore adopts the saved config")
@@ -261,12 +261,12 @@ final class GameViewModelTests: XCTestCase {
     /// whole chrome); a restore must land the saved value there, and the VM's
     /// `elapsedCentiseconds` passthrough must reflect it.
     func testRestoreLandsElapsedOnTheClock() {
-        let config = GameConfig.classic(.beginner)
+        let config = GameConfig.basic(.beginner)
         var game = Game(config: config)
         game.reveal(Coord(0, 0))  // → .playing, so the snapshot is worth saving
         let snapshot = GameSnapshot(game: game, config: config, elapsedCentiseconds: 4242)!
 
-        let vm = GameViewModel(config: .classic(.expert))
+        let vm = GameViewModel(config: .basic(.expert))
         vm.restore(from: snapshot)
         XCTAssertEqual(vm.clock.elapsedCentiseconds, 4242, "restore lands elapsed on the clock")
         XCTAssertEqual(vm.elapsedCentiseconds, 4242, "the VM passthrough mirrors the clock")
@@ -278,7 +278,7 @@ final class GameViewModelTests: XCTestCase {
         let snapshot = try? XCTUnwrap(vm.snapshot())
         guard let snapshot else { return }
 
-        let restored = GameViewModel(config: .classic(.expert))
+        let restored = GameViewModel(config: .basic(.expert))
         restored.restore(from: snapshot)
         XCTAssertEqual(restored.inputMode, .flag, "resuming keeps the dig/flag toggle")
     }

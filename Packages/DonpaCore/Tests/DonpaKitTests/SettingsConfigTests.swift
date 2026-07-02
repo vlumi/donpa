@@ -4,41 +4,65 @@ import XCTest
 @testable import DonpaKit
 
 /// `Settings.currentConfig` is what the New Game popup turns the player's pending
-/// choices into — including the new wrapped-edges axis. Lock the mapping +
-/// persistence (pure logic; the picker UI itself is coverage-ignored).
+/// choices into — family + axes. Lock the mapping, persistence, and the one-time
+/// migration from the pre-family (mode + shape) keys.
 @MainActor
 final class SettingsConfigTests: XCTestCase {
     private func freshDefaults() -> UserDefaults {
-        let d = UserDefaults(suiteName: "test.\(UUID().uuidString)")!
-        return d
+        UserDefaults(suiteName: "test.\(UUID().uuidString)")!
     }
 
-    func testModernEdgesDefaultsToBounded() {
-        let s = Settings(defaults: freshDefaults())
-        XCTAssertEqual(s.modernEdges, .bounded, "off by default — existing behaviour unchanged")
+    func testDefaultsAreBasicFlat() {
+        let settings = Settings(defaults: freshDefaults())
+        XCTAssertEqual(settings.family, .basic)
+        XCTAssertEqual(settings.edges, .flat, "Round is opt-in")
+        XCTAssertEqual(settings.currentConfig, .basic(.beginner))
     }
 
-    func testCurrentConfigCarriesTheChosenEdges() {
-        let s = Settings(defaults: freshDefaults())
-        s.mode = .modern
-        s.modernEdges = .wrapped
-        guard case .modern(_, _, let edges, _) = s.currentConfig else {
-            return XCTFail("modern mode should yield a modern config")
-        }
-        XCTAssertEqual(edges, .wrapped, "the picker's edges choice flows into the config")
-        XCTAssertTrue(s.currentConfig.topology is WrappedSquareTopology)
+    func testCurrentConfigCarriesTheChosenAxes() {
+        let settings = Settings(defaults: freshDefaults())
+        settings.family = .grid
+        settings.edges = .round
+        XCTAssertEqual(
+            settings.currentConfig, .grid(settings.boardSize, settings.density, .round),
+            "the picker's choices flow into the config")
+        XCTAssertTrue(settings.currentConfig.topology is WrappedSquareTopology)
 
-        // Classic is always bounded, regardless of the modern edges setting.
-        s.mode = .classic
-        XCTAssertEqual(s.currentConfig.edges, .bounded)
+        settings.family = .hive
+        XCTAssertTrue(
+            settings.currentConfig.topology is WrappedHexTopology,
+            "the shared edges choice follows the family switch")
+
+        // Basic is always Flat, regardless of the Grid/Hive edges setting.
+        settings.family = .basic
+        XCTAssertEqual(settings.currentConfig.edges, .flat)
     }
 
-    func testModernEdgesPersists() {
+    func testFamilyAndEdgesPersist() {
         let defaults = freshDefaults()
-        let a = Settings(defaults: defaults)
-        a.modernEdges = .wrapped
-        // A fresh Settings on the same store restores the choice.
-        let b = Settings(defaults: defaults)
-        XCTAssertEqual(b.modernEdges, .wrapped)
+        let first = Settings(defaults: defaults)
+        first.family = .hive
+        first.edges = .round
+        // A fresh Settings on the same store restores the choices.
+        let second = Settings(defaults: defaults)
+        XCTAssertEqual(second.family, .hive)
+        XCTAssertEqual(second.edges, .round)
+    }
+
+    func testMigratesLegacyModeShapeAndEdges() {
+        // A pre-family install stored mode/shape/edges in the old vocabulary; a
+        // hex-on-wrapped player must come back as Hive + Round, not the defaults.
+        let defaults = freshDefaults()
+        defaults.set("modern", forKey: "donpa.mode")
+        defaults.set("hex", forKey: "donpa.modernShape")
+        defaults.set("wrapped", forKey: "donpa.modernEdges")
+        let migrated = Settings(defaults: defaults)
+        XCTAssertEqual(migrated.family, .hive)
+        XCTAssertEqual(migrated.edges, .round)
+
+        // And a classic player lands on Basic.
+        let classicDefaults = freshDefaults()
+        classicDefaults.set("classic", forKey: "donpa.mode")
+        XCTAssertEqual(Settings(defaults: classicDefaults).family, .basic)
     }
 }

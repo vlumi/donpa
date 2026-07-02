@@ -1,16 +1,17 @@
 import DonpaCore
 import SwiftUI
 
-/// The board-config chooser: a Classic/Modern mode switch over the matching
-/// picker (3 classic presets, or Size × Density for Modern). Binds directly to
-/// `Settings` — the pending choice; the host decides when to start a game.
+/// The board-config chooser: a Basic/Grid/Hive family switch over the matching
+/// picker (3 basic presets, or Difficulty × Size + Flat/Round edges). Binds
+/// directly to `Settings` — the pending choice; the host decides when to start a
+/// game.
 ///
 /// The difficulty/size rows are `CarouselPicker` drums with a detail/tagline line
-/// below the selected card. Mode stays a segmented control (two short options).
+/// below the selected card. Family stays a segmented control (three short options).
 ///
 /// On macOS it's keyboard-drivable: up/down move between rows, left/right cycle
 /// within the focused row. `focusedRow` is owned by the host and clamped here as
-/// the row set changes (Classic 2 rows, Modern 3). Cycling mutates `Settings` and
+/// the row set changes (Basic 2 rows, Grid/Hive 4). Cycling mutates `Settings` and
 /// each carousel follows its bound value, so the keys drive the drums.
 struct BoardSelectionPicker: View {
     @ObservedObject var settings: Settings
@@ -22,35 +23,36 @@ struct BoardSelectionPicker: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            // Row 0: Mode. The Picker labels here are visually hidden but read by
+            // Row 0: Family. The Picker labels here are visually hidden but read by
             // VoiceOver — as Text(bundle: .module) so they resolve in this package's
             // catalog (a bare string key would look in the app bundle: unlocalized).
-            Picker(selection: $settings.mode) {
-                ForEach(GameMode.allCases) { Text(verbatim: $0.label).tag($0) }
+            Picker(selection: $settings.family) {
+                ForEach(BoardFamily.allCases) { Text(verbatim: $0.label).tag($0) }
             } label: {
-                Text("Mode", bundle: .module)
+                Text("Family", bundle: .module)
             }
             .labelsHidden()
             .pickerStyle(.segmented)
             .modifier(FocusRing(focused: focusedRow == 0))
-            .onChange(of: settings.mode) { _ in onFocusRow?(0) }
+            .onChange(of: settings.family) { _ in onFocusRow?(0) }
 
-            switch settings.mode {
-            case .classic:
-                // Difficulty is row 1, lining up with Modern's difficulty row.
+            switch settings.family {
+            case .basic:
+                // Difficulty is row 1, lining up with Grid/Hive's difficulty row.
                 carouselRow(
                     1,
-                    labels: ClassicPreset.allCases.map(\.label),
-                    index: classicIndex,
-                    detail: settings.classicPreset.detail,
-                    tagline: settings.classicPreset.tagline)
-            case .modern:
+                    labels: BasicPreset.allCases.map(\.label),
+                    index: presetIndex,
+                    detail: settings.basicPreset.detail,
+                    tagline: settings.basicPreset.tagline)
+            case .grid, .hive:
                 carouselRow(
                     1,
                     labels: Density.allCases.map(\.label),
                     index: densityIndex,
-                    detail: settings.modernDensity.detail,
-                    tagline: settings.modernDensity.tagline,
+                    // Hive is denser per tier; show the number the board will use.
+                    detail: settings.density.detail(hex: settings.family == .hive),
+                    tagline: settings.density.tagline,
                     symbol: { i in
                         let all = Density.allCases
                         return all.indices.contains(i) ? DensityInsignia.markImage(all[i]) : nil
@@ -59,29 +61,19 @@ struct BoardSelectionPicker: View {
                     2,
                     labels: BoardSize.allCases.map(\.label),
                     index: sizeIndex,
-                    detail: settings.modernSize.detail,
-                    tagline: settings.modernSize.tagline)
-                // Row 3: shape (square vs hex). Modern only.
-                Picker(selection: $settings.modernShape) {
-                    ForEach(BoardShape.allCases) { Text(verbatim: $0.label).tag($0) }
-                } label: {
-                    Text("Shape", bundle: .module)
-                }
-                .labelsHidden()
-                .pickerStyle(.segmented)
-                .modifier(FocusRing(focused: focusedRow == 3))
-                .onChange(of: settings.modernShape) { _ in onFocusRow?(3) }
-                // Row 4: edges (bounded vs wrapped torus). Modern only; works for
-                // both shapes (every size is even-sided, so the hex torus is valid).
-                Picker(selection: $settings.modernEdges) {
+                    detail: settings.boardSize.detail,
+                    tagline: settings.boardSize.tagline)
+                // Row 3: edges — Flat, or Round (torus). Works for both families
+                // (every size is even-sided, so the Round hive torus is valid).
+                Picker(selection: $settings.edges) {
                     ForEach(BoardEdges.allCases) { Text(verbatim: $0.label).tag($0) }
                 } label: {
                     Text("Edges", bundle: .module)
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
-                .modifier(FocusRing(focused: focusedRow == 4))
-                .onChange(of: settings.modernEdges) { _ in onFocusRow?(4) }
+                .modifier(FocusRing(focused: focusedRow == 3))
+                .onChange(of: settings.edges) { _ in onFocusRow?(3) }
             }
         }
     }
@@ -96,7 +88,7 @@ struct BoardSelectionPicker: View {
                 labels: labels, selection: index, focused: focusedRow == row, symbol: symbol,
                 onInteract: { onFocusRow?(row) }
             )
-            // Identity per label set, so switching mode builds a fresh carousel
+            // Identity per label set, so switching family builds a fresh carousel
             // centred on its selection rather than reusing a stale scroll offset.
             .id(labels)
             HStack(spacing: 6) {
@@ -116,14 +108,14 @@ struct BoardSelectionPicker: View {
 
     // MARK: Enum ↔ index bindings (the carousel works in index space)
 
-    private var classicIndex: Binding<Int> {
-        enumIndex(\.classicPreset, all: ClassicPreset.allCases)
+    private var presetIndex: Binding<Int> {
+        enumIndex(\.basicPreset, all: BasicPreset.allCases)
     }
     private var densityIndex: Binding<Int> {
-        enumIndex(\.modernDensity, all: Density.allCases)
+        enumIndex(\.density, all: Density.allCases)
     }
     private var sizeIndex: Binding<Int> {
-        enumIndex(\.modernSize, all: BoardSize.allCases)
+        enumIndex(\.boardSize, all: BoardSize.allCases)
     }
 
     /// A `Binding<Int>` over a `Settings` enum, mapping case↔index in `allCases`.

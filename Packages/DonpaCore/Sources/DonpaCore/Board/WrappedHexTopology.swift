@@ -7,7 +7,7 @@
 /// parity, so a clean vertical wrap needs the top and bottom rows to have opposite
 /// parity — i.e. an even row count. With an odd height the seam would pair two
 /// same-parity rows, breaking adjacency symmetry (a cell's up-neighbour wouldn't
-/// list it back). The Modern size ladder is all powers of two, so every board is
+/// list it back). The Grid/Hive size ladder is all powers of two, so every board is
 /// even-sided and this holds; the initializer asserts it.
 public struct WrappedHexTopology: RectangularTopology {
     public let width: Int

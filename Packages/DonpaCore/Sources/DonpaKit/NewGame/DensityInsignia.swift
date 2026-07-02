@@ -1,7 +1,7 @@
 import DonpaCore
 import SwiftUI
 
-/// Rank-insignia images for the Modern difficulty tiers, rendered once to flat
+/// Rank-insignia images for the Grid/Hive difficulty tiers, rendered once to flat
 /// template `Image`s so they work as single labels in a segmented `Picker` (which
 /// flattens multi-view labels) and can be reused wherever a tier is shown.
 enum DensityInsignia {

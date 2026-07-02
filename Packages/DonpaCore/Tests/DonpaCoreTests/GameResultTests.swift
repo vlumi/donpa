@@ -40,7 +40,7 @@ final class GameResultTests: XCTestCase {
         // re-roll those so the assertion always actually runs, instead of the old
         // `if playing` form that could silently assert nothing.
         for _ in 0..<3 {
-            let vm = GameViewModel(config: .classic(.beginner))
+            let vm = GameViewModel(config: .basic(.beginner))
             await reveal(vm, Coord(4, 4))
             guard vm.status == .playing else { continue }
             XCTAssertNil(vm.lastResult, "no result while the game is in progress")
@@ -50,7 +50,7 @@ final class GameResultTests: XCTestCase {
     }
 
     func testResultMatchesFinalStatus() async {
-        let vm = GameViewModel(config: .classic(.beginner))
+        let vm = GameViewModel(config: .basic(.beginner))
         await playToEnd(vm)
         XCTAssertNotEqual(vm.status, .playing)
         let result = try? XCTUnwrap(vm.lastResult)
@@ -66,7 +66,7 @@ final class GameResultTests: XCTestCase {
     func testLostResultCarriesTheLossCoord() async {
         // Try several games until one is lost, then assert the coord matches.
         for _ in 0..<50 {
-            let vm = GameViewModel(config: .classic(.beginner))
+            let vm = GameViewModel(config: .basic(.beginner))
             await playToEnd(vm)
             if case .lost(let at)? = vm.lastResult?.result {
                 XCTAssertEqual(at, vm.game.lossCoord)
@@ -78,7 +78,7 @@ final class GameResultTests: XCTestCase {
     }
 
     func testNewGameClearsTheResult() async {
-        let vm = GameViewModel(config: .classic(.beginner))
+        let vm = GameViewModel(config: .basic(.beginner))
         await playToEnd(vm)
         XCTAssertNotNil(vm.lastResult)
         vm.newGame()
@@ -87,7 +87,7 @@ final class GameResultTests: XCTestCase {
     }
 
     func testNewGameResetsToRevealMode() {
-        let vm = GameViewModel(config: .classic(.beginner))
+        let vm = GameViewModel(config: .basic(.beginner))
         vm.inputMode = .flag
         vm.newGame()
         XCTAssertEqual(vm.inputMode, .reveal, "every game should start in reveal mode")
@@ -98,10 +98,10 @@ final class GameResultTests: XCTestCase {
     /// which previously replayed the end-game animation and panel on each click.
     func testInputIsInertAfterGameEnds() async {
         // Find a lost game so we have a revealed mine to re-click (chord path).
-        var vm = GameViewModel(config: .classic(.beginner))
+        var vm = GameViewModel(config: .basic(.beginner))
         var lost = false
         for _ in 0..<50 {
-            vm = GameViewModel(config: .classic(.beginner))
+            vm = GameViewModel(config: .basic(.beginner))
             await playToEnd(vm)
             if vm.status == .lost { lost = true; break }
         }
@@ -126,7 +126,7 @@ final class GameResultTests: XCTestCase {
     }
 
     func testResultIDIncrementsPerGame() async {
-        let vm = GameViewModel(config: .classic(.beginner))
+        let vm = GameViewModel(config: .basic(.beginner))
         await playToEnd(vm)
         let firstID = vm.lastResult?.id
         vm.newGame()

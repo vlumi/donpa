@@ -15,12 +15,19 @@ struct ScoreRow: View {
 
     var body: some View {
         HStack {
-            // Modern rows: rank insignia in a fixed-width column (so size letters
-            // line up), then the size name. Classic rows show their preset name.
-            if let size = config.modernSize, let density = config.modernDensity {
+            // Grid/Hive rows: rank insignia in a fixed-width column (so size letters
+            // line up), then the size name — plus a "Round" tag when the board wraps,
+            // since a Flat and a Round board of the same size/rank are separate rows.
+            // Basic rows show their preset name.
+            if let size = config.size, let density = config.density {
                 DensityInsignia.image(density)
                     .resizable().scaledToFit().frame(width: 30, height: 20)
                 Text(verbatim: size.label)
+                if config.edges.wraps {
+                    Text(verbatim: config.edges.label)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
             } else {
                 Text(verbatim: config.label)  // already localized by GameConfig
             }

@@ -5,8 +5,9 @@
 
 **Donpa Squad** (ドンパ隊) — a manga-styled Minesweeper for Apple platforms
 (iOS 16+ and macOS 14+). Classic mode shipped first, and the "epic" variants it
-was architected for are landing on schedule: huge zoomable maps, **wrapped
-(torus) edges**, and **hex grids** — each added without touching the game logic.
+was architected for are landing on schedule: huge zoomable maps, **Round
+(torus) edges**, and **hex grids** (the Hive family) — each added without
+touching the game logic.
 
 **v0.1.0** (classic mode) and **v0.2.0** (big boards + cross-device sync) shipped
 to TestFlight; **v0.3.0** (board variants) is in progress. See
@@ -16,7 +17,7 @@ decisions.
 
 ## Contents
 
-- [Modes](#modes)
+- [Board families](#board-families)
 - [Controls](#controls)
 - [Start and end of a game](#start-and-end-of-a-game)
 - [Scores](#scores)
@@ -26,31 +27,33 @@ decisions.
 - [Development](#development)
 - [License](#license)
 
-## Modes
+## Board families
 
-A **Classic / Modern** switch in the **New Game popup** chooses the board (open
-it from the title art, the in-game **config badge**, the result screen, or
-`⌘N`):
+A **Basic / Grid / Hive** switch in the **New Game popup** chooses the board
+family (open it from the title art, the in-game **config badge**, the result
+screen, or `⌘N`):
 
-- **Classic** — the original Beginner / Intermediate / Expert presets.
-- **Modern** — pick a **Difficulty** and a **Size**, plus the board's **Shape**
-  (square or **hex** — six neighbours instead of eight) and **Edges** (bounded,
-  or **wrapped** into a torus that scrolls seamlessly in every direction). The
-  size ladder runs XS / S / M / L / XL / XXL / XXXL as powers of two (8² up to
-  1024² = a million cells); the larger boards are panned and zoomed, with a
-  minimap for navigation. Difficulty is mine density (the deliberately brutal
-  top tier is near-unguessable; hex carries a touch more mines per tier to
-  match), so it composes with any size. Each tier carries its **military rank
-  insignia** — chevron stripes for the lower ranks, a star, then a star-in-laurel
-  for the apex. The chosen mode and selections are remembered.
+- **Basic** — the original Beginner / Intermediate / Expert presets.
+- **Grid** — square cells (eight neighbours); pick a **Difficulty** and a
+  **Size**, plus the board's **Edges**: **Flat** (a map with edges) or **Round**
+  (the world curves back — a torus that scrolls seamlessly in every direction).
+- **Hive** — hexagonal cells (six neighbours), same Difficulty / Size / Edges
+  axes; each tier carries a touch more mines than Grid so the difficulty matches.
+
+The Grid/Hive size ladder runs XS / S / M / L / XL / XXL / XXXL as powers of two
+(8² up to 1024² = a million cells); the larger boards are panned and zoomed, with
+a minimap for navigation. Difficulty is mine density (the deliberately brutal top
+tier is near-unguessable), so it composes with any size. Each tier carries its
+**military rank insignia** — chevron stripes for the lower ranks, a star, then a
+star-in-laurel for the apex. The chosen family and selections are remembered.
 
 The difficulty and size rows are a horizontal **carousel**: scroll/swipe (or
 click) to pick, with a line below the selection showing the board facts and a
 short flavour tagline.
 
-On macOS the popup is keyboard-drivable: **↑/↓** move between the rows (Mode /
-Difficulty / Size), **←/→** cycle the selection within the highlighted row,
-**Return** starts, **Esc** closes.
+On macOS the popup is keyboard-drivable: **↑/↓** move between the rows (Family /
+Difficulty / Size / Edges), **←/→** cycle the selection within the highlighted
+row, **Return** starts, **Esc** closes.
 
 ## Controls
 
@@ -84,7 +87,7 @@ hand to dig, a flag to flag (a plain arrow otherwise); holding **Control** shows
 the other mode's cursor, since Control-click does the opposite action. Panning is
 bounded to the board: it rests with a little breathing room past each edge, and
 pulling further rubber-bands with resistance before springing back. When the
-whole board already fits on screen, panning is disabled. A **wrapped** board has
+whole board already fits on screen, panning is disabled. A **Round** board has
 no edges to hit — it pans forever, and the minimap's "you are here" box splits
 across the seam.
 
@@ -139,8 +142,8 @@ erase (a device that was offline during the wipe clears itself when it
 reconnects). With sync off, everything stays on-device.
 
 Stats are keyed by board geometry, not by tier name, so the format stays stable
-across variants: wrapped, hex, and square boards — and any re-tuned tier — each
-get their own scoreboard entries rather than reinterpreting existing scores.
+across variants: every family × edges combination — and any re-tuned tier — gets
+its own scoreboard entries rather than reinterpreting existing scores.
 
 ## Settings
 

@@ -140,17 +140,21 @@ mid-game is a shrug; losing your records is not).
   out-of-bounds is discarded; a restored game also filters out-of-bounds coords
   and recomputes its safe-cell count from the board.
 
-`GameConfig.storageKey` (`v1|modern|sq|bounded|16x16|m41`) is itself a versioned,
-geometry-bearing token: the shape (`sq`/`hex`) and edges (`bounded`/`wrapped`)
-axes it named ahead of time are live now, so each variant — or a re-tuned tier —
-creates **new** scoreboard entries rather than colliding with old ones. Scores
-are local and user-editable by design (no anti-cheat; lean on Game Center's
-server-side validation if leaderboards land).
+`GameConfig.storageKey` (`v2|grid|flat|16x16|m31`) is itself a versioned,
+geometry-bearing token: the family (`basic`/`grid`/`hive`) and edges
+(`flat`/`round`) axes are named explicitly, so each variant — or a re-tuned
+tier — creates **new** scoreboard entries rather than colliding with old ones.
+(`v2` is the family vocabulary; `v1` keys spoke classic/modern + a shape axis
+and were orphaned by the 0.3.0 score reset, not migrated.) Scores are local and
+user-editable by design (no anti-cheat; lean on Game Center's server-side
+validation if leaderboards land).
 
 ## Score sync: per-device blobs, CRDT-ish merge, epoch tombstones
 
 Cross-device score sync (opt-in, off by default) rides **iCloud key-value
-storage** — no server, no accounts, ~1 MB, fits a scoreboard. The design goal is
+storage** — no server, no accounts, ~1 MB, fits a scoreboard. Blobs are
+zlib-compressed (the verbose JSON shrinks ~20×, so even a maxed-out multi-device
+fleet stays far under the shared quota) and sniffed on read. The design goal is
 that no device ever *overwrites* another's history:
 
 - **One blob per device** (`donpa.stats.blob.<deviceID>`). A device only ever

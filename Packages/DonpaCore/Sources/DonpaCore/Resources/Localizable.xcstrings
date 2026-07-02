@@ -120,6 +120,23 @@
         }
       }
     },
+    "Basic" : {
+      "comment" : "Board family: the three original presets. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Perus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ベーシック"
+          }
+        }
+      }
+    },
     "Beginner" : {
       "comment" : "Classic difficulty preset (9x9, 10 mines). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
@@ -150,23 +167,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "新兵、構えろ"
-          }
-        }
-      }
-    },
-    "Bounded" : {
-      "comment" : "Board edges axis: a normal square board with hard edges. NEEDS REVIEW: ja\/fi.",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reunallinen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "通常"
           }
         }
       }
@@ -222,19 +222,53 @@
         }
       }
     },
-    "Hex" : {
-      "comment" : "Board shape axis: hexagonal cells. NEEDS REVIEW: ja\/fi.",
+    "Flat" : {
+      "comment" : "Board edges: a map with edges you can fall off. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Kuusikulmio"
+            "value" : "Litteä"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "六角"
+            "value" : "フラット"
+          }
+        }
+      }
+    },
+    "Grid" : {
+      "comment" : "Board family: square cells. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ruudukko"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "グリッド"
+          }
+        }
+      }
+    },
+    "Hive" : {
+      "comment" : "Board family: hex cells. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kenno"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイブ"
           }
         }
       }
@@ -421,6 +455,23 @@
         }
       }
     },
+    "Round" : {
+      "comment" : "Board edges: the world curves back (torus). NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pyöreä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ラウンド"
+          }
+        }
+      }
+    },
     "S" : {
       "comment" : "Modern board size S (16x16). ja=小.",
       "localizations" : {
@@ -457,23 +508,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "工兵"
-          }
-        }
-      }
-    },
-    "Square" : {
-      "comment" : "Board shape axis: square cells. NEEDS REVIEW: ja\/fi.",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Neliö"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "四角"
           }
         }
       }
@@ -559,23 +593,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "古参兵"
-          }
-        }
-      }
-    },
-    "Wrapped" : {
-      "comment" : "Board edges axis: edges wrap around (torus). NEEDS REVIEW: ja\/fi.",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Kiertyvä"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ループ"
           }
         }
       }

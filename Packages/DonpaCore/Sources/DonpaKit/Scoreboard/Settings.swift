@@ -70,19 +70,6 @@ public enum Handedness: String, CaseIterable, Identifiable, Sendable {
     public var alignment: Alignment { self == .right ? .bottomTrailing : .bottomLeading }
 }
 
-/// Which board-config flavour the picker offers.
-public enum GameMode: String, CaseIterable, Identifiable, Sendable {
-    case classic
-    case modern
-
-    public var id: String { rawValue }
-    public var label: String {
-        self == .classic
-            ? String(localized: "Classic", bundle: .module)
-            : String(localized: "Modern", bundle: .module)
-    }
-}
-
 /// App language override. Applied by writing `AppleLanguages`, which the system
 /// reads at launch — so a change takes effect next launch.
 public enum LanguagePreference: String, CaseIterable, Identifiable, Sendable {
@@ -121,26 +108,23 @@ public final class Settings: ObservableObject {
     @Published public var appearance: AppearancePreference {
         didSet { defaults.set(appearance.rawValue, forKey: appearanceKey) }
     }
-    @Published public var mode: GameMode {
-        didSet { defaults.set(mode.rawValue, forKey: modeKey) }
+    /// The board family whose page the New Game picker shows (and starts from).
+    @Published public var family: BoardFamily {
+        didSet { defaults.set(family.rawValue, forKey: familyKey) }
     }
-    @Published public var modernSize: BoardSize {
-        didSet { defaults.set(modernSize.rawValue, forKey: sizeKey) }
+    /// Grid/Hive size — shared by both families (they pick over the same axes).
+    @Published public var boardSize: BoardSize {
+        didSet { defaults.set(boardSize.rawValue, forKey: sizeKey) }
     }
-    @Published public var modernDensity: Density {
-        didSet { defaults.set(modernDensity.rawValue, forKey: densityKey) }
+    @Published public var density: Density {
+        didSet { defaults.set(density.rawValue, forKey: densityKey) }
     }
-    /// Edges for Modern boards: bounded (square) or wrapped (torus). Classic is
-    /// always bounded.
-    @Published public var modernEdges: BoardEdges {
-        didSet { defaults.set(modernEdges.rawValue, forKey: edgesKey) }
+    /// Edges for Grid/Hive boards: Flat, or Round (torus). Basic is always Flat.
+    @Published public var edges: BoardEdges {
+        didSet { defaults.set(edges.rawValue, forKey: edgesKey) }
     }
-    /// Cell shape for Modern boards: square or hex. Classic is always square.
-    @Published public var modernShape: BoardShape {
-        didSet { defaults.set(modernShape.rawValue, forKey: shapeKey) }
-    }
-    @Published public var classicPreset: ClassicPreset {
-        didSet { defaults.set(classicPreset.rawValue, forKey: presetKey) }
+    @Published public var basicPreset: BasicPreset {
+        didSet { defaults.set(basicPreset.rawValue, forKey: presetKey) }
     }
     @Published public var handedness: Handedness {
         didSet { defaults.set(handedness.rawValue, forKey: handednessKey) }
@@ -175,12 +159,16 @@ public final class Settings: ObservableObject {
 
     private let defaults: UserDefaults
     private let appearanceKey = "donpa.appearance"
-    private let modeKey = "donpa.mode"
+    private let familyKey = "donpa.family"
+    // Size/density/preset keep their historical key names + raw values, so a
+    // pre-family install's picks carry over untouched.
     private let sizeKey = "donpa.modernSize"
     private let densityKey = "donpa.modernDensity"
     private let edgesKey = "donpa.modernEdges"
-    private let shapeKey = "donpa.modernShape"
     private let presetKey = "donpa.classicPreset"
+    // Legacy (pre-family) selection keys, read once for migration in init.
+    private let legacyModeKey = "donpa.mode"
+    private let legacyShapeKey = "donpa.modernShape"
     private let handednessKey = "donpa.handedness"
     private let languageKey = "donpa.language"
     private let showMinimapKey = "donpa.showMinimap"
@@ -192,18 +180,24 @@ public final class Settings: ObservableObject {
         appearance =
             defaults.string(forKey: appearanceKey).flatMap(AppearancePreference.init(rawValue:))
             ?? .system
-        mode = defaults.string(forKey: modeKey).flatMap(GameMode.init(rawValue:)) ?? .classic
+        // Family: prefer the stored value; else migrate a pre-family install's
+        // mode+shape selection (classic → basic; modern → grid/hive by shape).
+        family =
+            defaults.string(forKey: familyKey).flatMap(BoardFamily.init(rawValue:))
+            ?? Self.legacyFamily(
+                mode: defaults.string(forKey: legacyModeKey),
+                shape: defaults.string(forKey: legacyShapeKey))
         // Old size raw names (small/medium/…) no longer decode; fall back to `.s`
         // (the long-time default). Self-healing — the next pick persists the new name.
-        modernSize = defaults.string(forKey: sizeKey).flatMap(BoardSize.init(rawValue:)) ?? .s
-        modernDensity =
+        boardSize = defaults.string(forKey: sizeKey).flatMap(BoardSize.init(rawValue:)) ?? .s
+        density =
             defaults.string(forKey: densityKey).flatMap(Density.init(rawValue:)) ?? .normal
-        modernEdges =
-            defaults.string(forKey: edgesKey).flatMap(BoardEdges.init(rawValue:)) ?? .bounded
-        modernShape =
-            defaults.string(forKey: shapeKey).flatMap(BoardShape.init(rawValue:)) ?? .square
-        classicPreset =
-            defaults.string(forKey: presetKey).flatMap(ClassicPreset.init(rawValue:)) ?? .beginner
+        // Edges: the raw vocabulary changed (bounded/wrapped → flat/round); migrate
+        // a legacy value so a Round player stays Round.
+        edges =
+            defaults.string(forKey: edgesKey).flatMap(Self.edgesValue(from:)) ?? .flat
+        basicPreset =
+            defaults.string(forKey: presetKey).flatMap(BasicPreset.init(rawValue:)) ?? .beginner
         handedness =
             defaults.string(forKey: handednessKey).flatMap(Handedness.init(rawValue:)) ?? .left
         // Default ON: check presence explicitly, since `bool(forKey:)` is false when
@@ -217,13 +211,29 @@ public final class Settings: ObservableObject {
             ?? .system
     }
 
-    /// The `GameConfig` implied by the current mode + selections. All shape × edges
-    /// combinations are supported (every Modern size is even-sided, so the wrapped-
-    /// hex torus is valid).
+    /// The `GameConfig` implied by the current family + selections. All family ×
+    /// edges combinations are supported (every Grid/Hive size is even-sided, so the
+    /// Round hive torus is valid).
     public var currentConfig: GameConfig {
-        switch mode {
-        case .classic: return .classic(classicPreset)
-        case .modern: return .modern(modernSize, modernDensity, modernEdges, modernShape)
+        switch family {
+        case .basic: return .basic(basicPreset)
+        case .grid: return .grid(boardSize, density, edges)
+        case .hive: return .hive(boardSize, density, edges)
+        }
+    }
+
+    /// Map a pre-family install's stored mode/shape selection onto a family.
+    private static func legacyFamily(mode: String?, shape: String?) -> BoardFamily {
+        guard mode == "modern" else { return .basic }
+        return shape == "hex" ? .hive : .grid
+    }
+
+    /// Decode an edges raw value, accepting the legacy bounded/wrapped vocabulary.
+    private static func edgesValue(from raw: String) -> BoardEdges? {
+        switch raw {
+        case "bounded": return .flat
+        case "wrapped": return .round
+        default: return BoardEdges(rawValue: raw)
         }
     }
 }
