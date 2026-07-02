@@ -75,99 +75,99 @@ struct BoardGlyph: View {
 
     private static func drawBasic(_ pen: Pen) {
         let s = pen.s
-            // A retro app window: rounded frame, title-bar line, 2×2 grid below —
-            // a nod to where the presets came from.
-            let frame = CGRect(x: s * 0.12, y: s * 0.16, width: s * 0.76, height: s * 0.68)
-            pen.stroke(Path(roundedRect: frame, cornerRadius: s * 0.08))
-            let barY = frame.minY + s * 0.16
-            var bar = Path()
-            bar.move(to: CGPoint(x: frame.minX, y: barY))
-            bar.addLine(to: CGPoint(x: frame.maxX, y: barY))
-            pen.stroke(bar, thin: true)
-            var cross = Path()
-            let midX = frame.midX
-            let midY = (barY + frame.maxY) / 2
-            cross.move(to: CGPoint(x: midX, y: barY))
-            cross.addLine(to: CGPoint(x: midX, y: frame.maxY))
-            cross.move(to: CGPoint(x: frame.minX, y: midY))
-            cross.addLine(to: CGPoint(x: frame.maxX, y: midY))
-            pen.stroke(cross, thin: true)
+        // A retro app window: rounded frame, title-bar line, 2×2 grid below —
+        // a nod to where the presets came from.
+        let frame = CGRect(x: s * 0.12, y: s * 0.16, width: s * 0.76, height: s * 0.68)
+        pen.stroke(Path(roundedRect: frame, cornerRadius: s * 0.08))
+        let barY = frame.minY + s * 0.16
+        var bar = Path()
+        bar.move(to: CGPoint(x: frame.minX, y: barY))
+        bar.addLine(to: CGPoint(x: frame.maxX, y: barY))
+        pen.stroke(bar, thin: true)
+        var cross = Path()
+        let midX = frame.midX
+        let midY = (barY + frame.maxY) / 2
+        cross.move(to: CGPoint(x: midX, y: barY))
+        cross.addLine(to: CGPoint(x: midX, y: frame.maxY))
+        cross.move(to: CGPoint(x: frame.minX, y: midY))
+        cross.addLine(to: CGPoint(x: frame.maxX, y: midY))
+        pen.stroke(cross, thin: true)
     }
 
     private static func drawGrid(_ pen: Pen) {
         let s = pen.s
-            // A 3×3 square lattice: the plain open field.
-            let frame = CGRect(x: s * 0.14, y: s * 0.14, width: s * 0.72, height: s * 0.72)
-            pen.stroke(Path(roundedRect: frame, cornerRadius: s * 0.06))
-            var lattice = Path()
-            for i in 1...2 {
-                let x = frame.minX + frame.width * CGFloat(i) / 3
-                let y = frame.minY + frame.height * CGFloat(i) / 3
-                lattice.move(to: CGPoint(x: x, y: frame.minY))
-                lattice.addLine(to: CGPoint(x: x, y: frame.maxY))
-                lattice.move(to: CGPoint(x: frame.minX, y: y))
-                lattice.addLine(to: CGPoint(x: frame.maxX, y: y))
-            }
-            pen.stroke(lattice, thin: true)
+        // A 3×3 square lattice: the plain open field.
+        let frame = CGRect(x: s * 0.14, y: s * 0.14, width: s * 0.72, height: s * 0.72)
+        pen.stroke(Path(roundedRect: frame, cornerRadius: s * 0.06))
+        var lattice = Path()
+        for i in 1...2 {
+            let x = frame.minX + frame.width * CGFloat(i) / 3
+            let y = frame.minY + frame.height * CGFloat(i) / 3
+            lattice.move(to: CGPoint(x: x, y: frame.minY))
+            lattice.addLine(to: CGPoint(x: x, y: frame.maxY))
+            lattice.move(to: CGPoint(x: frame.minX, y: y))
+            lattice.addLine(to: CGPoint(x: frame.maxX, y: y))
+        }
+        pen.stroke(lattice, thin: true)
     }
 
     private static func drawHive(_ pen: Pen) {
         let s = pen.s
-            // A honeycomb: three pointy-top hexagons sharing edges (one up, two
-            // down). NOT a single hexagon with an inner "Y" — that reads as a cube.
-            let r = s * 0.21
-            let pitch = r * 1.732_050_807_568_877  // √3·r between adjacent centres
-            let top = CGPoint(x: s / 2, y: s * 0.31)
-            let centres = [
-                top,
-                CGPoint(x: top.x - pitch / 2, y: top.y + r * 1.5),
-                CGPoint(x: top.x + pitch / 2, y: top.y + r * 1.5),
-            ]
-            var comb = Path()
-            for c in centres {
-                for i in 0...6 {
-                    let a = (CGFloat(i) * 60 - 90) * .pi / 180  // pointy-top
-                    let p = CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a))
-                    if i == 0 { comb.move(to: p) } else { comb.addLine(to: p) }
-                }
+        // A honeycomb: three pointy-top hexagons sharing edges (one up, two
+        // down). NOT a single hexagon with an inner "Y" — that reads as a cube.
+        let r = s * 0.21
+        let pitch = r * 1.732_050_807_568_877  // √3·r between adjacent centres
+        let top = CGPoint(x: s / 2, y: s * 0.31)
+        let centres = [
+            top,
+            CGPoint(x: top.x - pitch / 2, y: top.y + r * 1.5),
+            CGPoint(x: top.x + pitch / 2, y: top.y + r * 1.5),
+        ]
+        var comb = Path()
+        for c in centres {
+            for i in 0...6 {
+                let a = (CGFloat(i) * 60 - 90) * .pi / 180  // pointy-top
+                let p = CGPoint(x: c.x + r * cos(a), y: c.y + r * sin(a))
+                if i == 0 { comb.move(to: p) } else { comb.addLine(to: p) }
             }
-            pen.stroke(comb)
+        }
+        pen.stroke(comb)
     }
 
     private static func drawFlat(_ pen: Pen) {
         let s = pen.s
-            // A framed flat map: border frame + two mountain peaks inside. The
-            // edge of the frame is the edge of the world.
-            let frame = CGRect(x: s * 0.10, y: s * 0.20, width: s * 0.80, height: s * 0.60)
-            pen.stroke(Path(roundedRect: frame, cornerRadius: s * 0.05))
-            var peaks = Path()
-            let base = frame.maxY - s * 0.14
-            peaks.move(to: CGPoint(x: frame.minX + s * 0.10, y: base))
-            peaks.addLine(to: CGPoint(x: frame.minX + s * 0.26, y: base - s * 0.20))
-            peaks.addLine(to: CGPoint(x: frame.minX + s * 0.40, y: base))
-            peaks.move(to: CGPoint(x: frame.minX + s * 0.34, y: base))
-            peaks.addLine(to: CGPoint(x: frame.minX + s * 0.54, y: base - s * 0.28))
-            peaks.addLine(to: CGPoint(x: frame.minX + s * 0.72, y: base))
-            pen.stroke(peaks, thin: true)
+        // A framed flat map: border frame + two mountain peaks inside. The
+        // edge of the frame is the edge of the world.
+        let frame = CGRect(x: s * 0.10, y: s * 0.20, width: s * 0.80, height: s * 0.60)
+        pen.stroke(Path(roundedRect: frame, cornerRadius: s * 0.05))
+        var peaks = Path()
+        let base = frame.maxY - s * 0.14
+        peaks.move(to: CGPoint(x: frame.minX + s * 0.10, y: base))
+        peaks.addLine(to: CGPoint(x: frame.minX + s * 0.26, y: base - s * 0.20))
+        peaks.addLine(to: CGPoint(x: frame.minX + s * 0.40, y: base))
+        peaks.move(to: CGPoint(x: frame.minX + s * 0.34, y: base))
+        peaks.addLine(to: CGPoint(x: frame.minX + s * 0.54, y: base - s * 0.28))
+        peaks.addLine(to: CGPoint(x: frame.minX + s * 0.72, y: base))
+        pen.stroke(peaks, thin: true)
     }
 
     private static func drawRound(_ pen: Pen) {
         let s = pen.s
-            // A globe with wrap bands: circle + equator + meridian — pan off one
-            // side and the world curves back.
-            let c = CGPoint(x: s / 2, y: s / 2)
-            let r = s * 0.38
-            pen.stroke(
-                Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)))
-            pen.stroke(
-                Path(
-                    ellipseIn: CGRect(
-                        x: c.x - r, y: c.y - r * 0.38, width: r * 2, height: r * 0.76)),
-                thin: true)
-            pen.stroke(
-                Path(
-                    ellipseIn: CGRect(
-                        x: c.x - r * 0.38, y: c.y - r, width: r * 0.76, height: r * 2)),
-                thin: true)
+        // A globe with wrap bands: circle + equator + meridian — pan off one
+        // side and the world curves back.
+        let c = CGPoint(x: s / 2, y: s / 2)
+        let r = s * 0.38
+        pen.stroke(
+            Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)))
+        pen.stroke(
+            Path(
+                ellipseIn: CGRect(
+                    x: c.x - r, y: c.y - r * 0.38, width: r * 2, height: r * 0.76)),
+            thin: true)
+        pen.stroke(
+            Path(
+                ellipseIn: CGRect(
+                    x: c.x - r * 0.38, y: c.y - r, width: r * 0.76, height: r * 2)),
+            thin: true)
     }
 }
