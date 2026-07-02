@@ -23,6 +23,14 @@ struct BoardSelectionPicker: View {
     /// Ask the host to move keyboard focus to a row. nil on iOS.
     var onFocusRow: ((Int) -> Void)?
 
+    /// The layout LAW is width-driven, not platform-driven: a compact width
+    /// (iPhone portrait) gets the swipe-pager; a regular width (iPad, Mac,
+    /// landscape) gets the sidebar + detail, which shows every family at once with
+    /// room to breathe. Each is designed for its own scale rather than one layout
+    /// stretched across a 6× width range. `#if os` isn't used for this — the size
+    /// class is a runtime value on every platform.
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     /// Live drag offset while swiping the pager; snaps back with the same
     /// spring the page change uses, so release always lands smoothly.
     @GestureState(resetTransaction: Transaction(animation: .snappy))
@@ -33,11 +41,106 @@ struct BoardSelectionPicker: View {
     @State private var pageHeights: [BoardFamily: CGFloat] = [:]
 
     var body: some View {
+        if sizeClass == .regular {
+            regularLayout
+        } else {
+            compactLayout
+        }
+    }
+
+    /// Compact (iPhone portrait): the tab strip over the swipe-pager.
+    private var compactLayout: some View {
         VStack(spacing: 14) {
             familyTabs
                 .modifier(FocusRing(focused: focusedRow == 0))
 
             pager
+        }
+    }
+
+    // MARK: Regular layout (iPad / Mac) — family sidebar + detail pane
+
+    /// Regular (iPad/Mac): all three families as a vertical sidebar list on the
+    /// left, the chosen family's options filling the detail pane on the right.
+    /// Everything is shown at once — no pager, no swipe — because the width is
+    /// there. Keyboard nav maps naturally: up/down move the family (row 0),
+    /// left/right cycle within the focused option row.
+    private var regularLayout: some View {
+        HStack(alignment: .top, spacing: 20) {
+            familySidebar
+                .frame(width: 150)
+                .modifier(FocusRing(focused: focusedRow == 0))
+            detailPaneStack
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// The detail pane, sized to the TALLEST family so switching families never
+    /// changes the modal height (Basic's three preset cards are taller than
+    /// Grid/Hive's rows). All panes are laid on top of each other — the frame
+    /// takes the max — and only the selected one is shown.
+    private var detailPaneStack: some View {
+        ZStack(alignment: .top) {
+            ForEach(BoardFamily.allCases) { family in
+                detailPane(for: family)
+                    .opacity(family == settings.family ? 1 : 0)
+                    .accessibilityHidden(family != settings.family)
+                    .allowsHitTesting(family == settings.family)
+            }
+        }
+    }
+
+    private var familySidebar: some View {
+        VStack(spacing: 8) {
+            ForEach(BoardFamily.allCases) { family in
+                familySidebarItem(family)
+            }
+        }
+    }
+
+    private func familySidebarItem(_ family: BoardFamily) -> some View {
+        let selected = settings.family == family
+        return Button {
+            withAnimation(.snappy) { settings.family = family }
+            onFocusRow?(0)
+        } label: {
+            HStack(spacing: 10) {
+                BoardGlyph(kind: .family(family), size: 24)
+                Text(verbatim: family.label)
+                    .font(.body.weight(selected ? .semibold : .regular))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.75))
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.accentColor.opacity(selected ? 0.14 : 0.04))
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(verbatim: family.label))
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
+    }
+
+    /// The detail pane: the chosen family's options, filling the width. Reuses the
+    /// same row builders as the compact pager (basic cards / difficulty chips /
+    /// size chips / edges toggle), just laid out to fill the pane rather than a
+    /// swipe page.
+    @ViewBuilder private func detailPane(for family: BoardFamily) -> some View {
+        switch family {
+        case .basic:
+            basicCards
+        case .grid, .hive:
+            VStack(spacing: 16) {
+                densityChips(for: family)
+                    .modifier(FocusRing(focused: focusedRow == 1))
+                sizeChips(for: family)
+                    .modifier(FocusRing(focused: focusedRow == 2))
+                edgesToggle(for: family)
+                    .modifier(FocusRing(focused: focusedRow == 3))
+            }
         }
     }
 
