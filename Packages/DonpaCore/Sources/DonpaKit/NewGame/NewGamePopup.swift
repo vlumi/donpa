@@ -18,21 +18,15 @@ struct NewGamePopup: View {
     @State private var focusedRow: Int?
     #endif
 
-    /// Measured natural height of the scrollable content, so the card hugs it
-    /// until it would exceed the available height (then the ScrollView scrolls).
-    @State private var contentHeight: CGFloat = 0
-
     /// Preferred card width, FIXED across all family pages so paging never resizes
     /// the frame — a family-dependent width left the pager half-resized when
     /// returning to a narrower page. Roomy enough that every chip row and the
     /// preset cards breathe.
     private static let idealWidth: CGFloat = 680
 
-    /// The card chrome above the scroll region: the "New game" title line plus the
-    /// VStack spacing under it. Subtracted from the window height so the scroll
-    /// area's cap leaves room for the title (and its own padding), rather than the
-    /// card growing past the window and hiding the Start button at the bottom.
-    private static let titleChromeHeight: CGFloat = 50
+    /// Top/bottom gap between the card and the window edge. Small, so on a short
+    /// screen the card can grow nearly full-height (and Start rides up).
+    private static let outerVMargin: CGFloat = 12
 
     /// At/above this available width the modal uses the wide sidebar+detail layout;
     /// below it (portrait phone), the vertical swipe-pager. Chosen so the
@@ -70,20 +64,21 @@ struct NewGamePopup: View {
             GeometryReader { geo in
                 card(
                     layout: Self.layout(for: geo.size),
-                    width: Self.cardWidth(available: geo.size.width - 48),
-                    // Height budget for the SCROLLABLE region only — subtract the
-                    // card's own chrome (outer padding 48 + card padding 48 + the
-                    // title row and its spacing) so the scroll area caps at what's
-                    // actually left. Capping at the full window height instead let
-                    // the card grow taller than the window, pushing the last scroll
-                    // item (the Start button) off the bottom where the scroll,
-                    // already at its cap, couldn't reveal it.
-                    maxHeight: geo.size.height - 48 - 48 - Self.titleChromeHeight
+                    width: Self.cardWidth(available: geo.size.width - 48)
                 )
-                .animation(.snappy, value: settings.family)
+                // Bound the WHOLE card to the window (minus the outer margin each
+                // side). A small vertical margin lets the card grow tall on a short
+                // screen; the horizontal margin stays roomier so the card doesn't
+                // hug the side edges.
+                .frame(
+                    maxWidth: .infinity, maxHeight: geo.size.height - 2 * Self.outerVMargin,
+                    alignment: .center
+                )
                 .overlay(alignment: .topTrailing) { closeButton }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(24)
+                .padding(.horizontal, 24)
+                .padding(.vertical, Self.outerVMargin)
+                .animation(.snappy, value: settings.family)
             }
         }
         #if os(macOS)
@@ -112,33 +107,37 @@ struct NewGamePopup: View {
     /// The card grows to `width` (so every option is visible side-by-side when
     /// there's room) and hugs its content height up to `maxHeight`; past that the
     /// content scrolls with the title pinned, so the selectors stay reachable.
-    private func card(layout: BoardSelectionPicker.Layout, width: CGFloat, maxHeight: CGFloat)
-        -> some View
-    {
-        VStack(spacing: 20) {
-            Text("New game", bundle: .module).font(.title2.bold())
-
-            // The picker scrolls if it's ever taller than the space; the pager
-            // layout's Start is pinned BELOW this scroll (outside it) so it can't
-            // be clipped, while the sidebar layout carries its own Start inside its
-            // pinned column.
-            scrollableContent(layout: layout)
-                // Hug content until it would overflow; only then cap + scroll.
-                .frame(height: min(contentHeight, max(0, maxHeight)))
-                .onPreferenceChange(ContentHeightKey.self) { contentHeight = $0 }
-
-            if layout == .pager {
-                picker(layout: layout).startButton
+    private func card(layout: BoardSelectionPicker.Layout, width: CGFloat) -> some View {
+        // Everything — title, picker, Start — lives in ONE ScrollView. When it all
+        // fits (the common case) `.basedOnSize` keeps it inert and the card hugs
+        // its content, so the outer frame centers it in the window. When the
+        // viewport is too short (a landscape phone / SE) it scrolls, so the bottom
+        // is always reachable and the card never overruns the window. No fixed
+        // heights, no chrome constants — the layout system sizes it.
+        let content = ScrollView {
+            VStack(spacing: 20) {
+                Text("New game", bundle: .module).font(.title2.bold())
+                picker(layout: layout)
+                #if os(macOS)
+                Text("Arrows to choose · Return to start", bundle: .module)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                #endif
+                if layout == .pager {
+                    picker(layout: .pager).startButton
+                }
             }
+            .frame(maxWidth: .infinity)
+            .padding(24)
         }
-        .padding(24)
-        .frame(width: width)
-        // Clip to the rounded card so nothing a child lays out wider (a chip row
-        // or the pager mid-measure on a very narrow window) can spill past the card
-        // edge — and, since the card is already clamped to the window, off-screen.
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
+        return scrollBehavior(content)
+            .frame(width: width)
+            // Clip to the rounded card so nothing a child lays out wider (a chip row
+            // or the pager mid-measure on a very narrow window) can spill past the card
+            // edge — and, since the card is already clamped to the window, off-screen.
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
     }
 
     /// The `BoardSelectionPicker` for a layout, configured once so the scroll body
@@ -153,25 +152,10 @@ struct NewGamePopup: View {
         #endif
     }
 
-    /// The picker in a ScrollView (engages only when the card hits its height cap;
-    /// suppresses rubber-banding when it doesn't, where available). Start lives
-    /// OUTSIDE this — in the picker's own sidebar column (sidebar layout) or pinned
-    /// below by `card` (pager layout) — so it's never clipped by the scroll.
-    @ViewBuilder private func scrollableContent(layout: BoardSelectionPicker.Layout) -> some View {
-        let scroll = ScrollView {
-            VStack(spacing: 20) {
-                picker(layout: layout)
-                #if os(macOS)
-                Text("Arrows to choose · Return to start", bundle: .module)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                #endif
-            }
-            .background(
-                GeometryReader { proxy in
-                    Color.clear.preference(key: ContentHeightKey.self, value: proxy.size.height)
-                })
-        }
+    /// Only scroll when the content genuinely doesn't fit — so on a roomy screen
+    /// the card hugs its content (and the outer frame centers it), and on a short
+    /// one it scrolls to the bottom instead of clipping.
+    @ViewBuilder private func scrollBehavior(_ scroll: ScrollView<some View>) -> some View {
         if #available(iOS 16.4, macOS 13.3, *) {
             scroll.scrollBounceBehavior(.basedOnSize)
         } else {
@@ -222,12 +206,4 @@ struct NewGamePopup: View {
         return all[next]
     }
     #endif
-}
-
-/// Carries the scrollable content's natural height up to the card.
-private struct ContentHeightKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
 }

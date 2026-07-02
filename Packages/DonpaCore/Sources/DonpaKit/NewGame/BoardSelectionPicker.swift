@@ -65,24 +65,24 @@ struct BoardSelectionPicker: View {
 
     // MARK: Regular layout (iPad / Mac / landscape) — family sidebar + detail pane
 
-    /// Regular: families as a vertical sidebar list on the left with Start pinned
-    /// at its bottom, the chosen family's options filling the detail pane on the
-    /// right. Everything shown at once — no pager, no swipe — because the width is
-    /// there. The sidebar column never scrolls (so Start is always visible); only
-    /// the detail pane scrolls, if it ever must. Keyboard nav maps naturally:
-    /// up/down move the family (row 0), left/right cycle within the focused row.
+    /// Regular: families as a vertical sidebar list on the left with Start directly
+    /// below them, the chosen family's options in the detail pane on the right.
+    /// Everything shown at once — no pager, no swipe, and no internal scroll: this
+    /// layout is short by design (it's chosen for short-wide viewports), so both
+    /// columns hug their content and the card hugs the taller of the two. Keyboard
+    /// nav: up/down move the family (row 0), left/right cycle the focused row.
     private var regularLayout: some View {
         HStack(alignment: .top, spacing: 20) {
             VStack(spacing: 16) {
                 familySidebar
                     .modifier(FocusRing(focused: focusedRow == 0))
-                Spacer(minLength: 12)
                 startButton
             }
             .frame(width: 160)
             detailPaneStack
                 .frame(maxWidth: .infinity)
         }
+        .fixedSize(horizontal: false, vertical: true)  // hug height; don't fill the window
     }
 
     /// The Start button — a filled capsule. Placed by each layout (see `onStart`).
@@ -334,8 +334,10 @@ struct BoardSelectionPicker: View {
                 BoardGlyph(kind: .family(family), size: 26)
                 Text(verbatim: family.label)
                     .font(.caption.weight(selected ? .bold : .regular))
+                    .lineLimit(1)  // keep e.g. "グリッド" on one line (don't wrap → taller tab)
+                    .fixedSize()
             }
-            .padding(.horizontal, 22)
+            .padding(.horizontal, 16)
             .padding(.vertical, 7)
             .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.65))
             .background(

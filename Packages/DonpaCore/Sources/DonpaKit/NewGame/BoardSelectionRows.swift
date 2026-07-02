@@ -152,8 +152,12 @@ extension BoardSelectionPicker {
         } label: {
             Text(verbatim: size.label)
                 .font(.subheadline.weight(.semibold))
-                .padding(.horizontal, 11)
-                .padding(.vertical, 6)
+                .lineLimit(1)
+                // Match the difficulty chips' pill size (same 22pt content height +
+                // 8pt padding), so the size row never reads as bigger than it.
+                .frame(height: 22)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
                 .foregroundStyle(selected ? Color.white : Color.primary)
                 .background(
                     Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
