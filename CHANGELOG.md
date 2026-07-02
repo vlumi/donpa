@@ -55,17 +55,6 @@ development — entries land under Unreleased as they merge.
   **stays erased** — a device that was offline during the wipe clears itself when it
   reconnects, rather than re-uploading old data. With sync off it stays a local-only
   clear (the cloud is never touched).
-- **Hex boards sit right in their frame.** The whole hex grid rendered slightly
-  low: a thin strip along the bottom row's tips was tap-dead, an equal empty band
-  hugged the top, and a tap in the notch beside a shifted row's left edge could
-  act on a cell you never touched. All fixed.
-- **End-of-game effects on wrapped boards follow the camera.** After panning a
-  wrapped board, the loss shockwave/detonation (and the instant mine-hit tile)
-  could play off-screen at the board's "home" position — a loss could look like
-  nothing happened. Effects now land on the visible copies of each cell, and with
-  Reduce Motion on, the win flash covers the viewport instead of a possibly
-  off-screen board rectangle (losses also calm down to a brief flash — no
-  scaling burst, no shake).
 - **Leaner rendering, and the minimap follows appearance changes.** Every visible
   tile was silently rebuilt twice per move (and once per mouse-move while
   dragging the minimap); now only when the board actually changes. The minimap
