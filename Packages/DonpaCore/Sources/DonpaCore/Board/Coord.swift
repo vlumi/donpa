@@ -1,5 +1,6 @@
-/// An integer cell coordinate. `(col, row)` for square grids; the same shape also
-/// serves axial hex `(q, r)` later, so field names stay generic.
+/// An integer cell coordinate. `(col, row)` for square grids; hex boards reuse it
+/// as odd-r offset coordinates (col, row — odd rows drawn half a cell right), so
+/// the field names stay generic.
 public struct Coord: Hashable, Sendable {
     public var x: Int
     public var y: Int

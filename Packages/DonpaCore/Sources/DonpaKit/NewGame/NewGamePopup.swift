@@ -194,7 +194,7 @@ struct NewGamePopup: View {
             settings.modernSize = Self.stepped(settings.modernSize, by: step)
         case (.modern, 3):
             settings.modernShape = Self.stepped(settings.modernShape, by: step)
-        case (.modern, _):  // row 4: edges (a no-op while hex forces bounded)
+        case (.modern, _):  // row 4: edges
             settings.modernEdges = Self.stepped(settings.modernEdges, by: step)
         }
     }

@@ -5,14 +5,18 @@ import XCTest
 @MainActor
 final class CumulativeStatsTests: XCTestCase {
     private var defaults: UserDefaults!
+    private var suiteName: String!
     private let storeKey = "donpa.stats.v1"
 
     override func setUp() {
         super.setUp()
-        defaults = UserDefaults(suiteName: "cumulative-\(UUID().uuidString)")
+        suiteName = "cumulative-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suiteName)
     }
     override func tearDown() {
-        defaults.removePersistentDomain(forName: defaults.description)
+        // Remove the actual suite (`defaults.description` is just the object dump —
+        // passing it here silently removed nothing, leaking a plist per test run).
+        defaults.removePersistentDomain(forName: suiteName)
         super.tearDown()
     }
 

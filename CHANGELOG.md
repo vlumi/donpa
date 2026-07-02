@@ -71,6 +71,11 @@ development — entries land under Unreleased as they merge.
   after a small pan on a board that fits (or stays hidden when it shouldn't) — its
   visibility now tracks the zoom level, not the camera position. Wrapped boards
   always show it (there's no edge to fit).
+- **Finnish and Japanese coverage completed.** Several macOS menu commands (New
+  Game…, Toggle Minimap Size, Zoom In/Out) and the macOS app name now have fi/ja
+  translations, the result panel's "first clear" pill and the scoreboard's
+  new-best marker are localized, and VoiceOver reads localized names for the
+  settings and New Game pickers.
 
 ## [0.2.0] — Cross-device & big boards
 

@@ -30,8 +30,8 @@ Two seams isolate all "epic" variation; everything else is written once.
   win/lose) is written *only* in terms of `neighbors(of:)` / `allCoords()`, so a
   new variant is a new `Topology` and nothing else.
 - **`CellLayout`** — the visual coordinate → pixel mapping and hit-testing.
-  `SquareLayout` ships now; `HexLayout` slots in here later with no change to
-  the renderer or the game logic.
+  `SquareLayout` and `HexLayout` are the two conformers; the seam held — hex
+  landed with no change to the renderer or the game logic.
 
 ### Structure
 

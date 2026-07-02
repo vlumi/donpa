@@ -4,9 +4,9 @@
 [![codecov](https://codecov.io/gh/vlumi/donpa/branch/main/graph/badge.svg)](https://codecov.io/gh/vlumi/donpa)
 
 **Donpa Squad** (ドンパ隊) — a manga-styled Minesweeper for Apple platforms
-(iOS 16+ and macOS 14+). Classic mode ships first; the architecture is built for
-"epic" variants from day one — huge zoomable maps, wrapped/torus edges, and hex
-grids — added later without touching the game logic.
+(iOS 16+ and macOS 14+). Classic mode shipped first, and the "epic" variants it
+was architected for are landing on schedule: huge zoomable maps, **wrapped
+(torus) edges**, and **hex grids** — each added without touching the game logic.
 
 **v0.1.0** (classic mode) and **v0.2.0** (big boards + cross-device sync) shipped
 to TestFlight; **v0.3.0** (board variants) is in progress. See
@@ -33,16 +33,20 @@ it from the title art, the in-game **config badge**, the result screen, or
 `⌘N`):
 
 - **Classic** — the original Beginner / Intermediate / Expert presets.
-- **Modern** — pick a **Difficulty** then a **Size**. The size ladder runs
-  XS / S / M / L / XL / XXL / XXXL (9² up to 1000² = a million cells); the larger
-  boards are panned and zoomed, with a minimap for navigation. Difficulty is mine
-  density (the deliberately brutal top tier is near-unguessable), so it composes
-  with any size. Each tier carries its **military rank insignia** — chevron
-  stripes for the lower ranks, a star, then a star-in-laurel for the apex. The
-  chosen mode and selections are remembered.
+- **Modern** — pick a **Difficulty** and a **Size**, plus the board's **Shape**
+  (square or **hex** — six neighbours instead of eight) and **Edges** (bounded,
+  or **wrapped** into a torus that scrolls seamlessly in every direction). The
+  size ladder runs XS / S / M / L / XL / XXL / XXXL as powers of two (8² up to
+  1024² = a million cells); the larger boards are panned and zoomed, with a
+  minimap for navigation. Difficulty is mine density (the deliberately brutal
+  top tier is near-unguessable; hex carries a touch more mines per tier to
+  match), so it composes with any size. Each tier carries its **military rank
+  insignia** — chevron stripes for the lower ranks, a star, then a star-in-laurel
+  for the apex. The chosen mode and selections are remembered.
 
-Both rows are a horizontal **carousel**: scroll/swipe (or click) to pick, with a
-line below the selection showing the board facts and a short flavour tagline.
+The difficulty and size rows are a horizontal **carousel**: scroll/swipe (or
+click) to pick, with a line below the selection showing the board facts and a
+short flavour tagline.
 
 On macOS the popup is keyboard-drivable: **↑/↓** move between the rows (Mode /
 Difficulty / Size), **←/→** cycle the selection within the highlighted row,
@@ -69,32 +73,36 @@ screentone keyed to the toggle (dots for dig, hatch for flag).
 | Tap/click number  | Chord         | Chord         |
 | Long-press hidden | Flag / unflag | Reveal        |
 
-| Other           | iOS   | macOS                        |
-| --------------- | ----- | ---------------------------- |
-| Flag (any mode) | —     | Right-click or Control-click |
-| Pan             | Drag  | Two-finger scroll            |
-| Zoom            | Pinch | Pinch (trackpad)             |
+| Other           | iOS   | macOS                          |
+| --------------- | ----- | ------------------------------ |
+| Flag (any mode) | —     | Right-click or Control-click   |
+| Pan             | Drag  | Two-finger scroll / click-drag |
+| Zoom            | Pinch | Pinch (trackpad) or ⌘-scroll   |
 
 On macOS the pointer reflects the mode while a game is in progress — a pointing
 hand to dig, a flag to flag (a plain arrow otherwise); holding **Control** shows
 the other mode's cursor, since Control-click does the opposite action. Panning is
 bounded to the board: it rests with a little breathing room past each edge, and
 pulling further rubber-bands with resistance before springing back. When the
-whole board already fits on screen, panning is disabled.
+whole board already fits on screen, panning is disabled. A **wrapped** board has
+no edges to hit — it pans forever, and the minimap's "you are here" box splits
+across the seam.
 
 ### Keyboard shortcuts
 
 | Key      | Action                                             |
 | -------- | -------------------------------------------------- |
 | Space    | Toggle mode while playing                          |
+| Esc      | Pause / resume; close a popup or the result panel  |
 | ⌘N       | New Game (opens the config popup, macOS menu)      |
-| ⌘R       | Restart the current board (macOS menu)             |
+| ⌘R       | Restart with the same setup (macOS menu)           |
 | ⌘T       | Return to the title screen (macOS menu)            |
 | ⌘F       | Toggle mode (macOS menu)                           |
+| ⌘⇧S      | High Scores (macOS menu)                           |
+| ⌘,       | Settings (macOS app menu)                          |
 | ⌘+ / ⌘−  | Zoom the board in / out (also ⌘-scroll)            |
-| ⌘0       | Open the board overview (macOS menu)               |
+| ⌘0       | Toggle the minimap between small and large         |
 | ⌘1/2/3   | Beginner / Intermediate / Expert (macOS menu)      |
-| Esc      | Close the New Game popup, overview, or result panel|
 
 ## Start and end of a game
 
@@ -110,27 +118,41 @@ when you beat your best time. It dims only the board, so the control strip stays
 live:
 
 - **Retry / Home** (and the config badge for a different game) remain usable on
-  the chrome — no need to dismiss the panel first. Retry replays the same board;
-  the config badge opens the New Game popup.
+  the chrome — no need to dismiss the panel first. Retry starts a fresh game with
+  the same setup (new mines); the config badge opens the New Game popup.
 - Dismiss the panel to inspect the finished board via the **X**, a tap anywhere,
   or **Esc**.
 
 ## Scores
 
-Per-board stats are kept locally (via `UserDefaults`) and shown from the 🎖️
-button (in the top strip in-game, or on the title art): your best time and how
-many games you've cleared on each board. A new best is celebrated on the result
-panel; the full table is always available from the 🎖️ button.
+The 🎖️ button (in the top strip in-game, or on the title art) opens the
+**Service Record**: per-board records — best time, games cleared, and best
+cleared-% from losses — plus lifetime career totals (games, tiles, flags, mines,
+playtime). The row for the board you're playing is highlighted, and a new best is
+celebrated on the result panel (with the improvement over your old record).
+
+Scores live locally (via `UserDefaults`) and can optionally sync across your
+devices with **iCloud** — an opt-in toggle in the Service Record footer, off by
+default. Synced devices merge their records for display while each device keeps
+ownership of its own history; the reset action then offers a true cross-device
+erase (a device that was offline during the wipe clears itself when it
+reconnects). With sync off, everything stays on-device.
 
 Stats are keyed by board geometry, not by tier name, so the format stays stable
-toward the "epic" variants: adding wrapped or hex boards — or re-tuning a tier —
-creates new scoreboard entries rather than reinterpreting existing scores.
+across variants: wrapped, hex, and square boards — and any re-tuned tier — each
+get their own scoreboard entries rather than reinterpreting existing scores.
 
 ## Settings
 
-The ⚙️ button opens settings. Appearance can be set to **System**, **Light**,
-or **Dark** — the board and chrome share one palette that follows the choice
-(System tracks the OS). The selection is saved between launches.
+The ⚙️ button opens settings (⌘, on macOS):
+
+- **Appearance** — **System**, **Light**, or **Dark**; the board and chrome share
+  one palette that follows the choice (System tracks the OS).
+- **Toggle side** — which corner the dig/flag toggle hugs (left/right), for your
+  grip.
+- **Language** — follow the system, or force English / Finnish / Japanese.
+
+All selections are saved between launches.
 
 ## AI assistance
 

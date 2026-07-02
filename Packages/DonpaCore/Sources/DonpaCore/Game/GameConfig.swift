@@ -6,10 +6,11 @@
 /// `Size × Density` grid; density is a mine percentage so size and difficulty
 /// compose independently).
 ///
-/// Future axes (hex shape, wrapped edges) are encoded in the storage key now with
-/// explicit defaults (`sq`, `bounded`), so adding them never invalidates existing
-/// keys. The key also encodes concrete geometry (`WxH|mN`), so re-tuning a tier
-/// produces a new key (new scoreboard entry) rather than re-pointing old scores.
+/// The shape (`sq`/`hex`) and edges (`bounded`/`wrapped`) axes are encoded in the
+/// storage key with explicit defaults, so adding an axis never invalidates
+/// existing keys. The key also encodes concrete geometry (`WxH|mN`), so re-tuning
+/// a tier produces a new key (new scoreboard entry) rather than re-pointing old
+/// scores.
 
 import Foundation
 
@@ -210,7 +211,7 @@ public enum BoardShape: String, Sendable, Codable, CaseIterable, Identifiable {
 }
 public enum BoardEdges: String, Sendable, Codable, CaseIterable, Identifiable {
     case bounded
-    /// Edges wrap (torus) — `WrappedSquareTopology`. Modern boards only.
+    /// Edges wrap (torus) — `Wrapped{Square,Hex}Topology`. Modern boards only.
     case wrapped
 
     public var id: String { rawValue }
@@ -300,8 +301,8 @@ public enum GameConfig: Hashable, Sendable {
         return nil
     }
 
-    /// Stable, versioned, geometry-bearing persistence key. Encodes every
-    /// future axis explicitly so older keys never become ambiguous.
+    /// Stable, versioned, geometry-bearing persistence key. Encodes every axis
+    /// explicitly (defaults included) so older keys never become ambiguous.
     ///
     ///   classic:  v1|classic|beginner
     ///   modern:   v1|modern|sq|bounded|16x16|m33

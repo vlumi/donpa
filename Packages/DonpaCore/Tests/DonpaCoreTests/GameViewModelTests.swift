@@ -179,11 +179,13 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertEqual(at, vm.game.lossCoord, "the published loss coord matches the detonated mine")
     }
 
-    func testLossStopsTheClockAtAFixedValue() async {
+    func testLossStopsTheClockAtAFixedValue() async throws {
         let vm = await startedGame()
         await forceLoss(vm)
         let frozen = vm.elapsedCentiseconds
-        // The clock is stopped on game-over, so the value can't keep climbing.
+        // Let real time pass (yielding the main actor, so a still-live timer tick
+        // WOULD fire and bump the value): the clock must stay frozen on game-over.
+        try await Task.sleep(nanoseconds: 150_000_000)
         XCTAssertEqual(vm.elapsedCentiseconds, frozen, "elapsed is frozen once the game ends")
     }
 

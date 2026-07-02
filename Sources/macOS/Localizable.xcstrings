@@ -1,148 +1,210 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "About Donpa Squad": {
-      "comment": "App menu: opens the About panel. NEEDS REVIEW: ja/fi.",
-      "extractionState": "stale",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Tietoja: Donpa Squad"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "About Donpa Squad" : {
+      "comment" : "App menu: opens the About panel. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tietoja: Donpa Squad"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ドンパ隊について"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ドンパ隊について"
           }
         }
       }
     },
-    "Game": {
-      "comment": "Menu bar menu title for game commands. NEEDS REVIEW: ja/fi.",
-      "extractionState": "stale",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Peli"
+    "Game" : {
+      "comment" : "Menu bar menu title for game commands. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Peli"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ゲーム"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ゲーム"
           }
         }
       }
     },
-    "Restart Game": {
-      "comment": "Menu command: replay the current board. NEEDS REVIEW: ja/fi.",
-      "extractionState": "stale",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Aloita peli alusta"
+    "High Scores" : {
+      "comment" : "Game-menu command opening the scoreboard. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ennätykset"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ゲームをやり直す"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイスコア"
           }
         }
       }
     },
-    "Switch to Flag Mode": {
-      "comment": "Menu command: change input mode to flagging. NEEDS REVIEW: ja/fi.",
-      "extractionState": "stale",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Vaihda lipputilaan"
+    "New Game…" : {
+      "comment" : "File-menu command opening the New Game popup. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uusi peli…"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "旗モードに切り替え"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新しいゲーム…"
           }
         }
       }
     },
-    "Switch to Reveal Mode": {
-      "comment": "Menu command: change input mode to revealing. NEEDS REVIEW: ja/fi.",
-      "extractionState": "stale",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Vaihda avaustilaan"
+    "Restart Game" : {
+      "comment" : "Menu command: replay the current board. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aloita peli alusta"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "開くモードに切り替え"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ゲームをやり直す"
           }
         }
       }
     },
-    "Title Screen": {
-      "comment": "Menu command: return to the title screen. NEEDS REVIEW: ja/fi.",
-      "extractionState": "stale",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Aloitusnäyttö"
+    "Settings…" : {
+      "comment" : "App-menu Settings command. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Asetukset…"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "タイトル画面"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "設定…"
           }
         }
       }
     },
-    "Settings…": {
-      "comment": "App-menu Settings command. NEEDS REVIEW: ja/fi.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Asetukset…"
+    "Switch to Flag Mode" : {
+      "comment" : "Menu command: change input mode to flagging. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vaihda lipputilaan"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "設定…"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "旗モードに切り替え"
           }
         }
       }
     },
-    "High Scores": {
-      "comment": "Game-menu command opening the scoreboard. NEEDS REVIEW: ja/fi.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Ennätykset"
+    "Switch to Reveal Mode" : {
+      "comment" : "Menu command: change input mode to revealing. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vaihda avaustilaan"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ハイスコア"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開くモードに切り替え"
+          }
+        }
+      }
+    },
+    "Title Screen" : {
+      "comment" : "Menu command: return to the title screen. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aloitusnäyttö"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "タイトル画面"
+          }
+        }
+      }
+    },
+    "Toggle Minimap Size" : {
+      "comment" : "Game-menu command snapping the minimap between small and large. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vaihda pienoiskartan kokoa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ミニマップのサイズを切り替え"
+          }
+        }
+      }
+    },
+    "Zoom In" : {
+      "comment" : "Game-menu command. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lähennä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "拡大"
+          }
+        }
+      }
+    },
+    "Zoom Out" : {
+      "comment" : "Game-menu command. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Loitonna"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "縮小"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

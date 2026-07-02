@@ -136,7 +136,7 @@ extension BoardScene {
     }
 
     /// Centre on a normalized board point (0,0 = top-left), keeping the current
-    /// zoom — the overview drives this live. Clamped to the resting bounds.
+    /// zoom — the minimap scrub drives this live. Clamped to the resting bounds.
     public func centerCamera(onNormalizedPoint p: CGPoint) {
         restoreCameraTarget = nil  // overview navigation is a deliberate move
         let board = layout.boardSize(width: viewModel.boardWidth, height: viewModel.boardHeight)

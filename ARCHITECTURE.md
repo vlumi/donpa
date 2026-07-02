@@ -78,14 +78,16 @@ recognizers hold their target weakly by framework convention.)
 
 ## Two native app targets — *not* Mac Catalyst
 
-The Mac app is a separate native AppKit/SwiftUI target, not Catalyst. Catalyst
-would simplify publishing (one universal-purchase record) but at the cost of the
+The Mac app is a separate native AppKit/SwiftUI target, not Catalyst — for the
 native Mac UX this app leans on: the mode cursor (`NSCursor`), click-vs-drag and
 right-click (`NSEvent`), two-finger `scrollWheel` pan, menu-bar commands, and
-`keyDown`. Under Catalyst those are exactly the weakest interactions. The cost
-(a second App Store submission + a distinct Mac bundle id, `fi.misaki.donpa.mac`)
-is worth the better result. Bundle ids must diverge **before** registering with
-Apple — changing them afterward is painful.
+`keyDown`. Under Catalyst those are exactly the weakest interactions.
+
+Both targets share **one bundle id**, `fi.misaki.donpa` — a native Mac target
+doesn't require a distinct id, and the shared id makes the two apps a single App
+Store Connect record (**Universal Purchase**). An earlier revision of this
+decision assumed a distinct `fi.misaki.donpa.mac`; that was reversed before
+registering with Apple (the one moment it's cheap to change).
 
 ## Some UI workarounds are deliberate (don't "fix" them)
 
@@ -139,10 +141,39 @@ mid-game is a shrug; losing your records is not).
   and recomputes its safe-cell count from the board.
 
 `GameConfig.storageKey` (`v1|modern|sq|bounded|16x16|m41`) is itself a versioned,
-geometry-bearing token naming future shape/edges axes with defaults, so adding
-wrapped/hex boards or re-tuning tiers creates **new** scoreboard entries rather
-than colliding with old ones. Scores are local and user-editable by design (no
-anti-cheat; lean on Game Center's server-side validation if leaderboards land).
+geometry-bearing token: the shape (`sq`/`hex`) and edges (`bounded`/`wrapped`)
+axes it named ahead of time are live now, so each variant — or a re-tuned tier —
+creates **new** scoreboard entries rather than colliding with old ones. Scores
+are local and user-editable by design (no anti-cheat; lean on Game Center's
+server-side validation if leaderboards land).
+
+## Score sync: per-device blobs, CRDT-ish merge, epoch tombstones
+
+Cross-device score sync (opt-in, off by default) rides **iCloud key-value
+storage** — no server, no accounts, ~1 MB, fits a scoreboard. The design goal is
+that no device ever *overwrites* another's history:
+
+- **One blob per device** (`donpa.stats.blob.<deviceID>`). A device only ever
+  writes its own blob; every device's display is a **merge** of all visible
+  blobs. Counters merge as a G-counter (each record keeps `mine` +
+  `othersTotal`), best times stay owned by the device that set them, and top-N
+  lists union + dedup. Merge is commutative/idempotent, so sync order never
+  matters and there are no conflicts to resolve.
+- **Offline shows a projection, not a snapshot.** The last merge is cached; while
+  unreachable, fresh local records are projected over the cached others-view
+  (`StatsMerge.offlineMerge`) so offline play shows immediately, and the
+  foreground refresh re-pushes on reconnect. A delete that couldn't reach iCloud
+  (reset / sync-off while offline) is remembered and replayed, so no ghost blob
+  keeps inflating other devices' totals.
+- **Erasure needs a tombstone.** A "wipe all synced devices" can't just delete
+  blobs — an offline device would re-upload its copy later and resurrect
+  everything. So a wipe bumps a monotonic **reset epoch** (`donpa.stats.
+  resetEpoch`); every blob and cache is stamped with the epoch it was written
+  under, and anything stamped below the current epoch is ignored and cleaned up
+  wherever it resurfaces. Devices honor a newer epoch by wiping themselves on
+  their next read — including a device whose sync was off during the wipe, which
+  is warned before opting back in. The epoch floor also doubles as a one-time
+  "orphan all pre-rebalance scores" switch.
 
 ## Assets are generated, not hand-drawn-in-repo
 

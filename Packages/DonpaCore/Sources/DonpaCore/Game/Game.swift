@@ -155,8 +155,9 @@ public struct Game: Sendable {
         checkWin()
     }
 
-    /// Reveals a 0-region: BFS that expands only out of 0-cells, so numbered
-    /// cells form the border. Flagged and mine cells are never enqueued.
+    /// Reveals a 0-region: iterative flood fill (stack-based — `popLast`) that
+    /// expands only out of 0-cells, so numbered cells form the border. Flagged
+    /// and mine cells are never enqueued.
     private mutating func floodFill(from start: Coord) {
         var queue = [start]
         var enqueued: Set<Coord> = [start]

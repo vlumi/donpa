@@ -30,31 +30,40 @@ struct SettingsView: View {
 
     private var settingsList: some View {
         VStack(alignment: .leading, spacing: 20) {
+            // The Picker labels are visually hidden but still read by VoiceOver —
+            // as Text(bundle: .module) so they resolve in this package's catalog
+            // (a bare string key would look in the app bundle: unlocalized).
             settingRow("Appearance") {
-                Picker("Appearance", selection: $settings.appearance) {
+                Picker(selection: $settings.appearance) {
                     ForEach(AppearancePreference.allCases) { pref in
                         Text(verbatim: pref.label).tag(pref)  // label localized in Settings
                     }
+                } label: {
+                    Text("Appearance", bundle: .module)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
             }
 
             settingRow("Toggle side") {
-                Picker("Toggle side", selection: $settings.handedness) {
-                    ForEach(Handedness.allCases) { h in
-                        Text(verbatim: h.label).tag(h)
+                Picker(selection: $settings.handedness) {
+                    ForEach(Handedness.allCases) { hand in
+                        Text(verbatim: hand.label).tag(hand)
                     }
+                } label: {
+                    Text("Toggle side", bundle: .module)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
             }
 
             settingRow("Language") {
-                Picker("Language", selection: $settings.language) {
+                Picker(selection: $settings.language) {
                     ForEach(LanguagePreference.allCases) { lang in
                         Text(verbatim: lang.label).tag(lang)
                     }
+                } label: {
+                    Text("Language", bundle: .module)
                 }
                 .labelsHidden()
                 if languageChanged {
