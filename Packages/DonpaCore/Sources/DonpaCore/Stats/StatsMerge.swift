@@ -70,4 +70,51 @@ enum StatsMerge {
 
         return out
     }
+
+    /// Offline projection: FRESH own records over the last cloud merge. The cache
+    /// keeps each counter's mine/othersTotal split, so the other devices' sums are
+    /// recoverable without their blobs — own values come live from `own`, so offline
+    /// play (and resets) show immediately instead of freezing at the cached snapshot.
+    /// The cache can't be fed to `merge` as a pseudo-device: its `mine` fields ARE
+    /// this device's stale counts and would double-count.
+    ///
+    /// Known limit: own top-time entries retired since the last sync (e.g. by a
+    /// reset) can linger in the cached top list until the next online merge.
+    static func offlineMerge(
+        own: [String: ScoreRecord], cached: [String: ScoreRecord]
+    ) -> [String: ScoreRecord] {
+        var configKeys = Set(own.keys)
+        configKeys.formUnion(cached.keys)
+
+        var merged: [String: ScoreRecord] = [:]
+        for key in configKeys {
+            var out = own[key] ?? ScoreRecord()
+            let last = cached[key]
+            func foldCounter(_ kp: WritableKeyPath<ScoreRecord, DeviceCounter>) {
+                out[keyPath: kp].setOthersTotal(last?[keyPath: kp].othersTotal ?? 0)
+            }
+            foldCounter(\.wins)
+            foldCounter(\.gamesPlayed)
+            foldCounter(\.losses)
+            foldCounter(\.tilesOpened)
+            foldCounter(\.flagsPlaced)
+            foldCounter(\.minesHit)
+            foldCounter(\.minesDisarmed)
+            foldCounter(\.playtimeCentiseconds)
+            foldCounter(\.chordsUsed)
+            foldCounter(\.noFlagWins)
+            foldCounter(\.noChordWins)
+            // The cached top list already contains own entries — the (time, date)
+            // dedup collapses them, so fresh own bests appear without doubling.
+            out.topTimes = (own[key]?.topTimes ?? []).mergedTop(
+                with: [last?.topTimes ?? []], limit: ScoreRecord.topTimeLimit)
+            out.best = out.topTimes.first ?? out.best
+            out.bestLossProgress =
+                [own[key]?.bestLossProgress, last?.bestLossProgress].compactMap { $0 }.max()
+            out.firstPlayed = [own[key]?.firstPlayed, last?.firstPlayed].compactMap { $0 }.min()
+            out.lastPlayed = [own[key]?.lastPlayed, last?.lastPlayed].compactMap { $0 }.max()
+            merged[key] = out
+        }
+        return merged
+    }
 }

@@ -35,8 +35,11 @@ public final class Scoreboard: ObservableObject {
     /// iCloud reachable (signed in), independent of the sync preference — so the UI
     /// can refuse to enable sync when it couldn't work.
     public var isCloudAvailable: Bool { sync.isCloudAvailable }
-    /// Pull + re-merge from the cloud (call on foreground).
+    /// Pull + re-push + re-merge from the cloud (call on foreground).
     public func refreshFromCloud() { sync.refreshFromCloud() }
+    /// Whether flipping sync ON right now would clear this device's local records
+    /// (a global wipe happened while sync was off) — so the toggle UI can ask first.
+    public var enablingSyncWouldWipeLocal: Bool { sync.enablingSyncWouldWipeLocal }
 
     /// On-disk envelope: a format `version` wrapping the records, keyed by
     /// `GameConfig.storageKey` (geometry-bearing, so new variants add keys). `epoch`
@@ -103,8 +106,11 @@ public final class Scoreboard: ObservableObject {
             self?.recentRecord = nil
             self?.persistLocalOnly()
         }
-        // Offline launch: show the last-known cached merge if syncing.
-        if syncEnabled, let cached = sync.cachedMerge() { displayRecords = cached }
+        // Offline launch: project own records over the last cached merge if syncing
+        // (own data live, others' sums from the cache — never a frozen snapshot).
+        if syncEnabled, let cached = sync.cachedMerge() {
+            displayRecords = StatsMerge.offlineMerge(own: own, cached: cached)
+        }
         sync.pushAndMerge()
     }
 
@@ -224,20 +230,25 @@ public final class Scoreboard: ObservableObject {
         record.lastPlayed = date
     }
 
-    /// Record a *losing* game's progress, kept only if it beats the cross-device
-    /// best (which is 100% once any device has cleared it). Returns true on a new
-    /// best. Don't call on a win — that's `submit`.
+    /// Record a *losing* game's progress. This device's OWN best is always kept up
+    /// to date (mirroring `submit`'s device-owned best times — independent of other
+    /// devices, so it survives them resetting/leaving); the returned "new best" is
+    /// still judged against the cross-device view (100% once anyone cleared it).
+    /// A 0% loss records nothing. Don't call on a win — that's `submit`.
     @discardableResult
-    public func submitLossProgress(_ progress: Double, for config: GameConfig) -> Bool {
+    public func submitLossProgress(
+        _ progress: Double, for config: GameConfig, at date: Date = Date()
+    ) -> Bool {
+        guard progress > 0 else { return false }
         var record = records[config.storageKey] ?? ScoreRecord()
-        let currentBest = bestProgress(for: config) ?? 0
-        let isBest = progress > currentBest
-        if isBest {
-            record.bestLossProgress = progress
-            records[config.storageKey] = record
-            recentRecord = config.storageKey
-            persist()
-        }
+        let isBest = progress > (bestProgress(for: config) ?? 0)
+        let improvesOwn = progress > (record.bestLossProgress ?? 0)
+        guard isBest || improvesOwn else { return false }
+        if improvesOwn { record.bestLossProgress = progress }
+        stampPlayed(&record, at: date)
+        records[config.storageKey] = record
+        if isBest { recentRecord = config.storageKey }
+        persist()
         return isBest
     }
 
