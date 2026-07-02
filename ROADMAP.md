@@ -193,8 +193,13 @@ and track rivals. Design settled 2026-07; depends on the 0.3.0 scoreboard redesi
       share identity; hardened decode (size caps, validation, versioned envelope)
 - [ ] In-app scanner (iOS; Mac via image import) + a separate, deletable friends
       store — shared data is **never merged into your own stats**
+- [ ] **Groups** (receiver-side only): organize contacts into circles — family, a
+      tight friend group — with strangers sandboxed in their own; the share payload
+      knows nothing of groups
 - [ ] Comparison report: career side-by-side + per-board head-to-head + tally
-- [ ] Tracked rivals interleave into the high-score table as ranked rows
+- [ ] Rivals interleave into the high-score table as ranked rows, scoped by **one
+      active comparison target — a single friend or a group** (off by default, so
+      nothing touches your table unless chosen)
 - [ ] Feat-based public **rank** — the hack-resistant face of progression (raw
       scores stay trusted-circle only)
 
