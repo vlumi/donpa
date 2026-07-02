@@ -1,32 +1,6 @@
 import Combine
 import Foundation
 
-/// What a plain tap/click on a *hidden* cell does. A revealed number always
-/// chords and a long-press always does the opposite action, regardless of mode.
-public enum InputMode: String, Codable, Sendable {
-    case reveal
-    case flag
-
-    public mutating func toggle() { self = flipped }
-    public var flipped: InputMode { self == .reveal ? .flag : .reveal }
-}
-
-/// The outcome of a finished game, for end-of-game feedback.
-public enum GameResult: Equatable, Sendable {
-    case won(centiseconds: Int, config: GameConfig)
-    /// `at` is the detonated mine (for a focused loss animation).
-    case lost(at: Coord?)
-
-    public var isWin: Bool { if case .won = self { return true } else { return false } }
-}
-
-/// A result tagged with a monotonic id, so observers fire even on two identical
-/// outcomes in a row.
-public struct GameResultEvent: Equatable, Sendable {
-    public let id: Int
-    public let result: GameResult
-}
-
 /// The live game clock, split out as its own observable so the ~10×/sec timer tick
 /// only re-renders the timer readout — NOT the whole `GameContent` body. (Reading
 /// the tick straight off `GameViewModel` made every view observing the VM re-render
