@@ -9,8 +9,11 @@ import SwiftUI
 ///
 /// Graphical by design: the family is its tab glyph, edges are two equal glyph
 /// pictures (framed map ↔ globe), difficulty is the rank insignia. On iOS the
-/// page also swipes horizontally; on macOS it's keyboard-drivable — up/down move
-/// between rows, left/right cycle within the focused row (row 0 = the tabs).
+/// pages sit side by side and SLIDE — the content tracks the finger, rubber-bands
+/// at the ends, and snaps a page over on release (the drum rows keep their own
+/// horizontal scrolling). On macOS the tabs switch in place (deliberately calm)
+/// and it's keyboard-drivable — up/down move between rows, left/right cycle
+/// within the focused row (row 0 = the tabs).
 struct BoardSelectionPicker: View {
     @ObservedObject var settings: Settings
     /// Keyboard-focused row, or nil when not keyboard-driven (iOS, or before the
@@ -19,26 +22,31 @@ struct BoardSelectionPicker: View {
     /// Ask the host to move keyboard focus to a row. nil on iOS.
     var onFocusRow: ((Int) -> Void)?
 
+    #if os(iOS)
+    /// Live finger offset while dragging the pager; snaps back with the same
+    /// spring the page change uses, so release always lands smoothly.
+    @GestureState(resetTransaction: Transaction(animation: .snappy))
+    private var pagerDrag: CGFloat = 0
+    /// The pager's slot width (one page), measured from layout.
+    @State private var pagerWidth: CGFloat = 0
+    /// Measured natural height per page, so the pager hugs the CURRENT page (the
+    /// Basic page is much shorter than Grid/Hive) and animates between them.
+    @State private var pageHeights: [BoardFamily: CGFloat] = [:]
+    #endif
+
     var body: some View {
         VStack(spacing: 14) {
             familyTabs
                 .modifier(FocusRing(focused: focusedRow == 0))
 
-            page
+            #if os(iOS)
+            pager
+            #else
+            page(for: settings.family)
                 .id(settings.family)  // fresh page per family (no stale carousel offsets)
                 .transition(.opacity)
+            #endif
         }
-        #if os(iOS)
-        // Swipe between family pages (the tabs stay tappable too).
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 24).onEnded { value in
-                guard abs(value.translation.width) > 48,
-                    abs(value.translation.width) > abs(value.translation.height)
-                else { return }
-                step(family: value.translation.width < 0 ? 1 : -1)
-            })
-        #endif
     }
 
     /// Move to the previous/next family page, clamped at the ends.
@@ -48,6 +56,79 @@ struct BoardSelectionPicker: View {
         let next = min(max(i + delta, 0), all.count - 1)
         withAnimation(.snappy) { settings.family = all[next] }
     }
+
+    #if os(iOS)
+    // MARK: Sliding pager (iOS)
+
+    private var selectedIndex: Int {
+        BoardFamily.allCases.firstIndex(of: settings.family) ?? 0
+    }
+
+    /// All three pages side by side, offset to the selected one plus the live
+    /// finger translation — the swipe is visible and interruptible, not a bare
+    /// gesture that teleports the content.
+    private var pager: some View {
+        Group {
+            if pagerWidth > 0 {
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(BoardFamily.allCases) { family in
+                        page(for: family)
+                            .frame(width: pagerWidth, alignment: .top)
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear.preference(
+                                        key: PageHeightsKey.self,
+                                        value: [family: geo.size.height])
+                                })
+                    }
+                }
+                .offset(x: -CGFloat(selectedIndex) * pagerWidth + rubberBanded(pagerDrag))
+                .frame(width: pagerWidth, alignment: .leading)
+                .frame(height: pageHeights[settings.family])
+                .clipped()
+                .contentShape(Rectangle())
+                .gesture(pagerGesture)
+                .onPreferenceChange(PageHeightsKey.self) { heights in
+                    pageHeights.merge(heights) { _, new in new }
+                }
+            } else {
+                // First layout pass: render the current page alone so the slot
+                // width below measures the natural full width.
+                page(for: settings.family)
+            }
+        }
+        .background(
+            GeometryReader { geo in
+                Color.clear.preference(key: PagerWidthKey.self, value: geo.size.width)
+            })
+        .onPreferenceChange(PagerWidthKey.self) { pagerWidth = $0 }
+    }
+
+    /// Damp the pull past the first/last page, so the edge answers with
+    /// resistance instead of silently ignoring the swipe.
+    private func rubberBanded(_ x: CGFloat) -> CGFloat {
+        let atStart = selectedIndex == 0 && x > 0
+        let atEnd = selectedIndex == BoardFamily.allCases.count - 1 && x < 0
+        return (atStart || atEnd) ? x / 3 : x
+    }
+
+    private var pagerGesture: some Gesture {
+        DragGesture(minimumDistance: 16)
+            .updating($pagerDrag) { value, state, _ in
+                state = value.translation.width
+            }
+            .onEnded { value in
+                // A quarter-page pull or a decisive fling turns the page.
+                let threshold = pagerWidth / 4
+                let projected = value.predictedEndTranslation.width
+                if value.translation.width < -threshold || projected < -pagerWidth / 2 {
+                    step(family: 1)
+                } else if value.translation.width > threshold || projected > pagerWidth / 2 {
+                    step(family: -1)
+                }
+            }
+    }
+    #endif
 
     // MARK: Family tabs (row 0)
 
@@ -85,8 +166,8 @@ struct BoardSelectionPicker: View {
 
     // MARK: Pages
 
-    @ViewBuilder private var page: some View {
-        switch settings.family {
+    @ViewBuilder private func page(for family: BoardFamily) -> some View {
+        switch family {
         case .basic:
             // Difficulty is row 1, lining up with Grid/Hive's difficulty row.
             carouselRow(
@@ -102,7 +183,7 @@ struct BoardSelectionPicker: View {
                     labels: Density.allCases.map(\.label),
                     index: densityIndex,
                     // Hive is denser per tier; show the number the board will use.
-                    detail: settings.density.detail(hex: settings.family == .hive),
+                    detail: settings.density.detail(hex: family == .hive),
                     tagline: settings.density.tagline,
                     symbol: { i in
                         let all = Density.allCases
@@ -253,6 +334,23 @@ struct BoardSelectionPicker: View {
             })
     }
 }
+
+#if os(iOS)
+/// Layout feedback for the sliding pager: the slot width and each page's height.
+private struct PagerWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+private struct PageHeightsKey: PreferenceKey {
+    static var defaultValue: [BoardFamily: CGFloat] = [:]
+    static func reduce(value: inout [BoardFamily: CGFloat], nextValue: () -> [BoardFamily: CGFloat]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+#endif
 
 /// Wraps a control with the keyboard focus ring used across the picker rows.
 private struct FocusRing: ViewModifier {
