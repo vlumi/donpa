@@ -102,6 +102,13 @@ public struct GameView: View {
         .animation(.easeInOut(duration: 0.2), value: navigator.showingNewGame)
         // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
         .onChangeCompat(of: settings.syncScores) { scoreboard.syncEnabled = $0 }
+        // UI-test hook (like -uitest-clean): jump straight to the New Game popup,
+        // so popup tests/screenshots don't depend on tapping through the title.
+        .onAppear {
+            if ProcessInfo.processInfo.arguments.contains("-uitest-open-newgame") {
+                navigator.showingNewGame = true
+            }
+        }
     }
 
     /// Start a fresh game with the popup's selection and leave the title — the

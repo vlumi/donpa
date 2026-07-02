@@ -31,14 +31,20 @@ development — entries land under Unreleased as they merge.
   scrolls seamlessly in every direction — pan off one side and the other flows in,
   forever. Pick **Wrapped** in the New Game screen (next to the size/difficulty).
   Scores are tracked separately from bounded boards.
-- **Boards are picked by family: Basic / Grid / Hive.** The New Game popup's
-  Classic/Modern split (with a separate square/hex toggle) became three board
-  families — **Basic** presets, **Grid** (square cells), and **Hive** (hex) —
-  and edges are now **Flat / Round** (a Round world curves back on itself, so it
-  wraps). The High Scores table follows the same names, Round boards carry a tag
-  on their row, and — new — **Hive and Round boards get scoreboard rows at all**
-  (they were missing from the table before). Scores stay tracked separately per
-  family × edges; the clean-slate reset announced below covers this change too.
+- **Boards are picked by family: Basic / Grid / Hive.** The New Game popup was
+  redesigned around three board-family **pages** — **Basic** presets, **Grid**
+  (square cells), and **Hive** (hex) — each with its own hand-drawn glyph tab
+  (swipe between pages on iPhone/iPad, or ←/→ on the Mac). Grid and Hive share
+  one page: the rank-insignia difficulty drum, a **size chip row** (XS…XXXL),
+  and an **edges toggle** that's now **Flat / Round** — a framed-map glyph
+  against a globe, because a Round world curves back on itself and wraps. The
+  Hive page shows its honest (denser) mine percentage, and **each family
+  remembers its own difficulty / size / edges** — a huge Round hive spree
+  doesn't retune your next Grid game. The High Scores table
+  follows the same names, Round boards carry a tag on their row, and — new —
+  **Hive and Round boards get scoreboard rows at all** (they were missing from
+  the table before). Scores stay tracked separately per family × edges; the
+  clean-slate reset announced below covers this change too.
 - **Board sizes rebalanced to powers of two** (8, 16, 32, 64, 128, 256, 1024). Every
   board is now even-sided (which the wrapped-hex torus needs), and the size ladder is
   cleaner. Mine-density tiers were re-tuned to 10/12/14/16/18% so the five
@@ -51,17 +57,6 @@ development — entries land under Unreleased as they merge.
   **stays erased** — a device that was offline during the wipe clears itself when it
   reconnects, rather than re-uploading old data. With sync off it stays a local-only
   clear (the cloud is never touched).
-- **Hex boards sit right in their frame.** The whole hex grid rendered slightly
-  low: a thin strip along the bottom row's tips was tap-dead, an equal empty band
-  hugged the top, and a tap in the notch beside a shifted row's left edge could
-  act on a cell you never touched. All fixed.
-- **End-of-game effects on wrapped boards follow the camera.** After panning a
-  wrapped board, the loss shockwave/detonation (and the instant mine-hit tile)
-  could play off-screen at the board's "home" position — a loss could look like
-  nothing happened. Effects now land on the visible copies of each cell, and with
-  Reduce Motion on, the win flash covers the viewport instead of a possibly
-  off-screen board rectangle (losses also calm down to a brief flash — no
-  scaling burst, no shake).
 - **Leaner rendering, and the minimap follows appearance changes.** Every visible
   tile was silently rebuilt twice per move (and once per mouse-move while
   dragging the minimap); now only when the board actually changes. The minimap
