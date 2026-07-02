@@ -23,13 +23,18 @@ struct BoardSelectionPicker: View {
     /// Ask the host to move keyboard focus to a row. nil on iOS.
     var onFocusRow: ((Int) -> Void)?
 
-    /// The layout LAW is width-driven, not platform-driven: a compact width
-    /// (iPhone portrait) gets the swipe-pager; a regular width (iPad, Mac,
-    /// landscape) gets the sidebar + detail, which shows every family at once with
-    /// room to breathe. Each is designed for its own scale rather than one layout
-    /// stretched across a 6× width range. `#if os` isn't used for this — the size
-    /// class is a runtime value on every platform.
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    /// Which of the two layouts to render. Chosen by the host from the actual
+    /// viewport SHAPE, not the platform or size class: only a narrow, tall
+    /// viewport (portrait phone) gets the vertical swipe-pager; everything wider
+    /// (landscape phone, iPad, Mac) gets the sidebar + detail, which suits a
+    /// short-wide shape and fills the width. `#if os` isn't used for this.
+    enum Layout { case pager, sidebar }
+    var layout: Layout = .pager
+    /// Start the game with the current selection. The picker owns the Start button
+    /// so each layout can PLACE it correctly (sidebar: bottom of the sidebar
+    /// column; pager: full-width, pinned by the host below the scroll) — and so
+    /// Start always sits OUTSIDE any scroll region and can't be clipped.
+    var onStart: () -> Void = {}
 
     /// Live drag offset while swiping the pager; snaps back with the same
     /// spring the page change uses, so release always lands smoothly.
@@ -41,14 +46,14 @@ struct BoardSelectionPicker: View {
     @State private var pageHeights: [BoardFamily: CGFloat] = [:]
 
     var body: some View {
-        if sizeClass == .regular {
-            regularLayout
-        } else {
-            compactLayout
+        switch layout {
+        case .sidebar: regularLayout
+        case .pager: compactLayout
         }
     }
 
-    /// Compact (iPhone portrait): the tab strip over the swipe-pager.
+    /// Compact (portrait phone): the tab strip over the swipe-pager. The host pins
+    /// Start below this (outside its scroll), so nothing here renders Start.
     private var compactLayout: some View {
         VStack(spacing: 14) {
             familyTabs
@@ -58,21 +63,45 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    // MARK: Regular layout (iPad / Mac) — family sidebar + detail pane
+    // MARK: Regular layout (iPad / Mac / landscape) — family sidebar + detail pane
 
-    /// Regular (iPad/Mac): all three families as a vertical sidebar list on the
-    /// left, the chosen family's options filling the detail pane on the right.
-    /// Everything is shown at once — no pager, no swipe — because the width is
-    /// there. Keyboard nav maps naturally: up/down move the family (row 0),
-    /// left/right cycle within the focused option row.
+    /// Regular: families as a vertical sidebar list on the left with Start pinned
+    /// at its bottom, the chosen family's options filling the detail pane on the
+    /// right. Everything shown at once — no pager, no swipe — because the width is
+    /// there. The sidebar column never scrolls (so Start is always visible); only
+    /// the detail pane scrolls, if it ever must. Keyboard nav maps naturally:
+    /// up/down move the family (row 0), left/right cycle within the focused row.
     private var regularLayout: some View {
         HStack(alignment: .top, spacing: 20) {
-            familySidebar
-                .frame(width: 150)
-                .modifier(FocusRing(focused: focusedRow == 0))
+            VStack(spacing: 16) {
+                familySidebar
+                    .modifier(FocusRing(focused: focusedRow == 0))
+                Spacer(minLength: 12)
+                startButton
+            }
+            .frame(width: 160)
             detailPaneStack
                 .frame(maxWidth: .infinity)
         }
+    }
+
+    /// The Start button — a filled capsule. Placed by each layout (see `onStart`).
+    var startButton: some View {
+        Button(action: onStart) {
+            Label {
+                Text("Start", bundle: .module)
+            } icon: {
+                Image(systemName: "play.fill")
+            }
+            .font(.title3.weight(.bold))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.accentColor, in: Capsule())
+            .foregroundStyle(.white)
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.defaultAction)
+        .accessibilityIdentifier("newgame.start")
     }
 
     /// The detail pane, sized to the TALLEST family so switching families never

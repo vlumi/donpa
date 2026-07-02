@@ -28,6 +28,26 @@ struct NewGamePopup: View {
     /// preset cards breathe.
     private static let idealWidth: CGFloat = 680
 
+    /// The card chrome above the scroll region: the "New game" title line plus the
+    /// VStack spacing under it. Subtracted from the window height so the scroll
+    /// area's cap leaves room for the title (and its own padding), rather than the
+    /// card growing past the window and hiding the Start button at the bottom.
+    private static let titleChromeHeight: CGFloat = 50
+
+    /// At/above this available width the modal uses the wide sidebar+detail layout;
+    /// below it (portrait phone), the vertical swipe-pager. Chosen so the
+    /// sidebar+detail's one-row size chips fit — any landscape phone clears it, a
+    /// portrait phone doesn't. (A small landscape phone that just clears it wraps
+    /// the size chips 4+3 via ViewThatFits — graceful, not broken.)
+    private static let sidebarMinWidth: CGFloat = 600
+
+    /// Layout chosen by the actual viewport SHAPE, not the platform or size class:
+    /// only a narrow (portrait-phone) viewport gets the pager; everything wider is
+    /// the sidebar. Runtime — no `#if os`.
+    private static func layout(for viewport: CGSize) -> BoardSelectionPicker.Layout {
+        viewport.width >= sidebarMinWidth ? .sidebar : .pager
+    }
+
     /// Card width: the ideal, but never wider than the window allows (`available`
     /// is already the window minus the outer padding). On a small window it shrinks
     /// to fit — the chip rows wrap and the content flexes — so nothing spills past
@@ -49,8 +69,16 @@ struct NewGamePopup: View {
             // roomy screen everything is visible without scrolling.
             GeometryReader { geo in
                 card(
+                    layout: Self.layout(for: geo.size),
                     width: Self.cardWidth(available: geo.size.width - 48),
-                    maxHeight: geo.size.height - 48
+                    // Height budget for the SCROLLABLE region only — subtract the
+                    // card's own chrome (outer padding 48 + card padding 48 + the
+                    // title row and its spacing) so the scroll area caps at what's
+                    // actually left. Capping at the full window height instead let
+                    // the card grow taller than the window, pushing the last scroll
+                    // item (the Start button) off the bottom where the scroll,
+                    // already at its cap, couldn't reveal it.
+                    maxHeight: geo.size.height - 48 - 48 - Self.titleChromeHeight
                 )
                 .animation(.snappy, value: settings.family)
                 .overlay(alignment: .topTrailing) { closeButton }
@@ -84,14 +112,24 @@ struct NewGamePopup: View {
     /// The card grows to `width` (so every option is visible side-by-side when
     /// there's room) and hugs its content height up to `maxHeight`; past that the
     /// content scrolls with the title pinned, so the selectors stay reachable.
-    private func card(width: CGFloat, maxHeight: CGFloat) -> some View {
+    private func card(layout: BoardSelectionPicker.Layout, width: CGFloat, maxHeight: CGFloat)
+        -> some View
+    {
         VStack(spacing: 20) {
             Text("New game", bundle: .module).font(.title2.bold())
 
-            scrollableContent
+            // The picker scrolls if it's ever taller than the space; the pager
+            // layout's Start is pinned BELOW this scroll (outside it) so it can't
+            // be clipped, while the sidebar layout carries its own Start inside its
+            // pinned column.
+            scrollableContent(layout: layout)
                 // Hug content until it would overflow; only then cap + scroll.
                 .frame(height: min(contentHeight, max(0, maxHeight)))
                 .onPreferenceChange(ContentHeightKey.self) { contentHeight = $0 }
+
+            if layout == .pager {
+                picker(layout: layout).startButton
+            }
         }
         .padding(24)
         .frame(width: width)
@@ -103,23 +141,31 @@ struct NewGamePopup: View {
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
     }
 
-    /// The picker + Start button in a ScrollView (engages only when the card hits
-    /// its height cap; suppresses rubber-banding when it doesn't, where available).
-    @ViewBuilder private var scrollableContent: some View {
+    /// The `BoardSelectionPicker` for a layout, configured once so the scroll body
+    /// and the pinned Start button share the same instance settings.
+    private func picker(layout: BoardSelectionPicker.Layout) -> BoardSelectionPicker {
+        #if os(macOS)
+        BoardSelectionPicker(
+            settings: settings, focusedRow: focusedRow,
+            onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart)
+        #else
+        BoardSelectionPicker(settings: settings, layout: layout, onStart: onStart)
+        #endif
+    }
+
+    /// The picker in a ScrollView (engages only when the card hits its height cap;
+    /// suppresses rubber-banding when it doesn't, where available). Start lives
+    /// OUTSIDE this — in the picker's own sidebar column (sidebar layout) or pinned
+    /// below by `card` (pager layout) — so it's never clipped by the scroll.
+    @ViewBuilder private func scrollableContent(layout: BoardSelectionPicker.Layout) -> some View {
         let scroll = ScrollView {
             VStack(spacing: 20) {
+                picker(layout: layout)
                 #if os(macOS)
-                BoardSelectionPicker(
-                    settings: settings, focusedRow: focusedRow,
-                    onFocusRow: { focusedRow = $0 })
                 Text("Arrows to choose · Return to start", bundle: .module)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                #else
-                BoardSelectionPicker(settings: settings)
                 #endif
-
-                startButton
             }
             .background(
                 GeometryReader { proxy in
@@ -131,26 +177,6 @@ struct NewGamePopup: View {
         } else {
             scroll
         }
-    }
-
-    private var startButton: some View {
-        Button {
-            onStart()
-        } label: {
-            Label {
-                Text("Start", bundle: .module)
-            } icon: {
-                Image(systemName: "play.fill")
-            }
-            .font(.title3.weight(.bold))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(Color.accentColor, in: Capsule())
-            .foregroundStyle(.white)
-        }
-        .buttonStyle(.plain)
-        .keyboardShortcut(.defaultAction)
-        .accessibilityIdentifier("newgame.start")
     }
 
     private var closeButton: some View {
