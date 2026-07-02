@@ -57,14 +57,32 @@ public final class Scoreboard: ObservableObject {
     /// then add a `migrated(_:)` step.
     private static let currentVersion = 1
 
+    /// Encode as zlib-compressed JSON. The JSON is verbose (a maxed-out table runs
+    /// ~120 KB; zlib ≈ 6 KB) and every device's blob shares iCloud KVS's **1 MB
+    /// total** quota — compression removes that ceiling for good. (The counters'
+    /// `othersTotal` is also encoded although blob readers ignore it — see
+    /// `StatsMerge` — but under compression the repetition costs nothing.)
     private static func encodeFile(_ records: [String: ScoreRecord], epoch: Int) -> Data? {
-        try? JSONEncoder().encode(
+        let json = try? JSONEncoder().encode(
             StatsFile(version: currentVersion, records: records, epoch: epoch))
+        guard let json else { return nil }
+        return (try? (json as NSData).compressed(using: .zlib) as Data) ?? json
+    }
+
+    /// Sniff-decompress a stats blob: plain JSON (a pre-compression build's local
+    /// store / cloud blob, or a test fixture) starts with `{` and passes through;
+    /// anything else is treated as a zlib stream (empty/garbage → empty Data, which
+    /// the decoders below turn into "no records" / epoch 0).
+    static func decompressIfNeeded(_ data: Data) -> Data {
+        guard data.first != UInt8(ascii: "{") else { return data }
+        return (try? (data as NSData).decompressed(using: .zlib) as Data) ?? Data()
     }
 
     /// The reset epoch stamped in a blob (0 if absent / undecodable).
     static func decodeEpoch(_ data: Data) -> Int {
-        guard let top = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard
+            let top = try? JSONSerialization.jsonObject(with: decompressIfNeeded(data))
+                as? [String: Any]
         else { return 0 }
         return top["epoch"] as? Int ?? 0
     }
@@ -140,7 +158,9 @@ public final class Scoreboard: ObservableObject {
             return out
         }
 
-        guard let top = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard
+            let top = try? JSONSerialization.jsonObject(with: decompressIfNeeded(data))
+                as? [String: Any]
         else { return [:] }
 
         if let versioned = top["records"] as? [String: Any], let v = top["version"] as? Int {

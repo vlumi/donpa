@@ -33,20 +33,20 @@ struct NewGamePopup: View {
     private static let carouselSpacing: CGFloat = 8
     private static let chrome: CGFloat = 68
 
-    /// Most cards in any row of the given mode (Classic: difficulty; Modern: the
+    /// Most cards in any row of the given family (Basic: presets; Grid/Hive: the
     /// wider of density/size). Drives how wide the card wants to be.
-    private static func maxCards(in mode: GameMode) -> Int {
-        switch mode {
-        case .classic: return ClassicPreset.allCases.count
-        case .modern: return max(Density.allCases.count, BoardSize.allCases.count)
+    private static func maxCards(in family: BoardFamily) -> Int {
+        switch family {
+        case .basic: return BasicPreset.allCases.count
+        case .grid, .hive: return max(Density.allCases.count, BoardSize.allCases.count)
         }
     }
 
-    /// Width that shows every card of the visible mode's widest row at once, so on
+    /// Width that shows every card of the visible family's widest row at once, so on
     /// a roomy screen there's no drum/scroll. Clamped to the available width, and to
     /// at least `minWidth` when there's room (keeps the compact look on small windows).
-    private static func cardWidth(for mode: GameMode, available: CGFloat) -> CGFloat {
-        let n = CGFloat(maxCards(in: mode))
+    private static func cardWidth(for family: BoardFamily, available: CGFloat) -> CGFloat {
+        let n = CGFloat(maxCards(in: family))
         let ideal = n * carouselCardWidth + max(0, n - 1) * carouselSpacing + chrome
         guard available >= minWidth else { return max(0, available) }  // tiny window
         return min(max(minWidth, ideal), available)
@@ -66,10 +66,10 @@ struct NewGamePopup: View {
             // clipping. On a roomy screen everything is visible without scrolling.
             GeometryReader { geo in
                 card(
-                    width: Self.cardWidth(for: settings.mode, available: geo.size.width - 48),
+                    width: Self.cardWidth(for: settings.family, available: geo.size.width - 48),
                     maxHeight: geo.size.height - 48
                 )
-                .animation(.snappy, value: settings.mode)
+                .animation(.snappy, value: settings.family)
                 .overlay(alignment: .topTrailing) { closeButton }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(24)
@@ -87,8 +87,8 @@ struct NewGamePopup: View {
         switch key {
         case .up: focusedRow = max(0, (focusedRow ?? 0) - 1)
         case .down:
-            // modern: mode, density, size, shape, edges
-            let rows = settings.mode == .classic ? 2 : 5
+            // grid/hive: family, density, size, edges
+            let rows = settings.family == .basic ? 2 : 4
             focusedRow = min(rows - 1, (focusedRow ?? -1) + 1)
         case .left: cycleSelection(in: focusedRow ?? 0, by: -1)
         case .right: cycleSelection(in: focusedRow ?? 0, by: 1)
@@ -180,22 +180,20 @@ struct NewGamePopup: View {
     }
 
     #if os(macOS)
-    /// Cycle the selection in the given row. Row 0 is Mode; rows 1+ are Difficulty
-    /// (Classic), or Density / Size / Shape / Edges (Modern).
+    /// Cycle the selection in the given row. Row 0 is Family; rows 1+ are the
+    /// preset (Basic), or Density / Size / Edges (Grid/Hive).
     private func cycleSelection(in row: Int, by step: Int) {
-        switch (settings.mode, row) {
+        switch (settings.family, row) {
         case (_, 0):
-            settings.mode = settings.mode == .classic ? .modern : .classic
-        case (.classic, _):
-            settings.classicPreset = Self.stepped(settings.classicPreset, by: step)
-        case (.modern, 1):
-            settings.modernDensity = Self.stepped(settings.modernDensity, by: step)
-        case (.modern, 2):
-            settings.modernSize = Self.stepped(settings.modernSize, by: step)
-        case (.modern, 3):
-            settings.modernShape = Self.stepped(settings.modernShape, by: step)
-        case (.modern, _):  // row 4: edges
-            settings.modernEdges = Self.stepped(settings.modernEdges, by: step)
+            settings.family = Self.stepped(settings.family, by: step)
+        case (.basic, _):
+            settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
+        case (.grid, 1), (.hive, 1):
+            settings.density = Self.stepped(settings.density, by: step)
+        case (.grid, 2), (.hive, 2):
+            settings.boardSize = Self.stepped(settings.boardSize, by: step)
+        case (.grid, _), (.hive, _):  // row 3: edges
+            settings.edges = Self.stepped(settings.edges, by: step)
         }
     }
 

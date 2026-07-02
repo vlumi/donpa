@@ -98,9 +98,9 @@ struct DonpaApp: App {
 
                 Divider()
 
-                classicButton(.beginner, key: "1")
-                classicButton(.intermediate, key: "2")
-                classicButton(.expert, key: "3")
+                basicButton(.beginner, key: "1")
+                basicButton(.intermediate, key: "2")
+                basicButton(.expert, key: "3")
             }
         }
     }
@@ -112,11 +112,11 @@ struct DonpaApp: App {
         navigator.isModalPresented || showingAbout
     }
 
-    private func classicButton(_ preset: ClassicPreset, key: KeyEquivalent) -> some View {
+    private func basicButton(_ preset: BasicPreset, key: KeyEquivalent) -> some View {
         Button(preset.label) {
-            settings.mode = .classic
-            settings.classicPreset = preset
-            viewModel.newGame(config: .classic(preset))
+            settings.family = .basic
+            settings.basicPreset = preset
+            viewModel.newGame(config: .basic(preset))
         }
         .keyboardShortcut(key, modifiers: .command)
         .disabled(modalOpen)

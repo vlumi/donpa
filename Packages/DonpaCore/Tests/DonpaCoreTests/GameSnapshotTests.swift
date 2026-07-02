@@ -5,7 +5,7 @@ import XCTest
 final class GameSnapshotTests: XCTestCase {
     /// A mid-game board: reveal a corner, flag a couple of cells.
     private func playingGame() -> (Game, GameConfig) {
-        let config = GameConfig.classic(.beginner)
+        let config = GameConfig.basic(.beginner)
         var game = Game(config: config)
         game.reveal(Coord(0, 0))  // places mines, opens a region → .playing
         XCTAssertEqual(game.status, .playing)
@@ -16,7 +16,7 @@ final class GameSnapshotTests: XCTestCase {
     }
 
     func testSnapshotIsNilUnlessPlaying() {
-        let config = GameConfig.classic(.beginner)
+        let config = GameConfig.basic(.beginner)
         let fresh = Game(config: config)
         XCTAssertNil(
             GameSnapshot(game: fresh, config: config, elapsedCentiseconds: 0),
@@ -66,7 +66,7 @@ final class GameSnapshotTests: XCTestCase {
         // Beginner means 10 mines; a save carrying 3 was written under a different
         // meaning of the same config (a density retune).
         let snap = try snapshot(
-            json: #"{"config":{"classic":{"_0":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#)
+            json: #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#)
         XCTAssertFalse(snap.isConsistent)
     }
 
@@ -76,7 +76,7 @@ final class GameSnapshotTests: XCTestCase {
         let mines = (0..<9).map { "[\($0),0]" } + ["[99,0]"]
         let snap = try snapshot(
             json:
-                #"{"config":{"classic":{"_0":"beginner"}},"mines":[\#(mines.joined(separator: ","))]}"#
+                #"{"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines.joined(separator: ","))]}"#
         )
         XCTAssertFalse(snap.isConsistent)
     }
@@ -86,7 +86,7 @@ final class GameSnapshotTests: XCTestCase {
     /// number, so win detection and the flag counter track the actual board.
     func testRestoredGameDerivesMineCountFromSavedLayout() throws {
         let snap = try snapshot(
-            json: #"{"config":{"classic":{"_0":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#)
+            json: #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#)
         let restored = snap.makeGame()
         XCTAssertEqual(restored.mineCount, 3, "saved layout wins over the config's 10")
         XCTAssertEqual(restored.safeCellCount, 81 - 3)
@@ -107,7 +107,7 @@ final class GameSnapshotTests: XCTestCase {
     }
 
     func testModernConfigRoundTrips() throws {
-        let config = GameConfig.modern(.s, .normal, .bounded, .square)
+        let config = GameConfig.grid(.s, .normal, .flat)
         var game = Game(config: config)
         game.reveal(Coord(0, 0))
         let snap = try XCTUnwrap(GameSnapshot(game: game, config: config, elapsedCentiseconds: 0))
@@ -126,10 +126,10 @@ final class GameSnapshotTests: XCTestCase {
     /// defaults — so a future app that *added* fields can still read today's save,
     /// and vice-versa. The format is additive.
     func testDecodesWithOnlyRequiredFields() throws {
-        let json = #"{"config":{"classic":{"_0":"beginner"}},"mines":[[0,0]]}"#
+        let json = #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0]]}"#
         let snap = try JSONDecoder().decode(GameSnapshot.self, from: Data(json.utf8))
         XCTAssertEqual(snap.version, GameSnapshot.currentVersion)  // defaulted
-        XCTAssertEqual(snap.config, .classic(.beginner))
+        XCTAssertEqual(snap.config, .basic(.beginner))
         XCTAssertEqual(snap.mines, [Coord(0, 0)])
         XCTAssertEqual(snap.revealed, [])  // defaulted
         XCTAssertEqual(snap.status, .playing)  // defaulted
@@ -142,7 +142,7 @@ final class GameSnapshotTests: XCTestCase {
         let noConfig = #"{"mines":[[0,0]]}"#
         XCTAssertThrowsError(
             try JSONDecoder().decode(GameSnapshot.self, from: Data(noConfig.utf8)))
-        let noMines = #"{"config":{"classic":{"_0":"beginner"}}}"#
+        let noMines = #"{"config":{"basic":{"preset":"beginner"}}}"#
         XCTAssertThrowsError(
             try JSONDecoder().decode(GameSnapshot.self, from: Data(noMines.utf8)))
     }
@@ -172,7 +172,7 @@ final class GameSnapshotTests: XCTestCase {
     func testOlderSaveWithoutCameraDecodesToNil() throws {
         // A save written before the camera field existed must still decode (the
         // field is additive + optional), with camera == nil.
-        let json = #"{"config":{"classic":{"_0":"beginner"}},"mines":[[0,0]]}"#
+        let json = #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0]]}"#
         let snap = try JSONDecoder().decode(GameSnapshot.self, from: Data(json.utf8))
         XCTAssertNil(snap.camera)
     }
@@ -194,7 +194,7 @@ final class GameSnapshotTests: XCTestCase {
         // Default init (no inputMode given) and an older save both mean reveal.
         let snap = try XCTUnwrap(GameSnapshot(game: game, config: config, elapsedCentiseconds: 0))
         XCTAssertEqual(snap.inputMode, .reveal)
-        let json = #"{"config":{"classic":{"_0":"beginner"}},"mines":[[0,0]]}"#
+        let json = #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0]]}"#
         let old = try JSONDecoder().decode(GameSnapshot.self, from: Data(json.utf8))
         XCTAssertEqual(old.inputMode, .reveal, "a pre-inputMode save defaults to reveal")
     }
@@ -204,7 +204,7 @@ final class GameSnapshotTests: XCTestCase {
     func testRestoreIgnoresOutOfBoundsCoords() throws {
         // Beginner is 9×9. Craft a snapshot with in-bounds and off-board coords.
         let json = """
-            {"version":1,"config":{"classic":{"_0":"beginner"}},
+            {"version":1,"config":{"basic":{"preset":"beginner"}},
             "mines":[[0,0],[99,99]],"revealed":[[1,1],[50,50]],"flagged":[[2,2],[-5,-5]],
             "status":"playing","revealedSafeCount":999,"lossCoord":null,
             "elapsedCentiseconds":100}

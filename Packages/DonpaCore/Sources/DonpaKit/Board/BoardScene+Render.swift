@@ -54,7 +54,7 @@ extension BoardScene {
     /// Whether the board wraps (torus). Wrapped boards scroll seamlessly: the
     /// viewport range is NOT clamped to bounds (it extends past the edges, with
     /// off-board screen positions resolving to wrapped cells via `displayCoord`).
-    var isWrapped: Bool { viewModel.config.edges == .wrapped }
+    var isWrapped: Bool { viewModel.config.edges.wraps }
 
     /// Map a *screen* cell position (which on a wrapped board can be negative or
     /// ≥ width/height) to the logical board cell it shows. Identity when bounded.
