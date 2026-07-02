@@ -9,7 +9,7 @@ extension BoardSelectionPicker {
 
     /// The Basic page's own layout: three big preset cards stacked vertically,
     /// always all visible, each carrying its board facts and tagline inside — no
-    /// drum to scroll. Keyboard row 1 (←/→ cycles the preset, same as the drums).
+    /// scrolling. Keyboard row 1 (←/→ cycles the preset, same as the chip rows).
     var basicCards: some View {
         VStack(spacing: 8) {
             ForEach(BasicPreset.allCases, id: \.self) { preset in
@@ -52,6 +52,50 @@ extension BoardSelectionPicker {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: "\(preset.label) — \(preset.detail)"))
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
+    }
+
+    // MARK: Difficulty chips (row 1)
+
+    /// The difficulty as five always-visible rank-insignia chips — NOT a drum: a
+    /// horizontally-scrolling row inside a horizontally-swiped pager is two
+    /// gestures fighting over the same axis. The selected tier's name, honest mine
+    /// percentage (Hive runs denser), and tagline sit in the caption below.
+    func densityChips(for family: BoardFamily) -> some View {
+        let densityPath = Settings.densityPath(family)
+        let selected = settings[keyPath: densityPath]
+        return VStack(spacing: 6) {
+            HStack(spacing: 8) {
+                ForEach(Density.allCases, id: \.self) { density in
+                    densityChip(density, densityPath)
+                }
+            }
+            detailLine(
+                detail: "\(selected.label) · \(selected.detail(hex: family == .hive))",
+                tagline: selected.tagline)
+        }
+    }
+
+    private func densityChip(
+        _ density: Density, _ densityPath: ReferenceWritableKeyPath<Settings, Density>
+    ) -> some View {
+        let selected = settings[keyPath: densityPath] == density
+        return Button {
+            settings[keyPath: densityPath] = density
+            onFocusRow?(1)
+        } label: {
+            DensityInsignia.markImage(density)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 36, height: 22)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .foregroundStyle(selected ? Color.white : Color.primary)
+                .background(
+                    Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(verbatim: density.label))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 

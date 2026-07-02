@@ -2,18 +2,19 @@ import DonpaCore
 import SwiftUI
 
 /// The board-config chooser: three paged **families** (Basic / Grid / Hive) under
-/// a glyph tab strip. Basic shows the preset carousel; Grid and Hive share one
-/// page layout — a difficulty carousel, a size-chip row, and the Flat/Round edges
-/// glyph toggle. Binds directly to `Settings` — the pending choice; the host
-/// decides when to start a game.
+/// a glyph tab strip. Basic shows its three preset cards; Grid and Hive share one
+/// page layout — rank-insignia difficulty chips, a size-chip row, and the
+/// Flat/Round edges glyph toggle. Every option is always visible: no row scrolls
+/// horizontally, so the pager owns that axis alone. Binds directly to
+/// `Settings` — the pending choice; the host decides when to start a game.
 ///
 /// Graphical by design: the family is its tab glyph, edges are two equal glyph
 /// pictures (framed map ↔ globe), difficulty is the rank insignia. The pages sit
 /// side by side and SLIDE — the content tracks a drag (finger or mouse),
 /// rubber-bands at the ends, and snaps a page over on release; a tab tap slides
-/// the same way, so both platforms share one behaviour. The drum rows keep their
-/// own horizontal scrolling. On macOS it's also keyboard-drivable — up/down move
-/// between rows, left/right cycle within the focused row (row 0 = the tabs).
+/// the same way, so both platforms share one behaviour. On macOS it's also
+/// keyboard-drivable — up/down move between rows, left/right cycle within the
+/// focused row (row 0 = the tabs).
 struct BoardSelectionPicker: View {
     @ObservedObject var settings: Settings
     /// Keyboard-focused row, or nil when not keyboard-driven (iOS, or before the
@@ -203,20 +204,8 @@ struct BoardSelectionPicker: View {
             basicCards
         case .grid, .hive:
             VStack(spacing: 12) {
-                carouselRow(
-                    (family, 1),
-                    labels: Density.allCases.map(\.label),
-                    index: densityIndex(for: family),
-                    // Hive is denser per tier; show the number the board will use.
-                    caption: (
-                        settings[keyPath: Settings.densityPath(family)]
-                            .detail(hex: family == .hive),
-                        settings[keyPath: Settings.densityPath(family)].tagline
-                    ),
-                    symbol: { i in
-                        let all = Density.allCases
-                        return all.indices.contains(i) ? DensityInsignia.markImage(all[i]) : nil
-                    })
+                densityChips(for: family)
+                    .modifier(FocusRing(focused: focusedRow == 1))
                 sizeChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 2))
                 edgesToggle(for: family)
@@ -226,28 +215,6 @@ struct BoardSelectionPicker: View {
     }
 
     // MARK: Shared rows
-
-    /// A carousel drum plus the detail/tagline line for its selected card. `slot`
-    /// is the drum's place in the pager: its page family + keyboard row.
-    private func carouselRow(
-        _ slot: (family: BoardFamily, row: Int), labels: [String], index: Binding<Int>,
-        caption: (detail: String, tagline: String), symbol: ((Int) -> Image?)? = nil
-    ) -> some View {
-        VStack(spacing: 4) {
-            CarouselPicker(
-                labels: labels, selection: index, focused: focusedRow == slot.row,
-                symbol: symbol,
-                onInteract: { onFocusRow?(slot.row) }
-            )
-            // Identity per family+row: a family switch builds a fresh carousel
-            // centred on its selection (no stale scroll offset), and in the pager —
-            // where every page is alive at once — each drum keeps its own identity.
-            // (The Grid and Hive drums previously shared one `.id(labels)`, two
-            // live views with the same explicit identity.)
-            .id("\(slot.family.rawValue).row\(slot.row)")
-            detailLine(detail: caption.detail, tagline: caption.tagline)
-        }
-    }
 
     func detailLine(detail: String, tagline: String) -> some View {
         HStack(spacing: 6) {
@@ -259,28 +226,9 @@ struct BoardSelectionPicker: View {
         // Wrap rather than shrink, so a longer line keeps the same font size.
         .lineLimit(2)
         .multilineTextAlignment(.center)
-        // Fixed width so the swapping content doesn't reflow while the drum animates.
+        // Fixed width so the swapping caption doesn't reflow the row around it.
         .frame(maxWidth: .infinity)
         .animation(.snappy, value: detail)
-    }
-
-    // MARK: Enum ↔ index bindings (the carousel works in index space)
-
-    private func densityIndex(for family: BoardFamily) -> Binding<Int> {
-        enumIndex(Settings.densityPath(family), all: Density.allCases)
-    }
-
-    /// A `Binding<Int>` over a `Settings` enum, mapping case↔index in `allCases`.
-    /// Out-of-range writes are ignored.
-    private func enumIndex<T: Equatable>(
-        _ keyPath: ReferenceWritableKeyPath<Settings, T>, all: [T]
-    ) -> Binding<Int> {
-        Binding(
-            get: { all.firstIndex(of: settings[keyPath: keyPath]) ?? 0 },
-            set: { i in
-                guard all.indices.contains(i) else { return }
-                settings[keyPath: keyPath] = all[i]
-            })
     }
 }
 

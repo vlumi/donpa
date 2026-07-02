@@ -22,31 +22,20 @@ struct NewGamePopup: View {
     /// until it would exceed the available height (then the ScrollView scrolls).
     @State private var contentHeight: CGFloat = 0
 
-    /// Floor on a narrow window (the prior fixed card width); below it, rows that
-    /// don't fit fall back to the swipe-drum.
+    /// Floor on a narrow window; below it the chip rows wrap to two lines.
     private static let minWidth: CGFloat = 460
 
-    /// Carousel card metrics, mirrored from `CarouselPicker`, to size the card so a
-    /// row's cards all fit statically (no drum). Chrome = the card's own padding
-    /// plus the carousel's internal insets.
-    private static let carouselCardWidth: CGFloat = 116
-    private static let carouselSpacing: CGFloat = 8
-    private static let chrome: CGFloat = 68
+    /// The card's design width, FIXED across all family pages so paging never
+    /// resizes the frame — a family-dependent width left the pager half-resized
+    /// when returning to a narrower page. Roomy enough that every chip row and the
+    /// preset cards breathe.
+    private static let idealWidth: CGFloat = 680
 
-    /// Most cards in any carousel row of ANY family (the density drum; sizes are
-    /// chips, not cards). The card width is FIXED at the widest page so paging
-    /// never resizes the frame — a family-dependent width left the pager
-    /// half-resized when returning to a narrower page.
-    private static let maxCarouselCards = Density.allCases.count
-
-    /// Width that shows every card of the widest row at once, so on a roomy screen
-    /// there's no drum/scroll. Clamped to the available width, and to at least
-    /// `minWidth` when there's room (keeps the compact look on small windows).
+    /// The fixed design width, clamped to the available width (and to at least
+    /// `minWidth` when there's room, keeping the compact look on small windows).
     private static func cardWidth(available: CGFloat) -> CGFloat {
-        let n = CGFloat(maxCarouselCards)
-        let ideal = n * carouselCardWidth + max(0, n - 1) * carouselSpacing + chrome
         guard available >= minWidth else { return max(0, available) }  // tiny window
-        return min(max(minWidth, ideal), available)
+        return min(max(minWidth, Self.idealWidth), available)
     }
 
     var body: some View {
@@ -57,10 +46,9 @@ struct NewGamePopup: View {
                 .contentShape(Rectangle())
                 .onTapGesture { onClose() }
 
-            // Grow the card toward the width that shows every difficulty/size card
-            // at once (so no row falls back to the swipe-drum), but never past the
-            // available width; and cap height so a short window scrolls rather than
-            // clipping. On a roomy screen everything is visible without scrolling.
+            // The card keeps one fixed design width (clamped to the window), and
+            // caps height so a short window scrolls rather than clipping. On a
+            // roomy screen everything is visible without scrolling.
             GeometryReader { geo in
                 card(
                     width: Self.cardWidth(available: geo.size.width - 48),
@@ -197,8 +185,8 @@ struct NewGamePopup: View {
         }
     }
 
-    /// Next/previous case of a `CaseIterable` enum, clamped at the ends (no wrap),
-    /// matching the carousel.
+    /// Next/previous case of a `CaseIterable` enum, clamped at the ends (no
+    /// wrap), matching the chip rows.
     private static func stepped<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
         let all = Array(T.allCases)
         guard let i = all.firstIndex(of: value), !all.isEmpty else { return value }
