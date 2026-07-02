@@ -19,6 +19,9 @@ final class StatsSyncCoordinator {
     /// The highest reset epoch this device has honored (persisted). A cloud epoch
     /// greater than this means a wipe happened elsewhere that we haven't applied.
     private let honoredEpochKey = "donpa.stats.resetEpoch.honored"
+    /// Set when a blob delete had to be dropped because iCloud was unreachable, so
+    /// it can be replayed instead of leaking a ghost blob.
+    private let pendingDeleteKey = "donpa.stats.pendingBlobDelete"
 
     /// Read this device's own records (the source pushed + merged). Set by the
     /// owner after init, once `self` exists.
@@ -44,10 +47,19 @@ final class StatsSyncCoordinator {
             if syncEnabled {
                 pushAndMerge()
             } else {
-                cloud?.deleteOwnBlob(deviceID: deviceID)
+                deleteOwnBlob()  // or remember to, if offline (replayed later)
                 refresh()
             }
         }
+    }
+
+    /// Whether flipping sync ON right now would clear this device's local records:
+    /// a global wipe happened while sync was off (the cloud epoch is ahead of what
+    /// we've honored) and there is local data to lose. Read-only — lets the UI ask
+    /// before enabling instead of silently honoring the tombstone.
+    var enablingSyncWouldWipeLocal: Bool {
+        guard !syncEnabled, let cloud, cloud.isAvailable else { return false }
+        return cloud.readResetEpoch() > honoredEpoch && !ownRecords().isEmpty
     }
 
     /// Sync on AND iCloud reachable — for the status row.
@@ -87,9 +99,11 @@ final class StatsSyncCoordinator {
     var honoredEpoch: Int { max(Self.epochFloor, defaults.integer(forKey: honoredEpochKey)) }
 
     /// The cached merge, or nil if none yet — lets a caller show last-known totals
-    /// on an offline launch.
+    /// on an offline launch. A cache stamped below the honored epoch is pre-wipe /
+    /// pre-floor data: showing it would resurrect wiped stats on an offline launch.
     func cachedMerge() -> [String: ScoreRecord]? {
         guard let data = defaults.data(forKey: mergedKey) else { return nil }
+        guard decodeEpoch(data) >= honoredEpoch else { return nil }
         return decode(data)
     }
 
@@ -104,10 +118,28 @@ final class StatsSyncCoordinator {
         refresh()
     }
 
-    /// Remove this device's cloud blob (on reset), so it stops contributing to
-    /// other devices' totals. The caller then clears local + re-publishes empty.
+    /// Remove this device's cloud blob (on reset / sync-off), so it stops
+    /// contributing to other devices' totals — or REMEMBER to, if iCloud is
+    /// unreachable right now: a silently-dropped delete leaves a ghost blob other
+    /// devices keep counting (forever, if sync stays off). The pending flag is
+    /// replayed on the next reachable refresh.
     func deleteOwnBlob() {
-        cloud?.deleteOwnBlob(deviceID: deviceID)
+        if let cloud, cloud.isAvailable {
+            cloud.deleteOwnBlob(deviceID: deviceID)
+            defaults.removeObject(forKey: pendingDeleteKey)
+        } else {
+            defaults.set(true, forKey: pendingDeleteKey)
+        }
+    }
+
+    /// Replay a dropped blob delete once the cloud is reachable. With sync back ON
+    /// the next push overwrites the blob anyway, so the flag just clears.
+    private func replayPendingDeleteIfNeeded() {
+        guard defaults.bool(forKey: pendingDeleteKey), let cloud, cloud.isAvailable else {
+            return
+        }
+        if !syncEnabled { cloud.deleteOwnBlob(deviceID: deviceID) }
+        defaults.removeObject(forKey: pendingDeleteKey)
     }
 
     /// GLOBAL wipe: bump the cloud reset epoch, delete every visible blob, and clear
@@ -132,26 +164,41 @@ final class StatsSyncCoordinator {
         return true
     }
 
-    /// Pull + re-merge (call on foreground). No-op when sync off / unavailable.
+    /// Pull, RE-PUSH, and re-merge (call on foreground): pushing here propagates
+    /// changes made while offline (a reset, new scores) on reconnect, instead of
+    /// waiting for the next local write. Also replays any dropped blob delete.
+    /// Otherwise a no-op when sync off / unavailable.
     func refreshFromCloud() {
+        replayPendingDeleteIfNeeded()
         guard syncEnabled, let cloud, cloud.isAvailable else { return }
         cloud.synchronize()
-        refresh()
+        pushAndMerge()
     }
 
     /// Recompute the display = own merged with other devices' blobs, and cache it.
     /// - sync OFF: own-only, drop the cache.
-    /// - sync ON but unreachable (offline): keep the cached merge (don't collapse).
+    /// - sync ON but unreachable (offline): project FRESH own records over the
+    ///   cached merge, so offline play/resets show immediately (never freeze at the
+    ///   snapshot), and refresh the cache so an offline relaunch matches.
     /// - sync ON + reachable: honor any newer reset epoch (self-wipe), then re-merge.
     func refresh() {
+        replayPendingDeleteIfNeeded()
         guard syncEnabled else {
             onMerged(ownRecords())
             defaults.removeObject(forKey: mergedKey)
             return
         }
         guard let cloud, cloud.isAvailable else {
-            // Offline: keep showing the cache; own-only only if there's none yet.
-            if defaults.data(forKey: mergedKey) == nil { onMerged(ownRecords()) }
+            let display =
+                cachedMerge().map { StatsMerge.offlineMerge(own: ownRecords(), cached: $0) }
+                ?? ownRecords()
+            onMerged(display)
+            // Refresh (or epoch-upgrade) an existing cache; don't mint one offline.
+            if defaults.data(forKey: mergedKey) != nil,
+                let data = encode(display, honoredEpoch)
+            {
+                defaults.set(data, forKey: mergedKey)
+            }
             return
         }
         // A wipe elsewhere bumped the epoch past what we've honored: this device

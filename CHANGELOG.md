@@ -43,6 +43,12 @@ development — entries land under Unreleased as they merge.
   **stays erased** — a device that was offline during the wipe clears itself when it
   reconnects, rather than re-uploading old data. With sync off it stays a local-only
   clear (the cloud is never touched).
+- **Sync behaves offline.** The scoreboard now updates while offline with sync on
+  (new wins and resets showed only after reconnecting — or not at all if you
+  relaunched); a reset or sync-off done offline now cleans up its cloud data on
+  reconnect instead of leaving other devices counting stale scores; and if scores
+  were erased everywhere while your sync was off, turning sync back on **asks
+  first** before resetting this device.
 - **Minimap shows/hides reliably.** The corner minimap no longer pops in mid-game
   after a small pan on a board that fits (or stays hidden when it shouldn't) — its
   visibility now tracks the zoom level, not the camera position. Wrapped boards

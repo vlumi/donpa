@@ -1098,6 +1098,23 @@
         }
       }
     },
+    "Scores were erased everywhere while sync was off. Turning sync on will reset this device too." : {
+      "comment" : "Confirm dialog message: a wipe happened while sync was off. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pisteet tyhjennettiin kaikkialta, kun synkronointi oli pois päältä. Synkronoinnin käyttöönotto nollaa myös tämän laitteen."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "同期がオフの間に、すべての端末のスコアが消去されました。同期をオンにすると、この端末もリセットされます。"
+          }
+        }
+      }
+    },
     "Service Record" : {
       "comment" : "Stats sheet overall title (military theme: a soldier's record). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
@@ -1196,6 +1213,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "同期"
+          }
+        }
+      }
+    },
+    "Sync and reset this device" : {
+      "comment" : "Destructive confirm button: enable sync, clearing this device's scores. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Synkronoi ja nollaa tämä laite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "同期してこの端末をリセット"
           }
         }
       }
@@ -1383,6 +1417,23 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "軍歴"
+          }
+        }
+      }
+    },
+    "Turn on sync?" : {
+      "comment" : "Confirm dialog title: enabling sync after a global wipe. NEEDS REVIEW: ja\/fi.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Otetaanko synkronointi käyttöön?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "同期をオンにしますか？"
           }
         }
       }

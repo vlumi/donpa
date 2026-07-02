@@ -15,12 +15,29 @@ struct SyncFooterControl: View {
     @ObservedObject var settings: Settings
     @ObservedObject var scoreboard: Scoreboard
 
+    /// Asking the player to confirm enabling sync when a global wipe happened while
+    /// sync was off — enabling would honor the tombstone and clear this device too.
+    @State private var confirmingEnable = false
+
     /// Turning sync ON only sticks when iCloud is actually reachable; otherwise the
-    /// switch snaps back off (the status row explains why). Turning OFF always works.
+    /// switch snaps back off (the status row explains why). If a wipe happened while
+    /// sync was off, enabling clears this device's local scores — confirm first.
+    /// Turning OFF always works.
     private var syncBinding: Binding<Bool> {
         Binding(
             get: { settings.syncScores },
-            set: { settings.syncScores = $0 && scoreboard.isCloudAvailable })
+            set: { newValue in
+                guard newValue else {
+                    settings.syncScores = false
+                    return
+                }
+                guard scoreboard.isCloudAvailable else { return }
+                if scoreboard.enablingSyncWouldWipeLocal {
+                    confirmingEnable = true  // the toggle stays off until confirmed
+                } else {
+                    settings.syncScores = true
+                }
+            })
     }
 
     var body: some View {
@@ -30,6 +47,17 @@ struct SyncFooterControl: View {
             }
             .toggleStyle(.switch)
             .fixedSize()
+            .confirmationDialog(
+                Text("Turn on sync?", bundle: .module), isPresented: $confirmingEnable
+            ) {
+                Button(role: .destructive) {
+                    settings.syncScores = true
+                } label: {
+                    Text("Sync and reset this device", bundle: .module)
+                }
+            } message: {
+                wipeWarningMessage
+            }
 
             if settings.syncScores, scoreboard.isCloudActive {
                 Label {
@@ -48,6 +76,14 @@ struct SyncFooterControl: View {
             }
         }
         .lineLimit(1)
+    }
+
+    /// The enable-after-wipe warning, extracted so the long localized key fits the
+    /// line cap.
+    private var wipeWarningMessage: Text {
+        Text(
+            "Scores were erased everywhere while sync was off. Turning sync on will reset this device too.",
+            bundle: .module)
     }
 
     /// How the player gets iCloud signed in. macOS can deep-link straight to the
