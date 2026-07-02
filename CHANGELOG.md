@@ -38,7 +38,9 @@ development — entries land under Unreleased as they merge.
   one page: the rank-insignia difficulty drum, a **size chip row** (XS…XXXL),
   and an **edges toggle** that's now **Flat / Round** — a framed-map glyph
   against a globe, because a Round world curves back on itself and wraps. The
-  Hive page shows its honest (denser) mine percentage. The High Scores table
+  Hive page shows its honest (denser) mine percentage, and **each family
+  remembers its own difficulty / size / edges** — a huge Round hive spree
+  doesn't retune your next Grid game. The High Scores table
   follows the same names, Round boards carry a tag on their row, and — new —
   **Hive and Round boards get scoreboard rows at all** (they were missing from
   the table before). Scores stay tracked separately per family × edges; the

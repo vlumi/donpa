@@ -103,7 +103,7 @@ struct BoardSelectionPicker: View {
         )
         .clipped()
         .contentShape(Rectangle())
-        .gesture(pagerGesture)
+        .simultaneousGesture(pagerGesture)
         .onPreferenceChange(PageHeightsKey.self) { heights in
             pageHeights.merge(heights) { _, new in new }
         }
@@ -161,7 +161,7 @@ struct BoardSelectionPicker: View {
     // MARK: Family tabs (row 0)
 
     private var familyTabs: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 18) {
             ForEach(BoardFamily.allCases) { family in
                 familyTab(family)
             }
@@ -174,12 +174,14 @@ struct BoardSelectionPicker: View {
             withAnimation(.snappy) { settings.family = family }
             onFocusRow?(0)
         } label: {
+            // Hug the content: the hit area stays tight to the drawn tab, leaving
+            // the space between tabs free to grab for the page swipe.
             VStack(spacing: 3) {
                 BoardGlyph(kind: .family(family), size: 26)
                 Text(verbatim: family.label)
                     .font(.caption.weight(selected ? .bold : .regular))
             }
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 22)
             .padding(.vertical, 7)
             .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.65))
             .background(
@@ -204,19 +206,20 @@ struct BoardSelectionPicker: View {
                 carouselRow(
                     (family, 1),
                     labels: Density.allCases.map(\.label),
-                    index: densityIndex,
+                    index: densityIndex(for: family),
                     // Hive is denser per tier; show the number the board will use.
                     caption: (
-                        settings.density.detail(hex: family == .hive),
-                        settings.density.tagline
+                        settings[keyPath: Settings.densityPath(family)]
+                            .detail(hex: family == .hive),
+                        settings[keyPath: Settings.densityPath(family)].tagline
                     ),
                     symbol: { i in
                         let all = Density.allCases
                         return all.indices.contains(i) ? DensityInsignia.markImage(all[i]) : nil
                     })
-                sizeChips
+                sizeChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 2))
-                edgesToggle
+                edgesToggle(for: family)
                     .modifier(FocusRing(focused: focusedRow == 3))
             }
         }
@@ -263,8 +266,8 @@ struct BoardSelectionPicker: View {
 
     // MARK: Enum ↔ index bindings (the carousel works in index space)
 
-    private var densityIndex: Binding<Int> {
-        enumIndex(\.density, all: Density.allCases)
+    private func densityIndex(for family: BoardFamily) -> Binding<Int> {
+        enumIndex(Settings.densityPath(family), all: Density.allCases)
     }
 
     /// A `Binding<Int>` over a `Settings` enum, mapping case↔index in `allCases`.

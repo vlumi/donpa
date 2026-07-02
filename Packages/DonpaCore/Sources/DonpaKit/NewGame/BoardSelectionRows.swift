@@ -57,31 +57,37 @@ extension BoardSelectionPicker {
 
     // MARK: Size chips (row 2)
 
-    var sizeChips: some View {
-        VStack(spacing: 6) {
+    func sizeChips(for family: BoardFamily) -> some View {
+        let sizePath = Settings.sizePath(family)
+        return VStack(spacing: 6) {
             // All seven chips in one row when there's room; two rows when not.
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) { chips(BoardSize.allCases) }
+                HStack(spacing: 6) { chips(BoardSize.allCases, sizePath) }
                 VStack(spacing: 6) {
-                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.prefix(4))) }
-                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.dropFirst(4))) }
+                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.prefix(4)), sizePath) }
+                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.dropFirst(4)), sizePath) }
                 }
             }
             detailLine(
-                detail: settings.boardSize.detail, tagline: settings.boardSize.tagline)
+                detail: settings[keyPath: sizePath].detail,
+                tagline: settings[keyPath: sizePath].tagline)
         }
     }
 
-    @ViewBuilder private func chips(_ sizes: [BoardSize]) -> some View {
+    @ViewBuilder private func chips(
+        _ sizes: [BoardSize], _ sizePath: ReferenceWritableKeyPath<Settings, BoardSize>
+    ) -> some View {
         ForEach(sizes, id: \.self) { size in
-            sizeChip(size)
+            sizeChip(size, sizePath)
         }
     }
 
-    private func sizeChip(_ size: BoardSize) -> some View {
-        let selected = settings.boardSize == size
+    private func sizeChip(
+        _ size: BoardSize, _ sizePath: ReferenceWritableKeyPath<Settings, BoardSize>
+    ) -> some View {
+        let selected = settings[keyPath: sizePath] == size
         return Button {
-            settings.boardSize = size
+            settings[keyPath: sizePath] = size
             onFocusRow?(2)
         } label: {
             Text(verbatim: size.label)
@@ -99,20 +105,24 @@ extension BoardSelectionPicker {
 
     // MARK: Edges glyph toggle (row 3)
 
-    var edgesToggle: some View {
+    func edgesToggle(for family: BoardFamily) -> some View {
         HStack(spacing: 10) {
             ForEach(BoardEdges.allCases) { edges in
-                edgesButton(edges)
+                edgesButton(edges, Settings.edgesPath(family))
             }
         }
     }
 
-    private func edgesButton(_ edges: BoardEdges) -> some View {
-        let selected = settings.edges == edges
+    private func edgesButton(
+        _ edges: BoardEdges, _ edgesPath: ReferenceWritableKeyPath<Settings, BoardEdges>
+    ) -> some View {
+        let selected = settings[keyPath: edgesPath] == edges
         return Button {
-            settings.edges = edges
+            settings[keyPath: edgesPath] = edges
             onFocusRow?(3)
         } label: {
+            // Two equal halves; the drawn frame IS the hit area (the page-swipe
+            // still starts here via the simultaneous drag gesture).
             HStack(spacing: 8) {
                 BoardGlyph(kind: .edges(edges), size: 24)
                 Text(verbatim: edges.label).font(.subheadline.weight(.medium))

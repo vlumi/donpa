@@ -33,21 +33,17 @@ struct NewGamePopup: View {
     private static let carouselSpacing: CGFloat = 8
     private static let chrome: CGFloat = 68
 
-    /// Most cards in any carousel row of the given family (Basic: presets;
-    /// Grid/Hive: the density drum — sizes are chips, not cards). Drives how wide
-    /// the card wants to be.
-    private static func maxCards(in family: BoardFamily) -> Int {
-        switch family {
-        case .basic: return BasicPreset.allCases.count
-        case .grid, .hive: return Density.allCases.count
-        }
-    }
+    /// Most cards in any carousel row of ANY family (the density drum; sizes are
+    /// chips, not cards). The card width is FIXED at the widest page so paging
+    /// never resizes the frame — a family-dependent width left the pager
+    /// half-resized when returning to a narrower page.
+    private static let maxCarouselCards = Density.allCases.count
 
-    /// Width that shows every card of the visible family's widest row at once, so on
-    /// a roomy screen there's no drum/scroll. Clamped to the available width, and to
-    /// at least `minWidth` when there's room (keeps the compact look on small windows).
-    private static func cardWidth(for family: BoardFamily, available: CGFloat) -> CGFloat {
-        let n = CGFloat(maxCards(in: family))
+    /// Width that shows every card of the widest row at once, so on a roomy screen
+    /// there's no drum/scroll. Clamped to the available width, and to at least
+    /// `minWidth` when there's room (keeps the compact look on small windows).
+    private static func cardWidth(available: CGFloat) -> CGFloat {
+        let n = CGFloat(maxCarouselCards)
         let ideal = n * carouselCardWidth + max(0, n - 1) * carouselSpacing + chrome
         guard available >= minWidth else { return max(0, available) }  // tiny window
         return min(max(minWidth, ideal), available)
@@ -67,7 +63,7 @@ struct NewGamePopup: View {
             // clipping. On a roomy screen everything is visible without scrolling.
             GeometryReader { geo in
                 card(
-                    width: Self.cardWidth(for: settings.family, available: geo.size.width - 48),
+                    width: Self.cardWidth(available: geo.size.width - 48),
                     maxHeight: geo.size.height - 48
                 )
                 .animation(.snappy, value: settings.family)
@@ -190,11 +186,14 @@ struct NewGamePopup: View {
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
         case (.grid, 1), (.hive, 1):
-            settings.density = Self.stepped(settings.density, by: step)
+            let path = Settings.densityPath(settings.family)
+            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, 2), (.hive, 2):
-            settings.boardSize = Self.stepped(settings.boardSize, by: step)
+            let path = Settings.sizePath(settings.family)
+            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, _), (.hive, _):  // row 3: edges
-            settings.edges = Self.stepped(settings.edges, by: step)
+            let path = Settings.edgesPath(settings.family)
+            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         }
     }
 

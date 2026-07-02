@@ -112,19 +112,46 @@ public final class Settings: ObservableObject {
     @Published public var family: BoardFamily {
         didSet { defaults.set(family.rawValue, forKey: familyKey) }
     }
-    /// Grid/Hive size — shared by both families (they pick over the same axes).
-    @Published public var boardSize: BoardSize {
-        didSet { defaults.set(boardSize.rawValue, forKey: sizeKey) }
+    // Grid and Hive remember their OWN size/density/edges independently — picking
+    // a huge Round hive must not retune the next Grid game (user decision).
+    @Published public var gridSize: BoardSize {
+        didSet { defaults.set(gridSize.rawValue, forKey: "donpa.grid.size") }
     }
-    @Published public var density: Density {
-        didSet { defaults.set(density.rawValue, forKey: densityKey) }
+    @Published public var gridDensity: Density {
+        didSet { defaults.set(gridDensity.rawValue, forKey: "donpa.grid.density") }
     }
-    /// Edges for Grid/Hive boards: Flat, or Round (torus). Basic is always Flat.
-    @Published public var edges: BoardEdges {
-        didSet { defaults.set(edges.rawValue, forKey: edgesKey) }
+    @Published public var gridEdges: BoardEdges {
+        didSet { defaults.set(gridEdges.rawValue, forKey: "donpa.grid.edges") }
+    }
+    @Published public var hiveSize: BoardSize {
+        didSet { defaults.set(hiveSize.rawValue, forKey: "donpa.hive.size") }
+    }
+    @Published public var hiveDensity: Density {
+        didSet { defaults.set(hiveDensity.rawValue, forKey: "donpa.hive.density") }
+    }
+    @Published public var hiveEdges: BoardEdges {
+        didSet { defaults.set(hiveEdges.rawValue, forKey: "donpa.hive.edges") }
     }
     @Published public var basicPreset: BasicPreset {
         didSet { defaults.set(basicPreset.rawValue, forKey: presetKey) }
+    }
+
+    /// Key paths to a family's own axes, so the picker and keyboard nav bind to
+    /// whichever page they're on. Basic has no axes; callers guard on family.
+    public static func sizePath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
+        Settings, BoardSize
+    > {
+        family == .hive ? \.hiveSize : \.gridSize
+    }
+    public static func densityPath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
+        Settings, Density
+    > {
+        family == .hive ? \.hiveDensity : \.gridDensity
+    }
+    public static func edgesPath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
+        Settings, BoardEdges
+    > {
+        family == .hive ? \.hiveEdges : \.gridEdges
     }
     @Published public var handedness: Handedness {
         didSet { defaults.set(handedness.rawValue, forKey: handednessKey) }
@@ -160,15 +187,15 @@ public final class Settings: ObservableObject {
     private let defaults: UserDefaults
     private let appearanceKey = "donpa.appearance"
     private let familyKey = "donpa.family"
-    // Size/density/preset keep their historical key names + raw values, so a
-    // pre-family install's picks carry over untouched.
-    private let sizeKey = "donpa.modernSize"
-    private let densityKey = "donpa.modernDensity"
-    private let edgesKey = "donpa.modernEdges"
     private let presetKey = "donpa.classicPreset"
-    // Legacy (pre-family) selection keys, read once for migration in init.
+    // Legacy (pre-family / pre-split) selection keys, read once for migration:
+    // mode+shape became the family; the shared size/density/edges seed BOTH
+    // families' own axes.
     private let legacyModeKey = "donpa.mode"
     private let legacyShapeKey = "donpa.modernShape"
+    private let legacySizeKey = "donpa.modernSize"
+    private let legacyDensityKey = "donpa.modernDensity"
+    private let legacyEdgesKey = "donpa.modernEdges"
     private let handednessKey = "donpa.handedness"
     private let languageKey = "donpa.language"
     private let showMinimapKey = "donpa.showMinimap"
@@ -187,15 +214,24 @@ public final class Settings: ObservableObject {
             ?? Self.legacyFamily(
                 mode: defaults.string(forKey: legacyModeKey),
                 shape: defaults.string(forKey: legacyShapeKey))
-        // Old size raw names (small/medium/…) no longer decode; fall back to `.s`
-        // (the long-time default). Self-healing — the next pick persists the new name.
-        boardSize = defaults.string(forKey: sizeKey).flatMap(BoardSize.init(rawValue:)) ?? .s
-        density =
-            defaults.string(forKey: densityKey).flatMap(Density.init(rawValue:)) ?? .normal
-        // Edges: the raw vocabulary changed (bounded/wrapped → flat/round); migrate
-        // a legacy value so a Round player stays Round.
-        edges =
-            defaults.string(forKey: edgesKey).flatMap(Self.edgesValue(from:)) ?? .flat
+        // Per-family axes: prefer each family's own stored value; fall back to the
+        // legacy SHARED keys (seeding both families with the old pick), then the
+        // defaults. Legacy edges values used the bounded/wrapped vocabulary.
+        let sharedSize =
+            defaults.string(forKey: legacySizeKey).flatMap(BoardSize.init(rawValue:)) ?? .s
+        let sharedDensity =
+            defaults.string(forKey: legacyDensityKey).flatMap(Density.init(rawValue:)) ?? .normal
+        let sharedEdges =
+            defaults.string(forKey: legacyEdgesKey).flatMap(Self.edgesValue(from:)) ?? .flat
+        func axis<T>(_ key: String, _ parse: (String) -> T?, else shared: T) -> T {
+            defaults.string(forKey: key).flatMap(parse) ?? shared
+        }
+        gridSize = axis("donpa.grid.size", BoardSize.init(rawValue:), else: sharedSize)
+        gridDensity = axis("donpa.grid.density", Density.init(rawValue:), else: sharedDensity)
+        gridEdges = axis("donpa.grid.edges", Self.edgesValue(from:), else: sharedEdges)
+        hiveSize = axis("donpa.hive.size", BoardSize.init(rawValue:), else: sharedSize)
+        hiveDensity = axis("donpa.hive.density", Density.init(rawValue:), else: sharedDensity)
+        hiveEdges = axis("donpa.hive.edges", Self.edgesValue(from:), else: sharedEdges)
         basicPreset =
             defaults.string(forKey: presetKey).flatMap(BasicPreset.init(rawValue:)) ?? .beginner
         handedness =
@@ -211,14 +247,14 @@ public final class Settings: ObservableObject {
             ?? .system
     }
 
-    /// The `GameConfig` implied by the current family + selections. All family ×
-    /// edges combinations are supported (every Grid/Hive size is even-sided, so the
-    /// Round hive torus is valid).
+    /// The `GameConfig` implied by the current family + ITS selections. All
+    /// family × edges combinations are supported (every Grid/Hive size is
+    /// even-sided, so the Round hive torus is valid).
     public var currentConfig: GameConfig {
         switch family {
         case .basic: return .basic(basicPreset)
-        case .grid: return .grid(boardSize, density, edges)
-        case .hive: return .hive(boardSize, density, edges)
+        case .grid: return .grid(gridSize, gridDensity, gridEdges)
+        case .hive: return .hive(hiveSize, hiveDensity, hiveEdges)
         }
     }
 
