@@ -85,24 +85,23 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    /// How much of each neighbouring page peeks in at the slot's edges — the
-    /// standing hint that there's more to swipe to — and the gap between panels.
-    private static let pagePeek: CGFloat = 22
-    private static let pageGap: CGFloat = 10
+    /// How far each neighbouring page peeks in at the slot's edges — the standing
+    /// hint that there's more to swipe to. The peek region is also where the fade
+    /// falls, so the next/previous page dissolves in rather than being hard-cut.
+    private static let pagePeek: CGFloat = 26
 
     private var slidingPages: some View {
-        let pageWidth = pagerWidth - 2 * Self.pagePeek
-        let stride = pageWidth + Self.pageGap
-        return HStack(alignment: .top, spacing: Self.pageGap) {
+        // Each page is the full slot width, so the selected page fills the slot and
+        // its neighbours sit exactly one slot away — only their inner `pagePeek`
+        // shows, softened by the edge fade below.
+        HStack(spacing: 0) {
             ForEach(BoardFamily.allCases) { family in
-                pagePanel(for: family, width: pageWidth)
+                pagePanel(for: family)
             }
         }
-        .offset(x: -CGFloat(selectedIndex) * stride + Self.pagePeek + rubberBanded(pagerDrag))
-        .frame(
-            width: pagerWidth, height: pageHeights.values.max(), alignment: .topLeading
-        )
-        .clipped()
+        .offset(x: -CGFloat(selectedIndex) * pagerWidth + rubberBanded(pagerDrag))
+        .frame(width: pagerWidth, height: pageHeights.values.max(), alignment: .topLeading)
+        .mask(edgeFadeMask)
         .contentShape(Rectangle())
         .simultaneousGesture(pagerGesture)
         .onPreferenceChange(PageHeightsKey.self) { heights in
@@ -110,22 +109,29 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    /// One page wrapped as a faintly-bordered panel. Panels stretch to the slot
-    /// height (content top-aligned), so the peeking neighbours read as equal cards
-    /// rather than ragged fragments.
-    private func pagePanel(for family: BoardFamily, width: CGFloat) -> some View {
+    /// Opaque across the middle, fading to clear over the `pagePeek` strip at each
+    /// edge — so the peeking neighbour pages dissolve out instead of being sliced
+    /// (the drum's edge-fade, applied to the pager). Fully opaque vertically.
+    private var edgeFadeMask: some View {
+        let fade = Self.pagePeek / max(pagerWidth, 1)
+        return LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black, location: fade),
+                .init(color: .black, location: 1 - fade),
+                .init(color: .clear, location: 1),
+            ],
+            startPoint: .leading, endPoint: .trailing)
+    }
+
+    /// One page, the full slot width. Content is inset by `pagePeek` so it sits
+    /// clear of the fading edges (and of the neighbours peeking in), and
+    /// top-aligned to the fixed slot height.
+    private func pagePanel(for family: BoardFamily) -> some View {
         page(for: family)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 12)
-            .frame(width: width, alignment: .top)
+            .padding(.horizontal, Self.pagePeek)
+            .frame(width: pagerWidth, alignment: .top)
             .frame(maxHeight: .infinity, alignment: .top)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.primary.opacity(0.03))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.primary.opacity(0.10), lineWidth: 1))
-            )
             .background(
                 GeometryReader { geo in
                     Color.clear.preference(
@@ -216,15 +222,23 @@ struct BoardSelectionPicker: View {
 
     // MARK: Shared rows
 
+    /// The caption under a chip row: the board facts on their own line, the
+    /// playful tagline on a second line below. Each line is reserved ALWAYS (the
+    /// tagline line holds a space when empty), so the block's height is constant
+    /// and the row never reflows as the selection changes — long values shrink to
+    /// fit their line rather than wrapping or truncating.
     func detailLine(detail: String, tagline: String) -> some View {
-        HStack(spacing: 6) {
-            Text(verbatim: detail).fontWeight(.bold).foregroundStyle(.primary)
-            Text(verbatim: "·").foregroundStyle(.secondary)
-            Text(verbatim: tagline).italic().foregroundStyle(.primary.opacity(0.75))
+        VStack(spacing: 2) {
+            Text(verbatim: detail)
+                .fontWeight(.bold)
+                .foregroundStyle(.primary)
+            Text(verbatim: tagline.isEmpty ? " " : tagline)
+                .italic()
+                .foregroundStyle(.primary.opacity(0.75))
         }
         .font(.body)
-        // Wrap rather than shrink, so a longer line keeps the same font size.
-        .lineLimit(2)
+        .lineLimit(1)
+        .minimumScaleFactor(0.6)  // safety valve for the widest values / narrow window
         .multilineTextAlignment(.center)
         // Fixed width so the swapping caption doesn't reflow the row around it.
         .frame(maxWidth: .infinity)
