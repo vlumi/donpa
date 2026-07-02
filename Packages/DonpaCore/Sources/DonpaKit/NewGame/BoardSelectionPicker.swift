@@ -84,20 +84,20 @@ struct BoardSelectionPicker: View {
         }
     }
 
+    /// How much of each neighbouring page peeks in at the slot's edges — the
+    /// standing hint that there's more to swipe to — and the gap between panels.
+    private static let pagePeek: CGFloat = 22
+    private static let pageGap: CGFloat = 10
+
     private var slidingPages: some View {
-        HStack(alignment: .top, spacing: 0) {
+        let pageWidth = pagerWidth - 2 * Self.pagePeek
+        let stride = pageWidth + Self.pageGap
+        return HStack(alignment: .top, spacing: Self.pageGap) {
             ForEach(BoardFamily.allCases) { family in
-                page(for: family)
-                    .frame(width: pagerWidth, alignment: .top)
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear.preference(
-                                key: PageHeightsKey.self,
-                                value: [family: geo.size.height])
-                        })
+                pagePanel(for: family, width: pageWidth)
             }
         }
-        .offset(x: -CGFloat(selectedIndex) * pagerWidth + rubberBanded(pagerDrag))
+        .offset(x: -CGFloat(selectedIndex) * stride + Self.pagePeek + rubberBanded(pagerDrag))
         .frame(
             width: pagerWidth, height: pageHeights.values.max(), alignment: .topLeading
         )
@@ -107,6 +107,30 @@ struct BoardSelectionPicker: View {
         .onPreferenceChange(PageHeightsKey.self) { heights in
             pageHeights.merge(heights) { _, new in new }
         }
+    }
+
+    /// One page wrapped as a faintly-bordered panel. Panels stretch to the slot
+    /// height (content top-aligned), so the peeking neighbours read as equal cards
+    /// rather than ragged fragments.
+    private func pagePanel(for family: BoardFamily, width: CGFloat) -> some View {
+        page(for: family)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 12)
+            .frame(width: width, alignment: .top)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.primary.opacity(0.03))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.primary.opacity(0.10), lineWidth: 1))
+            )
+            .background(
+                GeometryReader { geo in
+                    Color.clear.preference(
+                        key: PageHeightsKey.self,
+                        value: [family: geo.size.height])
+                })
     }
 
     /// Damp the pull past the first/last page, so the edge answers with
@@ -174,12 +198,7 @@ struct BoardSelectionPicker: View {
     @ViewBuilder private func page(for family: BoardFamily) -> some View {
         switch family {
         case .basic:
-            // Difficulty is row 1, lining up with Grid/Hive's difficulty row.
-            carouselRow(
-                (family, 1),
-                labels: BasicPreset.allCases.map(\.label),
-                index: presetIndex,
-                caption: (settings.basicPreset.detail, settings.basicPreset.tagline))
+            basicCards
         case .grid, .hive:
             VStack(spacing: 12) {
                 carouselRow(
@@ -201,88 +220,6 @@ struct BoardSelectionPicker: View {
                     .modifier(FocusRing(focused: focusedRow == 3))
             }
         }
-    }
-
-    // MARK: Size chips (row 2)
-
-    private var sizeChips: some View {
-        VStack(spacing: 6) {
-            // All seven chips in one row when there's room; two rows when not.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) { chips(BoardSize.allCases) }
-                VStack(spacing: 6) {
-                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.prefix(4))) }
-                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.dropFirst(4))) }
-                }
-            }
-            detailLine(
-                detail: settings.boardSize.detail, tagline: settings.boardSize.tagline)
-        }
-    }
-
-    @ViewBuilder private func chips(_ sizes: [BoardSize]) -> some View {
-        ForEach(sizes, id: \.self) { size in
-            sizeChip(size)
-        }
-    }
-
-    private func sizeChip(_ size: BoardSize) -> some View {
-        let selected = settings.boardSize == size
-        return Button {
-            settings.boardSize = size
-            onFocusRow?(2)
-        } label: {
-            Text(verbatim: size.label)
-                .font(.subheadline.weight(.semibold))
-                .padding(.horizontal, 11)
-                .padding(.vertical, 6)
-                .foregroundStyle(selected ? Color.white : Color.primary)
-                .background(
-                    Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text(verbatim: "\(size.label) — \(size.detail)"))
-        .accessibilityAddTraits(selected ? [.isSelected] : [])
-    }
-
-    // MARK: Edges glyph toggle (row 3)
-
-    private var edgesToggle: some View {
-        HStack(spacing: 10) {
-            ForEach(BoardEdges.allCases) { edges in
-                edgesButton(edges)
-            }
-        }
-    }
-
-    private func edgesButton(_ edges: BoardEdges) -> some View {
-        let selected = settings.edges == edges
-        return Button {
-            settings.edges = edges
-            onFocusRow?(3)
-        } label: {
-            HStack(spacing: 8) {
-                BoardGlyph(kind: .edges(edges), size: 24)
-                Text(verbatim: edges.label).font(.subheadline.weight(.medium))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.65))
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.accentColor.opacity(selected ? 0.14 : 0))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                selected
-                                    ? Color.accentColor.opacity(0.6)
-                                    : Color.primary.opacity(0.15)))
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text(verbatim: edges.label))
-        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     // MARK: Shared rows
@@ -309,7 +246,7 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    private func detailLine(detail: String, tagline: String) -> some View {
+    func detailLine(detail: String, tagline: String) -> some View {
         HStack(spacing: 6) {
             Text(verbatim: detail).fontWeight(.bold).foregroundStyle(.primary)
             Text(verbatim: "·").foregroundStyle(.secondary)
@@ -326,9 +263,6 @@ struct BoardSelectionPicker: View {
 
     // MARK: Enum ↔ index bindings (the carousel works in index space)
 
-    private var presetIndex: Binding<Int> {
-        enumIndex(\.basicPreset, all: BasicPreset.allCases)
-    }
     private var densityIndex: Binding<Int> {
         enumIndex(\.density, all: Density.allCases)
     }
@@ -365,7 +299,7 @@ private struct PageHeightsKey: PreferenceKey {
 }
 
 /// Wraps a control with the keyboard focus ring used across the picker rows.
-private struct FocusRing: ViewModifier {
+struct FocusRing: ViewModifier {
     let focused: Bool
     func body(content: Content) -> some View {
         content
