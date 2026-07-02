@@ -168,17 +168,22 @@ extension BoardScene {
     /// rebuild produces an identical node, so the handoff is seamless.
     func revealHitTileInstantly(at c: Coord) {
         let size = layout.cellSize
-        cellNodes[c]?.removeFromParent()
-        let container = SKNode()
-        let tile = SKSpriteNode(texture: tileTexture(forFill: palette.mineTile))
-        tile.size = layout.tileSize
-        container.addChild(tile)
-        let burst = burstMineNode(size: size)
-        burst.zPosition = 1
-        container.addChild(burst)
-        container.position = layout.center(of: c)
-        boardLayer.addChild(container)
-        cellNodes[c] = container
+        // `cellNodes` is keyed by SCREEN position; on a wrapped board the logical
+        // cell `c` can be visible at several screen spots (and `c` itself may not be
+        // a key at all after panning) — swap every visible copy.
+        for (screen, node) in cellNodes where displayCoord(screen) == c {
+            node.removeFromParent()
+            let container = SKNode()
+            let tile = SKSpriteNode(texture: tileTexture(forFill: palette.mineTile))
+            tile.size = layout.tileSize
+            container.addChild(tile)
+            let burst = burstMineNode(size: size)
+            burst.zPosition = 1
+            container.addChild(burst)
+            container.position = layout.center(of: screen)
+            boardLayer.addChild(container)
+            cellNodes[screen] = container
+        }
     }
 
     private func cellNode(for coord: Coord, cell: Cell) -> SKNode {

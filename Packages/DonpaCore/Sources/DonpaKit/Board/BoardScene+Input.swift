@@ -33,7 +33,18 @@ extension BoardScene {
         return layout.coord(at: local)
     }
 
+    /// Whether a scene point lands on the minimap HUD (the map or its resize caret).
+    /// Board actions triggered by right-click / long-press / Control-click must not
+    /// punch through it onto the board cell underneath.
+    func isOverMinimapUI(atScenePoint p: CGPoint) -> Bool {
+        guard !(minimapNode?.isHidden ?? true) else { return false }
+        if minimapHandleHit(atScenePoint: p) { return true }
+        guard let rect = minimapImageRect else { return false }
+        return rect.contains(cameraLocal(p))
+    }
+
     func flag(atScenePoint p: CGPoint) {
+        guard !isOverMinimapUI(atScenePoint: p) else { return }
         guard let c = coord(atScenePoint: p) else { return }
         viewModel.toggleFlag(c)
     }
@@ -64,6 +75,7 @@ extension BoardScene {
     /// A long-press: the opposite action to the current mode on a hidden cell
     /// (flag in Reveal, reveal in Flag); chords on a revealed number, like a tap.
     func longPressAction(atScenePoint p: CGPoint) {
+        guard !isOverMinimapUI(atScenePoint: p) else { return }
         guard let c = coord(atScenePoint: p) else { return }
         if viewModel.game.board[c].state == .revealed {
             viewModel.chord(c)

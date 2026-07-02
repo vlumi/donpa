@@ -93,9 +93,14 @@ public final class BoardScene: SKScene {
     /// Set by the host on appearance change; recolors the background and rebuilds.
     public var palette: Palette = .dark {
         didSet {
+            // BoardView re-assigns on EVERY SwiftUI update; without this guard each
+            // one forced a full board rebuild (twice per reveal, and once per
+            // mouse-move during a minimap drag).
+            guard palette != oldValue else { return }
             backgroundColor = palette.sceneBackground
             rebuild()
             lastGlowMode = nil  // force the glow to recolor from the new palette
+            recolorMinimap()  // its colours are baked at build; force a redo
         }
     }
 
