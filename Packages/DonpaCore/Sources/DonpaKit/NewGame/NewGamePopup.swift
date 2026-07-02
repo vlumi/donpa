@@ -62,24 +62,36 @@ struct NewGamePopup: View {
             // caps height so a short window scrolls rather than clipping. On a
             // roomy screen everything is visible without scrolling.
             GeometryReader { geo in
+                // Centre with symmetric spacers rather than a `.frame(maxHeight:)`
+                // alignment: a card whose subtree uses `.fixedSize(vertical:)` (the
+                // sidebar layout) reports an ideal height that an aligning frame
+                // top-anchors instead of centring. Equal-weight spacers always split
+                // the slack evenly, so both layouts sit dead-centre on any viewport.
                 card(
                     layout: Self.layout(for: geo.size),
                     width: Self.cardWidth(available: geo.size.width - 48)
                 )
-                // Bound the WHOLE card to the window (minus the outer margin each
-                // side). A small vertical margin lets the card grow tall on a short
-                // screen; the horizontal margin stays roomier so the card doesn't
-                // hug the side edges.
-                .frame(
-                    maxWidth: .infinity, maxHeight: geo.size.height - 2 * Self.outerVMargin,
-                    alignment: .center
-                )
+                // Close button in the CARD's corner — the overlay is on the card
+                // (its actual `width`), so it sits at the card's top-right, not
+                // the screen's.
                 .overlay(alignment: .topTrailing) { closeButton }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Centre in the full slot. A `.frame(alignment: .center)` centres the
+                // card whether it's SHORTER than the slot (margin all round) or TALLER
+                // (e.g. the sidebar on a short landscape phone) — in which case it
+                // overflows EQUALLY top and bottom rather than spilling only off the
+                // bottom the way collapsed spacers would.
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 .padding(.horizontal, 24)
                 .padding(.vertical, Self.outerVMargin)
                 .animation(.snappy, value: settings.family)
             }
+            // Centre in the FULL screen, matching the backdrop. Without this the
+            // GeometryReader is inset by the safe area, so an asymmetric inset (big
+            // top notch, small bottom) centres the card within that inset region —
+            // which reads as pushed-below-centre and imbalanced against the
+            // full-screen dim. The card is far smaller than the screen with a wide
+            // margin, so it never reaches the notch or home indicator.
+            .ignoresSafeArea()
         }
         #if os(macOS)
         // AppKit key-catcher: @FocusState can't reliably take first responder from
@@ -104,11 +116,16 @@ struct NewGamePopup: View {
     }
     #endif
 
-    /// The card grows to `width` (so every option is visible side-by-side when
-    /// there's room) and hugs its content height up to `maxHeight`; past that the
-    /// content scrolls with the title pinned, so the selectors stay reachable.
+    /// A plain card that HUGS its content; the outer frame centres it in the
+    /// window. Both layouts are tuned to fit the shortest device (iPhone SE) — the
+    /// pager in portrait, the sidebar in landscape — so neither needs a ScrollView.
+    /// On a taller screen the card just centres with a larger even margin.
     private func card(layout: BoardSelectionPicker.Layout, width: CGFloat) -> some View {
-        let inner = VStack(spacing: 20) {
+        // The sidebar layout is chosen for short-wide viewports (landscape phone can
+        // be only ~375pt tall), so it packs tighter than the pager: less title gap
+        // and less card padding, keeping the whole card within that height.
+        let sidebar = layout == .sidebar
+        return VStack(spacing: sidebar ? 12 : 20) {
             Text("New game", bundle: .module).font(.title2.bold())
             picker(layout: layout)
             #if os(macOS)
@@ -121,23 +138,8 @@ struct NewGamePopup: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(24)
-
-        return Group {
-            switch layout {
-            case .pager:
-                // The pager layout is tuned to fit the SHORTEST device (iPhone SE)
-                // in portrait — so it fits every taller screen too. No ScrollView:
-                // a plain card that hugs its content, which the outer frame then
-                // centers.
-                inner
-            case .sidebar:
-                // The sidebar layout (landscape phone / iPad / Mac) can meet a short
-                // viewport, so it scrolls when it must — hugging its content and
-                // centring otherwise (`.basedOnSize` + fixedSize; see scrollBehavior).
-                scrollBehavior(ScrollView { inner })
-            }
-        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, sidebar ? 16 : 24)
         .frame(width: width)
         // Clip to the rounded card so nothing a child lays out wider can spill past
         // the card edge (the card is already clamped to the window).
@@ -156,22 +158,6 @@ struct NewGamePopup: View {
         #else
         BoardSelectionPicker(settings: settings, layout: layout, onStart: onStart)
         #endif
-    }
-
-    /// Make the card HUG its content vertically (a ScrollView is otherwise greedy
-    /// and fills all offered height, stretching the card tall on a big screen).
-    /// With `fixedSize`, the outer `maxHeight` frame becomes a real CAP: when the
-    /// content fits it hugs and the outer frame centers it (equal top/bottom
-    /// margin); when it's taller than the window it clamps and this scrolls. So the
-    /// margin is effectively "minimum 0" — the card never grows past its content on
-    /// a tall screen, and never overruns a short one.
-    @ViewBuilder private func scrollBehavior(_ scroll: ScrollView<some View>) -> some View {
-        let hugging = scroll.fixedSize(horizontal: false, vertical: true)
-        if #available(iOS 16.4, macOS 13.3, *) {
-            hugging.scrollBounceBehavior(.basedOnSize)
-        } else {
-            scroll
-        }
     }
 
     private var closeButton: some View {

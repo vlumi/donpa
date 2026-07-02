@@ -11,7 +11,7 @@ extension BoardSelectionPicker {
     /// always all visible, each carrying its board facts and tagline inside — no
     /// scrolling. Keyboard row 1 (←/→ cycles the preset, same as the chip rows).
     var basicCards: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             ForEach(BasicPreset.allCases, id: \.self) { preset in
                 basicCard(preset)
             }
@@ -36,7 +36,7 @@ extension BoardSelectionPicker {
                     .opacity(0.8)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, 10)
             .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.75))
             .background(
                 RoundedRectangle(cornerRadius: 12)

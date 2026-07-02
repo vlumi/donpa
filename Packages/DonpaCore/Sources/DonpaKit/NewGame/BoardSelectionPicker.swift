@@ -162,7 +162,7 @@ struct BoardSelectionPicker: View {
         case .basic:
             basicCards
         case .grid, .hive:
-            VStack(spacing: 16) {
+            VStack(spacing: 8) {
                 densityChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 1))
                 sizeChips(for: family)
