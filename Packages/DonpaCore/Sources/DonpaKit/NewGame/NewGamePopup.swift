@@ -22,20 +22,18 @@ struct NewGamePopup: View {
     /// until it would exceed the available height (then the ScrollView scrolls).
     @State private var contentHeight: CGFloat = 0
 
-    /// Floor on a narrow window; below it the chip rows wrap to two lines.
-    private static let minWidth: CGFloat = 460
-
-    /// The card's design width, FIXED across all family pages so paging never
-    /// resizes the frame — a family-dependent width left the pager half-resized
-    /// when returning to a narrower page. Roomy enough that every chip row and the
+    /// Preferred card width, FIXED across all family pages so paging never resizes
+    /// the frame — a family-dependent width left the pager half-resized when
+    /// returning to a narrower page. Roomy enough that every chip row and the
     /// preset cards breathe.
     private static let idealWidth: CGFloat = 680
 
-    /// The fixed design width, clamped to the available width (and to at least
-    /// `minWidth` when there's room, keeping the compact look on small windows).
+    /// Card width: the ideal, but never wider than the window allows (`available`
+    /// is already the window minus the outer padding). On a small window it shrinks
+    /// to fit — the chip rows wrap and the content flexes — so nothing spills past
+    /// the card edge. Floored so it can't collapse to nothing during a resize.
     private static func cardWidth(available: CGFloat) -> CGFloat {
-        guard available >= minWidth else { return max(0, available) }  // tiny window
-        return min(max(minWidth, Self.idealWidth), available)
+        min(Self.idealWidth, max(0, available))
     }
 
     var body: some View {
@@ -97,7 +95,11 @@ struct NewGamePopup: View {
         }
         .padding(24)
         .frame(width: width)
+        // Clip to the rounded card so nothing a child lays out wider (a chip row
+        // or the pager mid-measure on a very narrow window) can spill past the card
+        // edge — and, since the card is already clamped to the window, off-screen.
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
     }
 

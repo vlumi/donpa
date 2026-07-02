@@ -65,14 +65,30 @@ extension BoardSelectionPicker {
         let densityPath = Settings.densityPath(family)
         let selected = settings[keyPath: densityPath]
         return VStack(spacing: 6) {
-            HStack(spacing: 8) {
-                ForEach(Density.allCases, id: \.self) { density in
-                    densityChip(density, densityPath)
+            // All five chips in one row when there's room; 3 + 2 when not (matching
+            // the size chips' wrap).
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { densityRow(Density.allCases, densityPath) }
+                VStack(spacing: 6) {
+                    HStack(spacing: 8) {
+                        densityRow(Array(Density.allCases.prefix(3)), densityPath)
+                    }
+                    HStack(spacing: 8) {
+                        densityRow(Array(Density.allCases.dropFirst(3)), densityPath)
+                    }
                 }
             }
             detailLine(
                 detail: "\(selected.label) · \(selected.detail(hex: family == .hive))",
                 tagline: selected.tagline)
+        }
+    }
+
+    @ViewBuilder private func densityRow(
+        _ densities: [Density], _ densityPath: ReferenceWritableKeyPath<Settings, Density>
+    ) -> some View {
+        ForEach(densities, id: \.self) { density in
+            densityChip(density, densityPath)
         }
     }
 
@@ -166,10 +182,14 @@ extension BoardSelectionPicker {
             onFocusRow?(3)
         } label: {
             // Two equal halves; the drawn frame IS the hit area (the page-swipe
-            // still starts here via the simultaneous drag gesture).
+            // still starts here via the simultaneous drag gesture). The label can
+            // shrink on a narrow window so the pair never forces the card wider.
             HStack(spacing: 8) {
                 BoardGlyph(kind: .edges(edges), size: 24)
-                Text(verbatim: edges.label).font(.subheadline.weight(.medium))
+                Text(verbatim: edges.label)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
