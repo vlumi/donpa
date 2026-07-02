@@ -347,8 +347,10 @@ final class GameViewModelTests: XCTestCase {
 
     // MARK: Mastery signals (no-flag / no-chord purity bits + chord count)
 
-    /// The purity bits start clean and LATCH on the first flag / chord; the chord
-    /// counter increments. A flag placed then removed still counts as "used flags".
+    /// The purity bits start clean; flags LATCH on first placement. Chord stats
+    /// count ONLY a chord that actually acts — the UI routes every tap on a
+    /// revealed cell through `chord`, so no-op taps (a hidden cell, a revealed
+    /// 0-cell) must not inflate the count or burn the no-chord feat.
     func testPurityBitsLatchAndChordCounts() async {
         let vm = await startedGame()
         XCTAssertFalse(vm.usedFlagEver, "clean at start")
@@ -360,10 +362,52 @@ final class GameViewModelTests: XCTestCase {
         vm.toggleFlag(target)  // unflag — still "used flags"
         XCTAssertTrue(vm.usedFlagEver, "latches on first placement, not cleared by unflag")
 
+        // No-op chords: a hidden cell, and the revealed 0 under the first click.
         vm.chord(aHiddenCell(vm))
+        vm.chord(Coord(0, 0))
         await vm.awaitPendingWork()
-        XCTAssertTrue(vm.usedChordEver)
+        XCTAssertFalse(vm.usedChordEver, "no-op taps must not count as chording")
+        XCTAssertEqual(vm.chordsThisGame, 0)
+
+        // A real chord: flag every mine neighbour of a suitable revealed number,
+        // then chord it — this one counts.
+        guard let (number, mines) = chordableNumber(vm) else {
+            return XCTFail("no chordable number on this board")
+        }
+        for m in mines { vm.toggleFlag(m) }
+        vm.chord(number)
+        await vm.awaitPendingWork()
+        XCTAssertTrue(vm.usedChordEver, "an acting chord latches")
         XCTAssertEqual(vm.chordsThisGame, 1)
+    }
+
+    /// A revealed number whose hidden neighbours include all its mines (so exact
+    /// flagging is possible) and at least one safe cell (so the chord will act).
+    private func chordableNumber(_ vm: GameViewModel) -> (Coord, [Coord])? {
+        let board = vm.game.board
+        for c in board.allCoords
+        where board[c].state == .revealed && board[c].adjacentMines > 0 {
+            let ns = board.topology.neighbors(of: c)
+            let hiddenMines = ns.filter { board[$0].state == .hidden && board[$0].isMine }
+            let hiddenSafe = ns.filter { board[$0].state == .hidden && !board[$0].isMine }
+            guard hiddenMines.count == board[c].adjacentMines, !hiddenSafe.isEmpty else {
+                continue
+            }
+            return (c, hiddenMines)
+        }
+        return nil
+    }
+
+    /// Flagging a revealed cell is a no-op all the way down: no latch, and no
+    /// revision bump (a bump would schedule a full-board autosave + redraw for
+    /// every stray right-click on opened ground).
+    func testFlaggingARevealedCellChangesNothing() async {
+        let vm = await startedGame()
+        let before = vm.revision
+        vm.toggleFlag(Coord(0, 0))  // the revealed first-click cell
+        XCTAssertEqual(vm.revision, before, "no state change → no bump")
+        XCTAssertFalse(vm.usedFlagEver)
+        XCTAssertEqual(vm.flagsPlacedThisGame, 0)
     }
 
     /// A new game resets the purity bits to clean; a RESTORE defaults them to
