@@ -33,12 +33,13 @@ struct NewGamePopup: View {
     private static let carouselSpacing: CGFloat = 8
     private static let chrome: CGFloat = 68
 
-    /// Most cards in any row of the given family (Basic: presets; Grid/Hive: the
-    /// wider of density/size). Drives how wide the card wants to be.
+    /// Most cards in any carousel row of the given family (Basic: presets;
+    /// Grid/Hive: the density drum — sizes are chips, not cards). Drives how wide
+    /// the card wants to be.
     private static func maxCards(in family: BoardFamily) -> Int {
         switch family {
         case .basic: return BasicPreset.allCases.count
-        case .grid, .hive: return max(Density.allCases.count, BoardSize.allCases.count)
+        case .grid, .hive: return Density.allCases.count
         }
     }
 
