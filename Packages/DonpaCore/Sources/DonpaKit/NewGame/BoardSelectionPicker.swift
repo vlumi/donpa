@@ -271,6 +271,20 @@ struct BoardSelectionPicker: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 12)
             .frame(width: width, alignment: .top)
+            // Measure the NATURAL content height HERE, before the stretch-to-slot
+            // frame below. Measuring after that frame fed the stretched height back
+            // into the slot (`pageHeights.max()`), a loop that inflated the panel to
+            // fill the whole window on a tall screen.
+            .background(
+                GeometryReader { geo in
+                    Color.clear.preference(
+                        key: PageHeightsKey.self,
+                        value: [family: geo.size.height])
+                }
+            )
+            // Stretch each page to the fixed slot height (the tallest family), so
+            // the peeking neighbours read as equal cards. Bounded by the slot, not
+            // greedy against the window.
             .frame(maxHeight: .infinity, alignment: .top)
             .background(
                 RoundedRectangle(cornerRadius: 14)
@@ -279,12 +293,6 @@ struct BoardSelectionPicker: View {
                         RoundedRectangle(cornerRadius: 14)
                             .stroke(Color.primary.opacity(0.10), lineWidth: 1))
             )
-            .background(
-                GeometryReader { geo in
-                    Color.clear.preference(
-                        key: PageHeightsKey.self,
-                        value: [family: geo.size.height])
-                })
     }
 
     /// Damp the pull past the first/last page, so the edge answers with
