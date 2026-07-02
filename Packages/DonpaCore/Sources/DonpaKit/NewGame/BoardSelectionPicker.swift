@@ -237,36 +237,36 @@ struct BoardSelectionPicker: View {
 
     // MARK: Shared rows
 
-    /// The caption under a chip row: board facts (bold) + the playful tagline
-    /// (italic). One line when it fits (a roomy window, e.g. macOS), stacked to two
-    /// lines when it wouldn't — never shrinking the text or truncating. Both the
-    /// one- and two-line forms are reserved the same TWO-line height, so the row's
-    /// height is constant and doesn't reflow as the selection changes.
+    /// The caption under a chip row: board facts (bold) on line 1, tagline
+    /// (italic) on line 2. Each line has a FIXED height and shrinks to fit its
+    /// WIDTH only (single line, `minimumScaleFactor`) — so a long value scales down
+    /// horizontally instead of wrapping to a second line, and the block's height
+    /// never changes between selections.
     func detailLine(detail: String, tagline: String) -> some View {
-        let facts = Text(verbatim: detail).fontWeight(.bold).foregroundStyle(.primary)
-        let flavour = Text(verbatim: tagline).italic().foregroundStyle(.primary.opacity(0.75))
-        return ViewThatFits(in: .horizontal) {
-            HStack(spacing: 6) {
-                facts
-                Text(verbatim: "·").foregroundStyle(.secondary)
-                flavour
-            }
-            VStack(spacing: 2) {
-                facts; flavour
-            }
+        VStack(spacing: 2) {
+            captionText(detail, weight: .bold, opacity: 1)
+            captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
         }
-        .font(.body)
-        .lineLimit(1)
-        // A gentle shrink as the last resort so the longest tagline
-        // ("Abandon all hope, ye who enter") fits its line on a phone rather than
-        // truncating; short captions render at full size.
-        .minimumScaleFactor(0.8)
-        .multilineTextAlignment(.center)
-        // Reserve two lines of `.body` (~22pt each + 2pt spacing) always, so
-        // switching between a one-line and a two-line caption never jumps the row.
-        .frame(maxWidth: .infinity, minHeight: 46)
+        .frame(maxWidth: .infinity)
         .animation(.snappy, value: detail)
     }
+
+    /// One caption line: single line, fixed height, shrinks to fit width only.
+    private func captionText(
+        _ text: String, weight: Font.Weight, opacity: Double, italic: Bool = false
+    ) -> some View {
+        Text(verbatim: text)
+            .font(.body.weight(weight))
+            .italic(italic)
+            .foregroundStyle(.primary.opacity(opacity))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .frame(height: Self.captionLineHeight)
+    }
+
+    /// Fixed height for one `.body` caption line, so shrinking a long value never
+    /// changes the row's height.
+    private static let captionLineHeight: CGFloat = 22
 }
 
 /// Layout feedback for the sliding pager: the slot width and each page's height.

@@ -19,11 +19,12 @@ struct DonpaApp: App {
                 navigator: navigator
             )
             // Min size keeps the end-of-game result panel and the New Game modal
-            // from being cramped: the modal lays its Grid/Hive options out on one
-            // row and shouldn't have to wrap/reflow, so the floor is wide enough
-            // for that (the popup caps its own width, so a wider window just
-            // centres it).
-            .frame(minWidth: 680, minHeight: 560)
+            // from being cramped or clipped: the modal lays its Grid/Hive options
+            // out on one row (so the width floor avoids wrap/reflow) and its full
+            // height — title, options, Start — needs the taller floor or it clips
+            // at the bottom. The popup caps its own size, so a bigger window just
+            // centres it.
+            .frame(minWidth: 680, minHeight: 640)
             .onChange(of: viewModel.config) { _, config in
                 WindowSizer.growToFit(for: config)
             }
