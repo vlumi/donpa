@@ -108,36 +108,42 @@ struct NewGamePopup: View {
     /// there's room) and hugs its content height up to `maxHeight`; past that the
     /// content scrolls with the title pinned, so the selectors stay reachable.
     private func card(layout: BoardSelectionPicker.Layout, width: CGFloat) -> some View {
-        // Everything — title, picker, Start — lives in ONE ScrollView. When it all
-        // fits (the common case) `.basedOnSize` keeps it inert and the card hugs
-        // its content, so the outer frame centers it in the window. When the
-        // viewport is too short (a landscape phone / SE) it scrolls, so the bottom
-        // is always reachable and the card never overruns the window. No fixed
-        // heights, no chrome constants — the layout system sizes it.
-        let content = ScrollView {
-            VStack(spacing: 20) {
-                Text("New game", bundle: .module).font(.title2.bold())
-                picker(layout: layout)
-                #if os(macOS)
-                Text("Arrows to choose · Return to start", bundle: .module)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                #endif
-                if layout == .pager {
-                    picker(layout: .pager).startButton
-                }
+        let inner = VStack(spacing: 20) {
+            Text("New game", bundle: .module).font(.title2.bold())
+            picker(layout: layout)
+            #if os(macOS)
+            Text("Arrows to choose · Return to start", bundle: .module)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            #endif
+            if layout == .pager {
+                picker(layout: .pager).startButton
             }
-            .frame(maxWidth: .infinity)
-            .padding(24)
         }
-        return scrollBehavior(content)
-            .frame(width: width)
-            // Clip to the rounded card so nothing a child lays out wider (a chip row
-            // or the pager mid-measure on a very narrow window) can spill past the card
-            // edge — and, since the card is already clamped to the window, off-screen.
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
+        .frame(maxWidth: .infinity)
+        .padding(24)
+
+        return Group {
+            switch layout {
+            case .pager:
+                // The pager layout is tuned to fit the SHORTEST device (iPhone SE)
+                // in portrait — so it fits every taller screen too. No ScrollView:
+                // a plain card that hugs its content, which the outer frame then
+                // centers.
+                inner
+            case .sidebar:
+                // The sidebar layout (landscape phone / iPad / Mac) can meet a short
+                // viewport, so it scrolls when it must — hugging its content and
+                // centring otherwise (`.basedOnSize` + fixedSize; see scrollBehavior).
+                scrollBehavior(ScrollView { inner })
+            }
+        }
+        .frame(width: width)
+        // Clip to the rounded card so nothing a child lays out wider can spill past
+        // the card edge (the card is already clamped to the window).
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
     }
 
     /// The `BoardSelectionPicker` for a layout, configured once so the scroll body
@@ -152,12 +158,17 @@ struct NewGamePopup: View {
         #endif
     }
 
-    /// Only scroll when the content genuinely doesn't fit — so on a roomy screen
-    /// the card hugs its content (and the outer frame centers it), and on a short
-    /// one it scrolls to the bottom instead of clipping.
+    /// Make the card HUG its content vertically (a ScrollView is otherwise greedy
+    /// and fills all offered height, stretching the card tall on a big screen).
+    /// With `fixedSize`, the outer `maxHeight` frame becomes a real CAP: when the
+    /// content fits it hugs and the outer frame centers it (equal top/bottom
+    /// margin); when it's taller than the window it clamps and this scrolls. So the
+    /// margin is effectively "minimum 0" — the card never grows past its content on
+    /// a tall screen, and never overruns a short one.
     @ViewBuilder private func scrollBehavior(_ scroll: ScrollView<some View>) -> some View {
+        let hugging = scroll.fixedSize(horizontal: false, vertical: true)
         if #available(iOS 16.4, macOS 13.3, *) {
-            scroll.scrollBounceBehavior(.basedOnSize)
+            hugging.scrollBounceBehavior(.basedOnSize)
         } else {
             scroll
         }
