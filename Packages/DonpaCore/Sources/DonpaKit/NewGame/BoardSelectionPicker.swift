@@ -65,22 +65,26 @@ struct BoardSelectionPicker: View {
     /// dedicated full-width ruler, not from the sliding content — measuring the
     /// content itself would feed its own frame back into the layout.
     private var pager: some View {
-        VStack(spacing: 0) {
-            Color.clear
-                .frame(maxWidth: .infinity)
-                .frame(height: 0)
-                .background(
-                    GeometryReader { geo in
-                        Color.clear.preference(key: PagerWidthKey.self, value: geo.size.width)
-                    })
+        // The pages render only once the slot width has been measured, so the
+        // FIRST real layout is already at the correct constrained width. Rendering
+        // an unconstrained page as a pre-measure placeholder made the first open
+        // lay out differently from a later return (ViewThatFits saw an infinite
+        // width and never wrapped) — so before measuring, show only a zero-content
+        // ruler; its full width sets `pagerWidth`, then the real pages appear.
+        Group {
             if pagerWidth > 0 {
                 slidingPages
             } else {
-                page(for: settings.family)  // pre-measure frame; replaced next pass
+                Color.clear.frame(maxWidth: .infinity, minHeight: 1)
             }
         }
+        .background(
+            GeometryReader { geo in
+                Color.clear.preference(key: PagerWidthKey.self, value: geo.size.width)
+            }
+        )
         .onPreferenceChange(PagerWidthKey.self) { width in
-            guard width > 0 else { return }  // never regress to the fallback branch
+            guard width > 0 else { return }
             pagerWidth = width
         }
     }

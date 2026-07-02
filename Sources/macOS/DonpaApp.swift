@@ -18,9 +18,12 @@ struct DonpaApp: App {
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator
             )
-            // Min size keeps the end-of-game result panel (square art + buttons)
-            // from being clipped when the user shrinks the window.
-            .frame(minWidth: 420, minHeight: 560)
+            // Min size keeps the end-of-game result panel and the New Game modal
+            // from being cramped: the modal lays its Grid/Hive options out on one
+            // row and shouldn't have to wrap/reflow, so the floor is wide enough
+            // for that (the popup caps its own width, so a wider window just
+            // centres it).
+            .frame(minWidth: 680, minHeight: 560)
             .onChange(of: viewModel.config) { _, config in
                 WindowSizer.growToFit(for: config)
             }
