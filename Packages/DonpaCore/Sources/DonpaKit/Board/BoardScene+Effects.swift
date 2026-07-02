@@ -262,32 +262,40 @@ extension BoardScene {
         #endif
     }
 
-    // O(1) — the board stores its mine set, not a full-board scan.
-    private var mineCoords: Set<Coord> {
-        viewModel.game.board.mineCoords
-    }
-
     func playLoss(trigger: Coord?, reduceMotion: Bool) {
         let cell = layout.cellSize
-        let origin = trigger.map { layout.center(of: $0) }
-
-        // Detonate the hit tile first so its explosion leads the shockwave.
-        if let origin {
-            effectsLayer.addChild(detonation(at: origin, size: cell))
+        let board = viewModel.game.board
+        let range = visibleRange()
+        // Sweep the visible range in SCREEN space (like playWin): on a wrapped board
+        // a logical coord can show at several screen spots — or none near the camera
+        // after panning — so placing FX at `layout.center(of: logicalCoord)` would
+        // detonate off-screen. A flagged ("disarmed") mine doesn't pulse; it stays
+        // intact under its flag.
+        var triggerPoints: [CGPoint] = []
+        var minePoints: [CGPoint] = []
+        range.forEach { c in
+            let logical = displayCoord(c)
+            let shown = board[logical]
+            guard shown.isMine else { return }
+            if logical == trigger {
+                triggerPoints.append(layout.center(of: c))
+            } else if shown.state != .flagged {
+                minePoints.append(layout.center(of: c))
+            }
         }
         if reduceMotion {
-            if let origin { effectsLayer.addChild(flash(at: origin, size: cell)) }
+            // A brief flash at the hit tile only — no scaling detonation, no
+            // shockwave, no board shake.
+            for p in triggerPoints { effectsLayer.addChild(flash(at: p, size: cell)) }
             return
         }
-        // Other mines pulse, staggered outward — only VISIBLE ones (culling keeps a
-        // huge board off the main thread). A flagged ("disarmed") mine doesn't
-        // detonate; it stays intact under its flag.
-        let range = visibleRange()
-        let board = viewModel.game.board
+        // Detonate the hit tile first so its explosion leads the shockwave.
+        for p in triggerPoints { effectsLayer.addChild(detonation(at: p, size: cell)) }
+        // Other mines pulse, staggered outward from the nearest visible copy of the
+        // trigger (all at once if the trigger is off-screen).
         let speed = cell * 18  // points/sec the shock wave travels
-        for c in mineCoords where c != trigger && range.contains(c) && board[c].state != .flagged {
-            let p = layout.center(of: c)
-            let delay = origin.map { hypot(p.x - $0.x, p.y - $0.y) / speed } ?? 0
+        for p in minePoints {
+            let delay = triggerPoints.map { hypot(p.x - $0.x, p.y - $0.y) / speed }.min() ?? 0
             let pulse = minePulse(at: p, size: cell)
             pulse.node.run(.sequence([.wait(forDuration: delay), pulse.pulseAction]))
             effectsLayer.addChild(pulse.node)
@@ -297,16 +305,19 @@ extension BoardScene {
 
     func playWin(reduceMotion: Bool) {
         let cell = layout.cellSize
-        let board = layout.boardSize(width: viewModel.boardWidth, height: viewModel.boardHeight)
-        let boardCentre = CGPoint(x: board.width / 2, y: board.height / 2)
         // The ripple radiates from where the player is LOOKING (camera/screen centre),
         // not the board's geometric middle — on a wrapped board the middle can be
         // off-screen, and even bounded this reads better when zoomed/panned.
         let centre = cameraNode.position
 
         if reduceMotion {
-            let overlay = SKShapeNode(rectOf: CGSize(width: board.width, height: board.height))
-            overlay.position = boardCentre
+            // Cover the VIEWPORT, not the board's home rect — on a wrapped board
+            // panned past a seam the home rect can be entirely off-screen, and the
+            // win would show nothing at all.
+            let viewport = CGSize(
+                width: size.width * cameraNode.xScale, height: size.height * cameraNode.yScale)
+            let overlay = SKShapeNode(rectOf: viewport)
+            overlay.position = centre
             overlay.fillColor = SKColor.green.withAlphaComponent(0.18)
             overlay.lineWidth = 0
             overlay.blendMode = .add

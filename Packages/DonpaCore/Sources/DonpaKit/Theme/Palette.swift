@@ -5,7 +5,7 @@ import SwiftUI
 /// The full set of board + chrome colors for one appearance. A `Palette` is
 /// resolved for the current light/dark mode, then feeds both the SwiftUI chrome
 /// (`Color`) and the SpriteKit scene (`SKColor`) so the two never drift.
-public struct Palette {
+public struct Palette: Equatable {
     // Chrome
     let pageBackground: Color
     let statusBar: Color

@@ -69,7 +69,22 @@ extension BoardScene {
             updateMinimapImage(boardW: w, boardH: h)
         }
 
-        layoutMinimap(boardW: w, boardH: h, range: visibleRange())
+        layoutMinimap(boardW: w, boardH: h)
+    }
+
+    /// Tear down the minimap so the next `refreshMinimap` rebuilds it: the panel/
+    /// viewport/caret colours are baked at creation and the overview image is keyed
+    /// on board revision only, so a palette change must force both.
+    func recolorMinimap() {
+        minimapNode?.removeFromParent()
+        minimapNode = nil
+        minimapPanel = nil
+        minimapImage = nil
+        minimapViewport = nil
+        minimapHandle = nil
+        minimapImageRect = nil
+        minimapHandleRects = []
+        lastMinimapRevision = -1  // re-render the overview in the new colours
     }
 
     /// The minimap's longer-side length in points for a given scale. `scale` runs
@@ -176,108 +191,11 @@ extension BoardScene {
         return node
     }
 
-    /// Render the whole board to a small image for the minimap sprite.
-    private func updateMinimapImage(boardW: Int, boardH: Int) {
-        // Pixels-per-cell, capped so a 1000² board still renders to a sane bitmap.
-        let maxDim = 240
-        let ppc = max(1, min(maxDim / max(boardW, boardH), 4))
-        // Render OFF the main thread (the per-cell loop is heavy on a 1M-cell
-        // board): snapshot the Sendable board + colours now, apply the texture back
-        // on the main actor only if no newer board state has superseded it.
-        let board = viewModel.game.board
-        let colors = overviewColors
-        let generation = lastMinimapRevision
-        // Supersede any render still running for an older revision — its result would
-        // be discarded anyway, so don't let it finish burning a core. The render runs
-        // in this child task (NOT `Task.detached`, which wouldn't inherit
-        // cancellation) so `Task.isCancelled` inside `renderOverview` actually fires.
-        minimapRenderTask?.cancel()
-        minimapRenderTask = Task.detached { [weak self] in
-            let cg = Self.renderOverview(
-                board: board, width: boardW, height: boardH, ppc: ppc, colors: colors)
-            guard let cg else { return }
-            await MainActor.run {
-                guard let self, !Task.isCancelled,
-                    generation == self.lastMinimapRevision
-                else { return }
-                let texture = SKTexture(cgImage: cg)
-                texture.filteringMode = .nearest  // crisp cell blocks, no blur
-                self.minimapImage?.texture = texture
-            }
-        }
-    }
-
-    /// Overview fill colours, bundled `Sendable` so the render can run off the main
-    /// actor (it can't touch `palette` there).
-    struct OverviewColors: Sendable {
-        let hidden, revealed, mine, flag: CGColor
-    }
-    var overviewColors: OverviewColors {
-        OverviewColors(
-            hidden: palette.hiddenTile.cgColor, revealed: palette.revealedTile.cgColor,
-            mine: palette.mineTile.cgColor, flag: palette.flagGlyph.cgColor)
-    }
-
-    /// A downsampled image of the whole board (one `ppc`×`ppc` block per cell,
-    /// hidden/revealed/mine/flag distinct), shared by the corner minimap and the
-    /// fullscreen overview. Board row 0 paints at CG y=0 (what the viewport-rect
-    /// math expects). The overview calls this synchronously; the live minimap runs
-    /// it off the main thread (see `updateMinimapImage`).
-    func boardOverviewImage(pixelsPerCell ppc: Int) -> CGImage? {
-        Self.renderOverview(
-            board: viewModel.game.board, width: viewModel.boardWidth,
-            height: viewModel.boardHeight, ppc: ppc, colors: overviewColors)
-    }
-
-    /// Pure renderer — no `self`, so it runs on any thread. Inputs are `Sendable`.
-    nonisolated static func renderOverview(
-        board: Board, width boardW: Int, height boardH: Int, ppc: Int, colors: OverviewColors
-    ) -> CGImage? {
-        let pxW = boardW * ppc
-        let pxH = boardH * ppc
-        let cs = CGColorSpace(name: CGColorSpace.sRGB)!
-        guard
-            let ctx = CGContext(
-                data: nil, width: pxW, height: pxH, bitsPerComponent: 8, bytesPerRow: 0,
-                space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-
-        ctx.setFillColor(colors.hidden)
-        ctx.fill(CGRect(x: 0, y: 0, width: pxW, height: pxH))
-        // Walk the dense flat store by index — NOT `board[Coord(x,y)]`, which does a
-        // topology `index(of:)` + protocol-witness dispatch + ARC retain/release per
-        // cell. On a 1M-cell board that per-cell overhead WAS the runaway (profiled
-        // ~74% of all CPU in `Board.subscript`/`swift_retain`). Index → x,y directly.
-        var aborted = false
-        board.forEachCellIndexed { i, cell in
-            if aborted { return }
-            // Cancellation: a newer board revision supersedes this render. Check only
-            // periodically — `Task.isCancelled` per cell would itself be 1M calls.
-            if i & 0x3FFF == 0, Task.isCancelled {
-                aborted = true
-                return
-            }
-            let color: CGColor?
-            switch cell.state {
-            case .revealed: color = cell.isMine ? colors.mine : colors.revealed
-            case .flagged: color = colors.flag
-            case .hidden: color = nil  // background already painted
-            }
-            guard let color else { return }
-            let x = i % boardW
-            let y = i / boardW
-            ctx.setFillColor(color)
-            ctx.fill(CGRect(x: x * ppc, y: y * ppc, width: ppc, height: ppc))
-        }
-        if aborted { return nil }
-        return ctx.makeImage()
-    }
-
     /// Position the minimap in the top-left corner and move the viewport rectangle
     /// to mirror the visible cell range. Camera children render WITHOUT the camera
     /// scale (per SKCameraNode docs), so everything here is plain screen points.
-    private func layoutMinimap(boardW: Int, boardH: Int, range: CellRange) {
-        guard let minimapNode, let minimapImage, let minimapViewport else { return }
+    private func layoutMinimap(boardW: Int, boardH: Int) {
+        guard let minimapNode, let minimapImage else { return }
         let mm = minimapSize(boardW: boardW, boardH: boardH)
         minimapImage.size = mm
         minimapImage.position = .zero
@@ -298,7 +216,7 @@ extension BoardScene {
             x: -halfW + pad + mm.width / 2 + framePad,
             y: halfH - pad - mm.height / 2 - framePad)
 
-        layoutMinimapViewport(mm: mm, boardW: boardW, boardH: boardH, range: range)
+        layoutMinimapViewport(mm: mm, boardW: boardW, boardH: boardH)
 
         // The minimap image's rect in CAMERA space (container pos + local image
         // half-extents) — the hit area for tap/drag-to-navigate.
@@ -329,23 +247,40 @@ extension BoardScene {
         ]
     }
 
-    /// Place the "you are here" viewport rect on the minimap. Bounded draws a single
-    /// rect at the visible range; WRAPPED tiles it across the minimap edges (modulo
-    /// the board) so the box splits at the seam to match the torus.
-    private func layoutMinimapViewport(mm: CGSize, boardW: Int, boardH: Int, range: CellRange) {
+    /// Place the "you are here" viewport rect on the minimap, from the camera's TRUE
+    /// visible extent in continuous cell units — not the built cell range, which
+    /// carries the off-screen build margin (+2 columns/+1 row each side) and would
+    /// oversize the box. Per-axis pitch handles hex (rows interlock at √3/2, so plain
+    /// cellSize math would misplace the box vertically). Bounded clamps to the board;
+    /// WRAPPED tiles the box across the minimap edges (modulo the board) so it splits
+    /// at the seam to match the torus.
+    private func layoutMinimapViewport(mm: CGSize, boardW: Int, boardH: Int) {
         guard let minimapViewport else { return }
         let cellW = mm.width / CGFloat(boardW)
         let cellH = mm.height / CGFloat(boardH)
-        let rw = CGFloat(range.maxX - range.minX + 1) * cellW
-        let rh = CGFloat(range.maxY - range.minY + 1) * cellH
-        let midX = CGFloat(range.minX + range.maxX) / 2 + 0.5
-        let midY = CGFloat(range.minY + range.maxY) / 2 + 0.5
+        let scale = cameraNode.xScale
+        let halfW = size.width / 2 * scale
+        let halfH = size.height / 2 * scale
+        let cam = cameraNode.position
+        let minCX = (cam.x - halfW) / layout.columnPitch
+        let maxCX = (cam.x + halfW) / layout.columnPitch
+        let minCY = (cam.y - halfH) / layout.rowPitch
+        let maxCY = (cam.y + halfH) / layout.rowPitch
 
         guard isWrapped else {
+            let x0 = max(0, minCX), x1 = min(CGFloat(boardW), maxCX)
+            let y0 = max(0, minCY), y1 = min(CGFloat(boardH), maxCY)
+            guard x1 > x0, y1 > y0 else {
+                minimapViewport.path = nil
+                return
+            }
+            let rw = (x1 - x0) * cellW
+            let rh = (y1 - y0) * cellH
             minimapViewport.path = CGPath(
                 rect: CGRect(x: -rw / 2, y: -rh / 2, width: rw, height: rh), transform: nil)
             minimapViewport.position = CGPoint(
-                x: -mm.width / 2 + midX * cellW, y: -mm.height / 2 + midY * cellH)
+                x: -mm.width / 2 + (x0 + x1) / 2 * cellW,
+                y: -mm.height / 2 + (y0 + y1) / 2 * cellH)
             return
         }
         // Torus: centre modulo the board, tile ±one board span per axis (enough — we
@@ -354,10 +289,10 @@ extension BoardScene {
             let r = v.truncatingRemainder(dividingBy: m)
             return r < 0 ? r + m : r
         }
-        let cx = mod(midX * cellW, mm.width)
-        let cy = mod(midY * cellH, mm.height)
-        let bw = min(rw, mm.width)
-        let bh = min(rh, mm.height)
+        let cx = mod((minCX + maxCX) / 2 * cellW, mm.width)
+        let cy = mod((minCY + maxCY) / 2 * cellH, mm.height)
+        let bw = min((maxCX - minCX) * cellW, mm.width)
+        let bh = min((maxCY - minCY) * cellH, mm.height)
         let full = CGRect(x: -mm.width / 2, y: -mm.height / 2, width: mm.width, height: mm.height)
         let path = CGMutablePath()
         for ox in [-mm.width, 0, mm.width] {
@@ -374,7 +309,7 @@ extension BoardScene {
     }
 
     /// Scene point → camera-local (camera children ignore the camera scale).
-    private func cameraLocal(_ p: CGPoint) -> CGPoint {
+    func cameraLocal(_ p: CGPoint) -> CGPoint {
         CGPoint(
             x: (p.x - cameraNode.position.x) / cameraNode.xScale,
             y: (p.y - cameraNode.position.y) / cameraNode.yScale)

@@ -87,8 +87,33 @@ final class CellLayoutTests: XCTestCase {
     func testHexRowsPackAtThreeQuarterHeight() {
         let layout = HexLayout(cellSize: 32)
         let pitch = 32.0 * 0.866_025_403_784_438_6  // √3/2
-        XCTAssertEqual(layout.center(of: Coord(0, 0)).y, pitch * 0.5, accuracy: 0.001)
-        XCTAssertEqual(layout.center(of: Coord(0, 1)).y, pitch * 1.5, accuracy: 0.001)
+        let vertexH = 32.0 * 1.154_700_538_379_251_5  // 2/√3
+        // Row 0's centre is half a vertex height up (bottom tips resting on y = 0);
+        // each further row adds one pitch.
+        XCTAssertEqual(layout.center(of: Coord(0, 0)).y, vertexH / 2, accuracy: 0.001)
+        XCTAssertEqual(layout.center(of: Coord(0, 1)).y, vertexH / 2 + pitch, accuracy: 0.001)
+    }
+
+    /// The grid fills its declared `boardSize` box exactly: row 0's bottom tips at
+    /// y = 0 and the top row's tips at the declared height. Regression: the grid
+    /// used to sit (vertexHeight − rowPitch)/2 ≈ 0.144·cellSize low, leaving row-0
+    /// tips at negative y (dead taps) and an equal dead band along the top.
+    func testHexGridFillsItsDeclaredBox() {
+        let layout = HexLayout(cellSize: 32)
+        let vertexH = 32.0 * 1.154_700_538_379_251_5
+        let size = layout.boardSize(width: 4, height: 3)
+        XCTAssertEqual(layout.center(of: Coord(0, 0)).y - vertexH / 2, 0, accuracy: 0.001)
+        XCTAssertEqual(
+            layout.center(of: Coord(0, 2)).y + vertexH / 2, size.height, accuracy: 0.001)
+    }
+
+    /// A tap in the notch beside an odd (right-shifted) row's LEFT edge is outside
+    /// every board hex — its containing hex in the infinite tiling is x = −1 — so it
+    /// must be nil, not snapped to a real cell the player never touched.
+    func testHexOddRowLeftNotchIsNotACell() {
+        let layout = HexLayout(cellSize: 32)
+        let notch = CGPoint(x: 8, y: layout.center(of: Coord(0, 1)).y)
+        XCTAssertNil(layout.coord(at: notch))
     }
 
     func testHexCenterRoundTripsThroughCoord() {
