@@ -36,13 +36,17 @@ final class GameResultTests: XCTestCase {
     }
 
     func testNoResultWhilePlaying() async {
-        let vm = GameViewModel(config: .classic(.beginner))
-        await reveal(vm, Coord(4, 4))
-        // After one reveal the game is either still playing or ended; if still
-        // playing there must be no result yet.
-        if vm.status == .playing {
-            XCTAssertNil(vm.lastResult)
+        // An opening reveal can (vanishingly rarely) flood-clear the whole board;
+        // re-roll those so the assertion always actually runs, instead of the old
+        // `if playing` form that could silently assert nothing.
+        for _ in 0..<3 {
+            let vm = GameViewModel(config: .classic(.beginner))
+            await reveal(vm, Coord(4, 4))
+            guard vm.status == .playing else { continue }
+            XCTAssertNil(vm.lastResult, "no result while the game is in progress")
+            return
         }
+        XCTFail("three opening reveals in a row ended a Beginner game — layout RNG is broken")
     }
 
     func testResultMatchesFinalStatus() async {

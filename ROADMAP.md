@@ -258,8 +258,8 @@ public stores from here:
       Escalate to a private source-art repo only if source files get
       large/sensitive. (Ties into the AI-disclosure note.)
 
-(The **two-native-targets, no-Catalyst** decision and the distinct Mac bundle id
-that follows from it are recorded in [ARCHITECTURE.md](ARCHITECTURE.md).)
+(The **two-native-targets, no-Catalyst** decision — with the shared bundle id /
+Universal Purchase — is recorded in [ARCHITECTURE.md](ARCHITECTURE.md).)
 
 ## Achievements (the v0.4 milestone — detail)
 

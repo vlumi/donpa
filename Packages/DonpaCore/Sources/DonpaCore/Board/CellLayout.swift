@@ -1,8 +1,8 @@
 import CoreGraphics
 
 /// Maps logical cell coordinates to screen geometry and back — the visual
-/// counterpart to `Topology`. `SquareLayout` ships now; `HexLayout` slots in here
-/// later with no change to `BoardScene` or game logic.
+/// counterpart to `Topology`. `SquareLayout` and `HexLayout` conform; the seam
+/// keeps `BoardScene` and the game logic geometry-agnostic.
 public protocol CellLayout: Sendable {
     /// Side length / nominal size of one cell in points.
     var cellSize: CGFloat { get }

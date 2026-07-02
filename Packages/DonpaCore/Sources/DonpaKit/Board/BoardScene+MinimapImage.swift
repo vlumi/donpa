@@ -8,7 +8,7 @@ import SpriteKit
 extension BoardScene {
     /// Render the whole board to a small image for the minimap sprite.
     func updateMinimapImage(boardW: Int, boardH: Int) {
-        // Pixels-per-cell, capped so a 1000² board still renders to a sane bitmap.
+        // Pixels-per-cell, capped so a 1024² board still renders to a sane bitmap.
         let maxDim = 240
         let ppc = max(1, min(maxDim / max(boardW, boardH), 4))
         // Render OFF the main thread (the per-cell loop is heavy on a 1M-cell
@@ -17,10 +17,11 @@ extension BoardScene {
         let board = viewModel.game.board
         let colors = overviewColors
         let generation = lastMinimapRevision
-        // Supersede any render still running for an older revision — its result would
-        // be discarded anyway, so don't let it finish burning a core. The render runs
-        // in this child task (NOT `Task.detached`, which wouldn't inherit
-        // cancellation) so `Task.isCancelled` inside `renderOverview` actually fires.
+        // Supersede any render still running for an older revision — its result
+        // would be discarded anyway, so don't let it finish burning a core.
+        // Cancellation reaches the body through the stored handle (`.cancel()` sets
+        // THAT task's flag, which `Task.isCancelled` inside `renderOverview` reads);
+        // detached only means it doesn't inherit the MainActor context — wanted.
         minimapRenderTask?.cancel()
         minimapRenderTask = Task.detached { [weak self] in
             let cg = Self.renderOverview(
@@ -48,18 +49,9 @@ extension BoardScene {
             mine: palette.mineTile.cgColor, flag: palette.flagGlyph.cgColor)
     }
 
-    /// A downsampled image of the whole board (one `ppc`×`ppc` block per cell,
-    /// hidden/revealed/mine/flag distinct), shared by the corner minimap and the
-    /// fullscreen overview. Board row 0 paints at CG y=0 (what the viewport-rect
-    /// math expects). The overview calls this synchronously; the live minimap runs
-    /// it off the main thread (see `updateMinimapImage`).
-    func boardOverviewImage(pixelsPerCell ppc: Int) -> CGImage? {
-        Self.renderOverview(
-            board: viewModel.game.board, width: viewModel.boardWidth,
-            height: viewModel.boardHeight, ppc: ppc, colors: overviewColors)
-    }
-
     /// Pure renderer — no `self`, so it runs on any thread. Inputs are `Sendable`.
+    /// Draws one `ppc`×`ppc` block per cell (hidden/revealed/mine/flag distinct);
+    /// board row 0 paints at CG y=0 (what the viewport-rect math expects).
     nonisolated static func renderOverview(
         board: Board, width boardW: Int, height boardH: Int, ppc: Int, colors: OverviewColors
     ) -> CGImage? {

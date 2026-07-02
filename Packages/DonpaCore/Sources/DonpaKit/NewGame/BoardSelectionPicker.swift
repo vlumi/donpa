@@ -22,9 +22,13 @@ struct BoardSelectionPicker: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            // Row 0: Mode.
-            Picker("Mode", selection: $settings.mode) {
+            // Row 0: Mode. The Picker labels here are visually hidden but read by
+            // VoiceOver — as Text(bundle: .module) so they resolve in this package's
+            // catalog (a bare string key would look in the app bundle: unlocalized).
+            Picker(selection: $settings.mode) {
                 ForEach(GameMode.allCases) { Text(verbatim: $0.label).tag($0) }
+            } label: {
+                Text("Mode", bundle: .module)
             }
             .labelsHidden()
             .pickerStyle(.segmented)
@@ -58,8 +62,10 @@ struct BoardSelectionPicker: View {
                     detail: settings.modernSize.detail,
                     tagline: settings.modernSize.tagline)
                 // Row 3: shape (square vs hex). Modern only.
-                Picker("Shape", selection: $settings.modernShape) {
+                Picker(selection: $settings.modernShape) {
                     ForEach(BoardShape.allCases) { Text(verbatim: $0.label).tag($0) }
+                } label: {
+                    Text("Shape", bundle: .module)
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
@@ -67,8 +73,10 @@ struct BoardSelectionPicker: View {
                 .onChange(of: settings.modernShape) { _ in onFocusRow?(3) }
                 // Row 4: edges (bounded vs wrapped torus). Modern only; works for
                 // both shapes (every size is even-sided, so the hex torus is valid).
-                Picker("Edges", selection: $settings.modernEdges) {
+                Picker(selection: $settings.modernEdges) {
                     ForEach(BoardEdges.allCases) { Text(verbatim: $0.label).tag($0) }
+                } label: {
+                    Text("Edges", bundle: .module)
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
