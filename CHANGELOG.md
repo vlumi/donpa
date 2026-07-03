@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 11
+
 - **New:** start a game straight from the scoreboard. Expand any board's row in the
   Service Record and tap **New game on this board** to jump right into it — handy
   for taking another run at a time you were just looking at.
