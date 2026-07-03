@@ -13,7 +13,7 @@ extension GameContent {
         // The medal is pinned right OUTSIDE FitToWidth so the expanding Spacer isn't
         // measured — a Spacer inside collapses when measured but expands when
         // rendered, so the row would clip instead of shrinking as one.
-        HStack(spacing: 16) {
+        HStack(spacing: 8) {
             FitToWidth {
                 HStack(spacing: 16) {
                     // Tappable badge for the current game; opens the New Game popup.
@@ -27,7 +27,10 @@ extension GameContent {
                 }
                 .lineLimit(1)
             }
-            Spacer(minLength: 12)
+            // Small floor so the metrics keep a hair of breathing room from the medal
+            // but claim the rest of the width — FitToWidth scales the cluster by the
+            // room it's given, so a wide gap here would needlessly shrink the metrics.
+            Spacer(minLength: 4)
             mangaIconButton(.medal, size: 40, help: "High Scores") {
                 navigator.showingScores = true
             }
@@ -48,14 +51,14 @@ extension GameContent {
                     let density = viewModel.config.density
                 {
                     DensityInsignia.image(density)
-                        .resizable().scaledToFit().frame(height: 24)
-                    Text(verbatim: size.label).font(.subheadline.weight(.bold))
+                        .resizable().scaledToFit().frame(height: 30)
+                    Text(verbatim: size.label).font(.title3.weight(.bold))
                 } else {
-                    Text(viewModel.config.label).font(.subheadline.weight(.bold))
+                    Text(viewModel.config.label).font(.title3.weight(.bold))
                 }
                 // Swap arrows read as "switch game", not a dropdown or "add".
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.caption.weight(.bold))
+                    .font(.footnote.weight(.bold))
                     .opacity(0.85)
             }
             .foregroundStyle(.white)
