@@ -119,7 +119,9 @@ extension BoardScene {
         // app dispatches and WHICH view hit-tests it — an invisible overlay eating
         // clicks names itself here; silence means the events die at window level.
         if InputTrace.enabled, traceEventMonitor == nil {
-            traceEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+            traceEventMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: .leftMouseDown
+            ) { event in
                 let hit: String
                 if let cv = event.window?.contentView, let sv = cv.superview {
                     let p = sv.convert(event.locationInWindow, from: nil)
