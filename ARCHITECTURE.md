@@ -62,6 +62,42 @@ O(cells): `Cell` is bit-packed to one byte (cheap copy), `Board` stores its mine
 set, placement rejection-samples indices, and the end-game effects are
 viewport-culled.
 
+## One config vocabulary: family × edges (× size × rank)
+
+`GameConfig` is an **enum** — `.basic(preset)`, `.grid(size, density, edges)`,
+`.hive(size, density, edges)` — making the board **family** (Basic / Grid / Hive)
+and the **edges** (Flat / Round, i.e. bounded / torus) first-class axes. The 0.3.0
+reshape retired the old `GameMode` (classic/modern) + shape-argument vocabulary
+deliberately: the *same axes* now name the storage keys (`v2|grid|flat|16x16|m31`),
+drive the New Game picker (families as pages/sidebar, an edges toggle), and filter
+the scoreboard (Family + Edges narrowing to one leaf) — one vocabulary end-to-end,
+so a new variant is a new enum case, not a parallel naming scheme in each layer.
+Supporting choices that are easy to mistake for accidents:
+
+- **Each family remembers its own selections.** `Settings` keeps per-family
+  size/density/edges (via `sizePath`/`densityPath`/`edgesPath` key paths), so a
+  huge Round hive session doesn't retune the next Grid game. `currentConfig`
+  derives from the family's own fields; `Settings.adopt(config)` decomposes a
+  `GameConfig` back into them — used when a game starts from a *specific* config
+  (e.g. the scoreboard's "New game on this board") so the choice is remembered.
+- **The scoreboard renders one `StatBlock` at two scopes** (lifetime career /
+  one config's record) — deliberately the same component so the two always read
+  alike, and a third scope (friend-vs-you comparison) can reuse it.
+
+## UI layout law: viewport shape, not platform
+
+Screens that must span an iPhone SE to a wide Mac window pick between **distinct
+layouts by the viewport's shape at runtime** — the New Game modal is the model
+case (a swipe-pager on a tall-narrow viewport; a family sidebar + detail pane at
+≥ a width breakpoint). This replaced one stretched-to-fit component, which bred
+hacks (scale factors as cross-size crutches, measured placeholders, reflow
+wobble) and still looked wrong at both extremes. The breakpoint is a runtime
+value available everywhere, so the split is ordinary SwiftUI — **not** `#if os`:
+platform conditionals stay reserved for genuinely native seams (cursor, key
+handling, menus), which is also the pre-1.0 cleanup direction. Scrolling screens
+(the scoreboard) instead use a single responsive flow — a scroll absorbs the
+size range that a fixed modal can't.
+
 ## SpriteKit board, owned by SwiftUI, input handled natively
 
 The board is a single long-lived `BoardScene` (`SKScene` + `SKCameraNode`) in a
@@ -106,6 +142,13 @@ documented at its call site:
 - **`onChangeCompat`** wraps `onChange` so the iOS-16 floor and macOS-14 share
   one warning-free call site (the zero/two-parameter form is iOS 17 / macOS 14
   only; the single-parameter form is deprecated on macOS 14).
+- **`boardExceedsViewport` publishes via `DispatchQueue.main.async`**, not
+  inline: it's written from the `SKScene` `update(_:)` loop, whose *first* tick
+  fires synchronously inside SwiftUI's render pass (the scene presents
+  mid-update) — an inline write to an observed `@Published` there trips
+  "Publishing changes from within view updates". The one-turn hop lands the
+  write after the pass; the value is a rarely-flipping bool, so the delay is
+  immaterial. Don't "simplify" it back to a direct assignment.
 
 ## Persistence: compact, tagged, atomic, tolerant
 
