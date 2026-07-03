@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 10
+
 - **Hex grids.** A new Modern **Shape** option: play on a hexagonal board where each
   cell has six neighbours instead of eight. Pick **Hex** in the New Game screen
   (alongside size/difficulty). Works with both bounded and **wrapped** edges — a hex
