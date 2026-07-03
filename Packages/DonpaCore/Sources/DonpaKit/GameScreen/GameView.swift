@@ -141,7 +141,7 @@ struct GameContent: View {
             // marker. In-game, mark the row for the config being played.
             ScoreboardView(
                 scoreboard: scoreboard, settings: settings, available: windowSize,
-                currentConfigKey: navigator.showingTitle ? nil : viewModel.config.storageKey)
+                currentConfig: navigator.showingTitle ? nil : viewModel.config)
         }
         // Opening the scoreboard pauses a live game (flushing career activity and
         // stopping the clock); auto-resume on dismiss only if WE paused.

@@ -12,52 +12,87 @@ struct ScoreRow: View {
     let currentConfigKey: String?
     /// Shared horizontal inset (matches the header + section padding).
     let rowInset: CGFloat
+    /// Whether this row's stat-block expansion is open (accordion — one at a time).
+    var isExpanded: Bool = false
+    /// Toggle the expansion. When nil the row isn't expandable (kept for callers
+    /// that just want a static row).
+    var onToggle: (() -> Void)?
 
     var body: some View {
-        HStack {
-            // Grid/Hive rows: rank insignia in a fixed-width column (so size letters
-            // line up), then the size name — plus a "Round" tag when the board wraps,
-            // since a Flat and a Round board of the same size/rank are separate rows.
-            // Basic rows show their preset name.
-            if let size = config.size, let density = config.density {
-                DensityInsignia.image(density)
-                    .resizable().scaledToFit().frame(width: 30, height: 20)
-                Text(verbatim: size.label)
-                if config.edges.wraps {
-                    Text(verbatim: config.edges.label)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                Text(verbatim: config.label)  // already localized by GameConfig
-            }
-            Spacer()
-            Text(verbatim: ScoreboardView.grouped(scoreboard.wins(for: config)))
-                .font(.body.monospaced())
-                .frame(width: 56, alignment: .trailing)
-            HStack(spacing: 3) {
-                if recordMarker == .progress { newBestMarker }
-                if let progress = scoreboard.bestProgress(for: config) {
-                    // Floor, not round: a 99.7%-cleared loss must not read "100%".
-                    Text("\(Int((progress * 100).rounded(.down)))%").font(.body.monospaced())
-                } else {
-                    Text("—").foregroundStyle(.secondary)
-                }
-            }
-            .frame(width: 64, alignment: .trailing)
-            HStack(spacing: 3) {
-                if recordMarker == .time { newBestMarker }
-                if let best = scoreboard.best(for: config) {
-                    Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())
-                } else {
-                    Text("—").foregroundStyle(.secondary)
-                }
-            }
-            .frame(width: 80, alignment: .trailing)
+        VStack(spacing: 0) {
+            summaryRow
+            if isExpanded { expansion }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, rowInset)
         .background(rowHighlight)
+    }
+
+    private var summaryRow: some View {
+        Button {
+            onToggle?()
+        } label: {
+            HStack {
+                // Grid/Hive rows: rank insignia in a fixed-width column (so size
+                // letters line up), then the size name. No edges tag — the list is
+                // already scoped to one edges value by the filter, so every row shares
+                // it. Basic rows show their preset name.
+                // Shrink to fit rather than truncate or force the row wider — a long
+                // preset name ("Intermediate") scales down instead of clipping or
+                // wobbling the sheet width when the family filter changes.
+                if let size = config.size, let density = config.density {
+                    DensityInsignia.image(density)
+                        .resizable().scaledToFit().frame(width: 30, height: 20)
+                    Text(verbatim: size.label).lineLimit(1).minimumScaleFactor(0.7)
+                } else {
+                    Text(verbatim: config.label).lineLimit(1).minimumScaleFactor(0.7)
+                }
+                Spacer()
+                Text(verbatim: ScoreboardView.grouped(scoreboard.wins(for: config)))
+                    .font(.body.monospaced())
+                    .frame(width: 56, alignment: .trailing)
+                HStack(spacing: 3) {
+                    if recordMarker == .progress { newBestMarker }
+                    if let progress = scoreboard.bestProgress(for: config) {
+                        // Floor, not round: a 99.7%-cleared loss must not read "100%".
+                        Text("\(Int((progress * 100).rounded(.down)))%").font(.body.monospaced())
+                    } else {
+                        Text("—").foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 64, alignment: .trailing)
+                HStack(spacing: 3) {
+                    if recordMarker == .time { newBestMarker }
+                    if let best = scoreboard.best(for: config) {
+                        Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())
+                    } else {
+                        Text("—").foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 80, alignment: .trailing)
+            }
+            .contentShape(Rectangle())
+            .padding(.vertical, 10)
+            .padding(.horizontal, rowInset)
+        }
+        .buttonStyle(.plain)
+        .disabled(onToggle == nil)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(Text(isExpanded ? "Hide details" : "Show details", bundle: .module))
+    }
+
+    /// This config's own stats — the same `StatBlock` the global career uses, scoped
+    /// to one record. An unplayed config shows a gentle placeholder instead.
+    @ViewBuilder private var expansion: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let record = scoreboard.record(for: config) {
+                StatBlock(figures: StatFigures(record: record), rowInset: rowInset, compact: true)
+            } else {
+                Text("No games on this board yet.", bundle: .module)
+                    .font(.callout).foregroundStyle(.secondary)
+                    .padding(.horizontal, rowInset)
+            }
+        }
+        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Which "Best" column, if any, just set a record on this row — so the non-color
