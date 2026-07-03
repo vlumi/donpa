@@ -18,38 +18,25 @@ struct NewGamePopup: View {
     @State private var focusedRow: Int?
     #endif
 
-    /// Measured natural height of the scrollable content, so the card hugs it
-    /// until it would exceed the available height (then the ScrollView scrolls).
-    @State private var contentHeight: CGFloat = 0
+    /// Card width, fixed across all family pages so paging never resizes the frame.
+    private static let idealWidth: CGFloat = 680
 
-    /// Floor on a narrow window (the prior fixed card width); below it, rows that
-    /// don't fit fall back to the swipe-drum.
-    private static let minWidth: CGFloat = 460
+    /// Gap between the card and the window edge.
+    private static let outerVMargin: CGFloat = 12
 
-    /// Carousel card metrics, mirrored from `CarouselPicker`, to size the card so a
-    /// row's cards all fit statically (no drum). Chrome = the card's own padding
-    /// plus the carousel's internal insets.
-    private static let carouselCardWidth: CGFloat = 116
-    private static let carouselSpacing: CGFloat = 8
-    private static let chrome: CGFloat = 68
+    /// At/above this width the modal uses the sidebar layout; below it (portrait
+    /// phone), the pager. Any landscape phone clears it; a portrait phone doesn't.
+    private static let sidebarMinWidth: CGFloat = 600
 
-    /// Most cards in any row of the given family (Basic: presets; Grid/Hive: the
-    /// wider of density/size). Drives how wide the card wants to be.
-    private static func maxCards(in family: BoardFamily) -> Int {
-        switch family {
-        case .basic: return BasicPreset.allCases.count
-        case .grid, .hive: return max(Density.allCases.count, BoardSize.allCases.count)
-        }
+    /// Layout chosen by the viewport SHAPE, not the platform — runtime, no `#if os`.
+    private static func layout(for viewport: CGSize) -> BoardSelectionPicker.Layout {
+        viewport.width >= sidebarMinWidth ? .sidebar : .pager
     }
 
-    /// Width that shows every card of the visible family's widest row at once, so on
-    /// a roomy screen there's no drum/scroll. Clamped to the available width, and to
-    /// at least `minWidth` when there's room (keeps the compact look on small windows).
-    private static func cardWidth(for family: BoardFamily, available: CGFloat) -> CGFloat {
-        let n = CGFloat(maxCards(in: family))
-        let ideal = n * carouselCardWidth + max(0, n - 1) * carouselSpacing + chrome
-        guard available >= minWidth else { return max(0, available) }  // tiny window
-        return min(max(minWidth, ideal), available)
+    /// The ideal width, clamped to what the window allows so the card never spills
+    /// past the edge (the chip rows wrap to fit a narrow window).
+    private static func cardWidth(available: CGFloat) -> CGFloat {
+        min(Self.idealWidth, max(0, available))
     }
 
     var body: some View {
@@ -60,20 +47,23 @@ struct NewGamePopup: View {
                 .contentShape(Rectangle())
                 .onTapGesture { onClose() }
 
-            // Grow the card toward the width that shows every difficulty/size card
-            // at once (so no row falls back to the swipe-drum), but never past the
-            // available width; and cap height so a short window scrolls rather than
-            // clipping. On a roomy screen everything is visible without scrolling.
             GeometryReader { geo in
                 card(
-                    width: Self.cardWidth(for: settings.family, available: geo.size.width - 48),
-                    maxHeight: geo.size.height - 48
+                    layout: Self.layout(for: geo.size),
+                    width: Self.cardWidth(available: geo.size.width - 48)
                 )
-                .animation(.snappy, value: settings.family)
+                // The X lives on the card (its actual width), so it sits in the
+                // card's corner rather than the screen's.
                 .overlay(alignment: .topTrailing) { closeButton }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(24)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .padding(.horizontal, 24)
+                .padding(.vertical, Self.outerVMargin)
+                .animation(.snappy, value: settings.family)
             }
+            // Ignore the safe area so the card centres in the same full-screen space
+            // the backdrop covers; an asymmetric inset would otherwise push it below
+            // centre. The card is small with a wide margin, so it clears the notch.
+            .ignoresSafeArea()
         }
         #if os(macOS)
         // AppKit key-catcher: @FocusState can't reliably take first responder from
@@ -98,72 +88,42 @@ struct NewGamePopup: View {
     }
     #endif
 
-    /// The card grows to `width` (so every option is visible side-by-side when
-    /// there's room) and hugs its content height up to `maxHeight`; past that the
-    /// content scrolls with the title pinned, so the selectors stay reachable.
-    private func card(width: CGFloat, maxHeight: CGFloat) -> some View {
-        VStack(spacing: 20) {
+    /// A card that hugs its content; the outer frame centres it. Both layouts are
+    /// tuned to fit the shortest device (iPhone SE), so neither needs a ScrollView.
+    private func card(layout: BoardSelectionPicker.Layout, width: CGFloat) -> some View {
+        // The sidebar is the short-wide layout (landscape phone ~375pt tall), so it
+        // packs tighter than the pager: less title gap and less card padding.
+        let sidebar = layout == .sidebar
+        return VStack(spacing: sidebar ? 12 : 20) {
             Text("New game", bundle: .module).font(.title2.bold())
-
-            scrollableContent
-                // Hug content until it would overflow; only then cap + scroll.
-                .frame(height: min(contentHeight, max(0, maxHeight)))
-                .onPreferenceChange(ContentHeightKey.self) { contentHeight = $0 }
+            picker(layout: layout)
+            #if os(macOS)
+            Text("Arrows to choose · Return to start", bundle: .module)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            #endif
+            if layout == .pager {
+                picker(layout: .pager).startButton
+            }
         }
-        .padding(24)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+        .padding(.vertical, sidebar ? 16 : 24)
         .frame(width: width)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
     }
 
-    /// The picker + Start button in a ScrollView (engages only when the card hits
-    /// its height cap; suppresses rubber-banding when it doesn't, where available).
-    @ViewBuilder private var scrollableContent: some View {
-        let scroll = ScrollView {
-            VStack(spacing: 20) {
-                #if os(macOS)
-                BoardSelectionPicker(
-                    settings: settings, focusedRow: focusedRow,
-                    onFocusRow: { focusedRow = $0 })
-                Text("Arrows to choose · Return to start", bundle: .module)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                #else
-                BoardSelectionPicker(settings: settings)
-                #endif
-
-                startButton
-            }
-            .background(
-                GeometryReader { proxy in
-                    Color.clear.preference(key: ContentHeightKey.self, value: proxy.size.height)
-                })
-        }
-        if #available(iOS 16.4, macOS 13.3, *) {
-            scroll.scrollBounceBehavior(.basedOnSize)
-        } else {
-            scroll
-        }
-    }
-
-    private var startButton: some View {
-        Button {
-            onStart()
-        } label: {
-            Label {
-                Text("Start", bundle: .module)
-            } icon: {
-                Image(systemName: "play.fill")
-            }
-            .font(.title3.weight(.bold))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(Color.accentColor, in: Capsule())
-            .foregroundStyle(.white)
-        }
-        .buttonStyle(.plain)
-        .keyboardShortcut(.defaultAction)
-        .accessibilityIdentifier("newgame.start")
+    /// The `BoardSelectionPicker` for a layout.
+    private func picker(layout: BoardSelectionPicker.Layout) -> BoardSelectionPicker {
+        #if os(macOS)
+        BoardSelectionPicker(
+            settings: settings, focusedRow: focusedRow,
+            onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart)
+        #else
+        BoardSelectionPicker(settings: settings, layout: layout, onStart: onStart)
+        #endif
     }
 
     private var closeButton: some View {
@@ -189,16 +149,19 @@ struct NewGamePopup: View {
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
         case (.grid, 1), (.hive, 1):
-            settings.density = Self.stepped(settings.density, by: step)
+            let path = Settings.densityPath(settings.family)
+            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, 2), (.hive, 2):
-            settings.boardSize = Self.stepped(settings.boardSize, by: step)
+            let path = Settings.sizePath(settings.family)
+            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, _), (.hive, _):  // row 3: edges
-            settings.edges = Self.stepped(settings.edges, by: step)
+            let path = Settings.edgesPath(settings.family)
+            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         }
     }
 
-    /// Next/previous case of a `CaseIterable` enum, clamped at the ends (no wrap),
-    /// matching the carousel.
+    /// Next/previous case of a `CaseIterable` enum, clamped at the ends (no
+    /// wrap), matching the chip rows.
     private static func stepped<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
         let all = Array(T.allCases)
         guard let i = all.firstIndex(of: value), !all.isEmpty else { return value }
@@ -206,12 +169,4 @@ struct NewGamePopup: View {
         return all[next]
     }
     #endif
-}
-
-/// Carries the scrollable content's natural height up to the card.
-private struct ContentHeightKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
 }
