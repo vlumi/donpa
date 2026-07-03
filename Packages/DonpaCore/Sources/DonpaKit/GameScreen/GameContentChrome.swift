@@ -186,6 +186,7 @@ extension GameContent {
                 .accessibilityIdentifier("game.home")
         case .retry:
             actionButton(.retry, help: "Retry", tint: newGameTint) { viewModel.newGame() }
+                .accessibilityIdentifier("game.retry")
         case .pause:
             // Pause/Resume toggle: shows Play while paused. Enabled while live
             // (playing or paused), dimmed otherwise.

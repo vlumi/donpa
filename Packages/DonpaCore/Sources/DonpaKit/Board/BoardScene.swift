@@ -283,7 +283,26 @@ public final class BoardScene: SKScene {
     // pixel or two of click jitter that must not count as a drag.
     var lastDragViewPoint: CGPoint = .zero
     var mouseDownViewPoint: CGPoint = .zero
+    var mouseDownTimestamp: TimeInterval = 0
     var didDragInScene = false
+    /// Trace-only (`-donpa.inputtrace`) app-level mouse monitor — held so it lives
+    /// as long as the scene; nil in normal runs. See `installGestureRecognizers`.
+    var traceEventMonitor: Any?
     static let dragThreshold: CGFloat = 4
+    // A drag can still END as a click: a Magic Mouse slides a few points under its
+    // own click force, so during rapid play every click travelled past the 4pt
+    // threshold and was eaten as an invisible micro-pan (on a fitting board it even
+    // springs back — nothing visibly happened, and continuous fast clicking stayed
+    // dead until the hand settled). A brief press whose NET down→up travel stays
+    // within the slop is therefore reclassified as a click at mouse-up. Trackpads
+    // never trip this (a physical click doesn't move the pointer).
+    static let clickSlop: CGFloat = 8
+    static let clickMaxDuration: TimeInterval = 0.3
+
+    /// Whether a press that crossed the drag threshold should still count as a
+    /// click when released: brief AND net-travel within the slop. Pure, for tests.
+    static func sloppyClickCountsAsClick(net: CGFloat, duration: TimeInterval) -> Bool {
+        net <= clickSlop && duration <= clickMaxDuration
+    }
     #endif
 }
