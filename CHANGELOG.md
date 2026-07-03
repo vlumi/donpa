@@ -46,6 +46,14 @@ development — entries land under Unreleased as they merge.
   **Hive and Round boards get scoreboard rows at all** (they were missing from
   the table before). Scores stay tracked separately per family × edges; the
   clean-slate reset announced below covers this change too.
+- **Service Record redesign: filter your scores and expand any board.** The High
+  Scores table now has **Family** and **Flat / Round** filters (the same glyphs as
+  the New Game screen) that narrow it to one board type at a time, so the list
+  stays short. **Tap any row to expand it** into that board's own record — games,
+  wins, tiles, flags, mines, no-flag / no-chord wins, chords, time, your top five
+  times (each with a relative date like "2 days ago"), and when you started playing
+  it — laid out with the same stat block as the lifetime career at the top. The
+  sheet uses one responsive layout from iPhone to Mac.
 - **Board sizes rebalanced to powers of two** (8, 16, 32, 64, 128, 256, 1024). Every
   board is now even-sided (which the wrapped-hex torus needs), and the size ladder is
   cleaner. Mine-density tiers were re-tuned to 10/12/14/16/18% so the five

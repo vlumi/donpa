@@ -14,27 +14,27 @@ struct ScoreboardView: View {
     @ObservedObject var settings: Settings
     /// Presenting window size, so the sheet grows with it. `.zero` → use the screen.
     var available: CGSize = .zero
-    /// The config the player is currently on (the storageKey), so its row gets a
-    /// persistent "you are here" marker. nil when opened from the title (browsing).
-    var currentConfigKey: String?
+    /// The config the player is currently on, so its row gets a persistent "you are
+    /// here" marker and the filter seeds to its family/edges. nil when opened from
+    /// the title (browsing).
+    var currentConfig: GameConfig?
+    /// The current config's storage key — the scroll anchor for the "jump to current"
+    /// behaviour.
+    private var currentConfigKey: String? { currentConfig?.storageKey }
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingReset = false
 
-    /// The family's configs the player has played at all — a win or a recorded
-    /// best progress from a loss. Enumerates both edges per size × density (Flat
-    /// before Round), so Round boards get their rows too; the redesign's Family +
-    /// Edges filters will narrow this to one list.
-    private func played(_ family: BoardFamily) -> [GameConfig] {
-        BoardSize.allCases.flatMap { size in
-            Density.allCases.flatMap { density in
-                BoardEdges.allCases.compactMap { GameConfig.custom(family, size, density, $0) }
-            }
-        }
-        .filter { scoreboard.record(for: $0) != nil }
-    }
+    /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
+    /// View-only state — a browsing choice, not persisted. Seeded in `onAppear` to
+    /// the config being played, so opening in-game lands on the relevant list.
+    @State private var filterFamily: BoardFamily = .basic
+    @State private var filterEdges: BoardEdges = .flat
+    /// The one config expanded to its stat-block (accordion — at most one open).
+    @State private var expandedKey: String?
 
     var body: some View {
         sheetChrome
+            .onAppear(perform: seedFilterFromCurrent)
             .confirmationDialog(
                 // When sync is active the wipe is global (all the player's devices);
                 // otherwise it's a local clear — the message says which so it's not a
@@ -84,8 +84,9 @@ struct ScoreboardView: View {
                     VStack(spacing: 0) {
                         Divider()
                         SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
+                            .padding(.vertical, 8)
                     }
                     .background(.bar)
                 }
@@ -166,37 +167,19 @@ struct ScoreboardView: View {
     /// Horizontal breathing room inside each row (and the record-highlight band).
     private static let rowInset: CGFloat = 10
 
-    /// One scrolling sheet: Career, then High Scores, then the sync footer. Two
-    /// columns when wide enough, otherwise stacked.
+    /// One scrolling sheet, the same law at every width (the sheet scrolls, so a big
+    /// screen just shows more without a distinct pinned-column layout): the global
+    /// Career, the Family/Edges filter, then the filtered high-score list — its rows
+    /// expandable to that config's own stat-block. Width only tunes column counts
+    /// inside the blocks, not the flow.
     @ViewBuilder private var content: some View {
-        // Decide columns from the known layout width (no GeometryReader — greedy on
-        // height, forcing a tall half-empty sheet).
-        if layoutWidth >= Self.twoColumnMinWidth {
-            // Wide: Career is a fixed column; only the High Scores rows scroll, its
-            // header pinned. Top-aligned so a short table doesn't stretch.
-            HStack(alignment: .top, spacing: 28) {
+        anchoredScroll {
+            VStack(alignment: .leading, spacing: 24) {
                 careerSection
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                VStack(alignment: .leading, spacing: 12) {
-                    sectionHeader("Commendations")
-                    anchoredScroll {
-                        scoresRows
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.trailing, Self.scrollbarGutter)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                scoresSection
             }
-        } else {
-            // Narrow: one scroll over both, stacked (headers scroll with content).
-            anchoredScroll {
-                VStack(alignment: .leading, spacing: 24) {
-                    careerSection
-                    scoresSection
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.trailing, Self.scrollbarGutter)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, Self.scrollbarGutter)
         }
     }
 
@@ -233,30 +216,20 @@ struct ScoreboardView: View {
         #endif
     }
 
-    /// Below this width the two stat groups stack. Generous so each column is
-    /// comfortably wide before splitting (avoids label wrapping).
-    private static let twoColumnMinWidth: CGFloat = 680
+    /// Two-column stat blocks above this width, one column below.
+    private static let twoColumnMinWidth: CGFloat = 520
 
-    /// Lifetime totals. Deliberately no win rate — raw, neutral counts (a win%
-    /// only discourages).
+    /// Lifetime totals across every config — the global Career, drawn with the same
+    /// `StatBlock` as a single config's expansion so the two read alike. Deliberately
+    /// no win rate: raw, neutral counts (a win% only discourages).
     @ViewBuilder private var careerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             sectionHeader("Tour of Duty")
-            if scoreboard.totalGamesPlayed > 0 {
-                VStack(spacing: 0) {
-                    statRow("Games played", Self.grouped(scoreboard.totalGamesPlayed))
-                    Divider()
-                    statRow("Tiles cleared", Self.grouped(scoreboard.totalTilesOpened))
-                    Divider()
-                    statRow("Flags placed", Self.grouped(scoreboard.totalFlagsPlaced))
-                    Divider()
-                    statRow("Mines disarmed", Self.grouped(scoreboard.totalMinesDisarmed))
-                    Divider()
-                    statRow("Mines hit", Self.grouped(scoreboard.totalMinesHit))
-                    Divider()
-                    statRow(
-                        "Time played", Self.durationLabel(scoreboard.totalPlaytimeCentiseconds))
-                }
+            let career = StatFigures(career: Array(scoreboard.displayRecords.values))
+            if career.hasPlayed {
+                StatBlock(
+                    figures: career, twoColumnWidth: Self.twoColumnMinWidth,
+                    rowInset: Self.rowInset)
             } else {
                 Text("Play a game to start your career stats.", bundle: .module)
                     .font(.callout)
@@ -267,45 +240,108 @@ struct ScoreboardView: View {
         }
     }
 
-    /// Score tables with the section header — the narrow layout, where the header
-    /// scrolls with the rows.
+    /// The filtered high-score list: a Family/Edges picker, then the one leaf's
+    /// configs as expandable rows.
     @ViewBuilder private var scoresSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             sectionHeader("Commendations")
-            scoresRows
+            filterControls
+            leafRows
         }
     }
 
-    /// Score tables without the header — the wide layout, header pinned above the
-    /// scroll. Basic always shows; Grid/Hive once played.
-    @ViewBuilder private var scoresRows: some View {
-        let playedGrid = played(.grid)
-        let playedHive = played(.hive)
-        VStack(alignment: .leading, spacing: 16) {
-            section("Basic", configs: GameConfig.configs(family: .basic))
-            if !playedGrid.isEmpty {
-                section("Grid", configs: playedGrid)
+    /// Family + Edges segmented controls (Edges disabled on Basic, which has no
+    /// edges). Selecting either collapses any open expansion, since the list changes.
+    /// `ViewThatFits` places them side by side with a gap when the width allows,
+    /// stacked when narrow — measuring the real available width (a computed
+    /// breakpoint mis-fired on the Mac sheet).
+    @ViewBuilder private var filterControls: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .bottom, spacing: 20) {
+                familyPicker
+                edgesPicker
             }
-            if !playedHive.isEmpty {
-                section("Hive", configs: playedHive)
+            .frame(minWidth: Self.twoColumnMinWidth)
+            VStack(alignment: .leading, spacing: 10) {
+                familyPicker
+                edgesPicker
             }
         }
+        .labelsHidden()
+        .padding(.horizontal, Self.rowInset)
+    }
+
+    private var familyPicker: some View {
+        SegmentedGlyphPicker(
+            values: BoardFamily.allCases, selection: $filterFamily,
+            glyph: { .family($0) }, label: { $0.label },
+            onChange: { expandedKey = nil })
+    }
+
+    private var edgesPicker: some View {
+        SegmentedGlyphPicker(
+            values: BoardEdges.allCases, selection: $filterEdges,
+            glyph: { .edges($0) }, label: { $0.label },
+            onChange: { expandedKey = nil }
+        )
+        .disabled(filterFamily == .basic)
+        .opacity(filterFamily == .basic ? 0.4 : 1)
+    }
+
+    /// The selected Family × Edges leaf, every size × rank shown (played or not).
+    /// Pinned to full width so the sheet never resizes when switching between a
+    /// family with long labels (Basic's "Intermediate") and short ones (Grid "XS").
+    @ViewBuilder private var leafRows: some View {
+        let edges: BoardEdges = filterFamily == .basic ? .flat : filterEdges
+        let configs = GameConfig.configs(family: filterFamily, edges: edges)
+        VStack(spacing: 0) {
+            columnHeader
+            ForEach(configs, id: \.self) { config in
+                ScoreRow(
+                    scoreboard: scoreboard, config: config,
+                    currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
+                    isExpanded: expandedKey == config.storageKey,
+                    onToggle: { toggleExpanded(config.storageKey) }
+                )
+                .id(config.storageKey)  // scroll anchor for the current-config jump
+                if config != configs.last { Divider() }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The list's column titles (Cleared / Best % / Best), matching `ScoreRow`.
+    private var columnHeader: some View {
+        HStack {
+            Spacer()
+            Text("Cleared", bundle: .module).font(.caption).foregroundStyle(.secondary)
+                .frame(width: 56, alignment: .trailing)
+            Text("Best %", bundle: .module).font(.caption).foregroundStyle(.secondary)
+                .frame(width: 64, alignment: .trailing)
+            Text("Best", bundle: .module).font(.caption).foregroundStyle(.secondary)
+                .frame(width: 80, alignment: .trailing)
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, Self.rowInset)
+    }
+
+    /// Accordion toggle: open the tapped row, closing any other.
+    private func toggleExpanded(_ key: String) {
+        expandedKey = (expandedKey == key) ? nil : key
+    }
+
+    /// Seed the filter to the config being played (so opening in-game shows its
+    /// list), else leave the Basic default for plain browsing from the title.
+    private func seedFilterFromCurrent() {
+        guard let config = currentConfig else { return }
+        filterFamily = config.family
+        filterEdges = config.edges
     }
 
     private func sectionHeader(_ title: LocalizedStringKey) -> some View {
         Text(title, bundle: .module)
             .font(.title3.bold())
             .padding(.horizontal, Self.rowInset)
-    }
-
-    private func statRow(_ label: LocalizedStringKey, _ value: String) -> some View {
-        HStack {
-            Text(label, bundle: .module)
-            Spacer()
-            Text(verbatim: value).font(.body.monospaced())
-        }
-        .padding(.vertical, 6)
-        .padding(.horizontal, Self.rowInset)
     }
 
     /// A count with the locale's grouping separator (e.g. `1,234,567`), for the
@@ -330,31 +366,5 @@ struct ScoreboardView: View {
         }
         return String(
             localized: "< 1m", bundle: .module, comment: "Playtime under a minute")
-    }
-
-    private func section(_ title: LocalizedStringKey, configs: [GameConfig]) -> some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(title, bundle: .module).font(.caption.bold()).foregroundStyle(.secondary)
-                Spacer()
-                Text("Cleared", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 56, alignment: .trailing)
-                Text("Best %", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 64, alignment: .trailing)
-                Text("Best", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                    .frame(width: 80, alignment: .trailing)
-            }
-            .padding(.vertical, 4)
-            .padding(.horizontal, Self.rowInset)
-
-            ForEach(configs, id: \.self) { config in
-                ScoreRow(
-                    scoreboard: scoreboard, config: config,
-                    currentConfigKey: currentConfigKey, rowInset: Self.rowInset
-                )
-                .id(config.storageKey)  // scroll anchor for the current-config jump
-                if config != configs.last { Divider() }
-            }
-        }
     }
 }

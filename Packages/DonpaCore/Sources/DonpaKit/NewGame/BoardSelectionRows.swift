@@ -170,48 +170,13 @@ extension BoardSelectionPicker {
     // MARK: Edges glyph toggle (row 3)
 
     func edgesToggle(for family: BoardFamily) -> some View {
-        HStack(spacing: 10) {
-            ForEach(BoardEdges.allCases) { edges in
-                edgesButton(edges, Settings.edgesPath(family))
-            }
-        }
-    }
-
-    private func edgesButton(
-        _ edges: BoardEdges, _ edgesPath: ReferenceWritableKeyPath<Settings, BoardEdges>
-    ) -> some View {
-        let selected = settings[keyPath: edgesPath] == edges
-        return Button {
-            settings[keyPath: edgesPath] = edges
-            onFocusRow?(3)
-        } label: {
-            // Two equal halves; the drawn frame IS the hit area (the page-swipe
-            // still starts here via the simultaneous drag gesture). The label can
-            // shrink on a narrow window so the pair never forces the card wider.
-            HStack(spacing: 8) {
-                BoardGlyph(kind: .edges(edges), size: 24)
-                Text(verbatim: edges.label)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.65))
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.accentColor.opacity(selected ? 0.14 : 0))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                selected
-                                    ? Color.accentColor.opacity(0.6)
-                                    : Color.primary.opacity(0.15)))
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text(verbatim: edges.label))
-        .accessibilityAddTraits(selected ? [.isSelected] : [])
+        let edgesPath = Settings.edgesPath(family)
+        return SegmentedGlyphPicker(
+            values: BoardEdges.allCases,
+            selection: Binding(
+                get: { settings[keyPath: edgesPath] },
+                set: { settings[keyPath: edgesPath] = $0 }),
+            glyph: { .edges($0) }, label: { $0.label },
+            onChange: { onFocusRow?(3) })
     }
 }

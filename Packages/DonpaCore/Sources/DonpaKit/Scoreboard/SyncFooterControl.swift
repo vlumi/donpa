@@ -46,6 +46,9 @@ struct SyncFooterControl: View {
                 Text("Sync", bundle: .module).font(.subheadline.weight(.medium))
             }
             .toggleStyle(.switch)
+            #if os(iOS)
+            .controlSize(.mini)  // a quieter switch; the footer bar shouldn't shout
+            #endif
             .fixedSize()
             .confirmationDialog(
                 Text("Turn on sync?", bundle: .module), isPresented: $confirmingEnable
