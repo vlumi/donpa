@@ -120,12 +120,18 @@ board is fully deducible.
 ## v0.5.0 — Friendly rivalry (score sharing)
 
 Peer-to-peer competition built on **trust, not anti-cheat** (no server, no global
-tracking): share scores as a QR code between people who know each other, compare,
-and track rivals. Design settled 2026-07; depends on the 0.3.0 scoreboard redesign
-(the table it overlays) and pairs with 0.4's progression (the rank).
+tracking): share scores as a QR code — or a tappable link — between people who know
+each other, compare, and track rivals. Design settled 2026-07; depends on the 0.3.0
+scoreboard redesign (the table it overlays) and pairs with 0.4's progression (the
+rank).
 
 - [ ] QR share: best + wins per config (career opt-in), display name typed at share
       time — no identity stored in the scores themselves
+- [ ] **Universal Link delivery** — the share is an `https://` link (static
+      apple-app-site-association, no backend); the QR just encodes it, so it also
+      opens from the **system Camera / Messages** and on **macOS**, falling back to
+      a web page when the app isn't installed. Self-contained (payload in the URL)
+      to keep the no-server stance; the in-app scanner becomes the fallback path
 - [ ] Signed payloads (spoof-resistant, trust-on-first-use) with a cross-device
       share identity; hardened decode (size caps, validation, versioned envelope)
 - [ ] In-app scanner (iOS; Mac via image import) + a separate, deletable friends
