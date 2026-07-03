@@ -18,34 +18,23 @@ struct NewGamePopup: View {
     @State private var focusedRow: Int?
     #endif
 
-    /// Preferred card width, FIXED across all family pages so paging never resizes
-    /// the frame — a family-dependent width left the pager half-resized when
-    /// returning to a narrower page. Roomy enough that every chip row and the
-    /// preset cards breathe.
+    /// Card width, fixed across all family pages so paging never resizes the frame.
     private static let idealWidth: CGFloat = 680
 
-    /// Top/bottom gap between the card and the window edge. Small, so on a short
-    /// screen the card can grow nearly full-height (and Start rides up).
+    /// Gap between the card and the window edge.
     private static let outerVMargin: CGFloat = 12
 
-    /// At/above this available width the modal uses the wide sidebar+detail layout;
-    /// below it (portrait phone), the vertical swipe-pager. Chosen so the
-    /// sidebar+detail's one-row size chips fit — any landscape phone clears it, a
-    /// portrait phone doesn't. (A small landscape phone that just clears it wraps
-    /// the size chips 4+3 via ViewThatFits — graceful, not broken.)
+    /// At/above this width the modal uses the sidebar layout; below it (portrait
+    /// phone), the pager. Any landscape phone clears it; a portrait phone doesn't.
     private static let sidebarMinWidth: CGFloat = 600
 
-    /// Layout chosen by the actual viewport SHAPE, not the platform or size class:
-    /// only a narrow (portrait-phone) viewport gets the pager; everything wider is
-    /// the sidebar. Runtime — no `#if os`.
+    /// Layout chosen by the viewport SHAPE, not the platform — runtime, no `#if os`.
     private static func layout(for viewport: CGSize) -> BoardSelectionPicker.Layout {
         viewport.width >= sidebarMinWidth ? .sidebar : .pager
     }
 
-    /// Card width: the ideal, but never wider than the window allows (`available`
-    /// is already the window minus the outer padding). On a small window it shrinks
-    /// to fit — the chip rows wrap and the content flexes — so nothing spills past
-    /// the card edge. Floored so it can't collapse to nothing during a resize.
+    /// The ideal width, clamped to what the window allows so the card never spills
+    /// past the edge (the chip rows wrap to fit a narrow window).
     private static func cardWidth(available: CGFloat) -> CGFloat {
         min(Self.idealWidth, max(0, available))
     }
@@ -58,39 +47,22 @@ struct NewGamePopup: View {
                 .contentShape(Rectangle())
                 .onTapGesture { onClose() }
 
-            // The card keeps one fixed design width (clamped to the window), and
-            // caps height so a short window scrolls rather than clipping. On a
-            // roomy screen everything is visible without scrolling.
             GeometryReader { geo in
-                // Centre with symmetric spacers rather than a `.frame(maxHeight:)`
-                // alignment: a card whose subtree uses `.fixedSize(vertical:)` (the
-                // sidebar layout) reports an ideal height that an aligning frame
-                // top-anchors instead of centring. Equal-weight spacers always split
-                // the slack evenly, so both layouts sit dead-centre on any viewport.
                 card(
                     layout: Self.layout(for: geo.size),
                     width: Self.cardWidth(available: geo.size.width - 48)
                 )
-                // Close button in the CARD's corner — the overlay is on the card
-                // (its actual `width`), so it sits at the card's top-right, not
-                // the screen's.
+                // The X lives on the card (its actual width), so it sits in the
+                // card's corner rather than the screen's.
                 .overlay(alignment: .topTrailing) { closeButton }
-                // Centre in the full slot. A `.frame(alignment: .center)` centres the
-                // card whether it's SHORTER than the slot (margin all round) or TALLER
-                // (e.g. the sidebar on a short landscape phone) — in which case it
-                // overflows EQUALLY top and bottom rather than spilling only off the
-                // bottom the way collapsed spacers would.
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 .padding(.horizontal, 24)
                 .padding(.vertical, Self.outerVMargin)
                 .animation(.snappy, value: settings.family)
             }
-            // Centre in the FULL screen, matching the backdrop. Without this the
-            // GeometryReader is inset by the safe area, so an asymmetric inset (big
-            // top notch, small bottom) centres the card within that inset region —
-            // which reads as pushed-below-centre and imbalanced against the
-            // full-screen dim. The card is far smaller than the screen with a wide
-            // margin, so it never reaches the notch or home indicator.
+            // Ignore the safe area so the card centres in the same full-screen space
+            // the backdrop covers; an asymmetric inset would otherwise push it below
+            // centre. The card is small with a wide margin, so it clears the notch.
             .ignoresSafeArea()
         }
         #if os(macOS)
@@ -116,14 +88,11 @@ struct NewGamePopup: View {
     }
     #endif
 
-    /// A plain card that HUGS its content; the outer frame centres it in the
-    /// window. Both layouts are tuned to fit the shortest device (iPhone SE) — the
-    /// pager in portrait, the sidebar in landscape — so neither needs a ScrollView.
-    /// On a taller screen the card just centres with a larger even margin.
+    /// A card that hugs its content; the outer frame centres it. Both layouts are
+    /// tuned to fit the shortest device (iPhone SE), so neither needs a ScrollView.
     private func card(layout: BoardSelectionPicker.Layout, width: CGFloat) -> some View {
-        // The sidebar layout is chosen for short-wide viewports (landscape phone can
-        // be only ~375pt tall), so it packs tighter than the pager: less title gap
-        // and less card padding, keeping the whole card within that height.
+        // The sidebar is the short-wide layout (landscape phone ~375pt tall), so it
+        // packs tighter than the pager: less title gap and less card padding.
         let sidebar = layout == .sidebar
         return VStack(spacing: sidebar ? 12 : 20) {
             Text("New game", bundle: .module).font(.title2.bold())
@@ -141,15 +110,12 @@ struct NewGamePopup: View {
         .padding(.horizontal, 24)
         .padding(.vertical, sidebar ? 16 : 24)
         .frame(width: width)
-        // Clip to the rounded card so nothing a child lays out wider can spill past
-        // the card edge (the card is already clamped to the window).
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
     }
 
-    /// The `BoardSelectionPicker` for a layout, configured once so the scroll body
-    /// and the pinned Start button share the same instance settings.
+    /// The `BoardSelectionPicker` for a layout.
     private func picker(layout: BoardSelectionPicker.Layout) -> BoardSelectionPicker {
         #if os(macOS)
         BoardSelectionPicker(
