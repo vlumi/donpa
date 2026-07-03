@@ -21,6 +21,12 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The board can't go dead after a game ends (Mac).** Rapid-clicking through the
+  end-of-game panel could leave the board silently ignoring *every* click until
+  you paused for a second: the dismissing panel stayed clickable through its
+  fade-out, and a click landing on it wedged the click handling for as long as
+  the rapid clicking continued. The panel now stops taking input the instant
+  it's dismissed, so post-restart clicks land immediately.
 - **Sloppy clicks land (Mac).** A quick click that slid a few points — the Magic
   Mouse does this under its own click force — was silently eaten as a tiny pan;
   during rapid play that could swallow *every* click until the hand settled,

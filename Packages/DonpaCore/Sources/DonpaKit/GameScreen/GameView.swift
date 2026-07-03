@@ -336,15 +336,27 @@ struct GameContent: View {
 
     /// The end-of-game result screen, overlaid on the BOARD only so the control
     /// strip's actions stay live. Dims the board until dismissed (X / tap / Esc).
+    ///
+    /// Hit-testing is gated on the LOGICAL state (outside the `if`, so it applies
+    /// to the outgoing fade too): the dismissing panel used to stay clickable
+    /// through its 0.25s fade-out, and a rapid click landing there started a
+    /// gesture recognition on a dying view — the hosting view's stuck recognizer
+    /// then swallowed EVERY further click of the continuing rapid-click sequence
+    /// (the board went dead until a ~1s pause let the chain expire). With the
+    /// gate, a click during the fade passes straight through to the board, where
+    /// it lands as the fresh game's first reveal.
     @ViewBuilder var mangaPanel: some View {
-        if let panel {
-            MangaPanelView(
-                kind: panel,
-                reduceMotion: reduceMotion,
-                onContinue: { dismissPanel() }
-            )
-            .transition(.opacity)
+        ZStack {
+            if let panel {
+                MangaPanelView(
+                    kind: panel,
+                    reduceMotion: reduceMotion,
+                    onContinue: { dismissPanel() }
+                )
+                .transition(.opacity)
+            }
         }
+        .allowsHitTesting(panel != nil)
     }
 
     /// Return home WITHOUT ending the game: pause and save, so "press start" can
