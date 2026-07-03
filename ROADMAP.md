@@ -6,59 +6,24 @@ geometry) — let most features land as a new conformer plus UI, without touchin
 game logic.
 
 Versions are indicative, not contractual. Each minor groups related work into one
-meaty release: v0.2.0 = cross-device sync + big boards; v0.3.0 = board variants +
-the config/scoreboard redesign; v0.4.0 = progression (achievements, gating,
-practice); v0.5.0 = score sharing; v1.0.0 = the store release.
-**v0.1.0 and v0.2.0 have shipped to TestFlight (0.2.0 is approved for external
-beta); v0.3.0 is in progress.**
+meaty release: v0.4.0 = progression (achievements, gating, practice); v0.5.0 =
+score sharing; v1.0.0 = the store release.
+
+**Shipped milestones live in [CHANGELOG.md](CHANGELOG.md)** (full detail) and are
+summarized in the [README](README.md) version history — this roadmap stays
+forward-looking. For the record: **v0.1.0** (classic), **v0.2.0** (cross-device
+sync + big boards) shipped to TestFlight; **v0.3.0** (board variants — wrapped +
+hex — and the New Game / scoreboard redesign) is feature-complete on `main`,
+awaiting a release build. Carry-over notes from those milestones live in the
+Backlog below.
 
 ---
-
-## v0.1.0 — Classic release (shipped to TestFlight)
-
-Classic Minesweeper on iOS + macOS (see [CHANGELOG.md](CHANGELOG.md)). TestFlight
-pre-release. Carry-over notes for later milestones:
-
-- **Per-cell board VoiceOver deferred** — needs a scalable cursor model (swiping
-  10k cells doesn't scale); co-design with big-board navigation.
-- **JA/FI strings are drafts** (`needs_review`) — refined from test feedback; not
-  a release gate.
-
-## v0.2.0 — Cross-device & big boards
-
-Both strands shipped; only a real-device verification pass remains, folded into
-pre-1.0 device testing.
-
-### Cross-device scoreboard sync
-
-**Shipped.** Scores + career totals sync via iCloud KVS, keyed by Apple ID: each
-device owns one blob, the display merges all conflict-free (counters sum, best
-times by min), so concurrent play never double-counts. Opt-in, off by default;
-local-only when signed out; in-progress games stay local. Detail in
-[CHANGELOG.md](CHANGELOG.md).
-
-**Still open:**
-
-- [ ] **Real two-device verification** — KVS is unreliable on the simulator;
-      confirm on a real iPhone + Mac (one Apple ID) in the pre-1.0 device pass.
-- [x] **PRIVACY.md note** — done (PRIVACY.md covers the iCloud-sync line).
-- [ ] **Churn / pruning** — a reinstall mints a new slot, orphaning the old KVS
-      blob. Deferred (a dead reinstall is indistinguishable from an offline device;
-      blobs are tiny). Revisit only near KVS limits.
-
-### Big boards
-
-**Shipped.** The full XS–XXXL ladder (up to 1000² = 1M cells), flat bit-packed
-storage, viewport culling + texture batching, bounded zoom-out, the minimap, and
-the off-main work that keeps a million-cell board responsive. Detail in
-[CHANGELOG.md](CHANGELOG.md). Non-blocking follow-ups (real-device pass, minimap
-polish) live in the Backlog.
 
 ## Backlog (unversioned)
 
 Polish and smaller features that can land in any release — not milestone gates.
-The numbered milestones are the real pillars (scale, then board variants); these
-slot into whichever release they're ready for.
+The numbered milestones below are the real pillars (progression, then sharing);
+these slot into whichever release they're ready for.
 
 **Gameplay fairness** (builds on the v0.1 logical solver):
 
@@ -86,6 +51,18 @@ slot into whichever release they're ready for.
       truncation escaped exactly this gap). Profile huge boards on real hardware
       (the simulator software-renders SpriteKit and overstates cost), and confirm
       the XXXL (1M) first-arm/reveal feel + baseline memory in Instruments.
+- [ ] **Two-device iCloud sync verification** — KVS is unreliable on the simulator;
+      confirm score/career sync on a real iPhone + Mac under one Apple ID.
+- [ ] **JA/FI native review** — the strings are the maker's drafts (`needs_review`);
+      refine from external-test feedback. Continuous, not a release gate.
+
+**Carry-overs (deferred, revisit when relevant):**
+
+- [ ] **Per-cell board VoiceOver** — needs a scalable cursor model (swiping 10k
+      cells doesn't scale); co-design with big-board navigation.
+- [ ] **KVS blob pruning** — a reinstall mints a new sync slot, orphaning the old
+      blob. Deferred (a dead reinstall looks like an offline device; blobs are
+      tiny). Revisit only near KVS storage limits.
 
 **Code cleanup (next refactor round):**
 
@@ -100,46 +77,6 @@ slot into whichever release they're ready for.
       `status == .notStarted || status == .playing` with computed properties on
       the enum (`isLive` / `isFinished` / `isPlaying`). Pure readability; no
       behaviour change.
-
-## v0.3.0 — Board variants + the config redesign
-
-The two board-topology pillars (both shipped), plus the one config/scoreboard
-redesign over the finished variant matrix — the remaining work before 0.3.0 ships.
-
-### Wrapped (torus) boards
-
-**Shipped.** Bounded/wrapped selector, seamless infinite scroll (no edges to clamp
-to, tap/minimap wrap around), and topology-keyed scoreboards. Detail in
-[CHANGELOG.md](CHANGELOG.md).
-
-### Hex grids
-
-**Shipped.** Pointy-top `HexTopology` (6-neighbour, odd-r offset) + `HexLayout`
-(nearest-centre hit-testing) + hex-aware tile/glow rendering, in both bounded and
-**wrapped** (torus) edges. The size ladder was moved to powers of two so every board
-is even-sided — the property a hex torus needs for consistent wrap. Difficulty tiers
-re-tuned across the new ladder (this reset pre-1.0 scores). Detail in
-[CHANGELOG.md](CHANGELOG.md).
-
-### New Game & scoreboard redesign
-
-**In progress — the 0.3.0 closer.** With the full matrix playable, the config UX
-gets its redesign: New Game becomes three paged **families — Basic / Grid / Hive**
-(classic presets / square / hex; swipe on iOS, tabs on macOS), with a graphical
-**Flat / Round** edge toggle. The scoreboard gains family + edge filters and
-expandable per-board records (top times with dates, per-board career stats).
-Underneath, the config model makes the family first-class — one last storage-key
-churn, folded into this release's already-planned score reset so players eat a
-single wipe, not two.
-
-- [ ] Deep config model: family + edges first-class (keys speak Basic/Grid/Hive)
-- [ ] Paged New Game (swipe / tab), Flat↔Round glyph toggle
-- [ ] Scoreboard filters + expandable per-board records
-- [ ] **Data-layer forward-compat audit** — the stats format restarts from scratch
-      here, so before freezing it, sweep the known future consumers (achievements
-      earned-set, unlock/gating state, streaks, rank inputs, practice-mode keys,
-      share identity) and confirm each can land **additively** — no breaking
-      format change after 0.3.0.
 
 ## v0.4.0 — Progression: achievements, gating & practice
 
