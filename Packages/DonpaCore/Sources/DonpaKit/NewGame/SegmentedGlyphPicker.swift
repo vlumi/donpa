@@ -30,6 +30,10 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
                 if index != values.count - 1 { divider }
             }
         }
+        // Hug the segments' height — the divider fills the row, but the row must NOT
+        // grow into vertical slack a parent offers (the pager stretches its page to
+        // the tallest family, which otherwise made this toggle tall + dead to touch).
+        .fixedSize(horizontal: false, vertical: true)
         .background(
             RoundedRectangle(cornerRadius: Self.cornerRadius)
                 .fill(Color.primary.opacity(0.08))
