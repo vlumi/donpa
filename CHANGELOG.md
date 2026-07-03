@@ -21,6 +21,9 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Website link in About.** The About panel now links to **donpa.app** alongside
+  the source-code link.
+
 ### build 11
 
 - **New:** start a game straight from the scoreboard. Expand any board's row in the
