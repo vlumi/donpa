@@ -173,6 +173,30 @@ later, this note will credit it.
 High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
 in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
 
+### 0.3.0 — board variants & the config redesign
+
+- **New:** **Hive (hex) boards** — a six-neighbour hexagonal grid alongside the
+  square **Grid**, in both flat and wrapped edges (a hex torus that scrolls
+  seamlessly in every direction).
+- **New:** **Round (torus) boards** — an edges toggle where the board wraps, so
+  panning off one side flows in from the other, forever. Scores are kept separate
+  from Flat boards.
+- **Changed:** the New Game screen is organized by **board family — Basic / Grid /
+  Hive** (classic presets / square / hex), each with a **Flat / Round** edge
+  toggle and its own remembered size and difficulty. It adapts to the screen: a
+  swipe-pager on a phone, a family sidebar on iPad and Mac.
+- **New:** the **Service Record** gained Family and Flat/Round filters and
+  **expandable per-board records** — tap any board to see its own games, wins,
+  best five times (with dates), and full career stats, shown the same way as your
+  lifetime totals.
+- **Changed:** board sizes rebalanced to powers of two (up to 1,000² = a million
+  cells) and difficulty tiers re-tuned so the five ranks stay distinct on big
+  boards. This resets all existing scores — a one-off clean slate before 1.0.
+- **New:** a cross-device **erase** that stays erased (an offline device clears
+  itself on reconnect instead of resurrecting old scores).
+- **Fixed:** offline sync updates promptly, the minimap shows/hides reliably and
+  follows light/dark changes, and the top status bar reads clearer.
+
 ### 0.2.0 — cross-device sync & big boards
 
 - **New:** iCloud cross-device sync for high scores and career totals (opt-in,
