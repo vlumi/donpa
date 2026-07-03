@@ -6,8 +6,8 @@ geometry) — let most features land as a new conformer plus UI, without touchin
 game logic.
 
 Versions are indicative, not contractual. Each minor groups related work into one
-meaty release: v0.4.0 = progression (achievements, gating, practice); v0.5.0 =
-score sharing; v1.0.0 = the store release.
+meaty release: v0.4.0 = friendly rivalry (score sharing); v0.5.0 = progression
+(achievements, gating, practice); v1.0.0 = the store release.
 
 **Shipped milestones live in [CHANGELOG.md](CHANGELOG.md)** (full detail) and are
 summarized in the [README](README.md) version history — this roadmap stays
@@ -22,7 +22,7 @@ Backlog below.
 ## Backlog (unversioned)
 
 Polish and smaller features that can land in any release — not milestone gates.
-The numbered milestones below are the real pillars (progression, then sharing);
+The numbered milestones below are the real pillars (sharing, then progression);
 these slot into whichever release they're ready for.
 
 **Gameplay fairness** (builds on the v0.1 logical solver):
@@ -31,7 +31,7 @@ these slot into whichever release they're ready for.
   of a forced guess is part of classic Minesweeper's character, so the standard
   modes keep it. The solver-gated no-guess machinery (cheap; `Solver` +
   `TierAnalysis` already exist, generation just resamples until solvable) instead
-  finds its purpose as a **practice mode** — see v0.4.
+  finds its purpose as a **practice mode** — see the progression milestone.
 - [ ] Safe-reveal / question-mark flag cycle (classic third flag state).
 
 **Navigation / UX:**
@@ -82,52 +82,14 @@ these slot into whichever release they're ready for.
       the enum (`isLive` / `isFinished` / `isPlaying`). Pure readability; no
       behaviour change.
 
-## v0.4.0 — Progression: achievements, gating & practice
-
-Engagement features grouped because they all ride one **game-end event layer** and
-turn on the same "what counts toward stats" question. Held **late on purpose**:
-achievement IDs are permanent (like the scoreboard keys), so they're designed once
-the full variant matrix exists and can be referenced without churn.
-
-**Achievements** — see the **Achievements** section below for the architecture,
-the no-leaderboards decision, and the design principles. Build-out:
-
-- [ ] Internal achievement layer (events on game-end → local store) + in-app UI
-- [ ] Local + iCloud-KVS sync of the earned set (reuses the v0.2 sync blob)
-- [ ] Game Center reporter bolted on behind the layer (achievements only)
-- [ ] The curated achievement list defined (IDs locked) in App Store Connect
-
-**Progressive gating** — content unlocks so a new player isn't hit with the full
-size × rank × family matrix at once. A second consumer (`UnlockEngine`) of the same
-game-end events — an unlock can trigger on the same signals without being a visible
-badge. The paged New Game is built for it: a locked **family is a whole page** with
-a teaser ("clear a Grid at Veteran+ to open the Hive"), not a greyed-out control.
-
-- [ ] UnlockEngine beside the achievement layer (shared events, separate concept)
-- [ ] Unlock triggers + which axes gate (extreme sizes? families?) decided
-- [ ] Locked-page presentation in New Game (ships ungated in 0.3.0)
-
-**Practice mode (no-guess boards)** — a deduction-only **onboarding** mode, framed
-as *practice*, NOT as a "fairer" alternative to the real game (the standard modes
-keep the classic forced-guess risk). Solver-gated generation resamples until the
-board is fully deducible.
-
-- [ ] Generate guaranteed-solvable boards (reuse `Solver` / `TierAnalysis`)
-- [ ] Frame it clearly as **practice** in the New Game UI — its own thing, not a
-      difficulty or a default
-- [ ] **No hi-scores**: practice never writes a per-board best time (incomparable
-      to real boards + an easier guarantee). **Career totals DO count** (you still
-      played — tiles/flags/playtime accrue). Achievements: gentle/onboarding ones
-      may count; skill feats (speed, no-flag, Insane) excluded. Its own
-      geometry-bearing `GameConfig.storageKey` keeps it cleanly separated.
-
-## v0.5.0 — Friendly rivalry (score sharing)
+## v0.4.0 — Friendly rivalry (score sharing)
 
 Peer-to-peer competition built on **trust, not anti-cheat** (no server, no global
 tracking): share scores as a QR code — or a tappable link — between people who know
-each other, compare, and track rivals. Design settled 2026-07; depends on the 0.3.0
-scoreboard redesign (the table it overlays) and pairs with 0.4's progression (the
-rank).
+each other, compare, and track rivals. Design settled 2026-07; depends on the
+scoreboard redesign (shipped — the table it overlays). Sequenced BEFORE progression
+on purpose: it's self-contained and rides the finished scoreboard, while
+progression's permanent commitments (achievement IDs, balance) are best done last.
 
 - [ ] QR share: best + wins per config (career opt-in), display name typed at share
       time — no identity stored in the scores themselves
@@ -147,8 +109,48 @@ rank).
 - [ ] Rivals interleave into the high-score table as ranked rows, scoped by **one
       active comparison target — a single friend or a group** (off by default, so
       nothing touches your table unless chosen)
-- [ ] Feat-based public **rank** — the hack-resistant face of progression (raw
-      scores stay trusted-circle only)
+- [ ] Feat-based public **rank** — the hack-resistant face of progression. Depends
+      on the progression milestone's feat/event layer, so it lands with or after
+      that (deferred from the first sharing pass; raw scores stay trusted-circle only).
+
+## v0.5.0 — Progression: achievements, gating & practice
+
+Engagement features grouped because they all ride one **game-end event layer** and
+turn on the same "what counts toward stats" question. Held **last on purpose**:
+achievement IDs are permanent (like the scoreboard keys), so they're designed once
+the full variant matrix exists and can be referenced without churn.
+
+**Achievements** — see the **Achievements** section below for the architecture,
+the no-leaderboards decision, and the design principles. Build-out:
+
+- [ ] Internal achievement layer (events on game-end → local store) + in-app UI
+- [ ] Local + iCloud-KVS sync of the earned set (reuses the cross-device sync blob)
+- [ ] Game Center reporter bolted on behind the layer (achievements only)
+- [ ] The curated achievement list defined (IDs locked) in App Store Connect
+
+**Progressive gating** — content unlocks so a new player isn't hit with the full
+size × rank × family matrix at once. A second consumer (`UnlockEngine`) of the same
+game-end events — an unlock can trigger on the same signals without being a visible
+badge. The paged New Game is built for it: a locked **family is a whole page** with
+a teaser ("clear a Grid at Veteran+ to open the Hive"), not a greyed-out control.
+
+- [ ] UnlockEngine beside the achievement layer (shared events, separate concept)
+- [ ] Unlock triggers + which axes gate (extreme sizes? families?) decided
+- [ ] Locked-page presentation in New Game (ships ungated with the redesign)
+
+**Practice mode (no-guess boards)** — a deduction-only **onboarding** mode, framed
+as *practice*, NOT as a "fairer" alternative to the real game (the standard modes
+keep the classic forced-guess risk). Solver-gated generation resamples until the
+board is fully deducible.
+
+- [ ] Generate guaranteed-solvable boards (reuse `Solver` / `TierAnalysis`)
+- [ ] Frame it clearly as **practice** in the New Game UI — its own thing, not a
+      difficulty or a default
+- [ ] **No hi-scores**: practice never writes a per-board best time (incomparable
+      to real boards + an easier guarantee). **Career totals DO count** (you still
+      played — tiles/flags/playtime accrue). Achievements: gentle/onboarding ones
+      may count; skill feats (speed, no-flag, Insane) excluded. Its own
+      geometry-bearing `GameConfig.storageKey` keeps it cleanly separated.
 
 ## v1.0.0 — The store release
 
@@ -208,7 +210,7 @@ public stores from here:
 (The **two-native-targets, no-Catalyst** decision — with the shared bundle id /
 Universal Purchase — is recorded in [ARCHITECTURE.md](ARCHITECTURE.md).)
 
-## Achievements (the v0.4 milestone — detail)
+## Achievements (the progression milestone — detail)
 
 Mostly an event-plumbing job, but with real permanence to design around.
 
@@ -314,7 +316,7 @@ Still open:
 Per project conventions: **no ads, no microtransactions, no pay-to-win**; no
 third-party *runtime* dependencies; the older Intel Mac is not targeted. No online
 multiplayer, **no server, no accounts, no global leaderboards** — ever the plan.
-(Cross-device *score* sync (v0.2.0) is the user's own iCloud KVS, and score
-*sharing* (v0.5.0) is peer-to-peer QR between people who know each other — neither
-involves a server or a global social layer.) A **tip jar** — optional,
+(Cross-device *score* sync (shipped in 0.2.0) is the user's own iCloud KVS, and
+score *sharing* (the friendly-rivalry milestone) is peer-to-peer QR between people
+who know each other — neither involves a server or a global social layer.) A **tip jar** — optional,
 content-neutral support — is the one monetization form under consideration.
