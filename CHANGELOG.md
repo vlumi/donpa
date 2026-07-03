@@ -34,8 +34,9 @@ development — entries land under Unreleased as they merge.
 - **Boards are picked by family: Basic / Grid / Hive.** The New Game popup was
   redesigned around three board-family **pages** — **Basic** presets, **Grid**
   (square cells), and **Hive** (hex) — each with its own hand-drawn glyph tab
-  (swipe between pages on iPhone/iPad, or ←/→ on the Mac). Grid and Hive share
-  one page: the rank-insignia difficulty drum, a **size chip row** (XS…XXXL),
+  (swipe between pages on a phone; a roomier screen shows the families in a
+  sidebar with the options beside them; or ←/→ on the Mac). Grid and Hive share
+  one page: rank-insignia **difficulty chips**, a **size chip row** (XS…XXXL),
   and an **edges toggle** that's now **Flat / Round** — a framed-map glyph
   against a globe, because a Round world curves back on itself and wraps. The
   Hive page shows its honest (denser) mine percentage, and **each family
@@ -74,6 +75,9 @@ development — entries land under Unreleased as they merge.
   after a small pan on a board that fits (or stays hidden when it shouldn't) — its
   visibility now tracks the zoom level, not the camera position. Wrapped boards
   always show it (there's no edge to fit).
+- **Clearer top status bar.** The current-game badge (difficulty insignia + size)
+  is larger and easier to read, and the mines / clear-% / timer readouts next to
+  it reclaim the width that was sitting empty before the High Scores medal.
 - **Finnish and Japanese coverage completed.** Several macOS menu commands (New
   Game…, Toggle Minimap Size, Zoom In/Out) and the macOS app name now have fi/ja
   translations, the result panel's "first clear" pill and the scoreboard's
