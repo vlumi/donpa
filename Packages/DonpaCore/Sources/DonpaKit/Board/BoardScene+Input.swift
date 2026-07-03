@@ -177,6 +177,15 @@ extension BoardScene {
             return
         }
         let step: CGFloat = event.hasPreciseScrollingDeltas ? 1 : 10
+        // Trace only the phase edges (a Magic Mouse surface brush mid-play shows up
+        // here) — per-event logging would flood during momentum.
+        if event.phase == .began {
+            InputTrace.log("scroll began")
+        } else if event.momentumPhase == .began {
+            InputTrace.log("scroll momentum began")
+        } else if event.phase == .ended || event.momentumPhase == .ended {
+            InputTrace.log("scroll ended")
+        }
         // Natural scroll: content follows the fingers. AppKit Y grows upward like
         // the scene, so pass deltas through directly.
         pan(
@@ -192,6 +201,10 @@ extension BoardScene {
     }
 
     public override func mouseDown(with event: NSEvent) {
+        // clickCount rises 2, 3, 4… while rapid same-spot clicks stay inside the
+        // system multi-click window (a ~1s pause resets it) — traced to test the
+        // click-escalation hypothesis behind the dead-while-hammering reports.
+        InputTrace.log("mouseDown clicks=\(event.clickCount)")
         let p = view?.convert(event.locationInWindow, from: nil) ?? .zero
         lastDragViewPoint = p
         mouseDownViewPoint = p
