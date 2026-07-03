@@ -285,6 +285,9 @@ public final class BoardScene: SKScene {
     var mouseDownViewPoint: CGPoint = .zero
     var mouseDownTimestamp: TimeInterval = 0
     var didDragInScene = false
+    /// Trace-only (`-donpa.inputtrace`) app-level mouse monitor — held so it lives
+    /// as long as the scene; nil in normal runs. See `installGestureRecognizers`.
+    var traceEventMonitor: Any?
     static let dragThreshold: CGFloat = 4
     // A drag can still END as a click: a Magic Mouse slides a few points under its
     // own click force, so during rapid play every click travelled past the 4pt

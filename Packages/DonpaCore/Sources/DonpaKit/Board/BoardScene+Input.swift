@@ -114,6 +114,23 @@ extension BoardScene {
         // events (mouseDown/Dragged/Up below). Only zoom needs a recognizer.
         let pinch = NSMagnificationGestureRecognizer(target: self, action: #selector(handlePinch))
         view.addGestureRecognizer(pinch)
+        // Trace-only app-level tap: a captured repro showed clicks vanishing ABOVE
+        // the scene (no scene mouseDown at all), so log every left-mouse-down the
+        // app dispatches and WHICH view hit-tests it — an invisible overlay eating
+        // clicks names itself here; silence means the events die at window level.
+        if InputTrace.enabled, traceEventMonitor == nil {
+            traceEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+                let hit: String
+                if let cv = event.window?.contentView, let sv = cv.superview {
+                    let p = sv.convert(event.locationInWindow, from: nil)
+                    hit = cv.hitTest(p).map { String(describing: type(of: $0)) } ?? "none"
+                } else {
+                    hit = event.window == nil ? "no-window" : "no-contentView"
+                }
+                InputTrace.log("app mouseDown hit=\(hit)")
+                return event
+            }
+        }
         #endif
     }
 
