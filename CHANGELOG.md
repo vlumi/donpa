@@ -21,6 +21,11 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Sloppy clicks land (Mac).** A quick click that slid a few points — the Magic
+  Mouse does this under its own click force — was silently eaten as a tiny pan;
+  during rapid play that could swallow *every* click until the hand settled,
+  leaving the board seemingly dead. A brief press that barely moved now counts as
+  the click it was meant to be; real drags still pan exactly as before.
 - **Website link in About.** The About panel now links to **donpa.app** alongside
   the source-code link.
 

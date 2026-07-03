@@ -52,6 +52,8 @@ extension BoardScene {
     /// A plain tap/click: a revealed number chords; a hidden cell follows the
     /// current input mode (reveal or flag), so in Flag mode a stray tap can't open.
     func tapAction(atScenePoint p: CGPoint) {
+        InputTrace.log(
+            "scene tap \(coord(atScenePoint: p).map(String.init(describing:)) ?? "off-board")")
         if minimapHandleHit(atScenePoint: p) {
             toggleMinimapSize()
             return
@@ -193,6 +195,7 @@ extension BoardScene {
         let p = view?.convert(event.locationInWindow, from: nil) ?? .zero
         lastDragViewPoint = p
         mouseDownViewPoint = p
+        mouseDownTimestamp = event.timestamp
         didDragInScene = false
         let sp = scenePoint(fromViewPoint: p)
         // A press on the resize handle starts a resize drag (a click-without-drag
@@ -246,8 +249,22 @@ extension BoardScene {
             scrubbingMinimap = false
             return
         }
-        if didDragInScene { panEnded() }  // spring back if the drag overshot the edge
-        guard !didDragInScene else { return }  // a real drag panned; don't also click
+        if didDragInScene {
+            panEnded()  // spring back if the drag overshot the edge
+            // A drag can still be a sloppy CLICK: a Magic Mouse slides a few points
+            // under its own click force, so during rapid play every click crossed
+            // the drag threshold and was silently eaten as a micro-pan (see
+            // `clickSlop`). Brief + net-travel within the slop → click after all;
+            // a real pan (longer or farther) stays a pan.
+            let up = view?.convert(event.locationInWindow, from: nil) ?? .zero
+            let net = hypot(up.x - mouseDownViewPoint.x, up.y - mouseDownViewPoint.y)
+            let duration = event.timestamp - mouseDownTimestamp
+            let counts = Self.sloppyClickCountsAsClick(net: net, duration: duration)
+            InputTrace.log(
+                "mouseUp dragged net=\(String(format: "%.1f", net)) "
+                    + "dur=\(String(format: "%.2f", duration)) → \(counts ? "click" : "pan")")
+            guard counts else { return }
+        }
         let p = event.location(in: self)
         // Control is the temporary "other action" modifier: it does the long-press
         // action (flag in Reveal mode, reveal in Flag mode).

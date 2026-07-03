@@ -420,15 +420,18 @@ struct GameContent: View {
     /// Slam the result screen in after a short beat so the board's detonation / win
     /// ripple plays first. The beat is animation timing, not a hang.
     private func showPanel(_ kind: MangaPanelView.Kind) {
+        InputTrace.log("panel scheduled")
         panelTask?.cancel()
         panelTask = Task {
             try? await Task.sleep(nanoseconds: 400_000_000)  // let board FX land
             guard !Task.isCancelled else { return }
+            InputTrace.log("panel shown")
             withAnimation(.easeOut(duration: 0.2)) { panel = kind }
         }
     }
 
     private func dismissPanel() {
+        InputTrace.log("panel dismissed (was \(panel == nil ? "nil" : "shown"))")
         panelTask?.cancel()
         withAnimation(.easeIn(duration: 0.25)) { panel = nil }
     }

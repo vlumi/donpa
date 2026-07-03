@@ -154,6 +154,7 @@ public final class GameViewModel: ObservableObject {
         afterApply: @escaping () -> Void = {}
     ) {
         isComputing = true
+        InputTrace.log("gate ON gid=\(gameID)")
         let snapshot = game  // O(1) COW; the task's mutation triggers the copy
         let tokenBefore = game.changeToken
         let generation = gameID
@@ -167,6 +168,9 @@ public final class GameViewModel: ObservableObject {
             let outcome = Self.computeOutcome(
                 finished: generation, current: self.gameID,
                 latestStarted: self.computeGeneration)
+            InputTrace.log(
+                "gate \(outcome.releaseGate ? "OFF" : "held") fin=\(generation) "
+                    + "cur=\(self.gameID) apply=\(outcome.applyResult)")
             if outcome.applyResult {
                 self.game = updated
                 // Skip the redraw/autosave/minimap-rebuild if nothing actually changed
@@ -203,6 +207,8 @@ public final class GameViewModel: ObservableObject {
     }
 
     public func reveal(_ c: Coord) {
+        InputTrace.log(
+            "reveal \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         let wasNotStarted = game.status == .notStarted
         computeOffMain({ game in game.reveal(c) }) { [weak self] in
@@ -213,6 +219,8 @@ public final class GameViewModel: ObservableObject {
     }
 
     public func toggleFlag(_ c: Coord) {
+        InputTrace.log(
+            "flag \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         // O(1), so synchronous — but still gated mid-compute / paused / finished.
         guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         let before = game.board[c].state
@@ -229,6 +237,8 @@ public final class GameViewModel: ObservableObject {
     }
 
     public func chord(_ c: Coord) {
+        InputTrace.log(
+            "chord \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         // Gated on .playing so a post-game chord can't re-publish the result (which
         // would replay the end-game panel on every click).
         guard canTakeInput, game.status == .playing else { return }
@@ -266,6 +276,7 @@ public final class GameViewModel: ObservableObject {
         flushedCentiseconds = 0
         resetTimer()
         gameID &+= 1
+        InputTrace.log("newGame gid=\(gameID)")
         bump()
         armBoard(seed: seed)
     }

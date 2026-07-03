@@ -131,3 +131,75 @@ final class DonpaUITests: XCTestCase {
     // testOverviewOpensAndCloses waited on `game.overview`, which no longer exists,
     // and could never pass.
 }
+
+/// Reproduction for the "board unresponsive after rapid restarts" report: on an XS
+/// board under tap storms + instant Retry, the fresh board sometimes ignored taps
+/// for a few seconds (chrome stayed live). Measures time-to-first-reveal after each
+/// restart — first-click safety makes "progress leaves 0%" a reliable responded
+/// signal. Launch includes `-donpa.inputtrace` so the unified log attributes any
+/// dead window to the gate / panel / scene (capture via `log stream` while running).
+final class RestartStormUITests: XCTestCase {
+    func testXSRestartStormRespondsQuickly() {
+        continueAfterFailure = true
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-uitest-clean", "-AppleLanguages", "(en)",
+            "-donpa.family", "grid", "-donpa.grid.size", "xs",
+            "-donpa.inputtrace",
+        ]
+        app.launch()
+
+        // Into a game: title → New Game popup (pre-seeded to XS Grid) → Start.
+        let start = app.buttons["title.start"]
+        XCTAssertTrue(start.waitForExistence(timeout: 5))
+        start.tap()
+        let popupStart = app.buttons["newgame.start"]
+        XCTAssertTrue(popupStart.waitForExistence(timeout: 5))
+        popupStart.tap()
+        XCTAssertTrue(app.buttons["game.home"].waitForExistence(timeout: 5))
+        // The popup's scrim eats taps until fully gone.
+        XCTAssertTrue(popupStart.waitForNonExistence(timeout: 5))
+
+        let board = app.otherElements["game.board"]
+        let retry = app.buttons["game.retry"]
+        let progress = app.descendants(matching: .any)["game.progress"]
+        XCTAssertTrue(board.waitForExistence(timeout: 5))
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        XCTAssertTrue(progress.waitForExistence(timeout: 5))
+
+        func progressValue() -> String { (progress.value as? String) ?? "?" }
+
+        var slow: [String] = []
+        var worst: TimeInterval = 0
+        for round in 1...20 {
+            // Tap storm: rapid reveals scattered over the board. Mine hits, game
+            // ends, and result panels mid-storm are all part of the reproduction.
+            for _ in 0..<8 {
+                let v = CGVector(
+                    dx: CGFloat.random(in: 0.15...0.85), dy: CGFloat.random(in: 0.2...0.8))
+                board.coordinate(withNormalizedOffset: v).tap()
+            }
+            retry.tap()
+            // Fresh board: keep re-tapping like an impatient player; measure how
+            // long until the first reveal lands (always safe → progress > 0%).
+            let t0 = Date()
+            var responded = false
+            while Date().timeIntervalSince(t0) < 8 {
+                board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                if progressValue() != "0%" {
+                    responded = true
+                    break
+                }
+            }
+            let dt = Date().timeIntervalSince(t0)
+            worst = max(worst, dt)
+            if !responded {
+                slow.append("round \(round): NEVER responded (8s cap)")
+            } else if dt > 1.5 {
+                slow.append("round \(round): \(String(format: "%.2f", dt))s")
+            }
+        }
+        print("STORM RESULT worst=\(String(format: "%.2f", worst))s slow=\(slow)")
+        XCTAssertTrue(slow.isEmpty, "unresponsive windows: \(slow.joined(separator: "; "))")
+    }
+}

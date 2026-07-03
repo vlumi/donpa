@@ -80,5 +80,6 @@ struct ProgressReadout: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Cleared", bundle: .module))
         .accessibilityValue(Text(verbatim: "\(pct)%"))
+        .accessibilityIdentifier("game.progress")
     }
 }
