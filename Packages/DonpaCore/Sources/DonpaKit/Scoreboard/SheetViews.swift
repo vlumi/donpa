@@ -206,6 +206,18 @@ struct ScoreboardView: View {
                     }
                 }
             }
+            // Expanding a row scrolls it into view — otherwise expanding the LAST
+            // row opens content that's off-screen below the fold (and there may be
+            // no layout shift to nudge it up). A beat later so the taller row has
+            // laid out before we scroll to it.
+            .onChangeCompat(of: expandedKey) { key in
+                guard let key else { return }
+                DispatchQueue.main.async {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo(key, anchor: .center)
+                    }
+                }
+            }
         }
     }
 

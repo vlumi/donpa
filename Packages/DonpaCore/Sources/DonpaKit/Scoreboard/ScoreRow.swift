@@ -28,55 +28,54 @@ struct ScoreRow: View {
         .background(rowHighlight)
     }
 
+    // A tap gesture (not a Button) so a scroll that STARTS on a row doesn't toggle
+    // it — inside a ScrollView a plain Button fires even when the touch turns into a
+    // drag, which made the last row nearly impossible to open. A tap only fires when
+    // the finger doesn't move past the scroll threshold.
     private var summaryRow: some View {
-        Button {
-            onToggle?()
-        } label: {
-            HStack {
-                // Grid/Hive rows: rank insignia in a fixed-width column (so size
-                // letters line up), then the size name. No edges tag — the list is
-                // already scoped to one edges value by the filter, so every row shares
-                // it. Basic rows show their preset name.
-                // Shrink to fit rather than truncate or force the row wider — a long
-                // preset name ("Intermediate") scales down instead of clipping or
-                // wobbling the sheet width when the family filter changes.
-                if let size = config.size, let density = config.density {
-                    DensityInsignia.image(density)
-                        .resizable().scaledToFit().frame(width: 30, height: 20)
-                    Text(verbatim: size.label).lineLimit(1).minimumScaleFactor(0.7)
-                } else {
-                    Text(verbatim: config.label).lineLimit(1).minimumScaleFactor(0.7)
-                }
-                Spacer()
-                Text(verbatim: ScoreboardView.grouped(scoreboard.wins(for: config)))
-                    .font(.body.monospaced())
-                    .frame(width: 56, alignment: .trailing)
-                HStack(spacing: 3) {
-                    if recordMarker == .progress { newBestMarker }
-                    if let progress = scoreboard.bestProgress(for: config) {
-                        // Floor, not round: a 99.7%-cleared loss must not read "100%".
-                        Text("\(Int((progress * 100).rounded(.down)))%").font(.body.monospaced())
-                    } else {
-                        Text("—").foregroundStyle(.secondary)
-                    }
-                }
-                .frame(width: 64, alignment: .trailing)
-                HStack(spacing: 3) {
-                    if recordMarker == .time { newBestMarker }
-                    if let best = scoreboard.best(for: config) {
-                        Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())
-                    } else {
-                        Text("—").foregroundStyle(.secondary)
-                    }
-                }
-                .frame(width: 80, alignment: .trailing)
+        HStack {
+            // Grid/Hive rows: rank insignia in a fixed-width column (so size
+            // letters line up), then the size name. No edges tag — the list is
+            // already scoped to one edges value by the filter, so every row shares
+            // it. Basic rows show their preset name.
+            // Shrink to fit rather than truncate or force the row wider — a long
+            // preset name ("Intermediate") scales down instead of clipping or
+            // wobbling the sheet width when the family filter changes.
+            if let size = config.size, let density = config.density {
+                DensityInsignia.image(density)
+                    .resizable().scaledToFit().frame(width: 30, height: 20)
+                Text(verbatim: size.label).lineLimit(1).minimumScaleFactor(0.7)
+            } else {
+                Text(verbatim: config.label).lineLimit(1).minimumScaleFactor(0.7)
             }
-            .contentShape(Rectangle())
-            .padding(.vertical, 10)
-            .padding(.horizontal, rowInset)
+            Spacer()
+            Text(verbatim: ScoreboardView.grouped(scoreboard.wins(for: config)))
+                .font(.body.monospaced())
+                .frame(width: 56, alignment: .trailing)
+            HStack(spacing: 3) {
+                if recordMarker == .progress { newBestMarker }
+                if let progress = scoreboard.bestProgress(for: config) {
+                    // Floor, not round: a 99.7%-cleared loss must not read "100%".
+                    Text("\(Int((progress * 100).rounded(.down)))%").font(.body.monospaced())
+                } else {
+                    Text("—").foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 64, alignment: .trailing)
+            HStack(spacing: 3) {
+                if recordMarker == .time { newBestMarker }
+                if let best = scoreboard.best(for: config) {
+                    Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())
+                } else {
+                    Text("—").foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 80, alignment: .trailing)
         }
-        .buttonStyle(.plain)
-        .disabled(onToggle == nil)
+        .contentShape(Rectangle())
+        .padding(.vertical, 10)
+        .padding(.horizontal, rowInset)
+        .onTapGesture { onToggle?() }
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text(isExpanded ? "Hide details" : "Show details", bundle: .module))
     }
