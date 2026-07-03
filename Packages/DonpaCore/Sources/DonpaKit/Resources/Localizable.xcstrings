@@ -1003,6 +1003,22 @@
         }
       }
     },
+    "New game on this board" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uusi peli tällä laudalla"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このボードで新規ゲーム"
+          }
+        }
+      }
+    },
     "New record! Minefield cleared in %@" : {
       "comment" : "VoiceOver label on a new-best win. %@ is the time. NEEDS REVIEW: ja\/fi.",
       "localizations" : {

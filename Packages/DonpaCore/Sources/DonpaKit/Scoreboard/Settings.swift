@@ -258,6 +258,27 @@ public final class Settings: ObservableObject {
         }
     }
 
+    /// Adopt a `GameConfig` as the current selection — sets the family and its
+    /// per-family size/density/edges so `currentConfig` round-trips to it, and so a
+    /// later plain New Game / relaunch remembers this board. Used when a game is
+    /// started from a specific config (e.g. the scoreboard's "New game on this
+    /// board") rather than by editing the picker.
+    public func adopt(_ config: GameConfig) {
+        family = config.family
+        switch config {
+        case .basic(let preset):
+            basicPreset = preset
+        case .grid(let size, let density, let edges):
+            gridSize = size
+            gridDensity = density
+            gridEdges = edges
+        case .hive(let size, let density, let edges):
+            hiveSize = size
+            hiveDensity = density
+            hiveEdges = edges
+        }
+    }
+
     /// Map a pre-family install's stored mode/shape selection onto a family.
     private static func legacyFamily(mode: String?, shape: String?) -> BoardFamily {
         guard mode == "modern" else { return .basic }

@@ -141,7 +141,8 @@ struct GameContent: View {
             // marker. In-game, mark the row for the config being played.
             ScoreboardView(
                 scoreboard: scoreboard, settings: settings, available: windowSize,
-                currentConfig: navigator.showingTitle ? nil : viewModel.config)
+                currentConfig: navigator.showingTitle ? nil : viewModel.config,
+                onPlay: { navigator.playConfigRequested = $0 })
         }
         // Opening the scoreboard pauses a live game (flushing career activity and
         // stopping the clock); auto-resume on dismiss only if WE paused.
@@ -163,6 +164,9 @@ struct GameContent: View {
             AboutView()
         }
         .onChangeCompat(of: navigator.startRequested) { _ in handleStartRequest() }
+        .onChangeCompat(of: navigator.playConfigRequested) { config in
+            if let config { playFromScoreboard(config) }
+        }
         .onChangeCompat(of: navigator.homeRequested) { _ in goHome() }
         .onChangeCompat(of: navigator.zoomInRequested) { _ in scene.zoom(by: 1.25) }
         .onChangeCompat(of: navigator.zoomOutRequested) { _ in scene.zoom(by: 0.8) }
@@ -248,6 +252,19 @@ struct GameContent: View {
         } else {
             navigator.showingNewGame = true
         }
+    }
+
+    /// Start a fresh game on the config the player tapped in the scoreboard, then
+    /// dismiss the sheet and leave the title. Clear the pause-for-scores flag so the
+    /// dismiss handler doesn't resume the OLD (now replaced) game. Behaves like the
+    /// New Game popup's Start — no confirm; the fresh game replaces the current one.
+    private func playFromScoreboard(_ config: GameConfig) {
+        pausedForScores = false
+        navigator.playConfigRequested = nil
+        navigator.showingScores = false
+        settings.adopt(config)  // remember it as the current selection (New Game / relaunch)
+        viewModel.newGame(config: config)
+        navigator.showingTitle = false
     }
 
     /// Persist the live game, or clear the save once it's no longer in progress.
