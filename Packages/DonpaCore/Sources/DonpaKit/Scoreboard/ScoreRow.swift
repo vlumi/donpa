@@ -17,6 +17,8 @@ struct ScoreRow: View {
     /// Toggle the expansion. When nil the row isn't expandable (kept for callers
     /// that just want a static row).
     var onToggle: (() -> Void)?
+    /// Start a fresh game on this row's config (the expansion's "New game" button).
+    var onPlay: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -82,7 +84,7 @@ struct ScoreRow: View {
     /// This config's own stats — the same `StatBlock` the global career uses, scoped
     /// to one record. An unplayed config shows a gentle placeholder instead.
     @ViewBuilder private var expansion: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             if let record = scoreboard.record(for: config) {
                 StatBlock(figures: StatFigures(record: record), rowInset: rowInset, compact: true)
             } else {
@@ -90,9 +92,30 @@ struct ScoreRow: View {
                     .font(.callout).foregroundStyle(.secondary)
                     .padding(.horizontal, rowInset)
             }
+            if let onPlay { playButton(onPlay) }
         }
         .padding(.bottom, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Jump straight into a fresh game on this board — closes the loop between
+    /// "check my best here" and "try to beat it".
+    private func playButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label {
+                Text("New game on this board", bundle: .module)
+            } icon: {
+                Image(systemName: "play.fill")
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .foregroundStyle(.white)
+            .background(Color.accentColor, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, rowInset)
+        .accessibilityIdentifier("scoreboard.play")
     }
 
     /// Which "Best" column, if any, just set a record on this row — so the non-color

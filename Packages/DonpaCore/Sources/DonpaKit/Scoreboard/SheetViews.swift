@@ -21,6 +21,9 @@ struct ScoreboardView: View {
     /// The current config's storage key — the scroll anchor for the "jump to current"
     /// behaviour.
     private var currentConfigKey: String? { currentConfig?.storageKey }
+    /// Start a fresh game on a config (the row expansion's "New game on this board").
+    /// The host wires this to begin the game and dismiss the sheet. nil = no button.
+    var onPlay: ((GameConfig) -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingReset = false
 
@@ -301,7 +304,8 @@ struct ScoreboardView: View {
                     scoreboard: scoreboard, config: config,
                     currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
                     isExpanded: expandedKey == config.storageKey,
-                    onToggle: { toggleExpanded(config.storageKey) }
+                    onToggle: { toggleExpanded(config.storageKey) },
+                    onPlay: onPlay.map { play in { play(config) } }
                 )
                 .id(config.storageKey)  // scroll anchor for the current-config jump
                 if config != configs.last { Divider() }

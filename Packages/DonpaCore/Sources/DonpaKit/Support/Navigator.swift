@@ -1,3 +1,4 @@
+import DonpaCore
 import SwiftUI
 
 /// Shared navigation state, outside `GameView`'s private `@State` so hosts (e.g.
@@ -31,6 +32,11 @@ public final class Navigator: ObservableObject {
 
     /// Bumped to toggle the minimap between its min and max size (macOS ⌘0).
     @Published public var toggleMinimapRequested = 0
+
+    /// Set to start a fresh game on a specific config — the scoreboard's "New game
+    /// on this board". `GameView` observes it, starts the game, dismisses the
+    /// scoreboard, and leaves the title. Cleared back to nil after handling.
+    @Published public var playConfigRequested: GameConfig?
 
     /// Whether any modal is presented. Gameplay commands are disabled while one is
     /// up, so their keyboard shortcuts don't mutate the game underneath.
