@@ -10,7 +10,8 @@ was architected for are landing on schedule: huge zoomable maps, **Round
 touching the game logic.
 
 **v0.1.0** (classic mode) and **v0.2.0** (big boards + cross-device sync) shipped
-to TestFlight; **v0.3.0** (board variants) is in progress. See
+to TestFlight; **v0.3.0** (board variants + the config/scoreboard redesign) is
+feature-complete on `main`, awaiting a release build. See
 [CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md) for
 the path to v1.0, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
 decisions.
@@ -105,7 +106,7 @@ across the seam.
 | ⌘,       | Settings (macOS app menu)                          |
 | ⌘+ / ⌘−  | Zoom the board in / out (also ⌘-scroll)            |
 | ⌘0       | Toggle the minimap between small and large         |
-| ⌘1/2/3   | Beginner / Intermediate / Expert (macOS menu)      |
+| ⌘1/2/3   | Basic presets: Beginner / Intermediate / Expert    |
 
 ## Start and end of a game
 
