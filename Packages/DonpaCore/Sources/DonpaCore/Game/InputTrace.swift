@@ -9,7 +9,8 @@ import os
 /// Off unless launched with `-donpa.inputtrace` (zero cost otherwise). Capture with
 ///   xcrun simctl spawn <udid> log stream --predicate 'category == "inputtrace"'
 public enum InputTrace {
-    public static let enabled =
+    /// Settable so tests can exercise the logging path; seeded from the launch args.
+    public static var enabled =
         ProcessInfo.processInfo.arguments.contains("-donpa.inputtrace")
 
     private static let logger = Logger(subsystem: "fi.misaki.donpa", category: "inputtrace")
