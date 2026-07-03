@@ -58,8 +58,12 @@ these slot into whichever release they're ready for.
 
 **Carry-overs (deferred, revisit when relevant):**
 
-- [ ] **Per-cell board VoiceOver** — needs a scalable cursor model (swiping 10k
-      cells doesn't scale); co-design with big-board navigation.
+- [ ] **A focused-cell cursor model** — unblocks two features at once: **keyboard
+      play on Mac** (arrow-key move + reveal/flag keys, so the board is playable
+      without a mouse — today the keyboard only drives app commands, not cells) and
+      **per-cell board VoiceOver** (both need the same navigable cursor, scaled to
+      huge boards — swiping/reading 10k cells one-by-one doesn't). Co-design with
+      big-board navigation; build the cursor once, serve both.
 - [ ] **KVS blob pruning** — a reinstall mints a new sync slot, orphaning the old
       blob. Deferred (a dead reinstall looks like an offline device; blobs are
       tiny). Revisit only near KVS storage limits.
