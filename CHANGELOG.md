@@ -21,13 +21,17 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Website link in About.** The About panel now links to **donpa.app** alongside
+  the source-code link.
+
 ### build 11
 
-- **New:** start a game straight from the scoreboard. Expand any board's row in the
-  Service Record and tap **New game on this board** to jump right into it — handy
-  for taking another run at a time you were just looking at.
-- **Fixed:** the New Game **Flat / Round** toggle no longer stretches tall on a
-  taller iPhone (the extra height read as dead space that didn't respond to taps).
+- **Play straight from the scoreboard.** Expand any board's row in the Service
+  Record and tap **New game on this board** to jump right into it — handy for
+  taking another run at a time you were just looking at.
+- **Steadier New Game toggle.** The **Flat / Round** control no longer stretches
+  tall on a taller iPhone, where the extra height read as dead space that didn't
+  respond to taps.
 
 ### build 10
 
