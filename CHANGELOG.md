@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 12
+
 - **The board can't go dead after a game ends (Mac).** Rapid-clicking through the
   end-of-game panel could leave the board silently ignoring *every* click until
   you paused for a second: the dismissing panel stayed clickable through its
