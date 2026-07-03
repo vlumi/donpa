@@ -85,6 +85,15 @@ public struct AboutView: View {
 
             VStack(spacing: 6) {
                 Text(verbatim: "© 2026 \(authorName)").font(.footnote)
+                Link(destination: URL(string: "https://donpa.app")!) {
+                    Label {
+                        Text(verbatim: "donpa.app")
+                    } icon: {
+                        Image(systemName: "globe")
+                    }
+                    .font(.footnote)
+                }
+                .tint(palette.counter)
                 Link(destination: URL(string: "https://github.com/vlumi/donpa")!) {
                     Label {
                         Text(verbatim: "github.com/vlumi/donpa")
