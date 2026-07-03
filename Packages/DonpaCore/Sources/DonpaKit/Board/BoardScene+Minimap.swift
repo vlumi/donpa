@@ -46,10 +46,17 @@ extension BoardScene {
         let eps: CGFloat = 0.001  // float slack so an exact fit isn't a false "exceeds"
         let fits = !isWrapped && cameraNode.xScale >= fitScale - eps
         // Publish so the toolbar toggle can disable when the board fits. Assign only
-        // on change to avoid @Published churn every frame.
+        // on change to avoid @Published churn every frame. Deferred to the next
+        // runloop turn: `refreshMinimap` runs from the SKScene `update(_:)` loop,
+        // which on the FIRST frame fires synchronously inside SwiftUI's view update
+        // (the scene presents mid-render) — assigning an observed @Published there
+        // trips "Publishing changes from within view updates". A hop lands the write
+        // after the update. It's a rarely-flipping bool, so a one-turn delay is moot.
         let exceeds = !fits
         if viewModel.boardExceedsViewport != exceeds {
-            viewModel.boardExceedsViewport = exceeds
+            DispatchQueue.main.async { [weak viewModel] in
+                viewModel?.boardExceedsViewport = exceeds
+            }
         }
         guard exceeds, showMinimap else {
             minimapNode?.isHidden = true
