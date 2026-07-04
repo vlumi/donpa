@@ -22,7 +22,7 @@ public struct GameView: View {
     @StateObject private var scoreboard: Scoreboard
     @StateObject private var settings: Settings
     @ObservedObject private var navigator: Navigator
-    @StateObject private var friends = FriendsStore()
+    @StateObject private var friends: FriendsStore
     @StateObject private var sceneHolder: SceneHolder
     private var scene: BoardScene { sceneHolder.scene }
     /// Brief in-app splash mirroring the OS launch image (which can't be delayed,
@@ -50,6 +50,13 @@ public struct GameView: View {
         _scoreboard = StateObject(wrappedValue: scoreboard)
         _settings = StateObject(wrappedValue: settings)
         _navigator = ObservedObject(wrappedValue: navigator)
+        // Friend list + groups sync under the SAME `syncScores` gate as the scoreboard
+        // (one social picture), over their own KVS blob namespace + the shared deviceID.
+        let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false
+        _friends = StateObject(
+            wrappedValue: FriendsStore(
+                cloud: UbiquitousFriendsStore(),
+                deviceID: DeviceID.current(), syncEnabled: syncOn))
         // Autoclosure → BoardScene is built once, not on every re-init (see SceneHolder).
         _sceneHolder = StateObject(wrappedValue: SceneHolder(viewModel: viewModel))
     }
@@ -106,7 +113,10 @@ public struct GameView: View {
         .onOpenURL { receive($0) }
         .modifier(ReceivePrompt(navigator: navigator, friends: friends))
         // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
-        .onChangeCompat(of: settings.syncScores) { scoreboard.syncEnabled = $0 }
+        .onChangeCompat(of: settings.syncScores) {
+            scoreboard.syncEnabled = $0
+            friends.syncEnabled = $0
+        }
         // UI-test hooks (like -uitest-clean): jump straight to a modal, so
         // tests/screenshots don't depend on tapping through the title.
         .onAppear {

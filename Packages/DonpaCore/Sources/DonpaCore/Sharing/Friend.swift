@@ -26,15 +26,36 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
     public var career: SharedCareer?
     /// When first pinned (local wall-clock) — for list ordering / "friends since".
     public var addedAt: Date
+    /// Last local mutation (add / alias / groups / refresh). The sync tiebreaker:
+    /// across devices the newest `updatedAt` wins per friend (last-writer-wins).
+    public var updatedAt: Date
+    /// Soft-delete tombstone. Non-nil = removed at that time; excluded from the live
+    /// list but kept in the synced blob so the delete propagates and can't resurrect
+    /// from a device that still lists the friend. nil = live.
+    public var deletedAt: Date?
 
     public var id: Data { publicKey }
 
     /// What to show: your local alias if you set one, else the friend's own name.
     public var displayName: String { localAlias ?? sharedName }
 
+    /// A tombstoned friend — removed, retained only to propagate the delete.
+    public var isDeleted: Bool { deletedAt != nil }
+
+    /// A minimal tombstone for this friend: keep only the public key + deletion time,
+    /// stripping name / scores / career / alias / groups. Enough for the merge to
+    /// propagate the delete, without their data lingering in the synced blob.
+    public func tombstone(now: Date = Date()) -> Friend {
+        Friend(
+            publicKey: publicKey, sharedName: "", localAlias: nil, groups: [],
+            lastIssuedAt: lastIssuedAt, scores: [], career: nil, addedAt: addedAt,
+            updatedAt: now, deletedAt: now)
+    }
+
     public init(
         publicKey: Data, sharedName: String, localAlias: String? = nil, groups: [String] = [],
-        lastIssuedAt: Date, scores: [SharedConfigScore], career: SharedCareer?, addedAt: Date
+        lastIssuedAt: Date, scores: [SharedConfigScore], career: SharedCareer?, addedAt: Date,
+        updatedAt: Date? = nil, deletedAt: Date? = nil
     ) {
         self.publicKey = publicKey
         self.sharedName = sharedName
@@ -44,10 +65,29 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
         self.scores = scores
         self.career = career
         self.addedAt = addedAt
+        // Default updatedAt to addedAt so records created without one sort sanely.
+        self.updatedAt = updatedAt ?? addedAt
+        self.deletedAt = deletedAt
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        publicKey = try c.decode(Data.self, forKey: .publicKey)
+        sharedName = try c.decode(String.self, forKey: .sharedName)
+        localAlias = try c.decodeIfPresent(String.self, forKey: .localAlias)
+        groups = try c.decodeIfPresent([String].self, forKey: .groups) ?? []
+        lastIssuedAt = try c.decode(Date.self, forKey: .lastIssuedAt)
+        scores = try c.decodeIfPresent([SharedConfigScore].self, forKey: .scores) ?? []
+        career = try c.decodeIfPresent(SharedCareer.self, forKey: .career)
+        addedAt = try c.decode(Date.self, forKey: .addedAt)
+        // Pre-sync records lack these: default updatedAt to addedAt, no tombstone.
+        updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? addedAt
+        deletedAt = try c.decodeIfPresent(Date.self, forKey: .deletedAt)
     }
 
     enum CodingKeys: String, CodingKey {
         case publicKey = "pk", sharedName = "n", localAlias = "la", groups = "g"
         case lastIssuedAt = "t", scores = "s", career = "c", addedAt = "a"
+        case updatedAt = "u", deletedAt = "d"
     }
 }
