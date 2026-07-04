@@ -21,6 +21,10 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Finnish polish.** Family/edge filter buttons shrink a long label to fit rather
+  than truncating it (e.g. "Ruudukko"), and the career-stat labels were reworded
+  to a consistent plural form (incl. a Finnish term for chording, "alueavaus").
+
 ### build 12
 
 - **The board can't go dead after a game ends (Mac).** Rapid-clicking through the

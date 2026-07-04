@@ -57,7 +57,10 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
                 if !text.isEmpty {
                     Text(verbatim: text)
                         .font(.subheadline.weight(selected ? .semibold : .regular))
+                        // Shrink to fit rather than truncate/wrap: a longer localized
+                        // label (e.g. FI "Ruudukko") stays whole on a narrow segment.
                         .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
             }
             .frame(maxWidth: .infinity)
