@@ -376,5 +376,7 @@ only. iOS shipped builds 2–3; macOS build 1.
 single plain vX.Y.Z tag — so each version links to its filtered list of GitHub
 releases rather than one tag. -->
 
+[0.4.0]: https://github.com/vlumi/donpa/releases?q=v0.4.0
+[0.3.0]: https://github.com/vlumi/donpa/releases?q=v0.3.0
 [0.2.0]: https://github.com/vlumi/donpa/releases?q=v0.2.0
 [0.1.0]: https://github.com/vlumi/donpa/releases?q=v0.1.0
