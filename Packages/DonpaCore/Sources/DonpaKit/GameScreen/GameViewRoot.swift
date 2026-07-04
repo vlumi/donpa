@@ -132,25 +132,31 @@ public struct GameView: View {
     /// friends list, and hand the result to the receive prompt. Verification lives in
     /// `ShareLink.payload` (signature) — a throw here means the share is invalid, so
     /// we surface a loud `.failed`; a valid share becomes `.accepted` or `.collision`.
-    private func receive(_ url: URL) {
+    /// Shared by `onOpenURL` (tapped link) and the scanner (decoded QR).
+    static func classify(_ url: URL, existing: [Friend]) -> IncomingShare {
         do {
             let payload = try ShareLink.payload(from: url)
-            switch FriendMerge.outcome(for: payload, existing: friends.friends) {
+            switch FriendMerge.outcome(for: payload, existing: existing) {
             case .nameCollision(let key):
-                navigator.incomingShare = .collision(payload, existingKey: key)
+                return .collision(payload, existingKey: key)
             case let outcome:
-                navigator.incomingShare = .accepted(payload, outcome)
+                return .accepted(payload, outcome)
             }
         } catch let error as ShareCodec.DecodeError {
-            navigator.incomingShare = .failed(error)
+            return .failed(error)
         } catch {
-            navigator.incomingShare = .failed(.notDonpaShare)
+            return .failed(.notDonpaShare)
         }
+    }
+
+    private func receive(_ url: URL) {
+        navigator.incomingShare = Self.classify(url, existing: friends.friends)
     }
 }
 
-/// Presents the receive flow driven by `Navigator.incomingShare`: the sheet for a
-/// verified add/refresh/collision, or a loud alert for a share that failed to verify.
+/// Presents the receive flow driven by `Navigator`: the sheet for a verified
+/// add/refresh/collision, the loud alert for a share that failed to verify, and the
+/// QR scan sheet (whose decoded code routes through the same classify path).
 /// A modifier (not inline) so `GameView.body` stays readable.
 private struct ReceivePrompt: ViewModifier {
     @ObservedObject var navigator: Navigator
@@ -167,6 +173,14 @@ private struct ReceivePrompt: ViewModifier {
             .sheet(item: sheetBinding) { incoming in
                 ReceiveShareView(incoming: incoming, friends: friends) {
                     navigator.incomingShare = nil
+                }
+            }
+            .sheet(isPresented: $navigator.showingScanner) {
+                ScanShareView { url in
+                    // Route on the next runloop tick: the scanner sheet is dismissing,
+                    // and presenting the receive sheet in the same tick can race it.
+                    let incoming = GameView.classify(url, existing: friends.friends)
+                    Task { @MainActor in navigator.incomingShare = incoming }
                 }
             }
             .alert(

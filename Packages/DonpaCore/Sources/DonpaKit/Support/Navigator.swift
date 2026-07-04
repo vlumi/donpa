@@ -42,7 +42,7 @@ public final class Navigator: ObservableObject {
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {
         showingScores || showingSettings || showingAbout || showingNewGame
-            || incomingShare != nil
+            || incomingShare != nil || showingScanner
     }
 
     /// A received share awaiting the user's decision (opened via a donpa.app link or
@@ -50,6 +50,11 @@ public final class Navigator: ObservableObject {
     /// friend, the resolution sheet for a name collision, or the alert for a share
     /// that failed to verify. Cleared once handled.
     @Published public var incomingShare: IncomingShare?
+
+    /// Whether the QR scan sheet is presented (the "add a friend" fallback when a
+    /// Universal Link can't be tapped — a QR shown on another screen). A decoded code
+    /// routes through the same receive path as `onOpenURL`.
+    @Published public var showingScanner = false
 
     public init(showingTitle: Bool = true) {
         self.showingTitle = showingTitle

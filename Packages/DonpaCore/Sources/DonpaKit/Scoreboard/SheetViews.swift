@@ -24,9 +24,15 @@ struct ScoreboardView: View {
     /// Start a fresh game on a config (the row expansion's "New game on this board").
     /// The host wires this to begin the game and dismiss the sheet. nil = no button.
     var onPlay: ((GameConfig) -> Void)?
-    @Environment(\.dismiss) private var dismiss
-    @State private var confirmingReset = false
-    @State private var sharing = false
+    /// Open the QR scanner to add a friend. The host dismisses this sheet and presents
+    /// the scanner at the root (so the scanner + receive prompt don't stack on top of
+    /// the scoreboard). nil = no scan button.
+    var onScan: (() -> Void)?
+    // Not `private`: the iOS toolbar lives in a `ScoreboardView` extension in another
+    // file (ScoreboardToolbar) and drives these — Swift `private` is file-scoped.
+    @Environment(\.dismiss) var dismiss
+    @State var confirmingReset = false
+    @State var sharing = false
 
     /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
     /// View-only state — a browsing choice, not persisted. Seeded in `onAppear` to
@@ -99,35 +105,7 @@ struct ScoreboardView: View {
                 }
                 .navigationTitle(Text("Service Record", bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            sharing = true
-                        } label: {
-                            Label {
-                                Text("Share scores", bundle: .module)
-                            } icon: {
-                                Image(systemName: "square.and.arrow.up")
-                            }
-                        }
-                        .accessibilityIdentifier("scoreboard.share")
-                    }
-                    ToolbarItem(placement: .destructiveAction) {
-                        Button(role: .destructive) {
-                            confirmingReset = true
-                        } label: {
-                            Text("Reset", bundle: .module)
-                        }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                        .accessibilityIdentifier("sheet.done")
-                    }
-                }
+                .toolbar { iOSToolbar }
         }
         #else
         VStack(spacing: 16) {
@@ -146,6 +124,15 @@ struct ScoreboardView: View {
                         Text("Share scores", bundle: .module)
                     } icon: {
                         Image(systemName: "square.and.arrow.up")
+                    }
+                }
+                if let onScan {
+                    Button(action: onScan) {
+                        Label {
+                            Text("Add friend", bundle: .module)
+                        } icon: {
+                            Image(systemName: "qrcode.viewfinder")
+                        }
                     }
                 }
                 Button(role: .destructive) {

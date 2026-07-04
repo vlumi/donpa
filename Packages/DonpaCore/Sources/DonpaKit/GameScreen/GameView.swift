@@ -144,7 +144,14 @@ struct GameContent: View {
             ScoreboardView(
                 scoreboard: scoreboard, settings: settings, available: windowSize,
                 currentConfig: navigator.showingTitle ? nil : viewModel.config,
-                onPlay: { navigator.playConfigRequested = $0 })
+                onPlay: { navigator.playConfigRequested = $0 },
+                // Close the scoreboard, then open the scanner at the root — so the
+                // scanner + receive prompt present cleanly, not stacked on this sheet.
+                // Deferred a tick: swapping two sheets in one runloop drops the second.
+                onScan: {
+                    navigator.showingScores = false
+                    Task { @MainActor in navigator.showingScanner = true }
+                })
         }
         // Opening the scoreboard pauses a live game (flushing career activity and
         // stopping the clock); auto-resume on dismiss only if WE paused.

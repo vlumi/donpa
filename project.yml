@@ -30,6 +30,10 @@ targets:
         # No encryption → declare it so every TestFlight/App Store upload skips
         # the export-compliance prompt.
         ITSAppUsesNonExemptEncryption: false
+        # Camera is used only to scan a friend's share QR (opt-in, from the scan
+        # screen). Never records or stores anything — the frame is discarded after
+        # a code is read.
+        NSCameraUsageDescription: Scan a friend's QR code to add their scores.
         LSApplicationCategoryType: public.app-category.puzzle
         # Launch screen: the mono burst-mine centered on a charcoal ground (both
         # asset-catalog entries), matching the app's "interior-page" B&W look.
