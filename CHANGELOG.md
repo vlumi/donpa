@@ -21,6 +21,14 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Share your scores with friends.** From the Service Record, tap Share to show a
+  QR code (or copy a link) built from your best scores. A friend adds you by scanning
+  the code or opening the link — no account, no server. Scores are signed so they
+  can't be forged, and a friend's scores stay separate from your own: remove them and
+  their data is simply gone.
+- **Friends list.** See everyone you've added, give them your own nickname, sort them
+  into groups, or remove them — all from the Service Record.
+
 ## [0.3.0] — Board variants
 
 **Board-topology variants: wrapped (torus) + hex grids** (see ROADMAP.md).

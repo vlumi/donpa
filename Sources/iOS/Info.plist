@@ -24,6 +24,8 @@
 	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.puzzle</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan a friend's QR code to add their scores.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

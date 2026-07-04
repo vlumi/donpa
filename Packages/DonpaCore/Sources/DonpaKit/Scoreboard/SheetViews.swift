@@ -24,8 +24,18 @@ struct ScoreboardView: View {
     /// Start a fresh game on a config (the row expansion's "New game on this board").
     /// The host wires this to begin the game and dismiss the sheet. nil = no button.
     var onPlay: ((GameConfig) -> Void)?
-    @Environment(\.dismiss) private var dismiss
-    @State private var confirmingReset = false
+    /// Open the QR scanner to add a friend. The host dismisses this sheet and presents
+    /// the scanner at the root (so the scanner + receive prompt don't stack on top of
+    /// the scoreboard). nil = no scan button.
+    var onScan: (() -> Void)?
+    /// Open the friends list. Like `onScan`, the host dismisses this sheet and presents
+    /// the list at the root. nil = no friends button.
+    var onFriends: (() -> Void)?
+    // Not `private`: the iOS toolbar lives in a `ScoreboardView` extension in another
+    // file (ScoreboardToolbar) and drives these — Swift `private` is file-scoped.
+    @Environment(\.dismiss) var dismiss
+    @State var confirmingReset = false
+    @State var sharing = false
 
     /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
     /// View-only state — a browsing choice, not persisted. Seeded in `onAppear` to
@@ -72,6 +82,9 @@ struct ScoreboardView: View {
                         bundle: .module)
                 }
             }
+            .sheet(isPresented: $sharing) {
+                ShareScoresView(scoreboard: scoreboard, settings: settings)
+            }
     }
 
     /// iOS: a NavigationStack with Reset / Done nav-bar items over the list. macOS:
@@ -95,23 +108,7 @@ struct ScoreboardView: View {
                 }
                 .navigationTitle(Text("Service Record", bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .destructiveAction) {
-                        Button(role: .destructive) {
-                            confirmingReset = true
-                        } label: {
-                            Text("Reset", bundle: .module)
-                        }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                        .accessibilityIdentifier("sheet.done")
-                    }
-                }
+                .toolbar { iOSToolbar }
         }
         #else
         VStack(spacing: 16) {
@@ -123,6 +120,33 @@ struct ScoreboardView: View {
             HStack(spacing: 12) {
                 SyncFooterControl(settings: settings, scoreboard: scoreboard)
                 Spacer()
+                Button {
+                    sharing = true
+                } label: {
+                    Label {
+                        Text("Share scores", bundle: .module)
+                    } icon: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+                if let onScan {
+                    Button(action: onScan) {
+                        Label {
+                            Text("Add friend", bundle: .module)
+                        } icon: {
+                            Image(systemName: "qrcode.viewfinder")
+                        }
+                    }
+                }
+                if let onFriends {
+                    Button(action: onFriends) {
+                        Label {
+                            Text("Friends", bundle: .module)
+                        } icon: {
+                            Image(systemName: "person.2")
+                        }
+                    }
+                }
                 Button(role: .destructive) {
                     confirmingReset = true
                 } label: {
@@ -360,27 +384,4 @@ struct ScoreboardView: View {
             .padding(.horizontal, Self.rowInset)
     }
 
-    /// A count with the locale's grouping separator (e.g. `1,234,567`), for the
-    /// large lifetime totals.
-    static func grouped(_ value: Int) -> String { value.formatted(.number) }
-
-    /// Coarse human duration for lifetime playtime (hours/minutes). E.g. `14h 23m`,
-    /// `45m`, `< 1m`.
-    static func durationLabel(_ centiseconds: Int) -> String {
-        let totalMinutes = centiseconds / 6000
-        let h = totalMinutes / 60
-        let m = totalMinutes % 60
-        // Localized units (en "14h 23m" / fi "14 t 23 min" / ja "14時間23分").
-        if h > 0 {
-            return String(
-                localized: "\(h)h \(m)m", bundle: .module,
-                comment: "Playtime, hours+minutes: H hours M minutes")
-        }
-        if m > 0 {
-            return String(
-                localized: "\(m)m", bundle: .module, comment: "Playtime, minutes only: M minutes")
-        }
-        return String(
-            localized: "< 1m", bundle: .module, comment: "Playtime under a minute")
-    }
 }

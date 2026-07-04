@@ -42,9 +42,48 @@ public final class Navigator: ObservableObject {
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {
         showingScores || showingSettings || showingAbout || showingNewGame
+            || incomingShare != nil || showingScanner || showingFriends
     }
+
+    /// A received share awaiting the user's decision (opened via a donpa.app link or
+    /// scanned QR). Drives the receive prompt — the confirm sheet for a new/refreshed
+    /// friend, the resolution sheet for a name collision, or the alert for a share
+    /// that failed to verify. Cleared once handled.
+    @Published public var incomingShare: IncomingShare?
+
+    /// Whether the QR scan sheet is presented (the "add a friend" fallback when a
+    /// Universal Link can't be tapped — a QR shown on another screen). A decoded code
+    /// routes through the same receive path as `onOpenURL`.
+    @Published public var showingScanner = false
+
+    /// Whether the friends list sheet is presented (view / rename / group / remove
+    /// tracked friends). Opened from the Service Record.
+    @Published public var showingFriends = false
 
     public init(showingTitle: Bool = true) {
         self.showingTitle = showingTitle
+    }
+}
+
+/// A decoded incoming share plus the classification the receive UI branches on. The
+/// URL is decoded once (in `GameView.receive(url:)`) and the result carried here so
+/// the sheet/alert just renders — no re-decoding, no signature check in the view.
+public enum IncomingShare: Identifiable {
+    /// Verified, and a genuine new/refresh/migrate — show the confirm sheet.
+    case accepted(SharePayload, FriendMerge.Outcome)
+    /// Verified, but the name clashes with an existing friend (different key) — show
+    /// the keep-both / replace / cancel resolution sheet. Carries the clashing key.
+    case collision(SharePayload, existingKey: Data)
+    /// Failed to verify or decode — show the loud alert with a reason.
+    case failed(ShareCodec.DecodeError)
+
+    /// Stable identity for `.sheet(item:)` — one live prompt at a time, so a constant
+    /// per-case tag is enough (and avoids hashing the payload).
+    public var id: String {
+        switch self {
+        case .accepted: return "accepted"
+        case .collision: return "collision"
+        case .failed: return "failed"
+        }
     }
 }
