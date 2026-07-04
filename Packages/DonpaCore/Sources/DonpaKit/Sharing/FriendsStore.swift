@@ -10,17 +10,50 @@ import Foundation
 /// tolerant loads, mirroring `SaveStore`.
 @MainActor
 public final class FriendsStore: ObservableObject {
+    /// The LIVE friends — tombstones filtered out. What the UI shows.
     @Published public private(set) var friends: [Friend] = []
-    /// The group catalog (id + name). Groups exist independently of membership, so an
-    /// empty group persists. `Friend.groups` holds ids into this.
+    /// The LIVE group catalog (id + name), tombstones filtered out. Groups exist
+    /// independently of membership, so an empty group persists. `Friend.groups` holds
+    /// ids into this.
     @Published public private(set) var groups: [FriendGroup] = []
 
-    private let url: URL
+    /// The full backing sets INCLUDING soft-delete tombstones — persisted and synced,
+    /// so a delete propagates across devices and can't resurrect. The published
+    /// `friends`/`groups` are the live projections of these.
+    private var allFriends: [Friend] = []
+    private var allGroups: [FriendGroup] = []
 
-    public init(directory: URL? = nil, filename: String = "friends.json") {
+    private let url: URL
+    private let cloud: (any CloudFriendsStore)?
+    private let deviceID: String
+
+    /// User gate — mirrors the scoreboard's `syncScores`. Off → this device's blob is
+    /// removed and only local records show; on → push + merge.
+    public var syncEnabled: Bool {
+        didSet {
+            guard syncEnabled != oldValue else { return }
+            if syncEnabled {
+                pushAndMerge()
+            } else {
+                cloud?.deleteOwnBlob(deviceID: deviceID)
+                rebuildFromOwn()  // drop others' contributions from the live view
+            }
+        }
+    }
+
+    public init(
+        directory: URL? = nil, filename: String = "friends.json",
+        cloud: (any CloudFriendsStore)? = nil,
+        deviceID: String = "local", syncEnabled: Bool = false
+    ) {
         let dir = directory ?? Self.appSupportDirectory
         self.url = dir.appendingPathComponent(filename)
+        self.cloud = cloud
+        self.deviceID = deviceID
+        self.syncEnabled = syncEnabled
         load()
+        cloud?.onExternalChange = { [weak self] in self?.pushAndMerge() }
+        if syncEnabled { pushAndMerge() }
     }
 
     /// A throwaway store in a unique temp dir — for UI tests / previews.
@@ -39,20 +72,21 @@ public final class FriendsStore: ObservableObject {
     /// then calls `add(resolving:)`). `now` injected for testability.
     @discardableResult
     public func apply(_ payload: SharePayload, now: Date = Date()) -> FriendMerge.Outcome {
+        // Classify against LIVE friends only — a tombstoned friend re-adds cleanly.
         let outcome = FriendMerge.outcome(for: payload, existing: friends)
         switch outcome {
         case .add:
-            friends.append(FriendMerge.friend(from: payload, existing: nil, now: now))
-            save()
+            put(stamped(FriendMerge.friend(from: payload, existing: nil, now: now), now))
         case .refresh:
-            upsert(
-                FriendMerge.friend(from: payload, existing: existing(payload.publicKey), now: now))
+            put(
+                stamped(
+                    FriendMerge.friend(
+                        from: payload, existing: liveFriend(payload.publicKey), now: now), now))
         case .migrate(let oldKey):
-            // Re-key the existing friend to the new identity, preserving your locals.
-            let existing = existing(oldKey)
-            friends.removeAll { $0.publicKey == oldKey }
-            friends.append(FriendMerge.friend(from: payload, existing: existing, now: now))
-            save()
+            // Re-key: tombstone the old identity, add the new preserving your locals.
+            let existing = liveFriend(oldKey)
+            tombstoneFriend(oldKey, now: now)
+            put(stamped(FriendMerge.friend(from: payload, existing: existing, now: now), now))
         case .stale, .nameCollision:
             break  // stale: ignore; collision: UI prompts, then resolveCollision(...)
         }
@@ -64,51 +98,48 @@ public final class FriendsStore: ObservableObject {
     public func addResolvingCollision(_ payload: SharePayload, alias: String?, now: Date = Date()) {
         var f = FriendMerge.friend(from: payload, existing: nil, now: now)
         f.localAlias = alias
-        friends.append(f)
-        save()
+        put(stamped(f, now))
     }
 
     /// Replace an existing friend's identity+data with the payload's (the "replace"
-    /// resolution for a collision): drop the clashing one, add the new.
+    /// resolution for a collision): tombstone the clashing one, add the new.
     public func replaceOnCollision(
         _ payload: SharePayload, replacing oldKey: Data, now: Date = Date()
     ) {
-        let keep = existing(oldKey)
-        friends.removeAll { $0.publicKey == oldKey }
-        friends.append(FriendMerge.friend(from: payload, existing: keep, now: now))
-        save()
+        let keep = liveFriend(oldKey)
+        tombstoneFriend(oldKey, now: now)
+        put(stamped(FriendMerge.friend(from: payload, existing: keep, now: now), now))
     }
 
     // MARK: List management
 
-    public func delete(_ publicKey: Data) {
-        friends.removeAll { $0.publicKey == publicKey }
-        save()
+    public func delete(_ publicKey: Data, now: Date = Date()) {
+        tombstoneFriend(publicKey, now: now)
     }
 
-    public func setAlias(_ alias: String?, for publicKey: Data) {
-        guard let i = friends.firstIndex(where: { $0.publicKey == publicKey }) else { return }
+    public func setAlias(_ alias: String?, for publicKey: Data, now: Date = Date()) {
+        guard var f = liveFriend(publicKey) else { return }
         let trimmed = alias?.trimmingCharacters(in: .whitespacesAndNewlines)
-        friends[i].localAlias = (trimmed?.isEmpty ?? true) ? nil : trimmed
-        save()
+        f.localAlias = (trimmed?.isEmpty ?? true) ? nil : trimmed
+        put(stamped(f, now))
     }
 
     /// Set a friend's group memberships (a set of `FriendGroup` ids). Ids not in the
-    /// catalog are dropped — membership can't reference a group that doesn't exist.
-    public func setGroups(_ groupIDs: [String], for publicKey: Data) {
-        guard let i = friends.firstIndex(where: { $0.publicKey == publicKey }) else { return }
+    /// LIVE catalog are dropped — membership can't reference a missing group.
+    public func setGroups(_ groupIDs: [String], for publicKey: Data, now: Date = Date()) {
+        guard var f = liveFriend(publicKey) else { return }
         let known = Set(groups.map(\.id))
-        friends[i].groups = groupIDs.filter(known.contains)
-        save()
+        f.groups = groupIDs.filter(known.contains)
+        put(stamped(f, now))
     }
 
     // MARK: Group catalog
 
-    /// Create a group with a trimmed name, or return the existing one if a group by
-    /// that name (case-insensitive) already exists — so "create" from a picker never
+    /// Create a group with a trimmed name, or return the existing LIVE one if a group
+    /// by that name (case-insensitive) already exists — so "create" from a picker never
     /// makes accidental duplicates. Returns nil if the name is blank.
     @discardableResult
-    public func createGroup(named name: String) -> FriendGroup? {
+    public func createGroup(named name: String, now: Date = Date()) -> FriendGroup? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         if let existing = groups.first(where: {
@@ -116,65 +147,165 @@ public final class FriendsStore: ObservableObject {
         }) {
             return existing
         }
-        let group = FriendGroup(name: trimmed)
-        groups.append(group)
-        save()
+        let group = FriendGroup(name: trimmed, updatedAt: now)
+        putGroup(group)
         return group
     }
 
     /// Rename a group (members follow, since they reference the id). No-op on a blank
-    /// name or an unknown id.
-    public func renameGroup(_ id: String, to name: String) {
+    /// name or an unknown live id.
+    public func renameGroup(_ id: String, to name: String, now: Date = Date()) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let i = groups.firstIndex(where: { $0.id == id }) else { return }
-        groups[i].name = trimmed
-        save()
+        guard !trimmed.isEmpty, var g = groups.first(where: { $0.id == id }) else { return }
+        g.name = trimmed
+        g.updatedAt = now
+        putGroup(g)
     }
 
-    /// Delete a group and remove its id from every friend's membership.
-    public func deleteGroup(_ id: String) {
-        groups.removeAll { $0.id == id }
-        for i in friends.indices {
-            friends[i].groups.removeAll { $0 == id }
+    /// Delete a group (tombstone it) and drop its id from every friend's membership.
+    public func deleteGroup(_ id: String, now: Date = Date()) {
+        guard let g = allGroups.first(where: { $0.id == id }) else { return }
+        putGroup(g.tombstone(now: now))
+        for f in allFriends where !f.isDeleted && f.groups.contains(id) {
+            var updated = f
+            updated.groups.removeAll { $0 == id }
+            put(stamped(updated, now))
         }
-        save()
     }
 
     /// Toggle a friend's membership in a group (convenience for the picker).
-    public func setMembership(_ member: Bool, of publicKey: Data, in groupID: String) {
-        guard groups.contains(where: { $0.id == groupID }),
-            let i = friends.firstIndex(where: { $0.publicKey == publicKey })
-        else { return }
-        var set = friends[i].groups
-        if member {
-            if !set.contains(groupID) { set.append(groupID) }
-        } else {
-            set.removeAll { $0 == groupID }
+    public func setMembership(
+        _ member: Bool, of publicKey: Data, in groupID: String, now: Date = Date()
+    ) {
+        guard groups.contains(where: { $0.id == groupID }), var f = liveFriend(publicKey) else {
+            return
         }
-        friends[i].groups = set
-        save()
+        if member {
+            if !f.groups.contains(groupID) { f.groups.append(groupID) }
+        } else {
+            f.groups.removeAll { $0 == groupID }
+        }
+        put(stamped(f, now))
     }
 
-    /// The friends who belong to a group (by id). Order preserved from `friends`.
+    /// The live friends who belong to a group (by id). Order preserved from `friends`.
     public func members(of groupID: String) -> [Friend] {
         friends.filter { $0.groups.contains(groupID) }
     }
 
     // MARK: Internals
 
-    private func existing(_ key: Data) -> Friend? { friends.first { $0.publicKey == key } }
+    /// The live (non-tombstoned) friend for a key, if any.
+    private func liveFriend(_ key: Data) -> Friend? {
+        friends.first { $0.publicKey == key }
+    }
 
-    private func upsert(_ friend: Friend) {
-        if let i = friends.firstIndex(where: { $0.publicKey == friend.publicKey }) {
-            friends[i] = friend
+    /// Bump `updatedAt` so this edit wins the cross-device merge.
+    private func stamped(_ friend: Friend, _ now: Date) -> Friend {
+        var f = friend
+        f.updatedAt = now
+        return f
+    }
+
+    /// Upsert a friend into the backing set (by public key), then republish + persist.
+    private func put(_ friend: Friend) {
+        if let i = allFriends.firstIndex(where: { $0.publicKey == friend.publicKey }) {
+            allFriends[i] = friend
         } else {
-            friends.append(friend)
+            allFriends.append(friend)
         }
+        commit()
+    }
+
+    /// Replace a friend with its minimal tombstone (or no-op if unknown/already gone).
+    private func tombstoneFriend(_ key: Data, now: Date) {
+        guard let i = allFriends.firstIndex(where: { $0.publicKey == key }),
+            !allFriends[i].isDeleted
+        else { return }
+        allFriends[i] = allFriends[i].tombstone(now: now)
+        commit()
+    }
+
+    private func putGroup(_ group: FriendGroup) {
+        if let i = allGroups.firstIndex(where: { $0.id == group.id }) {
+            allGroups[i] = group
+        } else {
+            allGroups.append(group)
+        }
+        commit()
+    }
+
+    /// Recompute the published live view, persist this device's own set, and (when
+    /// syncing) push the own blob so other devices see the change. The published view
+    /// is the merge of THIS device's records with every other device's blob; the
+    /// backing `allFriends`/`allGroups` remain this device's own records only, so we
+    /// never re-publish others' records as our own.
+    private func commit() {
         save()
+        if syncEnabled, let cloud, cloud.isAvailable {
+            if let data = try? JSONEncoder().encode(
+                FriendsStored(friends: allFriends, groups: allGroups))
+            {
+                cloud.writeOwnBlob(data, deviceID: deviceID)
+            }
+            republishMerged()
+        } else {
+            rebuildFromOwn()
+        }
+    }
+
+    /// Publish own-only (tombstones filtered) — when sync is off or iCloud is away.
+    private func rebuildFromOwn() {
+        friends = FriendSyncMerge.live(allFriends)
+        groups = FriendSyncMerge.live(allGroups)
+    }
+
+    /// Publish the merge of this device's records with every other device's blob.
+    private func republishMerged() {
+        let others = otherBlobs()
+        let mergedFriends = FriendSyncMerge.mergeFriends([allFriends] + others.map(\.friends))
+        let mergedGroups = FriendSyncMerge.mergeGroups([allGroups] + others.map(\.groups))
+        friends = FriendSyncMerge.live(mergedFriends)
+        groups = FriendSyncMerge.live(mergedGroups)
+    }
+
+    /// Decode every OTHER device's blob (skip our own slot; own records come from
+    /// `allFriends`, already current in memory).
+    private func otherBlobs() -> [FriendsStored] {
+        guard let cloud, cloud.isAvailable else { return [] }
+        let decoder = JSONDecoder()
+        return cloud.readAllBlobs()
+            .filter { $0.key != deviceID }
+            .values
+            .compactMap { try? decoder.decode(FriendsStored.self, from: $0) }
+    }
+
+    /// Re-pull + merge from the cloud now (e.g. before showing the friends list).
+    /// No-op when sync is off. Exposed so the UI (and tests) can force a refresh.
+    public func refreshFromCloud() { pushAndMerge() }
+
+    /// Pull others' records into this device's OWN set (a genuine union that persists),
+    /// then re-publish. Used on enabling sync / external change: adopting another
+    /// device's friends means they become ours too, so a later sync-off keeps them.
+    private func pushAndMerge() {
+        guard syncEnabled, let cloud, cloud.isAvailable else {
+            rebuildFromOwn()
+            return
+        }
+        let others = otherBlobs()
+        allFriends = FriendSyncMerge.mergeFriends([allFriends] + others.map(\.friends))
+        allGroups = FriendSyncMerge.mergeGroups([allGroups] + others.map(\.groups))
+        save()
+        if let data = try? JSONEncoder().encode(
+            FriendsStored(friends: allFriends, groups: allGroups))
+        {
+            cloud.writeOwnBlob(data, deviceID: deviceID)
+        }
+        rebuildFromOwn()  // own set is now the union, so own-only == merged
     }
 
     private func save() {
-        let stored = FriendsStored(friends: friends, groups: groups)
+        let stored = FriendsStored(friends: allFriends, groups: allGroups)
         guard let data = try? JSONEncoder().encode(stored) else { return }
         try? data.write(to: url, options: [.atomic])
     }
@@ -182,10 +313,12 @@ public final class FriendsStore: ObservableObject {
     private func load() {
         guard let data = try? Data(contentsOf: url) else { return }
         let decoder = JSONDecoder()
-        // Current format: a { friends, groups } container.
+        // Current format: a { friends, groups } container (may hold tombstones).
         if let stored = try? decoder.decode(FriendsStored.self, from: data) {
-            friends = stored.friends
-            groups = stored.groups
+            allFriends = stored.friends
+            allGroups = stored.groups
+            friends = FriendSyncMerge.live(allFriends)
+            groups = FriendSyncMerge.live(allGroups)
             return
         }
         // Legacy format: a bare [Friend] whose `groups` held NAMES, not ids. Migrate:
@@ -210,9 +343,9 @@ public final class FriendsStore: ObservableObject {
         for i in legacy.indices {
             legacy[i].groups = legacy[i].groups.compactMap { idByName[$0] }
         }
-        friends = legacy
-        groups = catalog
-        save()
+        allFriends = legacy
+        allGroups = catalog
+        commit()
     }
 
     private static let appSupportDirectory: URL = {

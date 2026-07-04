@@ -51,7 +51,7 @@ struct FriendsListView: View {
                     .buttonStyle(.plain)
                 }
                 .onDelete { offsets in
-                    offsets.map { ordered[$0].publicKey }.forEach(friends.delete)
+                    offsets.map { ordered[$0].publicKey }.forEach { friends.delete($0) }
                 }
             }
         }

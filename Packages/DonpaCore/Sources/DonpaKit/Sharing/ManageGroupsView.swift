@@ -12,6 +12,8 @@ struct ManageGroupsView: View {
     /// The group being renamed (its detail row shows a text field), or nil.
     @State private var renamingID: String?
     @State private var renameText = ""
+    /// The group whose members are expanded inline, or nil.
+    @State private var expandedID: String?
 
     var body: some View {
         chrome
@@ -39,8 +41,13 @@ struct ManageGroupsView: View {
                 List {
                     ForEach(friends.groups) { group in
                         row(for: group)
+                        if expandedID == group.id {
+                            memberList(for: group)
+                        }
                     }
-                    .onDelete { $0.map { friends.groups[$0].id }.forEach(friends.deleteGroup) }
+                    .onDelete { offsets in
+                        offsets.map { friends.groups[$0].id }.forEach { friends.deleteGroup($0) }
+                    }
                 }
             }
         }
@@ -62,8 +69,19 @@ struct ManageGroupsView: View {
             HStack {
                 Text(group.name)
                 Spacer()
-                Text("\(friends.members(of: group.id).count)")
-                    .font(.caption).foregroundStyle(.secondary)
+                // Tap the count to expand/collapse the member list.
+                Button {
+                    expandedID = (expandedID == group.id) ? nil : group.id
+                } label: {
+                    let count = friends.members(of: group.id).count
+                    HStack(spacing: 4) {
+                        Text("\(count)").font(.caption)
+                        Image(systemName: expandedID == group.id ? "chevron.up" : "chevron.down")
+                            .font(.caption2)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.borderless)
                 Button {
                     renamingID = group.id
                     renameText = group.name
@@ -73,6 +91,22 @@ struct ManageGroupsView: View {
                 .buttonStyle(.borderless)
             }
             .contentShape(Rectangle())
+        }
+    }
+
+    /// The friends in a group, shown inline under its row when expanded.
+    @ViewBuilder private func memberList(for group: FriendGroup) -> some View {
+        let members = friends.members(of: group.id)
+        if members.isEmpty {
+            Text("No members yet.", bundle: .module)
+                .font(.caption).foregroundStyle(.secondary)
+                .padding(.leading, 16)
+        } else {
+            ForEach(members) { friend in
+                Text(friend.displayName)
+                    .font(.callout).foregroundStyle(.secondary)
+                    .padding(.leading, 16)
+            }
         }
     }
 

@@ -31,7 +31,10 @@ under Unreleased as they merge.
   add them, too.
 - **Groups.** Sort friends into named groups (work, family, …): create and manage your
   groups, then put each friend in as many as you like. Renaming a group keeps its
-  members; deleting one just un-groups them.
+  members; deleting one just un-groups them. Tap a group to see who's in it.
+- **Friends and groups sync across your devices.** With iCloud sync on, the friends and
+  groups you set up on one device show up on the rest — the same switch that syncs your
+  scores. Removing a friend removes them everywhere.
 
 ## [0.3.0] — Board variants
 
@@ -373,5 +376,7 @@ only. iOS shipped builds 2–3; macOS build 1.
 single plain vX.Y.Z tag — so each version links to its filtered list of GitHub
 releases rather than one tag. -->
 
+[0.4.0]: https://github.com/vlumi/donpa/releases?q=v0.4.0
+[0.3.0]: https://github.com/vlumi/donpa/releases?q=v0.3.0
 [0.2.0]: https://github.com/vlumi/donpa/releases?q=v0.2.0
 [0.1.0]: https://github.com/vlumi/donpa/releases?q=v0.1.0

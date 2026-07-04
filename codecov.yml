@@ -24,13 +24,15 @@ comment:
 # ignored by the glob automatically; pure logic belongs in DonpaCore instead,
 # where it's tracked. Tests themselves aren't coverage subjects.
 #
-# CloudStatsStore.swift is the one exception in DonpaCore: its only executable
-# code is `UbiquitousStatsStore`, a thin wrapper over the real
-# `NSUbiquitousKeyValueStore` that can't run without a signed-in iCloud device
-# (tests drive the `CloudStatsStore` protocol via a fake). All the SYNC LOGIC —
-# merge, reset-epoch tombstone, offline cache — lives in `StatsMerge` /
-# `StatsSyncCoordinator` / `Scoreboard` and is fully covered.
+# CloudStatsStore.swift / CloudFriendsStore.swift are the exceptions in DonpaCore:
+# their only executable code is the `Ubiquitous*Store` wrappers over the real
+# `NSUbiquitousKeyValueStore`, which can't run without a signed-in iCloud device
+# (tests drive the `Cloud*Store` protocols via fakes). All the SYNC LOGIC —
+# merge, tombstones, union, reset-epoch, offline cache — lives in `StatsMerge` /
+# `StatsSyncCoordinator` / `Scoreboard` and `FriendSyncMerge` / `FriendsStore`,
+# and is fully covered.
 ignore:
   - "Packages/DonpaCore/Sources/DonpaKit/**"
   - "Packages/DonpaCore/Sources/DonpaCore/Stats/CloudStatsStore.swift"
+  - "Packages/DonpaCore/Sources/DonpaCore/Sharing/CloudFriendsStore.swift"
   - "Packages/DonpaCore/Tests/**"
