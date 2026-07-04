@@ -22,6 +22,7 @@ public struct GameView: View {
     @StateObject private var scoreboard: Scoreboard
     @StateObject private var settings: Settings
     @ObservedObject private var navigator: Navigator
+    @StateObject private var friends = FriendsStore()
     @StateObject private var sceneHolder: SceneHolder
     private var scene: BoardScene { sceneHolder.scene }
     /// Brief in-app splash mirroring the OS launch image (which can't be delayed,
@@ -100,6 +101,10 @@ public struct GameView: View {
         }
         .preferredColorScheme(settings.appearance.colorScheme)
         .animation(.easeInOut(duration: 0.2), value: navigator.showingNewGame)
+        // A tapped donpa.app/s/… link (or a Universal Link from the Camera) arrives
+        // here: decode + classify, then let the receive prompt render the decision.
+        .onOpenURL { receive($0) }
+        .modifier(ReceivePrompt(navigator: navigator, friends: friends))
         // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
         .onChangeCompat(of: settings.syncScores) { scoreboard.syncEnabled = $0 }
         // UI-test hooks (like -uitest-clean): jump straight to a modal, so
@@ -121,5 +126,74 @@ public struct GameView: View {
         navigator.showingNewGame = false
         viewModel.newGame(config: settings.currentConfig)
         navigator.showingTitle = false
+    }
+
+    /// Decode + verify a received donpa.app/s/… URL, classify it against the current
+    /// friends list, and hand the result to the receive prompt. Verification lives in
+    /// `ShareLink.payload` (signature) — a throw here means the share is invalid, so
+    /// we surface a loud `.failed`; a valid share becomes `.accepted` or `.collision`.
+    private func receive(_ url: URL) {
+        do {
+            let payload = try ShareLink.payload(from: url)
+            switch FriendMerge.outcome(for: payload, existing: friends.friends) {
+            case .nameCollision(let key):
+                navigator.incomingShare = .collision(payload, existingKey: key)
+            case let outcome:
+                navigator.incomingShare = .accepted(payload, outcome)
+            }
+        } catch let error as ShareCodec.DecodeError {
+            navigator.incomingShare = .failed(error)
+        } catch {
+            navigator.incomingShare = .failed(.notDonpaShare)
+        }
+    }
+}
+
+/// Presents the receive flow driven by `Navigator.incomingShare`: the sheet for a
+/// verified add/refresh/collision, or a loud alert for a share that failed to verify.
+/// A modifier (not inline) so `GameView.body` stays readable.
+private struct ReceivePrompt: ViewModifier {
+    @ObservedObject var navigator: Navigator
+    @ObservedObject var friends: FriendsStore
+
+    /// True only for `.failed`, which routes to the alert rather than the sheet.
+    private var failure: ShareCodec.DecodeError? {
+        if case .failed(let error) = navigator.incomingShare { return error }
+        return nil
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: sheetBinding) { incoming in
+                ReceiveShareView(incoming: incoming, friends: friends) {
+                    navigator.incomingShare = nil
+                }
+            }
+            .alert(
+                Text("Couldn't verify share", bundle: .module),
+                isPresented: alertBinding,
+                presenting: failure
+            ) { _ in
+                Button {
+                    navigator.incomingShare = nil
+                } label: {
+                    Text("OK", bundle: .module)
+                }
+            } message: { error in
+                Text(error.receiveMessage, bundle: .module)
+            }
+    }
+
+    /// The sheet shows every incoming case EXCEPT `.failed` (which is the alert).
+    private var sheetBinding: Binding<IncomingShare?> {
+        Binding(
+            get: { failure == nil ? navigator.incomingShare : nil },
+            set: { if $0 == nil { navigator.incomingShare = nil } })
+    }
+
+    private var alertBinding: Binding<Bool> {
+        Binding(
+            get: { failure != nil },
+            set: { if !$0 { navigator.incomingShare = nil } })
     }
 }
