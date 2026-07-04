@@ -115,18 +115,19 @@ struct StatBlock: View {
         .frame(minWidth: twoColumnWidth)
     }
 
-    /// Label/value pairs in display order. Wins sits with games (no ratio); feats
-    /// (no-flag / no-chord wins) and chords are the mastery tail.
+    /// Label/value pairs in display order, grouped: the WIN cluster first (games,
+    /// wins, and the no-flag/no-chord win feats right beside their parent — they're
+    /// qualifiers on Wins, not a mastery tail), then the activity counts, then time.
     private var statPairs: [(LocalizedStringKey, String)] {
         [
             ("Games played", grouped(figures.gamesPlayed)),
             ("Wins", grouped(figures.wins)),
+            ("No-flag wins", grouped(figures.noFlagWins)),
+            ("No-chord wins", grouped(figures.noChordWins)),
             ("Tiles cleared", grouped(figures.tilesOpened)),
             ("Flags placed", grouped(figures.flagsPlaced)),
             ("Mines disarmed", grouped(figures.minesDisarmed)),
             ("Mines hit", grouped(figures.minesHit)),
-            ("No-flag wins", grouped(figures.noFlagWins)),
-            ("No-chord wins", grouped(figures.noChordWins)),
             ("Chords used", grouped(figures.chordsUsed)),
             ("Time played", ScoreboardView.durationLabel(figures.playtimeCentiseconds)),
         ]

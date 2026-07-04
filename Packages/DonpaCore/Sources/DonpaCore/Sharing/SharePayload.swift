@@ -31,38 +31,40 @@ public struct SharedConfigScore: Codable, Equatable, Sendable {
 /// Lifetime career totals — shared only when the sharer opts in at share time.
 /// Mirrors the `StatFigures` career scope (see the scoreboard's `StatBlock`).
 public struct SharedCareer: Codable, Equatable, Sendable {
+    // Win cluster first (games, wins, and the win-feats beside their parent), then
+    // activity counts, then time — matching the scoreboard `StatBlock` display order.
     public var gamesPlayed: Int
     public var wins: Int
+    public var noFlagWins: Int
+    public var noChordWins: Int
     public var tilesOpened: Int
     public var flagsPlaced: Int
     public var minesDisarmed: Int
     public var minesHit: Int
     public var chordsUsed: Int
-    public var noFlagWins: Int
-    public var noChordWins: Int
     public var playtimeCentiseconds: Int
 
     public init(
-        gamesPlayed: Int, wins: Int, tilesOpened: Int, flagsPlaced: Int,
-        minesDisarmed: Int, minesHit: Int, chordsUsed: Int, noFlagWins: Int,
-        noChordWins: Int, playtimeCentiseconds: Int
+        gamesPlayed: Int, wins: Int, noFlagWins: Int, noChordWins: Int,
+        tilesOpened: Int, flagsPlaced: Int, minesDisarmed: Int, minesHit: Int,
+        chordsUsed: Int, playtimeCentiseconds: Int
     ) {
         self.gamesPlayed = gamesPlayed
         self.wins = wins
+        self.noFlagWins = noFlagWins
+        self.noChordWins = noChordWins
         self.tilesOpened = tilesOpened
         self.flagsPlaced = flagsPlaced
         self.minesDisarmed = minesDisarmed
         self.minesHit = minesHit
         self.chordsUsed = chordsUsed
-        self.noFlagWins = noFlagWins
-        self.noChordWins = noChordWins
         self.playtimeCentiseconds = playtimeCentiseconds
     }
 
     enum CodingKeys: String, CodingKey {
-        case gamesPlayed = "g", wins = "w", tilesOpened = "t", flagsPlaced = "f"
-        case minesDisarmed = "d", minesHit = "h", chordsUsed = "c"
-        case noFlagWins = "nf", noChordWins = "nc", playtimeCentiseconds = "pt"
+        case gamesPlayed = "g", wins = "w", noFlagWins = "nf", noChordWins = "nc"
+        case tilesOpened = "t", flagsPlaced = "f", minesDisarmed = "d", minesHit = "h"
+        case chordsUsed = "c", playtimeCentiseconds = "pt"
     }
 }
 

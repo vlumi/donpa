@@ -42,8 +42,11 @@ public enum FriendMerge {
             return .migrate(fromPublicKey: rot.oldPublicKey)
         }
 
-        // 3. New identity whose NAME matches a different tracked friend → prompt.
-        if let clash = existing.first(where: { $0.name == payload.body.name }) {
+        // 3. New identity whose incoming name matches what you SEE for a tracked
+        //    friend (their alias if set, else their shared name) → prompt; a stranger
+        //    reusing a familiar name is worth a beat. The prompt's "rename" resolves
+        //    by setting a local alias on one of them.
+        if let clash = existing.first(where: { $0.displayName == payload.body.name }) {
             return .nameCollision(withPublicKey: clash.publicKey)
         }
 
@@ -52,13 +55,17 @@ public enum FriendMerge {
     }
 
     /// Build the `Friend` record to store for an accepted `add`/`refresh`/`migrate`.
-    /// `migrate` reuses the existing friend's groups/addedAt but adopts the new key.
+    /// Local-only fields you set (`localAlias`, `groups`) and `addedAt` are PRESERVED
+    /// from the existing record — a refresh/rename/rotation adopts the friend's new
+    /// shared data + key without clobbering what YOU chose. `sharedName` always
+    /// tracks the latest share.
     public static func friend(
         from payload: SharePayload, existing: Friend?, now: Date
     ) -> Friend {
         Friend(
             publicKey: payload.publicKey,
-            name: payload.body.name,
+            sharedName: payload.body.name,
+            localAlias: existing?.localAlias,
             groups: existing?.groups ?? [],
             lastIssuedAt: payload.body.issuedAt,
             scores: payload.body.scores,

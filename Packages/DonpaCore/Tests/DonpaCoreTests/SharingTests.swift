@@ -219,4 +219,85 @@ final class SharingTests: XCTestCase {
             XCTAssertNil(ShareLink.blob(from: URL(string: s)!), "should ignore \(s)")
         }
     }
+
+    // MARK: Career-included share
+
+    func testCareerSharedRoundTrips() throws {
+        let career = SharedCareer(
+            gamesPlayed: 50, wins: 30, noFlagWins: 2, noChordWins: 3,
+            tilesOpened: 9000, flagsPlaced: 400, minesDisarmed: 350, minesHit: 20,
+            chordsUsed: 120, playtimeCentiseconds: 60000)
+        let payload = try ShareIdentity().makePayload(
+            name: "Ville", scores: sampleScores(), career: career, issuedAt: t0)
+        let back = try ShareCodec.decode(fromString: try ShareCodec.encodeToString(payload))
+        XCTAssertEqual(back.body.career, career)
+    }
+
+    func testNegativeCareerRejected() throws {
+        let bad = ShareBody(
+            name: "x", scores: [],
+            career: SharedCareer(
+                gamesPlayed: -1, wins: 0, noFlagWins: 0, noChordWins: 0, tilesOpened: 0,
+                flagsPlaced: 0, minesDisarmed: 0, minesHit: 0, chordsUsed: 0,
+                playtimeCentiseconds: 0),
+            issuedAt: t0)
+        XCTAssertThrowsError(try ShareCodec.sanitize(bad)) {
+            XCTAssertEqual($0 as? ShareCodec.DecodeError, .malformed)
+        }
+    }
+
+    // MARK: Identity persistence (Keychain round-trip)
+
+    func testIdentityPersistsAndSignsSame() throws {
+        let id = ShareIdentity()
+        let raw = id.privateKeyRepresentation
+        let reloaded = try ShareIdentity(privateKeyRepresentation: raw)
+        XCTAssertEqual(reloaded.publicKey, id.publicKey)
+        // The reloaded identity produces a signature the original's public key accepts.
+        let payload = try reloaded.makePayload(
+            name: "Ville", scores: sampleScores(), career: nil, issuedAt: t0)
+        XCTAssertTrue(ShareIdentity.verify(payload))
+    }
+
+    func testBadPrivateKeyBytesThrow() {
+        XCTAssertThrowsError(try ShareIdentity(privateKeyRepresentation: Data([1, 2, 3])))
+    }
+
+    // MARK: Friend Identifiable + local alias
+
+    func testFriendIdIsPublicKey() throws {
+        let f = FriendMerge.friend(from: try makeShare(), existing: nil, now: t0)
+        XCTAssertEqual(f.id, f.publicKey)
+    }
+
+    func testDisplayNamePrefersLocalAlias() throws {
+        var f = FriendMerge.friend(from: try makeShare(name: "Ville"), existing: nil, now: t0)
+        XCTAssertEqual(f.displayName, "Ville")  // no alias → shared name
+        f.localAlias = "Bro"
+        XCTAssertEqual(f.displayName, "Bro")  // alias wins
+    }
+
+    func testRefreshPreservesLocalAliasAndGroups_butUpdatesSharedName() throws {
+        let id = ShareIdentity()
+        var pinned = FriendMerge.friend(
+            from: try makeShare(id, name: "Ville"), existing: nil, now: t0)
+        pinned.localAlias = "Bro"
+        pinned.groups = ["family"]
+        // They re-share under a new display name — my alias/groups must survive.
+        let renamed = try makeShare(id, name: "Ville_2", issuedAt: t0.addingTimeInterval(60))
+        let updated = FriendMerge.friend(from: renamed, existing: pinned, now: t0)
+        XCTAssertEqual(updated.sharedName, "Ville_2")  // tracks their latest
+        XCTAssertEqual(updated.localAlias, "Bro")  // mine survives
+        XCTAssertEqual(updated.groups, ["family"])  // mine survives
+        XCTAssertEqual(updated.displayName, "Bro")
+    }
+
+    // MARK: Valid-JSON-but-wrong-shape → malformed
+
+    func testWellFormedJsonWrongShapeRejected() throws {
+        let data = Data(#"{"hello":"world"}"#.utf8)  // valid JSON, not a SharePayload
+        XCTAssertThrowsError(try ShareCodec.decode(data)) {
+            XCTAssertEqual($0 as? ShareCodec.DecodeError, .malformed)
+        }
+    }
 }
