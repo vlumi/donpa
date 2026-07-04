@@ -66,19 +66,81 @@ final class FriendsStoreTests: XCTestCase {
         XCTAssertTrue(store.friends.isEmpty)
     }
 
-    func testGroupsPersistAndReload() throws {
-        let dir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("donpa-friends-groups-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    func testGroupCatalogAndMembershipPersist() throws {
+        let dir = tempDir("groups")
         let p = try share()
 
         let store = FriendsStore(directory: dir)
         store.apply(p, now: t0)
-        store.setGroups(["work", "family"], for: p.publicKey)
-        XCTAssertEqual(store.friends[0].groups, ["work", "family"])
+        let work = try XCTUnwrap(store.createGroup(named: "work"))
+        let family = try XCTUnwrap(store.createGroup(named: "family"))
+        store.setGroups([work.id, family.id], for: p.publicKey)
+        XCTAssertEqual(Set(store.friends[0].groups), [work.id, family.id])
 
-        // A fresh store over the same dir sees the persisted groups (atomic write).
+        // A fresh store over the same dir sees the persisted catalog + membership.
         let reloaded = FriendsStore(directory: dir)
-        XCTAssertEqual(reloaded.friends.first?.groups, ["work", "family"])
+        XCTAssertEqual(Set(reloaded.groups.map(\.name)), ["work", "family"])
+        XCTAssertEqual(Set(reloaded.friends.first?.groups ?? []), [work.id, family.id])
+    }
+
+    func testCreateGroupDedupesByNameAndRejectsBlank() throws {
+        let store = FriendsStore.ephemeral()
+        let a = try XCTUnwrap(store.createGroup(named: "  Work "))
+        let b = store.createGroup(named: "work")  // case-insensitive dup → same group
+        XCTAssertEqual(a.id, b?.id)
+        XCTAssertEqual(store.groups.count, 1)
+        XCTAssertEqual(store.groups[0].name, "Work")  // trimmed
+        XCTAssertNil(store.createGroup(named: "   "))  // blank rejected
+    }
+
+    func testRenameKeepsMembershipDeleteClearsIt() throws {
+        let store = FriendsStore.ephemeral()
+        let p = try share()
+        store.apply(p, now: t0)
+        let g = try XCTUnwrap(store.createGroup(named: "old"))
+        store.setGroups([g.id], for: p.publicKey)
+
+        store.renameGroup(g.id, to: "new")  // members follow (id unchanged)
+        XCTAssertEqual(store.groups[0].name, "new")
+        XCTAssertEqual(store.friends[0].groups, [g.id])
+
+        store.deleteGroup(g.id)  // vanishes from catalog AND membership
+        XCTAssertTrue(store.groups.isEmpty)
+        XCTAssertTrue(store.friends[0].groups.isEmpty)
+    }
+
+    func testSetGroupsDropsUnknownIDs() throws {
+        let store = FriendsStore.ephemeral()
+        let p = try share()
+        store.apply(p, now: t0)
+        let g = try XCTUnwrap(store.createGroup(named: "real"))
+        store.setGroups([g.id, "bogus-id"], for: p.publicKey)
+        XCTAssertEqual(store.friends[0].groups, [g.id])  // unknown dropped
+    }
+
+    /// A file written in the legacy bare-`[Friend]` format (groups were NAMES) loads
+    /// by migrating: a catalog entry per distinct name, memberships rewritten to ids.
+    func testMigratesLegacyNameTaggedFile() throws {
+        let dir = tempDir("legacy")
+        let p = try share()
+        var legacy = FriendMerge.friend(from: p, existing: nil, now: t0)
+        legacy.groups = ["work", "family"]  // OLD shape: names in `groups`
+        let data = try JSONEncoder().encode([legacy])  // bare array, not the container
+        try data.write(to: dir.appendingPathComponent("friends.json"))
+
+        let store = FriendsStore(directory: dir)
+        XCTAssertEqual(Set(store.groups.map(\.name)), ["work", "family"])
+        // The friend's memberships are now ids that resolve to those names.
+        let names = store.friends[0].groups.compactMap { id in
+            store.groups.first { $0.id == id }?.name
+        }
+        XCTAssertEqual(Set(names), ["work", "family"])
+    }
+
+    private func tempDir(_ tag: String) -> URL {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("donpa-friends-\(tag)-\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
     }
 }

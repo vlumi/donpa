@@ -13,8 +13,9 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
     /// share, so it survives their renames. Wins over `sharedName` for display —
     /// lets you disambiguate two same-named friends, or just call them what you like.
     public var localAlias: String?
-    /// Receiver-assigned group tags (local only — the payload knows nothing of
-    /// groups). Empty = ungrouped. Tag-style: a friend can be in several.
+    /// Receiver-assigned group memberships as `FriendGroup` ids (local only — the
+    /// payload knows nothing of groups). Empty = ungrouped. A friend can be in
+    /// several. Ids, not names, so a group rename doesn't touch its members.
     public var groups: [String]
     /// The latest accepted share's `issuedAt` — the replay/downgrade guard: a share
     /// older than this is ignored, so re-scanning an old QR can't regress the entry.
