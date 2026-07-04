@@ -11,6 +11,9 @@ import Foundation
 @MainActor
 public final class FriendsStore: ObservableObject {
     @Published public private(set) var friends: [Friend] = []
+    /// The group catalog (id + name). Groups exist independently of membership, so an
+    /// empty group persists. `Friend.groups` holds ids into this.
+    @Published public private(set) var groups: [FriendGroup] = []
 
     private let url: URL
 
@@ -90,10 +93,71 @@ public final class FriendsStore: ObservableObject {
         save()
     }
 
-    public func setGroups(_ groups: [String], for publicKey: Data) {
+    /// Set a friend's group memberships (a set of `FriendGroup` ids). Ids not in the
+    /// catalog are dropped — membership can't reference a group that doesn't exist.
+    public func setGroups(_ groupIDs: [String], for publicKey: Data) {
         guard let i = friends.firstIndex(where: { $0.publicKey == publicKey }) else { return }
-        friends[i].groups = groups
+        let known = Set(groups.map(\.id))
+        friends[i].groups = groupIDs.filter(known.contains)
         save()
+    }
+
+    // MARK: Group catalog
+
+    /// Create a group with a trimmed name, or return the existing one if a group by
+    /// that name (case-insensitive) already exists — so "create" from a picker never
+    /// makes accidental duplicates. Returns nil if the name is blank.
+    @discardableResult
+    public func createGroup(named name: String) -> FriendGroup? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let existing = groups.first(where: {
+            $0.name.caseInsensitiveCompare(trimmed) == .orderedSame
+        }) {
+            return existing
+        }
+        let group = FriendGroup(name: trimmed)
+        groups.append(group)
+        save()
+        return group
+    }
+
+    /// Rename a group (members follow, since they reference the id). No-op on a blank
+    /// name or an unknown id.
+    public func renameGroup(_ id: String, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let i = groups.firstIndex(where: { $0.id == id }) else { return }
+        groups[i].name = trimmed
+        save()
+    }
+
+    /// Delete a group and remove its id from every friend's membership.
+    public func deleteGroup(_ id: String) {
+        groups.removeAll { $0.id == id }
+        for i in friends.indices {
+            friends[i].groups.removeAll { $0 == id }
+        }
+        save()
+    }
+
+    /// Toggle a friend's membership in a group (convenience for the picker).
+    public func setMembership(_ member: Bool, of publicKey: Data, in groupID: String) {
+        guard groups.contains(where: { $0.id == groupID }),
+            let i = friends.firstIndex(where: { $0.publicKey == publicKey })
+        else { return }
+        var set = friends[i].groups
+        if member {
+            if !set.contains(groupID) { set.append(groupID) }
+        } else {
+            set.removeAll { $0 == groupID }
+        }
+        friends[i].groups = set
+        save()
+    }
+
+    /// The friends who belong to a group (by id). Order preserved from `friends`.
+    public func members(of groupID: String) -> [Friend] {
+        friends.filter { $0.groups.contains(groupID) }
     }
 
     // MARK: Internals
@@ -110,15 +174,45 @@ public final class FriendsStore: ObservableObject {
     }
 
     private func save() {
-        guard let data = try? JSONEncoder().encode(friends) else { return }
+        let stored = FriendsStored(friends: friends, groups: groups)
+        guard let data = try? JSONEncoder().encode(stored) else { return }
         try? data.write(to: url, options: [.atomic])
     }
 
     private func load() {
-        guard let data = try? Data(contentsOf: url),
-            let list = try? JSONDecoder().decode([Friend].self, from: data)
-        else { return }
-        friends = list
+        guard let data = try? Data(contentsOf: url) else { return }
+        let decoder = JSONDecoder()
+        // Current format: a { friends, groups } container.
+        if let stored = try? decoder.decode(FriendsStored.self, from: data) {
+            friends = stored.friends
+            groups = stored.groups
+            return
+        }
+        // Legacy format: a bare [Friend] whose `groups` held NAMES, not ids. Migrate:
+        // mint a catalog entry per distinct name and rewrite memberships to ids.
+        if var legacy = try? decoder.decode([Friend].self, from: data) {
+            migrate(legacy: &legacy)
+        }
+    }
+
+    /// Turn name-tag memberships into an id-based catalog in place, then persist the
+    /// migrated form so the next load takes the fast path.
+    private func migrate(legacy: inout [Friend]) {
+        var idByName: [String: String] = [:]
+        var catalog: [FriendGroup] = []
+        for friend in legacy {
+            for name in friend.groups where idByName[name] == nil {
+                let group = FriendGroup(name: name)
+                idByName[name] = group.id
+                catalog.append(group)
+            }
+        }
+        for i in legacy.indices {
+            legacy[i].groups = legacy[i].groups.compactMap { idByName[$0] }
+        }
+        friends = legacy
+        groups = catalog
+        save()
     }
 
     private static let appSupportDirectory: URL = {
@@ -128,4 +222,29 @@ public final class FriendsStore: ObservableObject {
                 for: .applicationSupportDirectory, in: .userDomainMask,
                 appropriateFor: nil, create: true)) ?? fm.temporaryDirectory
     }()
+}
+
+/// The on-disk shape for `FriendsStore`: friends plus the group catalog. Tolerant
+/// decode so a file written by a newer/older build (missing `groups`) still loads;
+/// `friends` is required, so a legacy bare-`[Friend]` file fails here and `load()`
+/// falls through to its migration path. File-scoped (not nested) to satisfy the
+/// nesting limit.
+private struct FriendsStored: Codable {
+    var friends: [Friend]
+    var groups: [FriendGroup]
+
+    init(friends: [Friend], groups: [FriendGroup]) {
+        self.friends = friends
+        self.groups = groups
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        friends = try c.decode([Friend].self, forKey: .friends)
+        groups = try c.decodeIfPresent([FriendGroup].self, forKey: .groups) ?? []
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case friends = "f", groups = "g"
+    }
 }

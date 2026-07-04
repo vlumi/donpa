@@ -41,6 +41,8 @@ private struct ConfirmAddView: View {
     /// Optional local nickname, offered only for a genuine new add — a refresh
     /// mustn't clobber an alias you set earlier with a blank field here.
     @State private var alias = ""
+    /// Groups to put the friend in, staged until confirm (they aren't stored yet).
+    @State private var groupSelection: Set<String> = []
 
     private var isRefresh: Bool {
         if case .add = outcome { return false }
@@ -72,6 +74,11 @@ private struct ConfirmAddView: View {
                         }
                         .textFieldStyle(.roundedBorder)
                     }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Groups (optional)", bundle: .module)
+                            .font(.caption).foregroundStyle(.secondary)
+                        GroupPicker(friends: friends, selection: $groupSelection)
+                    }
                 }
             }
         }
@@ -79,9 +86,12 @@ private struct ConfirmAddView: View {
 
     private func confirm() {
         friends.apply(payload)
-        let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !isRefresh, !trimmed.isEmpty {
-            friends.setAlias(trimmed, for: payload.publicKey)
+        if !isRefresh {
+            let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { friends.setAlias(trimmed, for: payload.publicKey) }
+            if !groupSelection.isEmpty {
+                friends.setGroups(Array(groupSelection), for: payload.publicKey)
+            }
         }
         finish()
     }

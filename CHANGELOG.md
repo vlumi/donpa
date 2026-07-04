@@ -26,8 +26,12 @@ under Unreleased as they merge.
   the code or opening the link — no account, no server. Scores are signed so they
   can't be forged, and a friend's scores stay separate from your own: remove them and
   their data is simply gone.
-- **Friends list.** See everyone you've added, give them your own nickname, sort them
-  into groups, or remove them — all from the Service Record.
+- **Friends list.** See everyone you've added, give them your own nickname, or remove
+  them — all from the Service Record. You can nickname and group a friend right as you
+  add them, too.
+- **Groups.** Sort friends into named groups (work, family, …): create and manage your
+  groups, then put each friend in as many as you like. Renaming a group keeps its
+  members; deleting one just un-groups them.
 
 ## [0.3.0] — Board variants
 

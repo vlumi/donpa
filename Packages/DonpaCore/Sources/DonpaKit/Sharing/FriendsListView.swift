@@ -12,6 +12,8 @@ struct FriendsListView: View {
 
     /// The friend whose detail sheet is open (rename / groups / remove).
     @State private var editing: Friend?
+    /// Whether the group-management sheet (create/rename/delete) is open.
+    @State private var managingGroups = false
 
     /// Most-recent share first; ties broken by when you added them.
     private var ordered: [Friend] {
@@ -25,6 +27,14 @@ struct FriendsListView: View {
             .sheet(item: $editing) { friend in
                 FriendDetailView(friend: friend, friends: friends)
             }
+            .sheet(isPresented: $managingGroups) {
+                ManageGroupsView(friends: friends)
+            }
+    }
+
+    /// A friend's group names, resolved from their membership ids via the catalog.
+    private func groupNames(for friend: Friend) -> [String] {
+        friend.groups.compactMap { id in friends.groups.first { $0.id == id }?.name }
     }
 
     @ViewBuilder private var content: some View {
@@ -36,7 +46,7 @@ struct FriendsListView: View {
                     Button {
                         editing = friend
                     } label: {
-                        FriendRow(friend: friend)
+                        FriendRow(friend: friend, groupNames: groupNames(for: friend))
                     }
                     .buttonStyle(.plain)
                 }
@@ -70,6 +80,17 @@ struct FriendsListView: View {
                 .navigationTitle(Text("Friends", bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            managingGroups = true
+                        } label: {
+                            Label {
+                                Text("Manage groups", bundle: .module)
+                            } icon: {
+                                Image(systemName: "folder")
+                            }
+                        }
+                    }
                     ToolbarItem(placement: .confirmationAction) {
                         Button {
                             dismiss()
@@ -81,7 +102,19 @@ struct FriendsListView: View {
         }
         #else
         VStack(spacing: 12) {
-            Text("Friends", bundle: .module).font(.title2.bold())
+            HStack {
+                Text("Friends", bundle: .module).font(.title2.bold())
+                Spacer()
+                Button {
+                    managingGroups = true
+                } label: {
+                    Label {
+                        Text("Manage groups", bundle: .module)
+                    } icon: {
+                        Image(systemName: "folder")
+                    }
+                }
+            }
             content.frame(minHeight: 240)
             Button {
                 dismiss()
@@ -100,6 +133,8 @@ struct FriendsListView: View {
 /// score summary (boards won · total wins).
 private struct FriendRow: View {
     let friend: Friend
+    /// The friend's group names, resolved from ids by the list (which holds the catalog).
+    let groupNames: [String]
 
     private var boardsWon: Int { friend.scores.filter { $0.wins > 0 }.count }
     private var totalWins: Int { friend.scores.reduce(0) { $0 + $1.wins } }
@@ -116,8 +151,8 @@ private struct FriendRow: View {
             }
             Text("\(boardsWon) boards · \(totalWins) wins", bundle: .module)
                 .font(.caption).foregroundStyle(.secondary)
-            if !friend.groups.isEmpty {
-                Text(friend.groups.joined(separator: " · "))
+            if !groupNames.isEmpty {
+                Text(groupNames.joined(separator: " · "))
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }
