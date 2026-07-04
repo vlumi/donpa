@@ -6,5 +6,10 @@
 	<string>$(TeamIdentifierPrefix)fi.misaki.donpa</string>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- Universal Links for score sharing — see the iOS entitlements for the why. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:donpa.app</string>
+	</array>
 </dict>
 </plist>

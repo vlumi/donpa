@@ -135,6 +135,11 @@ public final class Settings: ObservableObject {
     @Published public var basicPreset: BasicPreset {
         didSet { defaults.set(basicPreset.rawValue, forKey: presetKey) }
     }
+    /// The display name last used when sharing scores — remembered so the share
+    /// sheet pre-fills it. Not an identity (that's the signing key); just a label.
+    @Published public var shareName: String {
+        didSet { defaults.set(shareName, forKey: shareNameKey) }
+    }
 
     /// Key paths to a family's own axes, so the picker and keyboard nav bind to
     /// whichever page they're on. Basic has no axes; callers guard on family.
@@ -188,6 +193,7 @@ public final class Settings: ObservableObject {
     private let appearanceKey = "donpa.appearance"
     private let familyKey = "donpa.family"
     private let presetKey = "donpa.classicPreset"
+    private let shareNameKey = "donpa.shareName"
     // Legacy (pre-family / pre-split) selection keys, read once for migration:
     // mode+shape became the family; the shared size/density/edges seed BOTH
     // families' own axes.
@@ -234,6 +240,7 @@ public final class Settings: ObservableObject {
         hiveEdges = axis("donpa.hive.edges", Self.edgesValue(from:), else: sharedEdges)
         basicPreset =
             defaults.string(forKey: presetKey).flatMap(BasicPreset.init(rawValue:)) ?? .beginner
+        shareName = defaults.string(forKey: shareNameKey) ?? ""
         handedness =
             defaults.string(forKey: handednessKey).flatMap(Handedness.init(rawValue:)) ?? .left
         // Default ON: check presence explicitly, since `bool(forKey:)` is false when
