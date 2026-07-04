@@ -38,6 +38,10 @@ private struct ConfirmAddView: View {
     let onDone: () -> Void
     @Environment(\.dismiss) private var dismiss
 
+    /// Optional local nickname, offered only for a genuine new add — a refresh
+    /// mustn't clobber an alias you set earlier with a blank field here.
+    @State private var alias = ""
+
     private var isRefresh: Bool {
         if case .add = outcome { return false }
         return true  // refresh or migrate — already a known friend
@@ -47,10 +51,7 @@ private struct ConfirmAddView: View {
         SharePromptChrome(
             title: isRefresh ? "Update scores?" : "Add friend?",
             confirmTitle: isRefresh ? "Update" : "Add",
-            onConfirm: {
-                friends.apply(payload)
-                finish()
-            },
+            onConfirm: confirm,
             onCancel: finish
         ) {
             VStack(alignment: .leading, spacing: 14) {
@@ -62,9 +63,27 @@ private struct ConfirmAddView: View {
                         bundle: .module
                     )
                     .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Your name for them (optional)", bundle: .module)
+                            .font(.caption).foregroundStyle(.secondary)
+                        TextField(text: $alias) {
+                            Text("e.g. \(payload.body.name)", bundle: .module)
+                        }
+                        .textFieldStyle(.roundedBorder)
+                    }
                 }
             }
         }
+    }
+
+    private func confirm() {
+        friends.apply(payload)
+        let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !isRefresh, !trimmed.isEmpty {
+            friends.setAlias(trimmed, for: payload.publicKey)
+        }
+        finish()
     }
 
     private func finish() {

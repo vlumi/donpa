@@ -1,54 +1,66 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "CFBundleDisplayName": {
-      "comment": "Home-screen app name. Japanese uses the kana ドンパ隊.",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Donpa Squad"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Home-screen app name. Japanese uses the kana ドンパ隊.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Donpa Squad"
           }
         },
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Donpa Squad"
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Donpa Squad"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ドンパ隊"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ドンパ隊"
           }
         }
       }
     },
-    "CFBundleName": {
-      "comment": "Bundle name",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Donpa Squad"
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Donpa Squad"
           }
         },
-        "fi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Donpa Squad"
+        "fi" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Donpa Squad"
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ドンパ隊"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ドンパ隊"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan a friend's QR code to add their scores."
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
