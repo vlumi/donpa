@@ -67,6 +67,21 @@ final class FriendSyncMergeTests: XCTestCase {
         XCTAssertTrue(FriendSyncMerge.mergeFriends([[dead], [live]])[0].isDeleted)
     }
 
+    func testEqualTimestampsBothLiveBreakOnStableField() {
+        // Two live edits at the SAME instant (no tombstone) → the higher displayName
+        // wins, order-independently, so devices converge.
+        let a = friend(1, name: "Zed", updated: t0)
+        let b = friend(1, name: "Amy", updated: t0)
+        XCTAssertEqual(FriendSyncMerge.mergeFriends([[a], [b]])[0].sharedName, "Zed")
+        XCTAssertEqual(FriendSyncMerge.mergeFriends([[b], [a]])[0].sharedName, "Zed")
+
+        // Same for groups (tie-break on name).
+        let g1 = FriendGroup(id: "x", name: "Zork", updatedAt: t0)
+        let g2 = FriendGroup(id: "x", name: "Ark", updatedAt: t0)
+        XCTAssertEqual(FriendSyncMerge.mergeGroups([[g1], [g2]])[0].name, "Zork")
+        XCTAssertEqual(FriendSyncMerge.mergeGroups([[g2], [g1]])[0].name, "Zork")
+    }
+
     func testGroupMergeByIDAndTombstone() {
         let g = FriendGroup(id: "x", name: "work", updatedAt: t0)
         let renamed = FriendGroup(id: "x", name: "office", updatedAt: t0.addingTimeInterval(60))
