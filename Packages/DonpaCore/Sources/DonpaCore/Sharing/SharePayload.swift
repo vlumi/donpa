@@ -31,8 +31,6 @@ public struct SharedConfigScore: Codable, Equatable, Sendable {
 /// Lifetime career totals — shared only when the sharer opts in at share time.
 /// Mirrors the `StatFigures` career scope (see the scoreboard's `StatBlock`).
 public struct SharedCareer: Codable, Equatable, Sendable {
-    // Win cluster first (games, wins, and the win-feats beside their parent), then
-    // activity counts, then time — matching the scoreboard `StatBlock` display order.
     public var gamesPlayed: Int
     public var wins: Int
     public var noFlagWins: Int

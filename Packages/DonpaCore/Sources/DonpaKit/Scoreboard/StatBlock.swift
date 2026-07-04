@@ -115,9 +115,7 @@ struct StatBlock: View {
         .frame(minWidth: twoColumnWidth)
     }
 
-    /// Label/value pairs in display order, grouped: the WIN cluster first (games,
-    /// wins, and the no-flag/no-chord win feats right beside their parent — they're
-    /// qualifiers on Wins, not a mastery tail), then the activity counts, then time.
+    /// Label/value pairs, in display order.
     private var statPairs: [(LocalizedStringKey, String)] {
         [
             ("Games played", grouped(figures.gamesPlayed)),
