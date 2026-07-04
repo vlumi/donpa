@@ -53,8 +53,11 @@ these slot into whichever release they're ready for.
       the XXXL (1M) first-arm/reveal feel + baseline memory in Instruments.
 - [ ] **Two-device iCloud sync verification** — KVS is unreliable on the simulator;
       confirm score/career sync on a real iPhone + Mac under one Apple ID.
-- [ ] **JA/FI native review** — the strings are the maker's drafts (`needs_review`);
-      refine from external-test feedback. Continuous, not a release gate.
+- [ ] **JA/FI native review** — the strings are the maker's drafts; refine from
+      play-testing feedback ("report weirdnesses"), not a string-by-string review
+      pass. Catalog review markers were dropped as noise while strings churn —
+      reintroduce `needs_review` flags only if a systematic pass happens once
+      things stabilize. Continuous, not a release gate.
 
 **Carry-overs (deferred, revisit when relevant):**
 

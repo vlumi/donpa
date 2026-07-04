@@ -11,53 +11,53 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$@, %2$lld by %3$lld, %4$lld mines remaining, %5$@"
           }
         },
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@, %2$lld × %3$lld, %4$lld miinaa jäljellä, %5$@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@、%2$lld×%3$lld、残り地雷%4$lld、%5$@"
           }
         }
       }
     },
     "%1$@, %2$lld by %3$lld, %4$lld mines remaining, %5$@" : {
-      "comment" : "VoiceOver board summary: config, width, height, mines remaining, state. NEEDS REVIEW: ja\/fi.",
+      "comment" : "VoiceOver board summary: config, width, height, mines remaining, state",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%1$@, %2$lld × %3$lld, %4$lld miinaa jäljellä, %5$@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%1$@、%2$lld×%3$lld、残り地雷 %4$lld、%5$@"
+            "state" : "translated",
+            "value" : "%1$@、%2$lld×%3$lld、残り地雷%4$lld、%5$@"
           }
         }
       }
     },
     "%lld left" : {
-      "comment" : "Loss pill: safe tiles still unopened when the cleared % would round to 100. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Loss pill: safe tiles still unopened when the cleared % would round to 100",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%lld jäljellä"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "残り%lld"
           }
         }
@@ -72,13 +72,13 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%lld t %lld min"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%lld時間%lld分"
           }
         }
@@ -89,13 +89,13 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%lld min"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "%lld分"
           }
         }
@@ -106,150 +106,149 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "< 1 min"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "1分未満"
           }
         }
       }
     },
     "A Minesweeper game for Apple platforms." : {
-      "comment" : "About screen tagline. NEEDS REVIEW: ja\/fi.",
+      "comment" : "About screen tagline",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Miinaharava-peli Applen alustoille."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Apple プラットフォーム向けのマインスイーパー。"
           }
         }
       }
     },
     "About" : {
-      "comment" : "Title of the About sheet. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Title of the About sheet",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tietoja"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "アプリについて"
           }
         }
       }
     },
     "Appearance" : {
-      "comment" : "Settings section: light\/dark\/system. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Settings section: light\/dark\/system",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ulkoasu"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "外観"
           }
         }
       }
     },
     "Arrows to choose · Return to start" : {
-      "comment" : "New Game popup keyboard hint (macOS). NEEDS REVIEW: ja\/fi.",
+      "comment" : "New Game popup keyboard hint (macOS)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nuolilla valitset · Enter aloittaa"
+            "state" : "translated",
+            "value" : "Nuolilla valitset · Return aloittaa"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "矢印で選択 · Returnで開始"
           }
         }
       }
     },
-    "Basic" : {
-      "comment" : "Scoreboard section header (the Basic board family). NEEDS REVIEW: ja\/fi.",
-      "extractionState" : "stale",
+    "At ease!" : {
+      "comment" : "Pause overlay title — the drill command, playful in every language.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Perus"
+            "state" : "translated",
+            "value" : "Lepo!"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ベーシック"
+            "state" : "translated",
+            "value" : "休め！"
           }
         }
       }
     },
     "best" : {
-      "comment" : "Tiny label under the new-best-% loss pill (lowercase). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Tiny label under the new-best-% loss pill (lowercase)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "paras"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "最高"
           }
         }
       }
     },
     "Best" : {
-      "comment" : "Scoreboard column header: best time. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Scoreboard column header: best time",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Paras"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ベスト"
           }
         }
       }
     },
     "Best %" : {
-      "comment" : "Scoreboard column header: best progress percent. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Scoreboard column header: best progress percent",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Paras %"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ベスト%"
           }
         }
@@ -272,35 +271,18 @@
       }
     },
     "Board" : {
-      "comment" : "Accessibility label for the game board. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Accessibility label for the game board",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lauta"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "盤面"
-          }
-        }
-      }
-    },
-    "Board family" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lautatyyppi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ボード種別"
           }
         }
       }
@@ -311,30 +293,30 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Pum — astuit miinaan. %@."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ドカーン — 地雷を踏んだ。%@。"
           }
         }
       }
     },
     "Cancel" : {
-      "comment" : "Dismiss a confirmation dialog. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Dismiss a confirmation dialog",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Peruuta"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "キャンセル"
           }
         }
@@ -346,13 +328,13 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vaihda peli"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ゲームを変更"
           }
         }
@@ -375,119 +357,119 @@
       }
     },
     "Clear all high scores?" : {
-      "comment" : "Confirmation dialog title before resetting scores. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Confirmation dialog title before resetting scores",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tyhjennetäänkö kaikki tulokset?"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "すべての記録を消去しますか？"
           }
         }
       }
     },
     "Clear scores" : {
-      "comment" : "Destructive confirm button: wipe all high scores. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Destructive confirm button: wipe all high scores",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tyhjennä tulokset"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "記録を消去"
           }
         }
       }
     },
     "Cleared" : {
-      "comment" : "Scoreboard column header: number of games cleared. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Scoreboard column header: number of games cleared",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Selvitetty"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "クリア数"
           }
         }
       }
     },
     "Cleared %@" : {
-      "comment" : "Loss consolation line: how much of the board was cleared. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Loss consolation line: how much of the board was cleared",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Raivattu %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%@ 除去"
+            "state" : "translated",
+            "value" : "%@クリア"
           }
         }
       }
     },
     "Close" : {
-      "comment" : "Result screen: dismiss the panel. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Result screen: dismiss the panel",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sulje"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "閉じる"
           }
         }
       }
     },
     "Commendations" : {
-      "comment" : "Stats section: per-board high scores (military theme: decorations). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Stats section: per-board high scores (military theme: decorations)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kunniamaininnat"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "表彰"
           }
         }
       }
     },
     "Dark" : {
-      "comment" : "Appearance option. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Appearance option",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tumma"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ダーク"
           }
         }
@@ -499,168 +481,132 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kaivuu"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "発掘"
           }
         }
       }
     },
     "Dig mode — tap reveals (Space)" : {
-      "comment" : "Tooltip for the mode toggle while in dig (reveal) mode. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Tooltip for the mode toggle while in dig (reveal) mode",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kaivuutila — napautus avaa (väli)"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "発掘モード — タップで開く（スペース）"
           }
         }
       }
     },
     "Done" : {
-      "comment" : "Close a sheet. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Close a sheet",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Valmis"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "完了"
           }
         }
       }
     },
-    "Edges" : {
-      "comment" : "Hidden a11y label for the New Game bounded\/wrapped picker. NEEDS REVIEW: ja\/fi.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reunat"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "境界"
-          }
-        }
-      }
-    },
     "Erase everywhere" : {
-      "comment" : "Destructive button: confirm the global (all-devices) wipe. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Destructive button: confirm the global (all-devices) wipe",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tyhjennä kaikkialta"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "すべて消去"
           }
         }
       }
     },
     "Erase scores on all your devices?" : {
-      "comment" : "Confirmation title for a GLOBAL wipe when iCloud sync is active. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Confirmation title for a GLOBAL wipe when iCloud sync is active",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tyhjennetäänkö tulokset kaikilta laitteiltasi?"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "すべてのデバイスの記録を消去しますか？"
           }
         }
       }
     },
-    "Family" : {
-      "comment" : "Hidden a11y label for the New Game Basic\/Grid\/Hive picker. NEEDS REVIEW: ja\/fi.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tyyppi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "種類"
-          }
-        }
-      }
-    },
     "first clear" : {
-      "comment" : "Result-panel pill: the first time this board config is cleared. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Result-panel pill: the first time this board config is cleared",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ensimmäinen läpäisy"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "初クリア"
           }
         }
       }
     },
     "Flag" : {
-      "comment" : "Accessibility value: input mode is flagging. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Accessibility value: input mode is flagging",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lippu"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "旗"
           }
         }
       }
     },
     "Flag mode — tap flags (Space)" : {
-      "comment" : "Tooltip for the mode toggle while in flag mode. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Tooltip for the mode toggle while in flag mode",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lipputila — napautus liputtaa (väli)"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "旗モード — タップで旗（スペース）"
           }
         }
@@ -671,13 +617,13 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Asetetut liput"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "立てた旗"
           }
         }
@@ -688,32 +634,14 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Pelatut pelit"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "プレイ回数"
-          }
-        }
-      }
-    },
-    "Grid" : {
-      "comment" : "Scoreboard section header (the Grid board family). NEEDS REVIEW: ja\/fi.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ruudukko"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "グリッド"
           }
         }
       }
@@ -735,188 +663,170 @@
       }
     },
     "High Scores" : {
-      "comment" : "Scoreboard sheet title. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Scoreboard sheet title",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ennätykset"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ハイスコア"
           }
         }
       }
     },
-    "Hive" : {
-      "comment" : "Scoreboard section header (the Hive board family). NEEDS REVIEW: ja\/fi.",
-      "extractionState" : "stale",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Kenno"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ハイブ"
-          }
-        }
-      }
-    },
     "Home" : {
-      "comment" : "Toolbar button: return to the home hub. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Toolbar button: return to the home hub",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Alkuun"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ホーム"
           }
         }
       }
     },
     "iCloud sign-in required" : {
-      "comment" : "Sync status (iOS): on-device-only because signed out — plain guidance, not tappable (iOS can't deep-link to iCloud sign-in). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Sync status (iOS): on-device-only because signed out — plain guidance, not tappable (iOS can't deep-link to iCloud sign-in)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vaatii iCloud-kirjautumisen"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "iCloudへのサインインが必要です。"
+            "state" : "translated",
+            "value" : "iCloudへのサインインが必要です"
           }
         }
       }
     },
     "In progress" : {
-      "comment" : "Game state: a game is underway. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Game state: a game is underway",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Käynnissä"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "プレイ中"
           }
         }
       }
     },
     "Input mode" : {
-      "comment" : "Accessibility label for the reveal\/flag toggle. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Accessibility label for the reveal\/flag toggle",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Syöttötila"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "入力モード"
           }
         }
       }
     },
     "Language" : {
-      "comment" : "Settings section header for the language picker. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Settings section header for the language picker",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kieli"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "言語"
           }
         }
       }
     },
     "Left" : {
-      "comment" : "Handedness: floating toggle on the left. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Handedness: floating toggle on the left",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vasen"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "左"
           }
         }
       }
     },
     "Light" : {
-      "comment" : "Appearance option. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Appearance option",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vaalea"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ライト"
           }
         }
       }
     },
     "Lost" : {
-      "comment" : "Game state: lost. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Game state: lost",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Hävitty"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "失敗"
           }
         }
       }
     },
     "Minefield cleared" : {
-      "comment" : "VoiceOver label on the win result screen. NEEDS REVIEW: ja\/fi.",
+      "comment" : "VoiceOver label on the win result screen",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Miinakenttä selvitetty"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "地雷原クリア"
           }
         }
@@ -927,13 +837,13 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Puretut miinat"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "解除した地雷"
           }
         }
@@ -944,64 +854,64 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Räjäytetyt miinat"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "踏んだ地雷"
           }
         }
       }
     },
     "Mines remaining" : {
-      "comment" : "Accessibility label for the flag\/mine counter. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Accessibility label for the flag\/mine counter",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Miinoja jäljellä"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "残り地雷"
           }
         }
       }
     },
     "new best" : {
-      "comment" : "Accessibility label for the scoreboard's new-best marker. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Accessibility label for the scoreboard's new-best marker",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "uusi ennätys"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "新記録"
           }
         }
       }
     },
     "New game" : {
-      "comment" : "Tooltip\/label for the new-game button. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Tooltip\/label for the new-game button",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Uusi peli"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "新しいゲーム"
           }
         }
@@ -1024,17 +934,17 @@
       }
     },
     "New record! Minefield cleared in %@" : {
-      "comment" : "VoiceOver label on a new-best win. %@ is the time. NEEDS REVIEW: ja\/fi.",
+      "comment" : "VoiceOver label on a new-best win. %@ is the time",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Uusi ennätys! Miinakenttä selvitetty ajassa %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "新記録！ %@ で地雷原クリア"
           }
         }
@@ -1089,68 +999,68 @@
       }
     },
     "Overview map" : {
-      "comment" : "Toolbar toggle for the big-board minimap overview. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Toolbar toggle for the big-board minimap overview",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Yleisnäkymä"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "全体マップ"
           }
         }
       }
     },
     "Pause" : {
-      "comment" : "Toolbar button: pause the game. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Toolbar button: pause the game",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tauko"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "一時停止"
           }
         }
       }
     },
     "Paused" : {
-      "comment" : "Overlay title shown while the game is paused. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Overlay title shown while the game is paused",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tauolla"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "一時停止中"
           }
         }
       }
     },
     "Play a game to start your career stats." : {
-      "comment" : "Career tab empty state. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Career tab empty state",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pelaa peli aloittaaksesi urasi tilastot."
+            "state" : "translated",
+            "value" : "Pelaa peli, niin uratilastot alkavat kertyä."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "プレイすると通算記録がここに表示されます。"
           }
         }
@@ -1167,159 +1077,159 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ から プレイ中"
+            "value" : "%@からプレイ中"
           }
         }
       }
     },
     "Ready" : {
-      "comment" : "Game state: not yet started. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Game state: not yet started",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Valmis"
+            "state" : "translated",
+            "value" : "Valmiina"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "準備完了"
           }
         }
       }
     },
     "Reset" : {
-      "comment" : "Button opening the clear-scores confirmation. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Button opening the clear-scores confirmation",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nollaa"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "リセット"
           }
         }
       }
     },
     "Restart the app to change the language." : {
-      "comment" : "Prominent notice after the language picker is changed. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Prominent notice after the language picker is changed",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Käynnistä sovellus uudelleen vaihtaaksesi kielen."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "言語を変更するにはアプリを再起動してください。"
           }
         }
       }
     },
     "Resume" : {
-      "comment" : "Launch dialog: resume the saved game. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Launch dialog: resume the saved game",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Jatka"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "再開"
           }
         }
       }
     },
     "Retry" : {
-      "comment" : "Toolbar button: restart the same board. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Toolbar button: restart the same board",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Uudelleen"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "やり直す"
           }
         }
       }
     },
     "Right" : {
-      "comment" : "Handedness: floating toggle on the right. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Handedness: floating toggle on the right",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Oikea"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "右"
           }
         }
       }
     },
     "Scores were erased everywhere while sync was off. Turning sync on will reset this device too." : {
-      "comment" : "Confirm dialog message: a wipe happened while sync was off. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Confirm dialog message: a wipe happened while sync was off",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pisteet tyhjennettiin kaikkialta, kun synkronointi oli pois päältä. Synkronoinnin käyttöönotto nollaa myös tämän laitteen."
+            "state" : "translated",
+            "value" : "Tulokset tyhjennettiin kaikkialta, kun synkronointi oli pois päältä. Synkronoinnin käyttöönotto nollaa myös tämän laitteen."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "同期がオフの間に、すべての端末のスコアが消去されました。同期をオンにすると、この端末もリセットされます。"
+            "state" : "translated",
+            "value" : "同期がオフの間に、すべてのデバイスの記録が消去されました。同期をオンにすると、このデバイスもリセットされます。"
           }
         }
       }
     },
     "Service Record" : {
-      "comment" : "Stats sheet overall title (military theme: a soldier's record). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Stats sheet overall title (military theme: a soldier's record)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Palvelustiedot"
+            "state" : "translated",
+            "value" : "Sotilaspassi"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "戦績"
           }
         }
       }
     },
     "Settings" : {
-      "comment" : "Settings sheet title. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Settings sheet title",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Asetukset"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "設定"
           }
         }
@@ -1342,170 +1252,170 @@
       }
     },
     "Sign into iCloud" : {
-      "comment" : "Sync status: on but signed out — tappable nudge (short). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Sync status: on but signed out — tappable nudge (short)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kirjaudu iCloudiin"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "iCloudにサインイン"
           }
         }
       }
     },
     "So close — %lld tiles left" : {
-      "comment" : "Loss consolation line for a last-cell near miss. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Loss consolation line for a last-cell near miss",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Niin lähellä — %lld ruutua jäljellä"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "おしい！残り%lldマス"
           }
         }
       }
     },
     "Start" : {
-      "comment" : "Home hub: begin a game with the current selection. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Home hub: begin a game with the current selection",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aloita"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "スタート"
           }
         }
       }
     },
     "Sync" : {
-      "comment" : "Scoreboard footer: sync toggle label (short). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Scoreboard footer: sync toggle label (short)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Synkronoi"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "同期"
           }
         }
       }
     },
     "Sync and reset this device" : {
-      "comment" : "Destructive confirm button: enable sync, clearing this device's scores. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Destructive confirm button: enable sync, clearing this device's scores",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Synkronoi ja nollaa tämä laite"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "同期してこの端末をリセット"
+            "state" : "translated",
+            "value" : "同期してこのデバイスをリセット"
           }
         }
       }
     },
     "System" : {
-      "comment" : "Appearance option: follow the OS. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Appearance option: follow the OS",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Järjestelmä"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "システム"
           }
         }
       }
     },
     "Tap to resume" : {
-      "comment" : "Pause overlay hint: tap to continue the game. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Pause overlay hint: tap to continue the game",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Jatka napauttamalla"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "タップで再開"
           }
         }
       }
     },
     "This clears your high scores and career stats on this device." : {
-      "comment" : "Local-wipe confirmation body (sync off \/ offline). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Local-wipe confirmation body (sync off \/ offline)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tämä tyhjentää tämän laitteen tulokset ja uratilastot."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "このデバイスのハイスコアと戦績を消去します。"
           }
         }
       }
     },
     "This device only" : {
-      "comment" : "Sync status: toggle off (short). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Sync status: toggle off (short)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vain tällä laitteella"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "このデバイスのみ"
           }
         }
       }
     },
     "This erases your high scores and career stats on every device signed in to your iCloud. It can't be undone." : {
-      "comment" : "Global-wipe confirmation body (sync active). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Global-wipe confirmation body (sync active)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tämä tyhjentää tuloksesi ja uratilastosi kaikilta iCloud-tilillesi kirjautuneilta laitteilta. Tätä ei voi kumota."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "iCloudにサインインしているすべてのデバイスから、ハイスコアと戦績が消去されます。取り消せません。"
           }
         }
@@ -1516,13 +1426,13 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Avatut ruudut"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "開けたマス"
           }
         }
@@ -1533,132 +1443,132 @@
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Peliaika"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "プレイ時間"
           }
         }
       }
     },
     "Time, seconds" : {
-      "comment" : "Accessibility label for the timer counter. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Accessibility label for the timer counter",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aika, sekuntia"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "時間（秒）"
           }
         }
       }
     },
     "Toggle side" : {
-      "comment" : "Settings header for the floating toggle’s corner. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Settings header for the floating toggle’s corner",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Painikkeen puoli"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "切替ボタンの位置"
           }
         }
       }
     },
     "Toggles between revealing and flagging" : {
-      "comment" : "Accessibility hint for the input-mode toggle. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Accessibility hint for the input-mode toggle",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vaihtaa avaamisen ja liputtamisen välillä"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "開く／旗の切り替え"
           }
         }
       }
     },
     "Tour of Duty" : {
-      "comment" : "Stats section: cumulative career totals (military theme). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Stats section: cumulative career totals (military theme)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Palvelushistoria"
+            "state" : "translated",
+            "value" : "Palvelusura"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "軍歴"
           }
         }
       }
     },
     "Turn on sync?" : {
-      "comment" : "Confirm dialog title: enabling sync after a global wipe. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Confirm dialog title: enabling sync after a global wipe",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Otetaanko synkronointi käyttöön?"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "同期をオンにしますか？"
           }
         }
       }
     },
     "Version %@" : {
-      "comment" : "About screen version line, e.g. 'Version 0.1.0 (1)'. %@ is the version string. NEEDS REVIEW: ja\/fi.",
+      "comment" : "About screen version line, e.g. 'Version 0.1.0 (1)'. %@ is the version string",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Versio %@"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "バージョン %@"
           }
         }
       }
     },
     "via iCloud" : {
-      "comment" : "Sync status: on + signed in (short, after toggle). NEEDS REVIEW: ja\/fi.",
+      "comment" : "Sync status: on + signed in (short, after toggle)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "iCloudiin"
+            "state" : "translated",
+            "value" : "iCloudin kautta"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "iCloud経由"
           }
         }
@@ -1681,17 +1591,17 @@
       }
     },
     "Won" : {
-      "comment" : "Game state: won. NEEDS REVIEW: ja\/fi.",
+      "comment" : "Game state: won",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Voitettu"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "成功"
           }
         }
@@ -1708,13 +1618,13 @@
         },
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Työstetään…"
+            "state" : "translated",
+            "value" : "Käsitellään…"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "処理中…"
           }
         }
