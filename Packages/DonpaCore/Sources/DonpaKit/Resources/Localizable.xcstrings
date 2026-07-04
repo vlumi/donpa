@@ -30,7 +30,7 @@
       }
     },
     "%1$@, %2$lld by %3$lld, %4$lld mines remaining, %5$@" : {
-      "comment" : "VoiceOver board summary: config, width, height, mines remaining, state. NEEDS REVIEW: ja/fi.",
+      "comment" : "VoiceOver board summary: config, width, height, mines remaining, state. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -47,7 +47,7 @@
       }
     },
     "%lld left" : {
-      "comment" : "Loss pill: safe tiles still unopened when the cleared % would round to 100. NEEDS REVIEW: ja/fi.",
+      "comment" : "Loss pill: safe tiles still unopened when the cleared % would round to 100. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -119,7 +119,7 @@
       }
     },
     "A Minesweeper game for Apple platforms." : {
-      "comment" : "About screen tagline. NEEDS REVIEW: ja/fi.",
+      "comment" : "About screen tagline. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -136,7 +136,7 @@
       }
     },
     "About" : {
-      "comment" : "Title of the About sheet. NEEDS REVIEW: ja/fi.",
+      "comment" : "Title of the About sheet. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -153,7 +153,7 @@
       }
     },
     "Appearance" : {
-      "comment" : "Settings section: light/dark/system. NEEDS REVIEW: ja/fi.",
+      "comment" : "Settings section: light\/dark\/system. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -170,7 +170,7 @@
       }
     },
     "Arrows to choose · Return to start" : {
-      "comment" : "New Game popup keyboard hint (macOS). NEEDS REVIEW: ja/fi.",
+      "comment" : "New Game popup keyboard hint (macOS). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -187,7 +187,7 @@
       }
     },
     "Basic" : {
-      "comment" : "Scoreboard section header (the Basic board family). NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard section header (the Basic board family). NEEDS REVIEW: ja\/fi.",
       "extractionState" : "stale",
       "localizations" : {
         "fi" : {
@@ -205,7 +205,7 @@
       }
     },
     "best" : {
-      "comment" : "Tiny label under the new-best-% loss pill (lowercase). NEEDS REVIEW: ja/fi.",
+      "comment" : "Tiny label under the new-best-% loss pill (lowercase). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -222,7 +222,7 @@
       }
     },
     "Best" : {
-      "comment" : "Scoreboard column header: best time. NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard column header: best time. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -239,7 +239,7 @@
       }
     },
     "Best %" : {
-      "comment" : "Scoreboard column header: best progress percent. NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard column header: best progress percent. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -272,7 +272,7 @@
       }
     },
     "Board" : {
-      "comment" : "Accessibility label for the game board. NEEDS REVIEW: ja/fi.",
+      "comment" : "Accessibility label for the game board. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -324,7 +324,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Dismiss a confirmation dialog. NEEDS REVIEW: ja/fi.",
+      "comment" : "Dismiss a confirmation dialog. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -363,7 +363,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ryhmäavauksia"
+            "value" : "Alueavaukset"
           }
         },
         "ja" : {
@@ -375,7 +375,7 @@
       }
     },
     "Clear all high scores?" : {
-      "comment" : "Confirmation dialog title before resetting scores. NEEDS REVIEW: ja/fi.",
+      "comment" : "Confirmation dialog title before resetting scores. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -392,7 +392,7 @@
       }
     },
     "Clear scores" : {
-      "comment" : "Destructive confirm button: wipe all high scores. NEEDS REVIEW: ja/fi.",
+      "comment" : "Destructive confirm button: wipe all high scores. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -409,7 +409,7 @@
       }
     },
     "Cleared" : {
-      "comment" : "Scoreboard column header: number of games cleared. NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard column header: number of games cleared. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -426,7 +426,7 @@
       }
     },
     "Cleared %@" : {
-      "comment" : "Loss consolation line: how much of the board was cleared. NEEDS REVIEW: ja/fi.",
+      "comment" : "Loss consolation line: how much of the board was cleared. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -443,7 +443,7 @@
       }
     },
     "Close" : {
-      "comment" : "Result screen: dismiss the panel. NEEDS REVIEW: ja/fi.",
+      "comment" : "Result screen: dismiss the panel. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -460,7 +460,7 @@
       }
     },
     "Commendations" : {
-      "comment" : "Stats section: per-board high scores (military theme: decorations). NEEDS REVIEW: ja/fi.",
+      "comment" : "Stats section: per-board high scores (military theme: decorations). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -477,7 +477,7 @@
       }
     },
     "Dark" : {
-      "comment" : "Appearance option. NEEDS REVIEW: ja/fi.",
+      "comment" : "Appearance option. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -512,7 +512,7 @@
       }
     },
     "Dig mode — tap reveals (Space)" : {
-      "comment" : "Tooltip for the mode toggle while in dig (reveal) mode. NEEDS REVIEW: ja/fi.",
+      "comment" : "Tooltip for the mode toggle while in dig (reveal) mode. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -529,7 +529,7 @@
       }
     },
     "Done" : {
-      "comment" : "Close a sheet. NEEDS REVIEW: ja/fi.",
+      "comment" : "Close a sheet. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -546,7 +546,7 @@
       }
     },
     "Edges" : {
-      "comment" : "Hidden a11y label for the New Game bounded/wrapped picker. NEEDS REVIEW: ja/fi.",
+      "comment" : "Hidden a11y label for the New Game bounded\/wrapped picker. NEEDS REVIEW: ja\/fi.",
       "extractionState" : "stale",
       "localizations" : {
         "fi" : {
@@ -564,7 +564,7 @@
       }
     },
     "Erase everywhere" : {
-      "comment" : "Destructive button: confirm the global (all-devices) wipe. NEEDS REVIEW: ja/fi.",
+      "comment" : "Destructive button: confirm the global (all-devices) wipe. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -581,7 +581,7 @@
       }
     },
     "Erase scores on all your devices?" : {
-      "comment" : "Confirmation title for a GLOBAL wipe when iCloud sync is active. NEEDS REVIEW: ja/fi.",
+      "comment" : "Confirmation title for a GLOBAL wipe when iCloud sync is active. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -598,7 +598,7 @@
       }
     },
     "Family" : {
-      "comment" : "Hidden a11y label for the New Game Basic/Grid/Hive picker. NEEDS REVIEW: ja/fi.",
+      "comment" : "Hidden a11y label for the New Game Basic\/Grid\/Hive picker. NEEDS REVIEW: ja\/fi.",
       "extractionState" : "stale",
       "localizations" : {
         "fi" : {
@@ -616,7 +616,7 @@
       }
     },
     "first clear" : {
-      "comment" : "Result-panel pill: the first time this board config is cleared. NEEDS REVIEW: ja/fi.",
+      "comment" : "Result-panel pill: the first time this board config is cleared. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -633,7 +633,7 @@
       }
     },
     "Flag" : {
-      "comment" : "Accessibility value: input mode is flagging. NEEDS REVIEW: ja/fi.",
+      "comment" : "Accessibility value: input mode is flagging. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -650,7 +650,7 @@
       }
     },
     "Flag mode — tap flags (Space)" : {
-      "comment" : "Tooltip for the mode toggle while in flag mode. NEEDS REVIEW: ja/fi.",
+      "comment" : "Tooltip for the mode toggle while in flag mode. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -701,7 +701,7 @@
       }
     },
     "Grid" : {
-      "comment" : "Scoreboard section header (the Grid board family). NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard section header (the Grid board family). NEEDS REVIEW: ja\/fi.",
       "extractionState" : "stale",
       "localizations" : {
         "fi" : {
@@ -735,7 +735,7 @@
       }
     },
     "High Scores" : {
-      "comment" : "Scoreboard sheet title. NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard sheet title. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -752,7 +752,7 @@
       }
     },
     "Hive" : {
-      "comment" : "Scoreboard section header (the Hive board family). NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard section header (the Hive board family). NEEDS REVIEW: ja\/fi.",
       "extractionState" : "stale",
       "localizations" : {
         "fi" : {
@@ -770,7 +770,7 @@
       }
     },
     "Home" : {
-      "comment" : "Toolbar button: return to the home hub. NEEDS REVIEW: ja/fi.",
+      "comment" : "Toolbar button: return to the home hub. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -787,7 +787,7 @@
       }
     },
     "iCloud sign-in required" : {
-      "comment" : "Sync status (iOS): on-device-only because signed out — plain guidance, not tappable (iOS can't deep-link to iCloud sign-in). NEEDS REVIEW: ja/fi.",
+      "comment" : "Sync status (iOS): on-device-only because signed out — plain guidance, not tappable (iOS can't deep-link to iCloud sign-in). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -804,7 +804,7 @@
       }
     },
     "In progress" : {
-      "comment" : "Game state: a game is underway. NEEDS REVIEW: ja/fi.",
+      "comment" : "Game state: a game is underway. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -821,7 +821,7 @@
       }
     },
     "Input mode" : {
-      "comment" : "Accessibility label for the reveal/flag toggle. NEEDS REVIEW: ja/fi.",
+      "comment" : "Accessibility label for the reveal\/flag toggle. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -838,7 +838,7 @@
       }
     },
     "Language" : {
-      "comment" : "Settings section header for the language picker. NEEDS REVIEW: ja/fi.",
+      "comment" : "Settings section header for the language picker. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -855,7 +855,7 @@
       }
     },
     "Left" : {
-      "comment" : "Handedness: floating toggle on the left. NEEDS REVIEW: ja/fi.",
+      "comment" : "Handedness: floating toggle on the left. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -872,7 +872,7 @@
       }
     },
     "Light" : {
-      "comment" : "Appearance option. NEEDS REVIEW: ja/fi.",
+      "comment" : "Appearance option. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -889,7 +889,7 @@
       }
     },
     "Lost" : {
-      "comment" : "Game state: lost. NEEDS REVIEW: ja/fi.",
+      "comment" : "Game state: lost. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -906,7 +906,7 @@
       }
     },
     "Minefield cleared" : {
-      "comment" : "VoiceOver label on the win result screen. NEEDS REVIEW: ja/fi.",
+      "comment" : "VoiceOver label on the win result screen. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -928,7 +928,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Purettuja miinoja"
+            "value" : "Puretut miinat"
           }
         },
         "ja" : {
@@ -957,7 +957,7 @@
       }
     },
     "Mines remaining" : {
-      "comment" : "Accessibility label for the flag/mine counter. NEEDS REVIEW: ja/fi.",
+      "comment" : "Accessibility label for the flag\/mine counter. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -974,7 +974,7 @@
       }
     },
     "new best" : {
-      "comment" : "Accessibility label for the scoreboard's new-best marker. NEEDS REVIEW: ja/fi.",
+      "comment" : "Accessibility label for the scoreboard's new-best marker. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -991,7 +991,7 @@
       }
     },
     "New game" : {
-      "comment" : "Tooltip/label for the new-game button. NEEDS REVIEW: ja/fi.",
+      "comment" : "Tooltip\/label for the new-game button. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1024,7 +1024,7 @@
       }
     },
     "New record! Minefield cleared in %@" : {
-      "comment" : "VoiceOver label on a new-best win. %@ is the time. NEEDS REVIEW: ja/fi.",
+      "comment" : "VoiceOver label on a new-best win. %@ is the time. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1061,7 +1061,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voitot ilman ryhmäavausta"
+            "value" : "Voitot ilman alueavausta"
           }
         },
         "ja" : {
@@ -1089,7 +1089,7 @@
       }
     },
     "Overview map" : {
-      "comment" : "Toolbar toggle for the big-board minimap overview. NEEDS REVIEW: ja/fi.",
+      "comment" : "Toolbar toggle for the big-board minimap overview. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1106,7 +1106,7 @@
       }
     },
     "Pause" : {
-      "comment" : "Toolbar button: pause the game. NEEDS REVIEW: ja/fi.",
+      "comment" : "Toolbar button: pause the game. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1123,7 +1123,7 @@
       }
     },
     "Paused" : {
-      "comment" : "Overlay title shown while the game is paused. NEEDS REVIEW: ja/fi.",
+      "comment" : "Overlay title shown while the game is paused. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1140,7 +1140,7 @@
       }
     },
     "Play a game to start your career stats." : {
-      "comment" : "Career tab empty state. NEEDS REVIEW: ja/fi.",
+      "comment" : "Career tab empty state. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1173,7 +1173,7 @@
       }
     },
     "Ready" : {
-      "comment" : "Game state: not yet started. NEEDS REVIEW: ja/fi.",
+      "comment" : "Game state: not yet started. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1190,7 +1190,7 @@
       }
     },
     "Reset" : {
-      "comment" : "Button opening the clear-scores confirmation. NEEDS REVIEW: ja/fi.",
+      "comment" : "Button opening the clear-scores confirmation. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1207,7 +1207,7 @@
       }
     },
     "Restart the app to change the language." : {
-      "comment" : "Prominent notice after the language picker is changed. NEEDS REVIEW: ja/fi.",
+      "comment" : "Prominent notice after the language picker is changed. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1224,7 +1224,7 @@
       }
     },
     "Resume" : {
-      "comment" : "Launch dialog: resume the saved game. NEEDS REVIEW: ja/fi.",
+      "comment" : "Launch dialog: resume the saved game. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1241,7 +1241,7 @@
       }
     },
     "Retry" : {
-      "comment" : "Toolbar button: restart the same board. NEEDS REVIEW: ja/fi.",
+      "comment" : "Toolbar button: restart the same board. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1258,7 +1258,7 @@
       }
     },
     "Right" : {
-      "comment" : "Handedness: floating toggle on the right. NEEDS REVIEW: ja/fi.",
+      "comment" : "Handedness: floating toggle on the right. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1275,7 +1275,7 @@
       }
     },
     "Scores were erased everywhere while sync was off. Turning sync on will reset this device too." : {
-      "comment" : "Confirm dialog message: a wipe happened while sync was off. NEEDS REVIEW: ja/fi.",
+      "comment" : "Confirm dialog message: a wipe happened while sync was off. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1292,7 +1292,7 @@
       }
     },
     "Service Record" : {
-      "comment" : "Stats sheet overall title (military theme: a soldier's record). NEEDS REVIEW: ja/fi.",
+      "comment" : "Stats sheet overall title (military theme: a soldier's record). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1309,7 +1309,7 @@
       }
     },
     "Settings" : {
-      "comment" : "Settings sheet title. NEEDS REVIEW: ja/fi.",
+      "comment" : "Settings sheet title. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1342,7 +1342,7 @@
       }
     },
     "Sign into iCloud" : {
-      "comment" : "Sync status: on but signed out — tappable nudge (short). NEEDS REVIEW: ja/fi.",
+      "comment" : "Sync status: on but signed out — tappable nudge (short). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1359,7 +1359,7 @@
       }
     },
     "So close — %lld tiles left" : {
-      "comment" : "Loss consolation line for a last-cell near miss. NEEDS REVIEW: ja/fi.",
+      "comment" : "Loss consolation line for a last-cell near miss. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1376,7 +1376,7 @@
       }
     },
     "Start" : {
-      "comment" : "Home hub: begin a game with the current selection. NEEDS REVIEW: ja/fi.",
+      "comment" : "Home hub: begin a game with the current selection. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1393,7 +1393,7 @@
       }
     },
     "Sync" : {
-      "comment" : "Scoreboard footer: sync toggle label (short). NEEDS REVIEW: ja/fi.",
+      "comment" : "Scoreboard footer: sync toggle label (short). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1410,7 +1410,7 @@
       }
     },
     "Sync and reset this device" : {
-      "comment" : "Destructive confirm button: enable sync, clearing this device's scores. NEEDS REVIEW: ja/fi.",
+      "comment" : "Destructive confirm button: enable sync, clearing this device's scores. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1427,7 +1427,7 @@
       }
     },
     "System" : {
-      "comment" : "Appearance option: follow the OS. NEEDS REVIEW: ja/fi.",
+      "comment" : "Appearance option: follow the OS. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1444,7 +1444,7 @@
       }
     },
     "Tap to resume" : {
-      "comment" : "Pause overlay hint: tap to continue the game. NEEDS REVIEW: ja/fi.",
+      "comment" : "Pause overlay hint: tap to continue the game. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1461,7 +1461,7 @@
       }
     },
     "This clears your high scores and career stats on this device." : {
-      "comment" : "Local-wipe confirmation body (sync off / offline). NEEDS REVIEW: ja/fi.",
+      "comment" : "Local-wipe confirmation body (sync off \/ offline). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1478,7 +1478,7 @@
       }
     },
     "This device only" : {
-      "comment" : "Sync status: toggle off (short). NEEDS REVIEW: ja/fi.",
+      "comment" : "Sync status: toggle off (short). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1495,7 +1495,7 @@
       }
     },
     "This erases your high scores and career stats on every device signed in to your iCloud. It can't be undone." : {
-      "comment" : "Global-wipe confirmation body (sync active). NEEDS REVIEW: ja/fi.",
+      "comment" : "Global-wipe confirmation body (sync active). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1546,7 +1546,7 @@
       }
     },
     "Time, seconds" : {
-      "comment" : "Accessibility label for the timer counter. NEEDS REVIEW: ja/fi.",
+      "comment" : "Accessibility label for the timer counter. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1563,7 +1563,7 @@
       }
     },
     "Toggle side" : {
-      "comment" : "Settings header for the floating toggle’s corner. NEEDS REVIEW: ja/fi.",
+      "comment" : "Settings header for the floating toggle’s corner. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1580,7 +1580,7 @@
       }
     },
     "Toggles between revealing and flagging" : {
-      "comment" : "Accessibility hint for the input-mode toggle. NEEDS REVIEW: ja/fi.",
+      "comment" : "Accessibility hint for the input-mode toggle. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1597,7 +1597,7 @@
       }
     },
     "Tour of Duty" : {
-      "comment" : "Stats section: cumulative career totals (military theme). NEEDS REVIEW: ja/fi.",
+      "comment" : "Stats section: cumulative career totals (military theme). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1614,7 +1614,7 @@
       }
     },
     "Turn on sync?" : {
-      "comment" : "Confirm dialog title: enabling sync after a global wipe. NEEDS REVIEW: ja/fi.",
+      "comment" : "Confirm dialog title: enabling sync after a global wipe. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1631,7 +1631,7 @@
       }
     },
     "Version %@" : {
-      "comment" : "About screen version line, e.g. 'Version 0.1.0 (1)'. %@ is the version string. NEEDS REVIEW: ja/fi.",
+      "comment" : "About screen version line, e.g. 'Version 0.1.0 (1)'. %@ is the version string. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1648,7 +1648,7 @@
       }
     },
     "via iCloud" : {
-      "comment" : "Sync status: on + signed in (short, after toggle). NEEDS REVIEW: ja/fi.",
+      "comment" : "Sync status: on + signed in (short, after toggle). NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1681,7 +1681,7 @@
       }
     },
     "Won" : {
-      "comment" : "Game state: won. NEEDS REVIEW: ja/fi.",
+      "comment" : "Game state: won. NEEDS REVIEW: ja\/fi.",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
