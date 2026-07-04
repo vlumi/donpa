@@ -189,4 +189,34 @@ final class SharingTests: XCTestCase {
         let share = try makeShare(newID, name: "Rival", issuedAt: t0, rotation: fakeEndorsement)
         XCTAssertEqual(FriendMerge.outcome(for: share, existing: [tracked]), .add)
     }
+
+    // MARK: Universal Link transport
+
+    func testShareLinkRoundTrip() throws {
+        let payload = try makeShare(name: "Ville")
+        let url = try ShareLink.url(for: payload)
+        XCTAssertEqual(url.scheme, "https")
+        XCTAssertEqual(url.host, "donpa.app")
+        XCTAssertTrue(url.path.hasPrefix("/s/"))
+        let back = try ShareLink.payload(from: url)
+        XCTAssertEqual(back.publicKey, payload.publicKey)
+        XCTAssertEqual(back.body.name, "Ville")
+    }
+
+    func testShareLinkAcceptsWwwHost() throws {
+        let payload = try makeShare()
+        let url = try ShareLink.url(for: payload)
+        var c = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+        c.host = "www.donpa.app"
+        XCTAssertNoThrow(try ShareLink.payload(from: c.url!))
+    }
+
+    func testNonShareURLsIgnored() {
+        for s in [
+            "https://example.com/s/abc", "https://donpa.app/about",
+            "https://donpa.app/s/", "donpa://s/abc",
+        ] {
+            XCTAssertNil(ShareLink.blob(from: URL(string: s)!), "should ignore \(s)")
+        }
+    }
 }
