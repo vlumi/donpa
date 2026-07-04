@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 13
+
 - **Localization polish (FI + JA).** A fresh-eyes pass over both languages:
   consistent terminology (FI "alueavaus" for chording, unified "tulokset"; JA
   デバイス/記録 unified), career-stat labels in a consistent plural form, several
