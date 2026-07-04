@@ -155,6 +155,19 @@ board is fully deducible.
       may count; skill feats (speed, no-flag, Insane) excluded. Its own
       geometry-bearing `GameConfig.storageKey` keeps it cleanly separated.
 
+**How to play (static reference)** — a `?` on the title screen (and reachable from
+About) opens a **static** "how to play" page: reveal/flag, what the numbers mean,
+chording, flags-remaining, win/lose. Manga/comic-styled **illustrations** (image
+assets, like the result panels) carry the explanation with minimal text — clearer
+than prose for chording, and light on JA/FI translation. Sibling to practice mode
+(the *reference*; practice is the *interactive teach*), which is why it lands here.
+
+- [ ] Static illustrated page + a `?` opener (title + About), no game logic
+- [ ] Comic-styled frames (reuse the manga asset-slot pattern), not screenshots
+      (authored art reads clearer + ages better than cropped board captures)
+- [ ] Interactive teach deferred — let **practice mode** be the "now try it" half
+      rather than building a separate tutorial engine
+
 ## v1.0.0 — The store release
 
 The features are in by 0.5; 1.0 makes them ship-shape for the public App Store.
