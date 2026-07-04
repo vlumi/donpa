@@ -14,12 +14,17 @@ build's heading and opens a fresh empty one. Keep that heading immediately
 followed by its list items (no prose between), so the release script can promote
 it with a one-line edit.
 
-## [0.3.0] — Board variants
+## [0.4.0] — Friendly rivalry
 
-**Board-topology variants: wrapped (torus) + hex grids** (see ROADMAP.md). In
-development — entries land under Unreleased as they merge.
+**Peer-to-peer score sharing** (see ROADMAP.md). In development — entries land
+under Unreleased as they merge.
 
 ### Unreleased (next build)
+
+## [0.3.0] — Board variants
+
+**Board-topology variants: wrapped (torus) + hex grids** (see ROADMAP.md).
+Shipped to TestFlight (both platforms).
 
 ### build 13
 
