@@ -1,0 +1,192 @@
+import XCTest
+
+@testable import DonpaCore
+
+/// The score-sharing core: signed-payload round-trip, every decode guard, and the
+/// full TOFU / rotation / collision decision matrix. Security-critical, so the
+/// guards are tested by construction (tamper a byte → reject), not just happy path.
+final class SharingTests: XCTestCase {
+    private let t0 = Date(timeIntervalSince1970: 1_000_000)
+
+    private func sampleScores() -> [SharedConfigScore] {
+        [
+            SharedConfigScore(
+                key: "v2|grid|flat|16x16|m31", best: 4200, wins: 3, bestProgress: nil),
+            SharedConfigScore(key: "v2|basic|beginner", best: 780, wins: 10, bestProgress: nil),
+        ]
+    }
+
+    private func makeShare(
+        _ id: ShareIdentity = ShareIdentity(), name: String = "Ville",
+        issuedAt: Date? = nil, rotation: RotationEndorsement? = nil
+    ) throws -> SharePayload {
+        try id.makePayload(
+            name: name, scores: sampleScores(), career: nil,
+            issuedAt: issuedAt ?? t0, rotation: rotation)
+    }
+
+    // MARK: Round-trip
+
+    func testRoundTripThroughStringPreservesBody() throws {
+        let payload = try makeShare()
+        let s = try ShareCodec.encodeToString(payload)
+        let back = try ShareCodec.decode(fromString: s)
+        XCTAssertEqual(back.publicKey, payload.publicKey)
+        XCTAssertEqual(back.body.name, "Ville")
+        XCTAssertEqual(back.body.scores, payload.body.scores)
+    }
+
+    func testEncodeIsUrlSafe() throws {
+        let s = try ShareCodec.encodeToString(makeShare())
+        XCTAssertFalse(s.contains("+"))
+        XCTAssertFalse(s.contains("/"))
+        XCTAssertFalse(s.contains("="))
+    }
+
+    // MARK: Signature guards
+
+    func testValidSignatureVerifies() throws {
+        XCTAssertTrue(ShareIdentity.verify(try makeShare()))
+    }
+
+    func testTamperedBodyFailsSignature() throws {
+        var p = try makeShare()
+        p = SharePayload(
+            publicKey: p.publicKey, signature: p.signature,
+            body: ShareBody(name: "Mallory", scores: p.body.scores, career: nil, issuedAt: t0))
+        XCTAssertFalse(ShareIdentity.verify(p))
+        // And decode rejects it loudly.
+        let data = try ShareCodec.encode(p)
+        XCTAssertThrowsError(try ShareCodec.decode(data)) {
+            XCTAssertEqual($0 as? ShareCodec.DecodeError, .badSignature)
+        }
+    }
+
+    func testForeignKeyCantClaimSignature() throws {
+        let real = try makeShare()
+        // Swap in a different public key but keep the (now-mismatched) signature.
+        let imposter = SharePayload(
+            publicKey: ShareIdentity().publicKey, signature: real.signature, body: real.body)
+        XCTAssertFalse(ShareIdentity.verify(imposter))
+    }
+
+    // MARK: Decode guards
+
+    func testUnsupportedVersionRejected() throws {
+        let p = try makeShare()
+        let future = SharePayload(
+            version: SharePayload.currentVersion + 1, publicKey: p.publicKey,
+            signature: p.signature, body: p.body)
+        // Re-sign not needed: version is checked before signature. Encode raw.
+        let enc = JSONEncoder()
+        enc.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let data = (try (enc.encode(future) as NSData).compressed(using: .zlib)) as Data
+        XCTAssertThrowsError(try ShareCodec.decode(data)) {
+            XCTAssertEqual($0 as? ShareCodec.DecodeError, .unsupportedVersion)
+        }
+    }
+
+    func testGarbageRejected() {
+        XCTAssertThrowsError(try ShareCodec.decode(fromString: "not-a-share!!"))
+        XCTAssertThrowsError(try ShareCodec.decode(Data([0xFF, 0x00, 0x13])))
+    }
+
+    func testBadStorageKeyGrammarRejected() throws {
+        // A hostile key with illegal chars must be refused by sanitize.
+        let bad = ShareBody(
+            name: "x",
+            scores: [SharedConfigScore(key: "v2|grid|../etc", best: 1, wins: 1, bestProgress: nil)],
+            career: nil, issuedAt: t0)
+        XCTAssertThrowsError(try ShareCodec.sanitize(bad)) {
+            XCTAssertEqual($0 as? ShareCodec.DecodeError, .malformed)
+        }
+    }
+
+    func testNegativeValuesRejected() throws {
+        let bad = ShareBody(
+            name: "x",
+            scores: [
+                SharedConfigScore(key: "v2|basic|beginner", best: -5, wins: 1, bestProgress: nil)
+            ],
+            career: nil, issuedAt: t0)
+        XCTAssertThrowsError(try ShareCodec.sanitize(bad))
+    }
+
+    func testDuplicateKeysRejected() throws {
+        let dup = ShareBody(
+            name: "x",
+            scores: [
+                SharedConfigScore(key: "v2|basic|beginner", best: 1, wins: 1, bestProgress: nil),
+                SharedConfigScore(key: "v2|basic|beginner", best: 2, wins: 2, bestProgress: nil),
+            ], career: nil, issuedAt: t0)
+        XCTAssertThrowsError(try ShareCodec.sanitize(dup))
+    }
+
+    func testNameSanitizationStripsBidiAndCaps() {
+        // Bidi-override char removed; length capped.
+        let spoof = "A\u{202E}dcba" + String(repeating: "z", count: 100)
+        let clean = ShareCodec.sanitizeName(spoof)
+        XCTAssertFalse(clean.unicodeScalars.contains { $0.value == 0x202E })
+        XCTAssertLessThanOrEqual(clean.count, ShareCodec.maxNameLength)
+        XCTAssertEqual(ShareCodec.sanitizeName("   "), "?")  // nothing printable
+    }
+
+    // MARK: TOFU / rotation / collision matrix
+
+    func testNewIdentityAdds() throws {
+        XCTAssertEqual(FriendMerge.outcome(for: try makeShare(), existing: []), .add)
+    }
+
+    func testNewerShareRefreshes() throws {
+        let id = ShareIdentity()
+        let old = try makeShare(id, issuedAt: t0)
+        let existing = FriendMerge.friend(from: old, existing: nil, now: t0)
+        let newer = try makeShare(id, name: "Ville", issuedAt: t0.addingTimeInterval(60))
+        XCTAssertEqual(FriendMerge.outcome(for: newer, existing: [existing]), .refresh)
+    }
+
+    func testOlderShareIsStale() throws {
+        let id = ShareIdentity()
+        let recent = try makeShare(id, issuedAt: t0.addingTimeInterval(60))
+        let existing = FriendMerge.friend(from: recent, existing: nil, now: t0)
+        let older = try makeShare(id, issuedAt: t0)
+        XCTAssertEqual(FriendMerge.outcome(for: older, existing: [existing]), .stale)
+    }
+
+    func testNameCollisionPrompts() throws {
+        let a = try makeShare(ShareIdentity(), name: "Ville")
+        let friendA = FriendMerge.friend(from: a, existing: nil, now: t0)
+        let b = try makeShare(ShareIdentity(), name: "Ville")  // same name, different key
+        XCTAssertEqual(
+            FriendMerge.outcome(for: b, existing: [friendA]),
+            .nameCollision(withPublicKey: friendA.publicKey))
+    }
+
+    func testRotationEndorsementMigratesSilently() throws {
+        // Old identity tracked; new identity carries a valid endorsement from it.
+        let oldID = ShareIdentity()
+        let oldShare = try makeShare(oldID, name: "Ville", issuedAt: t0)
+        let tracked = FriendMerge.friend(from: oldShare, existing: nil, now: t0)
+
+        let newID = ShareIdentity()
+        let endorsement = try oldID.endorse(newPublicKey: newID.publicKey)
+        let newShare = try makeShare(
+            newID, name: "Ville", issuedAt: t0.addingTimeInterval(120), rotation: endorsement)
+
+        XCTAssertEqual(
+            FriendMerge.outcome(for: newShare, existing: [tracked]),
+            .migrate(fromPublicKey: oldID.publicKey))
+    }
+
+    func testForgedRotationDoesNotMigrate() throws {
+        // Endorsement signed by an UNRELATED key (not one we track) → no migrate;
+        // falls through to a name collision (same name) or add.
+        let tracked = FriendMerge.friend(
+            from: try makeShare(ShareIdentity(), name: "Ville"), existing: nil, now: t0)
+        let attacker = ShareIdentity()
+        let newID = ShareIdentity()
+        let fakeEndorsement = try attacker.endorse(newPublicKey: newID.publicKey)
+        let share = try makeShare(newID, name: "Rival", issuedAt: t0, rotation: fakeEndorsement)
+        XCTAssertEqual(FriendMerge.outcome(for: share, existing: [tracked]), .add)
+    }
+}
