@@ -10,19 +10,26 @@ PR → merge to `main`. Releases are **tags**, not long-lived branches (see Cutt
 a release). No `develop` branch — `main` isn't continuously deployed, so a second
 permanent trunk would only add merge overhead.
 
-**Release branches** are the one exception, cut *only* when an in-progress
-release needs to be finalized/approved while trunk has already moved on to the
-next version:
+**Version-line release branches are cut ON DEMAND, not routinely.** The only
+reason to want one is patching an already-shipped version *after* trunk has moved
+on to the next — and through v0.1–v0.3 that never happened, so don't create them
+per release. The release **tag** is the exact cut point when a patch is ever
+needed; branch from it then:
 
-- Cut `release/<minor>` (e.g. `release/0.1`) from the commit the release builds
-  from. Forward work (the next version) continues on `main`.
-- **Fixes for that release land on the release branch** (branch off it → PR into
-  it → tag the new build from it), NOT on `main` directly.
+- Cut `release/<minor>` (e.g. `release/0.2`) **from that version's last release
+  tag** (`git switch -c release/0.2 mac/v0.2.0-9`). Forward work stays on `main`.
+- **Fixes land on the release branch** (branch off it → PR into it → tag the new
+  build from it), NOT on `main` directly.
 - **Every release-branch fix must also reach `main`** — cherry-pick it over, or
-  the next version silently regresses it. This is the only discipline a release
-  branch demands.
-- **Delete the release branch once that version ships for real** — it's
-  temporary, not a maintained line.
+  the next version silently regresses it. The only discipline a release branch
+  demands.
+- **Delete it once that patched version ships** — temporary, not a maintained
+  line.
+
+(Distinct from the transient `release/vX.Y.Z-N` branch `make release` creates to
+carry a version/build-bump PR — that's release-lane machinery, auto-merged and
+deleted per build; see § Cutting a release. Only the `release/<minor>`
+version-line branch above is the on-demand thing.)
 
 ## Versioning
 
