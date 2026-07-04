@@ -135,9 +135,14 @@ extension GameContent {
                             .scaledToFit()
                             .frame(
                                 maxWidth: min(panelW, geo.size.width - 24),
-                                maxHeight: geo.size.height - 80
+                                maxHeight: geo.size.height - 100
                             )
                             .shadow(color: .black.opacity(0.35), radius: 14, y: 5)
+                        // The drill command for "pause" — playful flavor in every
+                        // language (FI "Lepo!", JA 「休め！」); a11y keeps the plain
+                        // "Paused" state label below.
+                        Text("At ease!", bundle: .module)
+                            .font(.title2.bold())
                         Text("Tap to resume", bundle: .module)
                             .font(.callout.weight(.semibold)).foregroundStyle(.secondary)
                     }

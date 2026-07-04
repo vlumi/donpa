@@ -21,9 +21,16 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- **Finnish polish.** Family/edge filter buttons shrink a long label to fit rather
-  than truncating it (e.g. "Ruudukko"), and the career-stat labels were reworded
-  to a consistent plural form (incl. a Finnish term for chording, "alueavaus").
+- **Localization polish (FI + JA).** A fresh-eyes pass over both languages:
+  consistent terminology (FI "alueavaus" for chording, unified "tulokset"; JA
+  デバイス/記録 unified), career-stat labels in a consistent plural form, several
+  awkward or plain-wrong lines fixed, and a dose of light Finnish army flavor in
+  the taglines ("Pakkaa sissimuonat", "Iltavapaa peruttu", "Puhdasta
+  simputusta") to match the Japanese tone — plus the scoreboard is now the
+  **Sotilaspassi** in Finnish. The pause screen gained a drill-command title in
+  every language: **At ease! / Lepo! / 休め！**
+- **Filter labels fit.** Family/edge filter buttons shrink a long label to fit
+  rather than truncating it (e.g. "Ruudukko").
 
 ### build 12
 
