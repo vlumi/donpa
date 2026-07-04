@@ -28,6 +28,9 @@ struct ScoreboardView: View {
     /// the scanner at the root (so the scanner + receive prompt don't stack on top of
     /// the scoreboard). nil = no scan button.
     var onScan: (() -> Void)?
+    /// Open the friends list. Like `onScan`, the host dismisses this sheet and presents
+    /// the list at the root. nil = no friends button.
+    var onFriends: (() -> Void)?
     // Not `private`: the iOS toolbar lives in a `ScoreboardView` extension in another
     // file (ScoreboardToolbar) and drives these — Swift `private` is file-scoped.
     @Environment(\.dismiss) var dismiss
@@ -132,6 +135,15 @@ struct ScoreboardView: View {
                             Text("Add friend", bundle: .module)
                         } icon: {
                             Image(systemName: "qrcode.viewfinder")
+                        }
+                    }
+                }
+                if let onFriends {
+                    Button(action: onFriends) {
+                        Label {
+                            Text("Friends", bundle: .module)
+                        } icon: {
+                            Image(systemName: "person.2")
                         }
                     }
                 }

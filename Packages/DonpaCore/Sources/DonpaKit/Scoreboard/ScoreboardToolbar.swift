@@ -31,6 +31,18 @@ extension ScoreboardView {
                 .accessibilityIdentifier("scoreboard.scan")
             }
         }
+        if let onFriends {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onFriends) {
+                    Label {
+                        Text("Friends", bundle: .module)
+                    } icon: {
+                        Image(systemName: "person.2")
+                    }
+                }
+                .accessibilityIdentifier("scoreboard.friends")
+            }
+        }
         ToolbarItem(placement: .destructiveAction) {
             Button(role: .destructive) {
                 confirmingReset = true

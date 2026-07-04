@@ -65,4 +65,20 @@ final class FriendsStoreTests: XCTestCase {
         store.delete(p.publicKey)
         XCTAssertTrue(store.friends.isEmpty)
     }
+
+    func testGroupsPersistAndReload() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("donpa-friends-groups-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let p = try share()
+
+        let store = FriendsStore(directory: dir)
+        store.apply(p, now: t0)
+        store.setGroups(["work", "family"], for: p.publicKey)
+        XCTAssertEqual(store.friends[0].groups, ["work", "family"])
+
+        // A fresh store over the same dir sees the persisted groups (atomic write).
+        let reloaded = FriendsStore(directory: dir)
+        XCTAssertEqual(reloaded.friends.first?.groups, ["work", "family"])
+    }
 }

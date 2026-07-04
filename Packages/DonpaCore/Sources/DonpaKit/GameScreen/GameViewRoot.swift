@@ -183,6 +183,9 @@ private struct ReceivePrompt: ViewModifier {
                     Task { @MainActor in navigator.incomingShare = incoming }
                 }
             }
+            .sheet(isPresented: $navigator.showingFriends) {
+                FriendsListView(friends: friends)
+            }
             .alert(
                 Text("Couldn't verify share", bundle: .module),
                 isPresented: alertBinding,

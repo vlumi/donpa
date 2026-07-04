@@ -151,6 +151,10 @@ struct GameContent: View {
                 onScan: {
                     navigator.showingScores = false
                     Task { @MainActor in navigator.showingScanner = true }
+                },
+                onFriends: {
+                    navigator.showingScores = false
+                    Task { @MainActor in navigator.showingFriends = true }
                 })
         }
         // Opening the scoreboard pauses a live game (flushing career activity and

@@ -42,7 +42,7 @@ public final class Navigator: ObservableObject {
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {
         showingScores || showingSettings || showingAbout || showingNewGame
-            || incomingShare != nil || showingScanner
+            || incomingShare != nil || showingScanner || showingFriends
     }
 
     /// A received share awaiting the user's decision (opened via a donpa.app link or
@@ -55,6 +55,10 @@ public final class Navigator: ObservableObject {
     /// Universal Link can't be tapped — a QR shown on another screen). A decoded code
     /// routes through the same receive path as `onOpenURL`.
     @Published public var showingScanner = false
+
+    /// Whether the friends list sheet is presented (view / rename / group / remove
+    /// tracked friends). Opened from the Service Record.
+    @Published public var showingFriends = false
 
     public init(showingTitle: Bool = true) {
         self.showingTitle = showingTitle
