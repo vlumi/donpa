@@ -12,6 +12,11 @@ struct NewGamePopup: View {
     let onStart: () -> Void
     /// Dismiss without starting (X, backdrop tap, or Escape).
     let onClose: () -> Void
+    /// In-progress games (one per config), newest-played first — the resume list.
+    /// Empty → the section is hidden.
+    var inProgress: [GameSnapshot] = []
+    /// Resume a saved game instead of starting a fresh one. nil → no resume.
+    var onResume: ((GameSnapshot) -> Void)?
 
     #if os(macOS)
     /// Keyboard-focused picker row (0 = Mode). nil until the first arrow press.
@@ -127,6 +132,9 @@ struct NewGamePopup: View {
             if layout == .pager {
                 picker(layout: .pager).startButton
             }
+            if !inProgress.isEmpty, onResume != nil {
+                resumeSection
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
@@ -135,6 +143,33 @@ struct NewGamePopup: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
+    }
+
+    /// Resume an in-progress game — one row per config with a live save, newest
+    /// first, each showing the board and how far in it is. Tapping resumes that game
+    /// rather than starting fresh.
+    @ViewBuilder private var resumeSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Divider()
+            Text("In progress", bundle: .module)
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(inProgress, id: \.config) { snapshot in
+                Button {
+                    onResume?(snapshot)
+                } label: {
+                    HStack {
+                        Text(verbatim: snapshot.config.label).lineLimit(1)
+                        Spacer()
+                        Text(verbatim: TimeFormat.mmsst(centiseconds: snapshot.elapsedCentiseconds))
+                            .font(.caption.monospaced()).foregroundStyle(.secondary)
+                        Image(systemName: "arrow.uturn.forward.circle").foregroundStyle(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// The `BoardSelectionPicker` for a layout.
