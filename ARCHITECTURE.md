@@ -82,7 +82,8 @@ Supporting choices that are easy to mistake for accidents:
   (e.g. the scoreboard's "New game on this board") so the choice is remembered.
 - **The scoreboard renders one `StatBlock` at two scopes** (lifetime career /
   one config's record) — deliberately the same component so the two always read
-  alike, and a third scope (friend-vs-you comparison) can reuse it.
+  alike. Rival comparison is a separate surface (`ScoreComparison` +
+  `HeadToHeadView`; see the sharing section below), not another `StatBlock` scope.
 
 ## UI layout law: viewport shape, not platform
 
@@ -221,6 +222,69 @@ that no device ever *overwrites* another's history:
   their next read — including a device whose sync was off during the wipe, which
   is warned before opting back in. The epoch floor also doubles as a one-time
   "orphan all pre-rebalance scores" switch.
+
+## Score sharing: signed, serverless, peer-to-peer
+
+Sharing scores with other people (v0.4.0, "friendly rivalry") is **serverless and
+account-free** — the same philosophy as score sync, but between *different* people's
+devices instead of one person's. The whole pipeline lives in `DonpaCore/Sharing`
+(pure, headless, tested) with the SwiftUI/Keychain/camera glue in `DonpaKit/Sharing`.
+
+- **Identity is a keypair, not an account.** Each device lazily mints a Curve25519
+  signing key on first share (`ShareIdentity`), stored in a **synchronizable Keychain
+  item** so all *your* devices present one identity. The public key *is* your share id.
+- **A share is a signed, self-contained blob.** `ShareBody` (name + per-config
+  bests/wins + optional career + `issuedAt`) is canonicalized (sorted-key JSON so
+  signer and verifier hash identical bytes), signed, wrapped in a versioned
+  `SharePayload`, then zlib-compressed + base64url'd by `ShareCodec` into a
+  `https://donpa.app/s/<blob>` **Universal Link** (`ShareLink`) — which is also the QR.
+  No server: everything needed to verify is in the blob.
+- **Receiving is trust-on-first-use.** A tapped link (`onOpenURL`) or scanned/imported
+  QR (`ScanContent`) both funnel through **one** path: `ShareLink.payload` verifies the
+  signature, then `FriendMerge.outcome` classifies it — genuine add, refresh, silent
+  **rotation-migrate** (an old key signs a new one, so a friend's re-mint doesn't
+  double them), ignore-stale (`issuedAt` replay guard), or a **name collision** the UI
+  resolves (keep-both / replace / cancel). Decode is defensive: decompression-bomb cap,
+  version reject, shape + value-range checks, storage-key allowlist, bidi/control-char
+  name sanitization, signature-checked-before-trusted.
+- **Display-merge, never storage-merge.** A rival's scores live ONLY in `FriendsStore`,
+  never folded into your own `Scoreboard`. Comparison (`ScoreComparison`: per-config
+  leaderboard + head-to-head) reads both and interleaves at display time — so removing
+  a rival just drops their record, with nothing to disentangle from your stats.
+
+## Rival-list sync: the same blob model, different merge
+
+The rival list + groups sync across *your* devices under the **same `syncScores`
+toggle** — but a friend set isn't a G-counter, it's a mutable set with per-record
+edits, so the merge differs from scores:
+
+- **Per-record last-writer-wins + soft-delete tombstones** (`FriendSyncMerge`). Each
+  `Friend` (by public key) and `FriendGroup` (by id) carries `updatedAt` + `deletedAt`;
+  merge keeps the newest per key across devices, and a delete is a **minimal tombstone**
+  (key/id + timestamp, data stripped) that propagates so a friend can't resurrect from
+  a device that missed the removal — without their data lingering in the blob.
+- **Same transport as scores, own namespace.** `CloudFriendsStore` /
+  `UbiquitousFriendsStore` mirror the score stack (per-device blob keyed by `DeviceID`,
+  read-all-and-merge) under `donpa.friends.blob.<deviceID>`. Enabling sync **unions**
+  both devices' rivals into the local set (nobody dropped, survives a later sync-off).
+
+Two per-device-blob systems on one KVS, one sync gate, one `DeviceID`:
+
+```mermaid
+flowchart LR
+  subgraph KVS["iCloud Key-Value Store (your account)"]
+    SB["donpa.stats.blob.&lt;device&gt;<br/>G-counter scores"]
+    FB["donpa.friends.blob.&lt;device&gt;<br/>rivals + groups, LWW + tombstones"]
+    EP["donpa.stats.resetEpoch"]
+  end
+  Scoreboard -->|"writeOwnBlob / readAll"| SB
+  FriendsStore -->|"writeOwnBlob / readAll"| FB
+  SB --- EP
+  toggle["syncScores toggle"] --> Scoreboard
+  toggle --> FriendsStore
+  SB -. "StatsMerge" .-> Scoreboard
+  FB -. "FriendSyncMerge" .-> FriendsStore
+```
 
 ## Assets are generated, not hand-drawn-in-repo
 

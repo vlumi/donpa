@@ -1,6 +1,6 @@
 # Privacy Policy
 
-_Last updated: 2026-06-27_
+_Last updated: 2026-07-06_
 
 **Donpa Squad does not collect any personal data.**
 
@@ -20,7 +20,23 @@ The app runs on your device and, if you turn on score syncing, your own iCloud:
   default**, works only while you're signed into iCloud, and turning it off (or
   resetting your scores) removes that device's synced data. In-progress games are
   never synced. Everything is removed if you delete the app (local) or turn sync
-  off (iCloud).
+  off (iCloud). With sync on, your **rivals list and groups** (below) sync the same
+  way, in the same private iCloud, under the same switch.
+- **Sharing scores with others is peer-to-peer, not through us.** If you choose to
+  share, the app builds — **on your device** — a QR code / link containing the display
+  name you type, your best times and games-cleared per board, and (only if you opt in)
+  your career totals. You hand that code or link to whoever you want; there is **no
+  server and no account** — nothing is sent to us. The share is signed by a key kept in
+  your device Keychain (and your own iCloud Keychain, so your devices act as one
+  identity); the key exists only to prove a share really came from the same person, not
+  to identify you to anyone. As with sharing anything, once you give someone your code
+  they hold that copy — sharing again later doesn't reach back.
+- **A rival's scores you receive stay yours-side.** When you add someone as a rival
+  (by scanning their code or opening their link), the name and scores _they_ chose to
+  share are stored on your device (and your private iCloud if sync is on), kept separate
+  from your own scores, and shown only to you for comparison — never sent anywhere.
+  Removing a rival deletes their data from your device (and, with sync on, from your
+  other devices).
 - **No tracking.** The app does not track you across apps or websites and does
   not use any device identifiers for advertising.
 - **Children.** Because the app collects no data at all, it collects none from
