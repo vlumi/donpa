@@ -104,8 +104,19 @@ struct NewGamePopup: View {
             }
         case .left: cycleSelection(in: focusedRow ?? 0, by: -1)
         case .right: cycleSelection(in: focusedRow ?? 0, by: 1)
-        case .enter: onStart()
+        case .enter: commitSelection()
         case .escape: onClose()
+        }
+    }
+
+    /// Return does what the button does: Continue the current selection if it has an
+    /// in-progress save, else Start fresh — matching `BoardSelectionPicker.canContinue`
+    /// so the key never diverges from the visible Start/Continue label.
+    private func commitSelection() {
+        if let onResume, index.hasSave(for: settings.currentConfig) {
+            onResume(settings.currentConfig)
+        } else {
+            onStart()
         }
     }
 

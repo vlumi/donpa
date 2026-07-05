@@ -102,6 +102,27 @@ final class DonpaUITests: XCTestCase {
             "resumed directly, no New Game popup")
     }
 
+    /// Regression: start a game, make a move, reopen New Game on the SAME config.
+    /// The Start button must read "Continue" (the live game is flushed to disk when
+    /// New Game opens, so its in-progress cue is accurate immediately — it used to
+    /// show a plain "Start" until the debounced save happened to land). English is
+    /// forced in setUp, so the label check is stable.
+    func testNewGameShowsContinueForTheLiveGame() {
+        startGame()
+        XCTAssertTrue(
+            app.buttons["newgame.start"].waitForNonExistence(timeout: 5),
+            "New Game popup dismissed")
+        app.otherElements["game.board"].tap()  // first move → in-progress game
+        waitFor(app.buttons["game.pause"])  // confirm we're actually playing
+        // Reopen New Game via the in-game config badge (flushes the live game first).
+        app.buttons["game.config"].tap()
+        let button = app.buttons["newgame.start"]
+        waitFor(button)
+        XCTAssertEqual(
+            button.label, "Continue",
+            "the just-played config offers Continue, not a fresh Start")
+    }
+
     func testPauseAndResume() {
         startGame()
         // Wait for the New Game popup to finish fading out — its dimmed scrim

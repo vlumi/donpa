@@ -105,6 +105,22 @@ final class SaveStoreTests: XCTestCase {
             store.load(config: .basic(.beginner)), "…but an inconsistent save must not load")
     }
 
+    /// A finished (won/lost) game is not resumable. The capture init already refuses
+    /// to snapshot a non-playing game, but a finished snapshot could still reach disk
+    /// via a hand-written/legacy file — load/all must reject it so it never resurfaces
+    /// as a stale "Continue". Geometry-consistent (Beginner = 9×9, 10 mines) so only
+    /// the status gate can reject it.
+    func testLoadRejectsFinishedGame() throws {
+        let mines = ((0..<9).map { "[\($0),0]" } + ["[0,1]"]).joined(separator: ",")
+        let json =
+            #"{"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines)],"status":"lost"}"#
+        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        XCTAssertTrue(store.hasSave(config: .basic(.beginner)), "the file exists…")
+        XCTAssertNil(
+            store.load(config: .basic(.beginner)), "…but a finished game must not load")
+        XCTAssertTrue(store.all().isEmpty, "and it doesn't appear in the in-progress list")
+    }
+
     func testClearRemovesTheSave() {
         let config = GameConfig.basic(.beginner)
         store.save(sampleSnapshot(config))

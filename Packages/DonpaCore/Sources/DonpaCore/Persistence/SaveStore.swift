@@ -99,11 +99,16 @@ public struct SaveStore {
         return files.filter { $0.lastPathComponent.hasPrefix("save-") }
     }
 
-    /// Shared tolerant decode: version-gated and geometry-checked. See `load`.
+    /// Shared tolerant decode: version-gated, geometry-checked, and in-progress only.
+    /// A save is only resumable while the game is still playable — a won/lost snapshot
+    /// that slipped to disk (e.g. an app-exit save fired after the result) must never
+    /// resurface as a "Continue", so it's rejected here rather than relied on being
+    /// cleared everywhere it could be written. See `load`.
     private func decode(_ data: Data?) -> GameSnapshot? {
         guard let data,
             let snapshot = try? JSONDecoder().decode(GameSnapshot.self, from: data),
             snapshot.version <= GameSnapshot.currentVersion,
+            snapshot.status == .playing,
             snapshot.isConsistent
         else { return nil }
         return snapshot.migrated()

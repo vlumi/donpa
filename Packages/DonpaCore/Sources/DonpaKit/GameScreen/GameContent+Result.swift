@@ -91,6 +91,11 @@ extension GameContent {
             chordsUsed: viewModel.chordsThisGame)
         showPanel(kind)
 
+        // The game is over → discard its in-progress save now (a game is kept only
+        // while playable). Without this the last debounced save lingered until the
+        // next autosave, so New Game could still show a stale Continue for it.
+        autosave()  // not in progress → clears this config's save
+
         if !reduceMotion {
             restartPop = true
             withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) { restartPop = false }
