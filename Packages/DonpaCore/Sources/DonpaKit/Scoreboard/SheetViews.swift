@@ -31,6 +31,13 @@ struct ScoreboardView: View {
     /// Open the friends list. Like `onScan`, the host dismisses this sheet and presents
     /// the list at the root. nil = no friends button.
     var onFriends: (() -> Void)?
+    /// Tracked friends, for the per-config rival comparison. No friends → no
+    /// comparison shown, rows behave exactly as before.
+    @ObservedObject var friends: FriendsStore
+    /// The group to compare against, or nil for all friends (the group filter). Not
+    /// `private`: the rival-scope control lives in a `ScoreboardView` extension in
+    /// another file (ScoreboardRivals) — Swift `private` is file-scoped.
+    @State var rivalGroupID: String?
     // Not `private`: the iOS toolbar lives in a `ScoreboardView` extension in another
     // file (ScoreboardToolbar) and drives these — Swift `private` is file-scoped.
     @Environment(\.dismiss) var dismiss
@@ -191,8 +198,9 @@ struct ScoreboardView: View {
     /// Gutter at the right of the table so the scroll indicator sits clear of the
     /// rows and their dividers.
     private static let scrollbarGutter: CGFloat = 16
+    // Not `private`: referenced by the ScoreboardRivals extension (another file).
     /// Horizontal breathing room inside each row (and the record-highlight band).
-    private static let rowInset: CGFloat = 10
+    static let rowInset: CGFloat = 10
 
     /// One scrolling sheet, the same law at every width (the sheet scrolls, so a big
     /// screen just shows more without a distinct pinned-column layout): the global
@@ -285,6 +293,7 @@ struct ScoreboardView: View {
         VStack(alignment: .leading, spacing: 16) {
             sectionHeader("Commendations")
             filterControls
+            if !friends.friends.isEmpty { rivalScopeControl }
             leafRows
         }
     }
@@ -333,6 +342,7 @@ struct ScoreboardView: View {
     @ViewBuilder private var leafRows: some View {
         let edges: BoardEdges = filterFamily == .basic ? .flat : filterEdges
         let configs = GameConfig.configs(family: filterFamily, edges: edges)
+        let rivals = RivalRanking.rivals(from: friends, group: rivalGroupID)
         VStack(spacing: 0) {
             columnHeader
             ForEach(configs, id: \.self) { config in
@@ -341,7 +351,8 @@ struct ScoreboardView: View {
                     currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
                     isExpanded: expandedKey == config.storageKey,
                     onToggle: { toggleExpanded(config.storageKey) },
-                    onPlay: onPlay.map { play in { play(config) } }
+                    onPlay: onPlay.map { play in { play(config) } },
+                    rivals: rivals, yourName: settings.shareName
                 )
                 .id(config.storageKey)  // scroll anchor for the current-config jump
                 if config != configs.last { Divider() }

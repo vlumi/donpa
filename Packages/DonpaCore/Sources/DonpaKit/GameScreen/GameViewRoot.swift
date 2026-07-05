@@ -65,7 +65,7 @@ public struct GameView: View {
         ZStack {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
-                navigator: navigator, scene: scene)
+                navigator: navigator, friends: friends, scene: scene)
             // Title fade scoped to this overlay via `.animation(_:value:)` — an
             // imperative `withAnimation` would also animate the chrome's first
             // layout, making the status bar visibly settle.

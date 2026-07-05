@@ -19,6 +19,18 @@ struct ScoreRow: View {
     var onToggle: (() -> Void)?
     /// Start a fresh game on this row's config (the expansion's "New game" button).
     var onPlay: (() -> Void)?
+    /// The tracked friends to compare against (already filtered to the chosen group),
+    /// and your display name. Empty / nil → no comparison shown (rows still work).
+    var rivals: [Friend] = []
+    var yourName: String = ""
+
+    /// You + rivals ranked by best time on this config — nil when there are no rivals,
+    /// so rows behave exactly as before when the friends list is empty.
+    private var ranking: ScoreComparison.Ranking? {
+        guard !rivals.isEmpty else { return nil }
+        return RivalRanking.ranking(
+            config: config, scoreboard: scoreboard, rivals: rivals, yourName: yourName)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -63,6 +75,7 @@ struct ScoreRow: View {
             }
             .frame(width: 64, alignment: .trailing)
             HStack(spacing: 3) {
+                if let rank = ranking?.yourRank { rankBadge(rank) }
                 if recordMarker == .time { newBestMarker }
                 if let best = scoreboard.best(for: config) {
                     Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())
@@ -91,10 +104,71 @@ struct ScoreRow: View {
                     .font(.callout).foregroundStyle(.secondary)
                     .padding(.horizontal, rowInset)
             }
+            if let ranking { leaderboard(ranking) }
             if let onPlay { playButton(onPlay) }
         }
         .padding(.bottom, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The mixed top-5 leaderboard for this board — you slotted among rivals by time,
+    /// highlighted in place. If you're outside the top 5, your own row is appended
+    /// below a break so you can still see where you stand.
+    @ViewBuilder private func leaderboard(_ ranking: ScoreComparison.Ranking) -> some View {
+        let top = Array(ranking.entries.prefix(5))
+        let youInTop = top.contains { $0.isYou }
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Leaderboard", bundle: .module)
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(Array(top.enumerated()), id: \.offset) { index, entry in
+                leaderboardRow(place: index + 1, entry: entry)
+            }
+            // You didn't make the top 5 → show your line below, after a break.
+            if !youInTop, let you = ranking.entries.first(where: { $0.isYou }),
+                let rank = ranking.yourRank
+            {
+                Text("⋯").font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                leaderboardRow(place: rank, entry: you)
+            }
+        }
+        .padding(.horizontal, rowInset)
+    }
+
+    private func leaderboardRow(place: Int, entry: ScoreComparison.Entry) -> some View {
+        HStack(spacing: 8) {
+            Text("\(place)").font(.caption.monospaced())
+                .foregroundStyle(.secondary).frame(width: 20, alignment: .trailing)
+            Text(entry.name).lineLimit(1)
+                .fontWeight(entry.isYou ? .bold : .regular)
+            Spacer()
+            if let best = entry.best {
+                Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced())
+            } else {
+                Text("—").foregroundStyle(.secondary)
+            }
+        }
+        .font(.callout)
+        // Highlight your own line so it stands out in the mix.
+        .background(entry.isYou ? Color.accentColor.opacity(0.12) : .clear)
+    }
+
+    /// The tiny standing badge for the collapsed row: a medal for 1–3, a compact "4+"
+    /// beyond — kept minimal to fit SE portrait alongside the existing columns.
+    @ViewBuilder private func rankBadge(_ rank: Int) -> some View {
+        switch rank {
+        case 1: badgeGlyph("1.circle.fill", .yellow)
+        case 2: badgeGlyph("2.circle.fill", .gray)
+        case 3: badgeGlyph("3.circle.fill", .brown)
+        default:
+            Text("4+").font(.caption2.bold()).foregroundStyle(.secondary)
+                .accessibilityLabel(Text("rank \(rank)", bundle: .module))
+        }
+    }
+
+    private func badgeGlyph(_ systemName: String, _ tint: Color) -> some View {
+        Image(systemName: systemName).font(.caption).foregroundStyle(tint)
+            .accessibilityLabel(Text("rank \(String(systemName.prefix(1)))", bundle: .module))
     }
 
     /// Jump straight into a fresh game on this board — closes the loop between
