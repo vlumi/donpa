@@ -21,6 +21,11 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **A game in progress on every board.** Each board keeps its own in-progress game now,
+  not one shared slot — so starting a quick round on another board no longer discards
+  the big one you had going. The New Game screen lists your in-progress games (most
+  recent first) to jump back into, and the app auto-resumes the one you played last. A
+  game is cleared when you win or lose it.
 - **Share your scores.** From the Service Record, tap Share to show a QR code (or copy
   a link) built from your best scores. Someone adds you as a rival by scanning the code
   or opening the link — no account, no server. Scores are signed so they can't be
