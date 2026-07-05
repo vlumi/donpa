@@ -8,10 +8,13 @@ import SwiftUI
 /// invariant means removing a friend just drops their data, nothing to reconcile.
 struct FriendsListView: View {
     @ObservedObject var friends: FriendsStore
+    @ObservedObject var scoreboard: Scoreboard
     @Environment(\.dismiss) private var dismiss
 
     /// The friend whose detail sheet is open (rename / groups / remove).
     @State private var editing: Friend?
+    /// The friend being compared head-to-head, or nil.
+    @State private var comparing: Friend?
     /// Whether the group-management sheet (create/rename/delete) is open.
     @State private var managingGroups = false
 
@@ -27,8 +30,13 @@ struct FriendsListView: View {
             .sheet(item: $editing) { friend in
                 FriendDetailView(friend: friend, friends: friends)
             }
+            .sheet(item: $comparing) { friend in
+                HeadToHeadView(
+                    scoreboard: scoreboard, opponentName: friend.displayName,
+                    result: RivalRanking.headToHead(with: friend, scoreboard: scoreboard))
+            }
             .sheet(isPresented: $managingGroups) {
-                ManageGroupsView(friends: friends)
+                ManageGroupsView(friends: friends, scoreboard: scoreboard)
             }
     }
 
@@ -49,6 +57,30 @@ struct FriendsListView: View {
                         FriendRow(friend: friend, groupNames: groupNames(for: friend))
                     }
                     .buttonStyle(.plain)
+                    // Compare is a secondary action (tapping the row opens detail).
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            comparing = friend
+                        } label: {
+                            Label {
+                                Text("Compare", bundle: .module)
+                            } icon: {
+                                Image(systemName: "chart.bar")
+                            }
+                        }
+                        .tint(.accentColor)
+                    }
+                    .contextMenu {
+                        Button {
+                            comparing = friend
+                        } label: {
+                            Label {
+                                Text("Compare", bundle: .module)
+                            } icon: {
+                                Image(systemName: "chart.bar")
+                            }
+                        }
+                    }
                 }
                 .onDelete { offsets in
                     offsets.map { ordered[$0].publicKey }.forEach { friends.delete($0) }

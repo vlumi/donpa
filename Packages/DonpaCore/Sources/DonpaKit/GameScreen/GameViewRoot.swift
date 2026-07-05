@@ -65,7 +65,7 @@ public struct GameView: View {
         ZStack {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
-                navigator: navigator, scene: scene)
+                navigator: navigator, friends: friends, scene: scene)
             // Title fade scoped to this overlay via `.animation(_:value:)` — an
             // imperative `withAnimation` would also animate the chrome's first
             // layout, making the status bar visibly settle.
@@ -111,7 +111,7 @@ public struct GameView: View {
         // A tapped donpa.app/s/… link (or a Universal Link from the Camera) arrives
         // here: decode + classify, then let the receive prompt render the decision.
         .onOpenURL { receive($0) }
-        .modifier(ReceivePrompt(navigator: navigator, friends: friends))
+        .modifier(ReceivePrompt(navigator: navigator, friends: friends, scoreboard: scoreboard))
         // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
         .onChangeCompat(of: settings.syncScores) {
             scoreboard.syncEnabled = $0
@@ -171,6 +171,7 @@ public struct GameView: View {
 private struct ReceivePrompt: ViewModifier {
     @ObservedObject var navigator: Navigator
     @ObservedObject var friends: FriendsStore
+    @ObservedObject var scoreboard: Scoreboard
 
     /// True only for `.failed`, which routes to the alert rather than the sheet.
     private var failure: ShareCodec.DecodeError? {
@@ -194,7 +195,7 @@ private struct ReceivePrompt: ViewModifier {
                 }
             }
             .sheet(isPresented: $navigator.showingFriends) {
-                FriendsListView(friends: friends)
+                FriendsListView(friends: friends, scoreboard: scoreboard)
             }
             .alert(
                 Text("Couldn't verify share", bundle: .module),

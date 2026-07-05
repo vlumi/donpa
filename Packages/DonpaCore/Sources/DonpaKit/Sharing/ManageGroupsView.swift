@@ -6,6 +6,7 @@ import SwiftUI
 /// from the friends list; the per-friend membership picker lives in the detail sheet.
 struct ManageGroupsView: View {
     @ObservedObject var friends: FriendsStore
+    @ObservedObject var scoreboard: Scoreboard
     @Environment(\.dismiss) private var dismiss
 
     @State private var newName = ""
@@ -14,9 +15,17 @@ struct ManageGroupsView: View {
     @State private var renameText = ""
     /// The group whose members are expanded inline, or nil.
     @State private var expandedID: String?
+    /// The group being compared head-to-head (vs its best per board), or nil.
+    @State private var comparing: FriendGroup?
 
     var body: some View {
         chrome
+            .sheet(item: $comparing) { group in
+                HeadToHeadView(
+                    scoreboard: scoreboard, opponentName: group.name,
+                    result: RivalRanking.headToHead(
+                        withGroup: friends.members(of: group.id), scoreboard: scoreboard))
+            }
     }
 
     @ViewBuilder private var content: some View {
@@ -82,6 +91,14 @@ struct ManageGroupsView: View {
                     .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.borderless)
+                // Compare vs this group's best per board.
+                Button {
+                    comparing = group
+                } label: {
+                    Image(systemName: "chart.bar")
+                }
+                .buttonStyle(.borderless)
+                .disabled(friends.members(of: group.id).isEmpty)
                 Button {
                     renamingID = group.id
                     renameText = group.name

@@ -1,0 +1,109 @@
+import DonpaCore
+import SwiftUI
+
+/// Bridges the live stores to the pure `ScoreComparison`: builds a per-config ranking
+/// (you + the selected rivals) and picks the rivals set from the friends list, honoring
+/// an optional group filter. `@MainActor` because it reads `Scoreboard`/`FriendsStore`.
+@MainActor
+enum RivalRanking {
+    /// The friends to compare against: everyone, or just one group's members.
+    static func rivals(from friends: FriendsStore, group groupID: String?) -> [Friend] {
+        guard let groupID else { return friends.friends }
+        return friends.members(of: groupID)
+    }
+
+    /// Rank you + the given rivals on one config, by best time. `yourName` falls back to
+    /// a generic label when you haven't set a share name.
+    static func ranking(
+        config: GameConfig, scoreboard: Scoreboard, rivals: [Friend], yourName: String
+    ) -> ScoreComparison.Ranking {
+        let key = config.storageKey
+        let rivalPairs = rivals.map { friend in
+            (name: friend.displayName, best: friend.scores.first { $0.key == key }?.best)
+        }
+        return ScoreComparison.rank(
+            yourName: yourName, yourBest: scoreboard.best(for: config), rivals: rivalPairs)
+    }
+
+    // MARK: Head-to-head
+
+    /// Every config across families/edges, keyed by `storageKey` — the label source for
+    /// head-to-head rows and the universe of boards to consider.
+    static let allConfigs: [GameConfig] = BoardFamily.allCases.flatMap { family in
+        BoardEdges.allCases.flatMap { edges in GameConfig.configs(family: family, edges: edges) }
+    }
+    private static let configByKey: [String: GameConfig] = Dictionary(
+        allConfigs.map { ($0.storageKey, $0) }, uniquingKeysWith: { first, _ in first })
+
+    /// A labeled head-to-head row (the sheet needs a human board name, not a key).
+    struct H2HRow: Identifiable {
+        let key: String
+        let label: String
+        let yourBest: Int?
+        let theirBest: Int?
+        let lead: ScoreComparison.Lead
+        var id: String { key }
+    }
+
+    struct H2H {
+        let rows: [H2HRow]
+        let youLead: Int
+        let theyLead: Int
+    }
+
+    /// Your best time per config key (only boards you've won).
+    private static func yourBests(_ scoreboard: Scoreboard) -> [String: Int] {
+        var out: [String: Int] = [:]
+        for config in allConfigs where scoreboard.best(for: config) != nil {
+            out[config.storageKey] = scoreboard.best(for: config)
+        }
+        return out
+    }
+
+    private static func bests(of friend: Friend) -> [String: Int] {
+        var out: [String: Int] = [:]
+        for score in friend.scores {
+            if let best = score.best { out[score.key] = best }
+        }
+        return out
+    }
+
+    /// Head-to-head against a single friend.
+    static func headToHead(
+        with friend: Friend, scoreboard: Scoreboard
+    ) -> H2H {
+        labeled(
+            ScoreComparison.headToHead(
+                configKeys: Array(configByKey.keys),
+                yourBests: yourBests(scoreboard), theirBests: bests(of: friend)))
+    }
+
+    /// Head-to-head against a group's best (fastest member per board).
+    static func headToHead(
+        withGroup members: [Friend], scoreboard: Scoreboard
+    ) -> H2H {
+        let groupBests = ScoreComparison.groupBests(members.map(bests(of:)))
+        return labeled(
+            ScoreComparison.headToHead(
+                configKeys: Array(configByKey.keys),
+                yourBests: yourBests(scoreboard), theirBests: groupBests))
+    }
+
+    /// Attach board labels + keep the tally; drop rows whose key we can't label
+    /// (unknown/legacy configs), then order by the app's canonical config order.
+    private static func labeled(_ h: ScoreComparison.HeadToHead) -> H2H {
+        let order = Dictionary(
+            allConfigs.enumerated().map { ($0.element.storageKey, $0.offset) },
+            uniquingKeysWith: { first, _ in first })
+        let rows =
+            h.rows
+            .compactMap { row -> H2HRow? in
+                guard let config = configByKey[row.configKey] else { return nil }
+                return H2HRow(
+                    key: row.configKey, label: config.label,
+                    yourBest: row.yourBest, theirBest: row.theirBest, lead: row.lead)
+            }
+            .sorted { (order[$0.key] ?? .max) < (order[$1.key] ?? .max) }
+        return H2H(rows: rows, youLead: h.youLead, theyLead: h.theyLead)
+    }
+}

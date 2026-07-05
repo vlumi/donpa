@@ -16,6 +16,7 @@ struct GameContent: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
     @ObservedObject var navigator: Navigator
+    @ObservedObject var friends: FriendsStore
     let scene: BoardScene
 
     // Non-private (like restartPop/showProcessing): used by the GameContent+Result
@@ -62,12 +63,13 @@ struct GameContent: View {
 
     init(
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
-        navigator: Navigator, scene: BoardScene
+        navigator: Navigator, friends: FriendsStore, scene: BoardScene
     ) {
         self.viewModel = viewModel
         self.scoreboard = scoreboard
         self.settings = settings
         self.navigator = navigator
+        self.friends = friends
         self.scene = scene
         // One store backs both the synchronous reads and the background writer.
         let store =
@@ -155,7 +157,8 @@ struct GameContent: View {
                 onFriends: {
                     navigator.showingScores = false
                     Task { @MainActor in navigator.showingFriends = true }
-                })
+                },
+                friends: friends)
         }
         // Opening the scoreboard pauses a live game (flushing career activity and
         // stopping the clock); auto-resume on dismiss only if WE paused.
