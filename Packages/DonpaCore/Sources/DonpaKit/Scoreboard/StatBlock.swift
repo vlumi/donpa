@@ -122,11 +122,13 @@ struct StatBlock: View {
             ("Wins", grouped(figures.wins)),
             ("No-flag wins", grouped(figures.noFlagWins)),
             ("No-chord wins", grouped(figures.noChordWins)),
+            // Opening actions grouped (tiles + chords, which clear tiles), then the
+            // flag/mine cluster, then playtime.
             ("Tiles cleared", grouped(figures.tilesOpened)),
+            ("Chords used", grouped(figures.chordsUsed)),
             ("Flags placed", grouped(figures.flagsPlaced)),
             ("Mines disarmed", grouped(figures.minesDisarmed)),
             ("Mines hit", grouped(figures.minesHit)),
-            ("Chords used", grouped(figures.chordsUsed)),
             ("Time played", ScoreboardView.durationLabel(figures.playtimeCentiseconds)),
         ]
     }
