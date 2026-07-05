@@ -9,6 +9,8 @@ import SwiftUI
 struct ShareScoresView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    /// Open directly on the Scan tab (the Mess hall's "Add rival" door).
+    var startInScanMode = false
     /// A scanned rival URL to route into the receive flow. The host closes this sheet
     /// and hands the URL to the root classify/prompt path (same as a tapped link).
     var onScanned: ((URL) -> Void)?
@@ -30,6 +32,7 @@ struct ShareScoresView: View {
     var body: some View {
         chrome
             .onAppear {
+                if startInScanMode { mode = .scan }
                 if name.isEmpty { name = settings.shareName }
                 rebuild()
             }

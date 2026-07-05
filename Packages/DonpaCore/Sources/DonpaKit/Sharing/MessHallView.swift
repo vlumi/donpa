@@ -1,17 +1,27 @@
 import DonpaCore
 import SwiftUI
 
-/// The social sheet: two segmented tabs, **Rivals** and **Groups**, over one
-/// `FriendsStore`. In both, tapping a row COMPARES you head-to-head; a trailing pencil
-/// edits (a rival's alias/groups/removal, or a group's name/members/deletion). Sorted
-/// alphabetically. Read-only over the store except through its methods — the
-/// display-merge invariant means removing an entry just drops its data.
-struct FriendsListView: View {
+/// The **Mess hall** — where units mingle: your share card, your rivals, and your
+/// squads, one social screen (FI *Sotku*, JA 食堂). Two segmented tabs, **Rivals**
+/// and **Squads**, over one `FriendsStore`, under a share/scan header. In both tabs,
+/// tapping a row COMPARES you head-to-head; a trailing pencil edits (a rival's
+/// alias/squads/removal, or a squad's name/members/deletion). Sorted alphabetically.
+/// Read-only over the store except through its methods — the display-merge invariant
+/// means removing an entry just drops its data.
+struct MessHallView: View {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
+    @ObservedObject var settings: Settings
+    /// Route a scanned rival URL into the receive flow: the host closes this sheet
+    /// and hands the URL to the root classify/prompt path (same as a tapped link).
+    var onScanned: ((URL) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
-    private enum Tab: Hashable { case rivals, groups }
+    /// The share sheet (QR + link + scan), and whether it opens on the Scan tab.
+    @State private var sharing = false
+    @State private var sharingStartsInScan = false
+
+    private enum Tab: Hashable { case rivals, squads }
     @State private var tab: Tab = .rivals
 
     /// The rival whose detail (edit) sheet is open, or nil.
@@ -36,6 +46,18 @@ struct FriendsListView: View {
 
     var body: some View {
         chrome
+            .sheet(isPresented: $sharing) {
+                ShareScoresView(
+                    scoreboard: scoreboard, settings: settings,
+                    startInScanMode: sharingStartsInScan,
+                    onScanned: onScanned.map { route in
+                        { url in
+                            sharing = false
+                            dismiss()  // close the Mess hall so the prompt shows at root
+                            route(url)
+                        }
+                    })
+            }
             .sheet(item: $editingRival) { FriendDetailView(friend: $0, friends: friends) }
             .sheet(item: $comparingRival) { rival in
                 HeadToHeadView(
@@ -55,12 +77,46 @@ struct FriendsListView: View {
             }
     }
 
+    // MARK: Share / scan header
+
+    /// The share card row: show your QR / link, or jump straight to scanning a
+    /// rival's. The two doors into the sharing flow, now that the Service Record
+    /// no longer carries them.
+    private var shareHeader: some View {
+        HStack(spacing: 12) {
+            Button {
+                sharingStartsInScan = false
+                sharing = true
+            } label: {
+                Label {
+                    Text("Share my scores", bundle: .module)
+                } icon: {
+                    Image(systemName: "qrcode")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            Button {
+                sharingStartsInScan = true
+                sharing = true
+            } label: {
+                Label {
+                    Text("Add rival", bundle: .module)
+                } icon: {
+                    Image(systemName: "qrcode.viewfinder")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+
     // MARK: Tabs
 
     private var tabPicker: some View {
         Picker(selection: $tab) {
             Text("Rivals", bundle: .module).tag(Tab.rivals)
-            Text("Groups", bundle: .module).tag(Tab.groups)
+            Text("Squads", bundle: .module).tag(Tab.squads)
         } label: {
             Text("View", bundle: .module)
         }
@@ -72,7 +128,7 @@ struct FriendsListView: View {
         .background {
             Group {
                 Button("") { tab = .rivals }.keyboardShortcut("1", modifiers: .command)
-                Button("") { tab = .groups }.keyboardShortcut("2", modifiers: .command)
+                Button("") { tab = .squads }.keyboardShortcut("2", modifiers: .command)
             }
             .opacity(0)
         }
@@ -82,7 +138,7 @@ struct FriendsListView: View {
     @ViewBuilder private var tabContent: some View {
         switch tab {
         case .rivals: rivalsList
-        case .groups: groupsList
+        case .squads: groupsList
         }
     }
 
@@ -119,7 +175,7 @@ struct FriendsListView: View {
         List {
             // Create a group, then jump straight into editing it (name + add members).
             HStack(spacing: 8) {
-                TextField(text: $newGroupName) { Text("New group", bundle: .module) }
+                TextField(text: $newGroupName) { Text("New squad", bundle: .module) }
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(createGroup)
                 Button(action: createGroup) { Text("Add", bundle: .module) }
@@ -127,7 +183,7 @@ struct FriendsListView: View {
             }
 
             if friends.groups.isEmpty {
-                Text("No groups yet — create one above.", bundle: .module)
+                Text("No squads yet — create one above.", bundle: .module)
                     .font(.callout).foregroundStyle(.secondary)
             } else {
                 ForEach(friends.groups) { group in
@@ -194,10 +250,11 @@ struct FriendsListView: View {
         #if os(iOS)
         NavigationStack {
             VStack(spacing: 0) {
+                shareHeader.padding([.horizontal, .top], 12)
                 tabPicker.padding([.horizontal, .top], 12)
                 tabContent
             }
-            .navigationTitle(Text("Rivals", bundle: .module))
+            .navigationTitle(Text("Mess hall", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -211,6 +268,8 @@ struct FriendsListView: View {
         }
         #else
         VStack(spacing: 12) {
+            Text("Mess hall", bundle: .module).font(.title2.bold())
+            shareHeader
             tabPicker
             tabContent.frame(minHeight: 260)
             Button {

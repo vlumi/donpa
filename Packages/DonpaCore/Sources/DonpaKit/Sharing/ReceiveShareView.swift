@@ -11,14 +11,20 @@ struct ReceiveShareView: View {
     let incoming: IncomingShare
     @ObservedObject var friends: FriendsStore
     let onDone: () -> Void
+    /// Called INSTEAD of `onDone` when a rival was actually added/updated — the host
+    /// opens the Mess hall so the new rival is never invisible. Cancels stay `onDone`.
+    var onAdded: (() -> Void)?
 
     var body: some View {
         switch incoming {
         case .accepted(let payload, let outcome):
-            ConfirmAddView(payload: payload, outcome: outcome, friends: friends, onDone: onDone)
+            ConfirmAddView(
+                payload: payload, outcome: outcome, friends: friends, onDone: onDone,
+                onAdded: onAdded)
         case .collision(let payload, let existingKey):
             ResolveCollisionView(
-                payload: payload, existingKey: existingKey, friends: friends, onDone: onDone)
+                payload: payload, existingKey: existingKey, friends: friends, onDone: onDone,
+                onAdded: onAdded)
         case .failed:
             // A failed share is shown as an alert by the presenter, never as a sheet.
             EmptyView()
@@ -36,6 +42,7 @@ private struct ConfirmAddView: View {
     let outcome: FriendMerge.Outcome
     @ObservedObject var friends: FriendsStore
     let onDone: () -> Void
+    var onAdded: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     /// Optional local nickname, offered only for a genuine new add — a refresh
@@ -51,7 +58,7 @@ private struct ConfirmAddView: View {
 
     var body: some View {
         SharePromptChrome(
-            title: isRefresh ? "Update scores?" : "Add friend?",
+            title: isRefresh ? "Update scores?" : "Add rival?",
             confirmTitle: isRefresh ? "Update" : "Add",
             onConfirm: confirm,
             onCancel: finish
@@ -61,7 +68,7 @@ private struct ConfirmAddView: View {
                 SharePreview(payload: payload)
                 if isRefresh {
                     Text(
-                        "You already track this friend — this refreshes their scores.",
+                        "You already track this rival — this refreshes their scores.",
                         bundle: .module
                     )
                     .font(.caption).foregroundStyle(.secondary)
@@ -75,7 +82,7 @@ private struct ConfirmAddView: View {
                         .textFieldStyle(.roundedBorder)
                     }
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Groups (optional)", bundle: .module)
+                        Text("Squads (optional)", bundle: .module)
                             .font(.caption).foregroundStyle(.secondary)
                         GroupPicker(friends: friends, selection: $groupSelection)
                     }
@@ -93,7 +100,8 @@ private struct ConfirmAddView: View {
                 friends.setGroups(Array(groupSelection), for: payload.publicKey)
             }
         }
-        finish()
+        dismiss()
+        (onAdded ?? onDone)()
     }
 
     private func finish() {
@@ -111,6 +119,7 @@ private struct ResolveCollisionView: View {
     let existingKey: Data
     @ObservedObject var friends: FriendsStore
     let onDone: () -> Void
+    var onAdded: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     @State private var alias = ""
@@ -122,13 +131,13 @@ private struct ResolveCollisionView: View {
             onConfirm: {
                 let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
                 friends.addResolvingCollision(payload, alias: trimmed.isEmpty ? nil : trimmed)
-                finish()
+                finish(added: true)
             },
-            onCancel: finish,
+            onCancel: { finish(added: false) },
             extraButton: AnyView(
                 Button(role: .destructive) {
                     friends.replaceOnCollision(payload, replacing: existingKey)
-                    finish()
+                    finish(added: true)
                 } label: {
                     Text("Replace existing", bundle: .module)
                 })
@@ -152,9 +161,9 @@ private struct ResolveCollisionView: View {
         }
     }
 
-    private func finish() {
+    private func finish(added: Bool) {
         dismiss()
-        onDone()
+        (added ? (onAdded ?? onDone) : onDone)()
     }
 }
 

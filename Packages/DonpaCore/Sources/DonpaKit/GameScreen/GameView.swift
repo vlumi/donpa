@@ -150,16 +150,11 @@ struct GameContent: View {
                 scoreboard: scoreboard, settings: settings, available: windowSize,
                 currentConfig: navigator.showingTitle ? nil : viewModel.config,
                 onPlay: { navigator.playConfigRequested = $0 },
-                // A rival URL scanned in the Share sheet's Scan tab: classify it and
-                // present the receive prompt at the root. Deferred a tick — the
-                // scoreboard is dismissing, and two sheet swaps in one runloop race.
-                onReceiveURL: { url in
-                    let incoming = GameView.classify(url, existing: friends.friends)
-                    Task { @MainActor in navigator.incomingShare = incoming }
-                },
-                onFriends: {
+                // "Manage rivals": swap to the Mess hall at root (deferred a tick —
+                // the scoreboard is dismissing; two sheet swaps in one runloop race).
+                onMessHall: {
                     navigator.showingScores = false
-                    Task { @MainActor in navigator.showingFriends = true }
+                    Task { @MainActor in navigator.showingMessHall = true }
                 },
                 friends: friends)
         }

@@ -24,13 +24,15 @@ struct HomeScreen: View {
     /// Open the New Game picker — the single, deliberate path to a fresh game.
     let onNewGame: () -> Void
     let onScores: () -> Void
+    /// Open the Mess hall — the social screen (share card, rivals, squads).
+    let onMessHall: () -> Void
     let onSettings: () -> Void
     let onAbout: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
     /// Whether the full in-progress list sheet is presented.
-    @State private var showAll = false
+    @State var showAll = false
 
     var body: some View {
         GeometryReader { geo in
@@ -131,7 +133,7 @@ struct HomeScreen: View {
     }
 
     /// The shared menu column: Continue (when there's anything to continue),
-    /// New Game, Service Record.
+    /// New Game, Service Record, Mess hall.
     private var menu: some View {
         VStack(spacing: 12) {
             if let latest = snapshots.first {
@@ -139,6 +141,7 @@ struct HomeScreen: View {
             }
             newGameButton
             recordButton
+            messHallButton
         }
     }
 
@@ -169,138 +172,6 @@ struct HomeScreen: View {
         .keyboardShortcut(.defaultAction)
         .accessibilityLabel(Text(snapshots.isEmpty ? "Start" : "Continue", bundle: .module))
         .accessibilityIdentifier("title.start")
-    }
-
-    // MARK: Continue
-
-    /// The latest in-progress board as the leading card, plus — when there are more —
-    /// a row opening the full list as a sheet. A sheet, NOT an inline accordion: with
-    /// dozens of saved boards an expansion swallowed the whole Home (the flexible art
-    /// shrank to nothing) and scrolled awkwardly; a modal scrolls naturally and never
-    /// reflows the menu.
-    private func continueCard(latest: SaveStore.SaveSummary) -> some View {
-        VStack(spacing: 0) {
-            Button {
-                onContinue(latest.config)
-            } label: {
-                VStack(alignment: .leading, spacing: 8) {
-                    Label {
-                        Text("Continue", bundle: .module)
-                    } icon: {
-                        Image(systemName: "arrow.uturn.forward.circle.fill")
-                    }
-                    .font(.headline)
-                    .foregroundStyle(Color.accentColor)
-                    savedGameRow(latest)
-                }
-                .padding(12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("home.continue")
-
-            if snapshots.count > 1 {
-                Divider()
-                allGamesRow
-            }
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.accentColor.opacity(0.10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.accentColor.opacity(0.55), lineWidth: 1.5))
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-    }
-
-    /// The "In progress (N)" row opening the full list sheet. The count is the
-    /// sheet's total (the latest is in it too, so the numbers always agree with
-    /// what opens).
-    private var allGamesRow: some View {
-        Button {
-            showAll = true
-        } label: {
-            HStack {
-                Text("In progress", bundle: .module)
-                Text(verbatim: "(\(snapshots.count))")
-                Spacer()
-                Image(systemName: "chevron.right")
-            }
-            .font(.subheadline.weight(.medium))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home.inprogress")
-    }
-
-    /// The full in-progress list, newest played first — every saved board is a row
-    /// that resumes it. Header + explicit frame instead of NavigationStack chrome:
-    /// a bare List in a macOS sheet collapses to nothing (the #206 lesson).
-    private var inProgressSheet: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("In progress", bundle: .module)
-                    .font(.headline)
-                Spacer()
-                Button {
-                    showAll = false
-                } label: {
-                    Text("Close", bundle: .module)
-                }
-                .keyboardShortcut(.cancelAction)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            Divider()
-            List {
-                ForEach(snapshots, id: \.config) { snapshot in
-                    Button {
-                        showAll = false
-                        onContinue(snapshot.config)
-                    } label: {
-                        savedGameRow(snapshot)
-                            .padding(.vertical, 2)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            #if os(macOS)
-            .listStyle(.inset)
-            #endif
-        }
-        #if os(macOS)
-        .frame(minWidth: 400, idealWidth: 460, minHeight: 340, idealHeight: 520)
-        #endif
-    }
-
-    /// One in-progress board: glyph, family + config (with cleared %), and — trailing —
-    /// the elapsed clock over a relative "last played" age.
-    private func savedGameRow(_ snapshot: SaveStore.SaveSummary) -> some View {
-        HStack(spacing: 12) {
-            BoardGlyph(kind: .family(snapshot.config.family), size: 28)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: snapshot.config.family.label)
-                    .font(.headline)
-                Text(verbatim: "\(snapshot.config.label) · \(snapshot.progressPercent)%")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(verbatim: Self.clock(snapshot.elapsedCentiseconds))
-                    .font(.subheadline.monospacedDigit())
-                Text(snapshot.updatedAt, format: .relative(presentation: .named))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: Actions
@@ -346,6 +217,31 @@ struct HomeScreen: View {
         .buttonStyle(.plain)
         .accessibilityLabel(Text("High Scores", bundle: .module))
         .accessibilityIdentifier("title.highScores")
+    }
+
+    private var messHallButton: some View {
+        Button(action: onMessHall) {
+            HStack(spacing: 10) {
+                Image(systemName: "fork.knife")
+                    .font(.system(size: 20, weight: .semibold))
+                    .frame(width: 30)
+                Text("Mess hall", bundle: .module)
+                    .font(.body.weight(.semibold))
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.primary.opacity(0.06))
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("title.messHall")
     }
 
     /// Small round overlay button for a secondary corner action (as on the old title).

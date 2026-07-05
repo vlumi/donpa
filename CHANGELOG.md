@@ -33,18 +33,24 @@ under Unreleased as they merge.
   No more silent jump into whichever game you played last — continuing is one
   predictable tap, and the title art still works as that shortcut. On a wide screen
   (Mac, iPad, landscape) the art and menu sit side by side.
-- **Share your scores.** From the Service Record, tap Share to show a QR code (or copy
+- **The Mess hall.** Everything social now lives in one place, straight off the home
+  screen: share your scores, add rivals by scanning theirs, and manage your rivals and
+  squads — no more hunting through the Service Record's toolbar. The Record keeps the
+  rival comparisons themselves, with a Manage rivals link right by the comparison
+  picker. Adding a rival now drops you in the Mess hall so you see exactly where they
+  landed.
+- **Share your scores.** In the Mess hall, tap Share my scores for a QR code (or copy
   a link) built from your best scores. Someone adds you as a rival by scanning the code
   or opening the link — no account, no server. Scores are signed so they can't be
   forged, and a rival's scores stay separate from your own: remove them and their data
   is simply gone.
 - **Rivals list.** Add rivals from their shared scores, give each your own nickname, or
-  remove them — all from the Service Record. Their scores are a snapshot from when they
-  last shared (with the date shown), not a live feed. You can nickname and group a rival
-  right as you add them, too.
-- **Groups.** Sort rivals into named groups (work, family, …): create and manage your
-  groups, then put each rival in as many as you like. Renaming a group keeps its
-  members; deleting one just un-groups them. Tap a group to see who's in it.
+  remove them — all in the Mess hall. Their scores are a snapshot from when they
+  last shared (with the date shown), not a live feed. You can nickname a rival and put
+  them straight into squads as you add them, too.
+- **Squads.** Sort rivals into named squads (work, family, …): create and manage your
+  squads, then put each rival in as many as you like. Renaming a squad keeps its
+  members; deleting one just un-groups them. Tap a squad to see who's in it.
 - **See how you rank against rivals.** Expand any board in the Service Record for a
   leaderboard — your best time slotted in among your rivals', fastest first. A little
   medal on each board shows your standing at a glance, and you can narrow the comparison

@@ -55,6 +55,16 @@ final class DonpaUITests: XCTestCase {
         XCTAssertFalse(startButton.isHittable)
     }
 
+    /// Home's Mess hall row opens the social screen (share / rivals / squads).
+    func testMessHallOpensFromHome() {
+        waitFor(startButton)
+        app.buttons["title.messHall"].tap()
+        // The share header's buttons are the screen's stable landmarks (EN forced).
+        waitFor(app.buttons["Add rival"])
+        app.buttons["Done"].tap()
+        waitFor(startButton)
+    }
+
     func testHighScoresSheetOpensAndCloses() {
         waitFor(app.buttons["title.highScores"])
         app.buttons["title.highScores"].tap()

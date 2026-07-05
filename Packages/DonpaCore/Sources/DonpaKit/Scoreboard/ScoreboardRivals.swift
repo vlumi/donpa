@@ -27,6 +27,13 @@ extension ScoreboardView {
                 Text(rivalScopeLabel).font(.caption.bold())
             }
             Spacer()
+            // The one cross-link to the social screen, now that Share/Rivals left
+            // the toolbar — the comparison you scope HERE is managed THERE.
+            if let onMessHall {
+                Button(action: onMessHall) {
+                    Text("Manage rivals", bundle: .module).font(.caption)
+                }
+            }
         }
         .padding(.horizontal, Self.rowInset)
     }
