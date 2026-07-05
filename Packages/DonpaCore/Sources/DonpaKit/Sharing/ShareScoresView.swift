@@ -115,36 +115,19 @@ struct ShareScoresView: View {
         }
     }
 
-    /// Send the link (copy / system share) plus share a branded QR IMAGE — the framed
-    /// card, for posting where a bare link/QR has no context.
+    /// Send the link (the system share sheet already offers Copy, so no separate
+    /// copy button) plus share a branded QR IMAGE — the framed card, for posting
+    /// where a bare link/QR has no context.
     @ViewBuilder private func shareButtons(for link: URL) -> some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 12) {
-                ShareLinkButton(url: link)
-                copyLinkButton(link)
-            }
+        HStack(spacing: 12) {
+            ShareLinkButton(url: link)
             if let qr {
-                ShareImageButton(qr: qr, name: currentName)
+                // `link` keys the render: it changes whenever the QR does (name /
+                // career edit), so the card image rebuilds to match.
+                ShareImageButton(qr: qr, name: currentName, linkID: link)
             }
         }
         .buttonStyle(.bordered)
-    }
-
-    @ViewBuilder private func copyLinkButton(_ link: URL) -> some View {
-        Button {
-            #if os(iOS)
-            UIPasteboard.general.url = link
-            #elseif os(macOS)
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(link.absoluteString, forType: .string)
-            #endif
-        } label: {
-            Label {
-                Text("Copy link", bundle: .module)
-            } icon: {
-                Image(systemName: "doc.on.doc")
-            }
-        }
     }
 
     /// The name to stamp on the shared card — same trimmed input the payload used.
@@ -224,7 +207,7 @@ private struct ShareLinkButton: View {
     var body: some View {
         ShareLink(item: url) {
             Label {
-                Text("Send link", bundle: .module)
+                Text("Share link", bundle: .module)
             } icon: {
                 Image(systemName: "square.and.arrow.up")
             }
@@ -238,8 +221,10 @@ private struct ShareLinkButton: View {
 private struct ShareImageButton: View {
     let qr: Image
     let name: String
-    /// Rendered card image + its temp-file URL, built once on appear (rendering the
-    /// card on every body pass would be wasteful).
+    /// Identity that changes with the QR (the share URL) — re-renders on edit.
+    let linkID: URL
+    /// Rendered card image + its temp-file URL. Rebuilt when `linkID` changes;
+    /// rendering on every body pass would be wasteful.
     @State private var rendered: (image: PlatformImage, url: URL)?
 
     var body: some View {
@@ -255,7 +240,7 @@ private struct ShareImageButton: View {
                 label.opacity(0.5)
             }
         }
-        .task { if rendered == nil { rendered = await build() } }
+        .task(id: linkID) { rendered = await build() }
     }
 
     private var label: some View {
@@ -266,10 +251,12 @@ private struct ShareImageButton: View {
         }
     }
 
-    /// Render the branded card once, then write its PNG to a temp file.
+    /// Render the branded card once, then write its PNG to a temp file. The card's date
+    /// is "now" — the moment of sharing (matches the payload's `issuedAt` closely enough
+    /// for a human-readable day stamp).
     @MainActor
     private func build() async -> (PlatformImage, URL)? {
-        guard let image = ShareCard.render(qr: qr, name: name),
+        guard let image = ShareCard.render(qr: qr, name: name, date: Date()),
             let url = Self.writePNG(image)
         else { return nil }
         return (image, url)
