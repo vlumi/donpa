@@ -39,13 +39,15 @@ promote_changelog_build() {
         return 0
     }
 
-    # Promote: rename the heading to "### build N", and put a fresh empty Unreleased
-    # heading back above it. One substitution on the single heading line — the entries
-    # below it are already in the right place, so nothing else moves.
+    # Promote: rename the heading to "### build N — <today>", and put a fresh empty
+    # Unreleased heading back above it. One substitution on the single heading line —
+    # the entries below it are already in the right place, so nothing else moves. The
+    # date is the release/stamp day (this runs in the publish lane).
+    local today; today="$(date +%Y-%m-%d)"
     local tmp; tmp="$(mktemp)"
-    awk -v build="$build" '
+    awk -v build="$build" -v today="$today" '
         $0 == h && !done {
-            print h "\n\n### build " build
+            print h "\n\n### build " build " — " today
             done = 1
             next
         }

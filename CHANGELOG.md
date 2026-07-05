@@ -48,7 +48,7 @@ under Unreleased as they merge.
 **Board-topology variants: wrapped (torus) + hex grids** (see ROADMAP.md).
 Shipped to TestFlight (both platforms).
 
-### build 13
+### build 13 — 2026-07-04
 
 - **Localization polish (FI + JA).** A fresh-eyes pass over both languages:
   consistent terminology (FI "alueavaus" for chording, unified "tulokset"; JA
@@ -61,7 +61,7 @@ Shipped to TestFlight (both platforms).
 - **Filter labels fit.** Family/edge filter buttons shrink a long label to fit
   rather than truncating it (e.g. "Ruudukko").
 
-### build 12
+### build 12 — 2026-07-04
 
 - **The board can't go dead after a game ends (Mac).** Rapid-clicking through the
   end-of-game panel could leave the board silently ignoring *every* click until
@@ -77,7 +77,7 @@ Shipped to TestFlight (both platforms).
 - **Website link in About.** The About panel now links to **donpa.app** alongside
   the source-code link.
 
-### build 11
+### build 11 — 2026-07-03
 
 - **Play straight from the scoreboard.** Expand any board's row in the Service
   Record and tap **New game on this board** to jump right into it — handy for
@@ -86,7 +86,7 @@ Shipped to TestFlight (both platforms).
   tall on a taller iPhone, where the extra height read as dead space that didn't
   respond to taps.
 
-### build 10
+### build 10 — 2026-07-03
 
 - **Hex grids.** A new Modern **Shape** option: play on a hexagonal board where each
   cell has six neighbours instead of eight. Pick **Hex** in the New Game screen
@@ -164,7 +164,7 @@ Shipped to TestFlight (both platforms).
 **Cross-device sync & big boards** (see ROADMAP.md). Both pillars have landed;
 cross-device sync awaits a real two-device verification pass.
 
-### build 9
+### build 9 — 2026-06-30
 
 - **Big boards are much lighter.** The board scene was being rebuilt on every UI
   tick (the running clock alone re-creates the view ~10×/s), leaving extra scenes
@@ -180,7 +180,7 @@ cross-device sync awaits a real two-device verification pass.
   when iCloud isn't available (it can't sync), and on iOS the status is plain
   guidance to sign in rather than a link that just opened the app's own settings.
 
-### build 8
+### build 8 — 2026-06-29
 
 - **Scoreboard orientation.** The board you're playing gets a persistent "you are
   here" row band; opening the scoreboard mid-game scrolls that row into view (from
@@ -203,13 +203,13 @@ cross-device sync awaits a real two-device verification pass.
   could peg the CPU and stall after opening tiles; reveals, flagging, and idle are
   all much lighter now, especially on macOS.
 
-### build 7
+### build 7 — 2026-06-28
 
 - **Minimap appears immediately** on a board that only slightly exceeds the
   viewport (e.g. Modern S on an iPhone 14) — it no longer stayed hidden until a
   small pan.
 
-### build 6
+### build 6 — 2026-06-28
 
 - **Resuming keeps the dig/flag input mode** — it no longer reset to dig on
   restore.
@@ -222,7 +222,7 @@ cross-device sync awaits a real two-device verification pass.
   offline; a fix so a new record set on another device isn't double-counted.
 - Carousel modal no longer overflows on small iPhones (edges fade instead).
 
-### builds 4–5 (initial 0.2.0)
+### builds 4–5 (initial 0.2.0) — 2026-06-28
 
 - **Cross-device scoreboard sync (iCloud).** High scores and career totals follow
   the player across their devices via iCloud Key-Value Storage. Opt-in (off by
