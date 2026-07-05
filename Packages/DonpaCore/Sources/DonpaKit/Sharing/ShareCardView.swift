@@ -1,27 +1,17 @@
 import DonpaCore
 import SwiftUI
 
-/// "Share my scores" sheet: type a display name, optionally include career totals,
-/// and get a QR (the primary, in-person channel — matches the trust model) plus a
-/// copy/share link for remote sending. The payload is built from the MERGED
-/// cross-device view; when sync is on we refresh first, and either way the footer
-/// says honestly whether it's your synced best or this device only.
-struct ShareScoresView: View {
+/// The inline "share my scores" card — lives ON the Mess hall, not behind a sheet:
+/// your name, career opt-in, the QR (the primary, in-person channel — matches the
+/// trust model), and share/copy-link buttons, one glance away. The payload is built
+/// from the MERGED cross-device view; when sync is on we refresh first, and either
+/// way the footer says honestly whether it's your synced best or this device only.
+struct ShareCardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
-    /// Open directly on the Scan tab (the Mess hall's "Add rival" door).
-    var startInScanMode = false
-    /// A scanned rival URL to route into the receive flow. The host closes this sheet
-    /// and hands the URL to the root classify/prompt path (same as a tapped link).
-    var onScanned: ((URL) -> Void)?
-    @Environment(\.dismiss) private var dismiss
 
-    /// Minted lazily on first share; held for the sheet's lifetime.
+    /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
-
-    /// Show my QR to a rival, or scan a rival's. One sheet, two jobs.
-    private enum Mode: Hashable { case show, scan }
-    @State private var mode: Mode = .show
 
     @State private var name: String = ""
     @State private var includeCareer = false
@@ -30,91 +20,63 @@ struct ShareScoresView: View {
     @State private var failed = false
 
     var body: some View {
-        chrome
-            .onAppear {
-                if startInScanMode { mode = .scan }
-                if name.isEmpty { name = settings.shareName }
-                rebuild()
-            }
-    }
-
-    /// The mode switch + the active mode's body.
-    @ViewBuilder private var content: some View {
-        VStack(spacing: 16) {
-            Picker(selection: $mode) {
-                Text("Show", bundle: .module).tag(Mode.show)
-                Text("Scan", bundle: .module).tag(Mode.scan)
-            } label: {
-                Text("Mode", bundle: .module)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            #if os(macOS)
-            // ⌘1 / ⌘2 switch modes (standard macOS segment nav), via hidden buttons.
-            .background {
-                Group {
-                    Button("") { mode = .show }.keyboardShortcut("1", modifiers: .command)
-                    Button("") { mode = .scan }.keyboardShortcut("2", modifiers: .command)
+        // Compact: the QR sits beside the fields, so the card stays ~160pt tall and
+        // the rivals list below keeps the room. The QR is still comfortably scannable
+        // phone-to-phone at this size.
+        VStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(alignment: .leading, spacing: 10) {
+                    TextField(text: $name) {
+                        Text("Your name", bundle: .module)
+                    }
+                    .textFieldStyle(.roundedBorder)
+                    .onChangeCompat(of: name) { _ in
+                        settings.shareName = name
+                        rebuild()
+                    }
+                    Toggle(isOn: $includeCareer) {
+                        Text("Include career stats", bundle: .module)
+                    }
+                    .onChangeCompat(of: includeCareer) { _ in rebuild() }
+                    if let link {
+                        shareButtons(for: link)
+                    }
                 }
-                .opacity(0)
+                .frame(maxWidth: .infinity)
+                qrThumb
             }
-            #endif
-
-            switch mode {
-            case .show: showContent
-            case .scan:
-                ScanContent { url in
-                    dismiss()
-                    onScanned?(url)
-                }
-            }
+            // Honest provenance: synced best vs. this device only.
+            Text(provenanceKey, bundle: .module)
+                .font(.caption2).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.primary.opacity(0.05))
+        )
+        .onAppear {
+            if name.isEmpty { name = settings.shareName }
+            rebuild()
         }
     }
 
-    @ViewBuilder private var showContent: some View {
-        VStack(spacing: 16) {
-            // Name + career opt-in drive the payload; editing rebuilds the QR/link.
-            VStack(alignment: .leading, spacing: 12) {
-                TextField(text: $name) {
-                    Text("Your name", bundle: .module)
-                }
-                .textFieldStyle(.roundedBorder)
-                .onChangeCompat(of: name) { _ in
-                    settings.shareName = name
-                    rebuild()
-                }
-                Toggle(isOn: $includeCareer) {
-                    Text("Include career stats", bundle: .module)
-                }
-                .onChangeCompat(of: includeCareer) { _ in rebuild() }
-            }
-            .padding(.horizontal, 4)
-
-            if let qr {
-                qr
-                    .interpolation(.none)  // keep QR modules crisp
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 260, maxHeight: 260)
-                    .padding(12)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 12))
-                    .accessibilityLabel(Text("Share QR code", bundle: .module))
-            } else if failed {
-                Text("Couldn't prepare your share.", bundle: .module)
-                    .font(.callout).foregroundStyle(.secondary)
-                    .frame(height: 260)
-            } else {
-                ProgressView().frame(height: 260)
-            }
-
-            if let link {
-                shareButtons(for: link)
-            }
-
-            // Honest provenance: synced best vs. this device only.
-            Text(provenanceKey, bundle: .module)
+    @ViewBuilder private var qrThumb: some View {
+        if let qr {
+            qr
+                .interpolation(.none)  // keep QR modules crisp
+                .resizable()
+                .scaledToFit()
+                .frame(width: 132, height: 132)
+                .padding(8)
+                .background(.white, in: RoundedRectangle(cornerRadius: 10))
+                .accessibilityLabel(Text("Share QR code", bundle: .module))
+        } else if failed {
+            Text("Couldn't prepare your share.", bundle: .module)
                 .font(.caption).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                .frame(width: 148, height: 148)
+        } else {
+            ProgressView().frame(width: 148, height: 148)
         }
     }
 
@@ -122,15 +84,21 @@ struct ShareScoresView: View {
     /// copy button) plus share a branded QR IMAGE — the framed card, for posting
     /// where a bare link/QR has no context.
     @ViewBuilder private func shareButtons(for link: URL) -> some View {
-        HStack(spacing: 12) {
-            ShareLinkButton(url: link)
-            if let qr {
-                // `link` keys the render: it changes whenever the QR does (name /
-                // career edit), so the card image rebuilds to match.
-                ShareImageButton(qr: qr, name: currentName, linkID: link)
-            }
+        // Wraps to two rows when the column is narrow (compact phones).
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { shareButtonRow(for: link) }
+            VStack(alignment: .leading, spacing: 8) { shareButtonRow(for: link) }
         }
         .buttonStyle(.bordered)
+    }
+
+    @ViewBuilder private func shareButtonRow(for link: URL) -> some View {
+        ShareLinkButton(url: link)
+        if let qr {
+            // `link` keys the render: it changes whenever the QR does (name /
+            // career edit), so the card image rebuilds to match.
+            ShareImageButton(qr: qr, name: currentName, linkID: link)
+        }
     }
 
     /// The name to stamp on the shared card — same trimmed input the payload used.
@@ -169,38 +137,6 @@ struct ShareScoresView: View {
         qr = QRCode.image(from: url.absoluteString)
     }
 
-    /// iOS NavigationStack + Done; macOS inline + Done, matching the other sheets.
-    @ViewBuilder private var chrome: some View {
-        #if os(iOS)
-        NavigationStack {
-            ScrollView { content.padding(20) }
-                .navigationTitle(Text("Share", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                    }
-                }
-        }
-        #else
-        VStack(spacing: 16) {
-            Text("Share", bundle: .module).font(.title2.bold())
-            content
-            Button {
-                dismiss()
-            } label: {
-                Text("Done", bundle: .module)
-            }
-            .keyboardShortcut(.defaultAction)
-        }
-        .padding(24)
-        .frame(minWidth: 340)
-        #endif
-    }
 }
 
 /// A thin wrapper over SwiftUI's `ShareLink` (the system share sheet) so the call

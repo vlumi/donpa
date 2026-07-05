@@ -17,9 +17,8 @@ struct MessHallView: View {
     var onScanned: ((URL) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
-    /// The share sheet (QR + link + scan), and whether it opens on the Scan tab.
-    @State private var sharing = false
-    @State private var sharingStartsInScan = false
+    /// Whether the Add-rival scanner sheet is presented.
+    @State private var scanning = false
 
     private enum Tab: Hashable { case rivals, squads }
     @State private var tab: Tab = .rivals
@@ -46,17 +45,12 @@ struct MessHallView: View {
 
     var body: some View {
         chrome
-            .sheet(isPresented: $sharing) {
-                ShareScoresView(
-                    scoreboard: scoreboard, settings: settings,
-                    startInScanMode: sharingStartsInScan,
-                    onScanned: onScanned.map { route in
-                        { url in
-                            sharing = false
-                            dismiss()  // close the Mess hall so the prompt shows at root
-                            route(url)
-                        }
-                    })
+            .sheet(isPresented: $scanning) {
+                AddRivalSheet { url in
+                    scanning = false
+                    dismiss()  // close the Mess hall so the prompt shows at root
+                    onScanned?(url)
+                }
             }
             .sheet(item: $editingRival) { FriendDetailView(friend: $0, friends: friends) }
             .sheet(item: $comparingRival) { rival in
@@ -79,26 +73,16 @@ struct MessHallView: View {
 
     // MARK: Share / scan header
 
-    /// The share card row: show your QR / link, or jump straight to scanning a
-    /// rival's. The two doors into the sharing flow, now that the Service Record
-    /// no longer carries them.
+    /// Your share card, INLINE (the wireframe's shape — sharing is the social act,
+    /// one glance away, no sheet), and the Add-rival door to the scanner.
     private var shareHeader: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 10) {
+            Text("Share my scores", bundle: .module)
+                .font(.caption).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            ShareCardView(scoreboard: scoreboard, settings: settings)
             Button {
-                sharingStartsInScan = false
-                sharing = true
-            } label: {
-                Label {
-                    Text("Share my scores", bundle: .module)
-                } icon: {
-                    Image(systemName: "qrcode")
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            Button {
-                sharingStartsInScan = true
-                sharing = true
+                scanning = true
             } label: {
                 Label {
                     Text("Add rival", bundle: .module)
