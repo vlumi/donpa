@@ -198,7 +198,6 @@ struct GameContent: View {
         .sheet(isPresented: $navigator.showingAbout) {
             AboutView()
         }
-        .onChangeCompat(of: navigator.startRequested) { _ in handleStartRequest() }
         .onChangeCompat(of: navigator.playConfigRequested) { config in
             if let config { playFromScoreboard(config) }
         }
@@ -210,9 +209,9 @@ struct GameContent: View {
 
     // MARK: Save / restore lifecycle
 
-    /// On launch: resume a saved in-progress game straight into the board (skipping
-    /// the title), else stay on the title with the board primed to the persisted
-    /// config so an immediate New Game matches the last selection.
+    /// On launch: land on Home (the Continue card handles resuming), with the board
+    /// primed to the persisted config so an immediate New Game matches the last
+    /// selection.
     private func onLaunch() {
         // Persist a minimap resize back to Settings (survives new game / restart /
         // save-restore). The scene drives the gesture; Settings is the store.
@@ -231,11 +230,10 @@ struct GameContent: View {
         }
         if let scenario = PerfScenario.current {
             startPerfScenario(scenario)
-        } else if let snapshot = saveStore.latest() {
-            // Auto-resume the most-recently-played in-progress game (per-config saves).
-            viewModel.restore(from: snapshot)
-            navigator.showingTitle = false
         } else if viewModel.config != settings.currentConfig {
+            // Land on Home (no auto-resume — the Continue card is one predictable
+            // tap); prime the board to the persisted config so an immediate New
+            // Game matches the last selection.
             viewModel.newGame(config: settings.currentConfig)
         }
     }
@@ -278,27 +276,15 @@ struct GameContent: View {
         }
     }
 
-    /// Open the New Game popup, flushing the live game to disk INLINE first so the
-    /// popup's in-progress cues are accurate the instant it appears. Without the flush
-    /// a just-started game (its save still debounced) shows no dot / a plain Start, and
-    /// a just-ended game (save cleared) could show a stale Continue. Ordered before
-    /// `showingNewGame = true` so disk is settled before the popup reads the index.
+    /// Open the New Game popup, flushing the live game to disk first so the popup's
+    /// in-progress cues are accurate. The flush is ASYNC — a blocking write meant
+    /// synchronously encoding a multi-MB XXXL board on the main thread, a visible
+    /// stall on open — and the popup catches up the moment the write commits via
+    /// `savesChanged` (the same signal that handles big boards whose first move is
+    /// still computing here).
     func openNewGame() {
-        autosaveBlocking()  // write-if-in-progress / clear-if-ended
+        autosave()  // write-if-in-progress / clear-if-ended, off the main thread
         navigator.showingNewGame = true
-    }
-
-    /// "Press start": if there are in-progress boards, show the Continue list (pick
-    /// one to resume, or start fresh); with none, open the New Game popup directly.
-    /// The title stays up behind either — the actual leave-title happens on the pick.
-    /// The single place the resume decision lives, since `saveStore` is owned here.
-    private func handleStartRequest() {
-        if saveStore.latest() != nil {
-            navigator.showingResumeList = true
-        } else {
-            navigator.showingTitle = false
-            navigator.showingNewGame = true
-        }
     }
 
     /// Start a fresh game on the config the player tapped in the scoreboard, then
@@ -324,14 +310,22 @@ struct GameContent: View {
     func autosave() {
         autosaveTask?.cancel()  // an explicit save subsumes any pending debounce
         if let inputs = viewModel.snapshotInputs() {
+            let navigator = navigator
             Task.detached(priority: .utility) {
                 guard let snapshot = GameSnapshot(inputs: inputs) else { return }
                 await saveWriter.write(snapshot)
+                // Signal the commit so Home / New Game re-read their save cues —
+                // this is what updates a dot whose save landed AFTER the popup
+                // opened (big boards: the first move is still computing at open).
+                await MainActor.run { navigator.savesChanged &+= 1 }
             }
         } else {
             // Not in progress (won/lost/not started) → discard THIS config's save.
             let config = viewModel.config
-            Task { await saveWriter.clear(config: config) }
+            Task {
+                await saveWriter.clear(config: config)
+                navigator.savesChanged &+= 1
+            }
         }
     }
 
@@ -362,6 +356,7 @@ struct GameContent: View {
     /// terminate the instant the handler returns, so the write must finish inline.
     private func autosaveBlocking() {
         autosaveTask?.cancel()
+        defer { navigator.savesChanged &+= 1 }
         if let snapshot = viewModel.snapshot() {
             saveStore.save(snapshot)
         } else {
@@ -384,8 +379,11 @@ struct GameContent: View {
     // Result feedback (manga result screen + restart pop + haptics) lives in
     // GameContent+Result.swift.
 
-    /// Return home WITHOUT ending the game: pause and save, so "press start" can
-    /// resume where it left off. Discarding is an explicit New Game instead.
+    /// Return home WITHOUT ending the game: pause and save, so Home's Continue card
+    /// can resume where it left off. The save is ASYNC (a blocking XXXL encode was a
+    /// visible stall on the Home button); the card reads the last debounced state
+    /// immediately and catches up via `savesChanged` when the write commits.
+    /// Discarding is an explicit New Game.
     func goHome() {
         viewModel.pause()
         autosave()

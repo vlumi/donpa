@@ -123,6 +123,23 @@ final class DonpaUITests: XCTestCase {
             "the just-played config offers Continue, not a fresh Start")
     }
 
+    /// Home shows a Continue card for the in-progress game (fresh the moment Home
+    /// appears — goHome flushes the save inline), and tapping it resumes play.
+    func testHomeShowsContinueCardAndResumes() {
+        startGame()
+        XCTAssertTrue(
+            app.buttons["newgame.start"].waitForNonExistence(timeout: 5),
+            "New Game popup dismissed")
+        app.otherElements["game.board"].tap()  // first move → a real in-progress game
+        app.buttons["game.home"].tap()
+        let card = app.buttons["home.continue"]
+        waitFor(card)
+        card.tap()
+        waitFor(app.buttons["game.home"])
+        XCTAssertFalse(
+            app.buttons["newgame.start"].exists, "resumed directly, no New Game popup")
+    }
+
     /// Regression: the New Game popup pauses a live game (browsing configs shouldn't
     /// cost clock time) and resumes on dismiss — the resume is owned by the popup, so
     /// it only fires when the popup did the pausing.

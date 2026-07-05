@@ -23,11 +23,16 @@ under Unreleased as they merge.
 
 - **A game in progress on every board.** Each board keeps its own in-progress game now,
   not one shared slot — so starting a quick round on another board no longer discards
-  the big one you had going. Tap the title to see all your in-progress games (most
-  recent first) and jump back into any of them, or start a new one. In New Game, the
-  Start button becomes Continue when the current board has a game going, and a small dot
-  marks each selector that leads to one — so you can drill down to any saved board. A
-  game is cleared when you win or lose it.
+  the big one you had going. In New Game, the Start button becomes Continue when the
+  current board has a game going, and a small dot marks each selector that leads to
+  one — so you can drill down to any saved board. A game is cleared when you win or
+  lose it.
+- **The title screen is now a home screen.** The app opens to a proper menu: a Continue
+  card showing your latest in-progress board (with its progress, time, and when you
+  last played — expandable to all of them), a New Game button, and the Service Record.
+  No more silent jump into whichever game you played last — continuing is one
+  predictable tap, and the title art still works as that shortcut. On a wide screen
+  (Mac, iPad, landscape) the art and menu sit side by side.
 - **Share your scores.** From the Service Record, tap Share to show a QR code (or copy
   a link) built from your best scores. Someone adds you as a rival by scanning the code
   or opening the link — no account, no server. Scores are signed so they can't be
