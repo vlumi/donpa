@@ -72,6 +72,24 @@ final class SaveStoreTests: XCTestCase {
         XCTAssertEqual(store.latest()?.config, .basic(.expert))
     }
 
+    /// Summaries mirror all(): same gating, same order, plus the derived progress —
+    /// without retaining board sets (they feed Home's list across view updates).
+    func testSummariesMirrorAllWithProgress() {
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        store.save(sampleSnapshot(.basic(.beginner), elapsed: 700, at: t0))
+        store.save(sampleSnapshot(.basic(.expert), at: t0.addingTimeInterval(60)))
+        let summaries = store.summaries()
+        XCTAssertEqual(summaries.map(\.config), [.basic(.expert), .basic(.beginner)])
+        XCTAssertEqual(summaries.last?.elapsedCentiseconds, 700)
+        // Beginner: 9×9 − 10 mines = 71 safe cells; the sample revealed at least one,
+        // so progress is a small positive percent (never 0 rounded up dishonestly).
+        let progress = summaries.last?.progressPercent ?? -1
+        XCTAssertTrue((0...99).contains(progress), "in-progress game is under 100%")
+        XCTAssertEqual(
+            summaries.last?.revealedSafeCount,
+            store.load(config: .basic(.beginner))?.revealedSafeCount)
+    }
+
     func testLatestIsNilWhenNoSaves() {
         XCTAssertNil(store.latest())
         XCTAssertTrue(store.all().isEmpty)

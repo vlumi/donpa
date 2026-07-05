@@ -1762,23 +1762,6 @@
         }
       }
     },
-    "New game…" : {
-      "comment" : "Continue list: start a fresh game instead of resuming (opens New Game)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uusi peli…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新しいゲーム…"
-          }
-        }
-      }
-    },
     "New group" : {
       "localizations" : {
         "en" : {

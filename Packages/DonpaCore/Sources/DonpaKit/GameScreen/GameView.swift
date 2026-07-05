@@ -198,7 +198,6 @@ struct GameContent: View {
         .sheet(isPresented: $navigator.showingAbout) {
             AboutView()
         }
-        .onChangeCompat(of: navigator.startRequested) { _ in handleStartRequest() }
         .onChangeCompat(of: navigator.playConfigRequested) { config in
             if let config { playFromScoreboard(config) }
         }
@@ -210,9 +209,9 @@ struct GameContent: View {
 
     // MARK: Save / restore lifecycle
 
-    /// On launch: resume a saved in-progress game straight into the board (skipping
-    /// the title), else stay on the title with the board primed to the persisted
-    /// config so an immediate New Game matches the last selection.
+    /// On launch: land on Home (the Continue card handles resuming), with the board
+    /// primed to the persisted config so an immediate New Game matches the last
+    /// selection.
     private func onLaunch() {
         // Persist a minimap resize back to Settings (survives new game / restart /
         // save-restore). The scene drives the gesture; Settings is the store.
@@ -231,11 +230,10 @@ struct GameContent: View {
         }
         if let scenario = PerfScenario.current {
             startPerfScenario(scenario)
-        } else if let snapshot = saveStore.latest() {
-            // Auto-resume the most-recently-played in-progress game (per-config saves).
-            viewModel.restore(from: snapshot)
-            navigator.showingTitle = false
         } else if viewModel.config != settings.currentConfig {
+            // Land on Home (no auto-resume — the Continue card is one predictable
+            // tap); prime the board to the persisted config so an immediate New
+            // Game matches the last selection.
             viewModel.newGame(config: settings.currentConfig)
         }
     }
@@ -286,19 +284,6 @@ struct GameContent: View {
     func openNewGame() {
         autosaveBlocking()  // write-if-in-progress / clear-if-ended
         navigator.showingNewGame = true
-    }
-
-    /// "Press start": if there are in-progress boards, show the Continue list (pick
-    /// one to resume, or start fresh); with none, open the New Game popup directly.
-    /// The title stays up behind either — the actual leave-title happens on the pick.
-    /// The single place the resume decision lives, since `saveStore` is owned here.
-    private func handleStartRequest() {
-        if saveStore.latest() != nil {
-            navigator.showingResumeList = true
-        } else {
-            navigator.showingTitle = false
-            navigator.showingNewGame = true
-        }
     }
 
     /// Start a fresh game on the config the player tapped in the scoreboard, then
@@ -384,11 +369,13 @@ struct GameContent: View {
     // Result feedback (manga result screen + restart pop + haptics) lives in
     // GameContent+Result.swift.
 
-    /// Return home WITHOUT ending the game: pause and save, so "press start" can
-    /// resume where it left off. Discarding is an explicit New Game instead.
+    /// Return home WITHOUT ending the game: pause and save, so Home's Continue card
+    /// can resume where it left off. The save is INLINE (blocking) — Home refreshes
+    /// its in-progress list the moment `showingTitle` flips, so an async write would
+    /// race the read and show a stale card. Discarding is an explicit New Game.
     func goHome() {
         viewModel.pause()
-        autosave()
+        autosaveBlocking()
         navigator.showingTitle = true
     }
 }

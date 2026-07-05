@@ -81,6 +81,35 @@ public struct SaveStore {
     /// The most-recently-played saved game, for auto-resume. nil if there are none.
     public func latest() -> GameSnapshot? { all().first }
 
+    /// A lightweight view of one saved game, for lists and cues — everything the
+    /// Home card / New Game dots need, WITHOUT retaining the board's coord sets
+    /// (an XXXL snapshot holds ~1M coords; a list of those is a memory trap).
+    public struct SaveSummary: Equatable, Sendable {
+        public let config: GameConfig
+        public let elapsedCentiseconds: Int
+        public let revealedSafeCount: Int
+        public let updatedAt: Date
+
+        /// Whole-percent board progress (revealed safe cells over the config's
+        /// safe-cell count).
+        public var progressPercent: Int {
+            let safe = max(1, config.width * config.height - config.mineCount)
+            return Int((Double(revealedSafeCount) / Double(safe) * 100).rounded())
+        }
+    }
+
+    /// Summaries of every live saved game, newest-played first. Decoding still
+    /// parses each file once (same gating as `all()` — version, in-progress,
+    /// geometry), but only the summary is retained, so callers can hold the result
+    /// across view updates cheaply. Refresh on demand, not per render.
+    public func summaries() -> [SaveSummary] {
+        all().map {
+            SaveSummary(
+                config: $0.config, elapsedCentiseconds: $0.elapsedCentiseconds,
+                revealedSafeCount: $0.revealedSafeCount, updatedAt: $0.updatedAt)
+        }
+    }
+
     public func hasSave(config: GameConfig) -> Bool {
         fileManager.fileExists(atPath: url(for: config).path)
     }

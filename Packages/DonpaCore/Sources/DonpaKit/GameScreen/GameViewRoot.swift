@@ -34,6 +34,12 @@ public struct GameView: View {
     @State private var saveStore: SaveStore =
         SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
     private var resumeStore: SaveStore { saveStore }
+    /// Cached in-progress summaries feeding Home's Continue card and the New Game
+    /// dots. Refreshed when either surface (re)opens — NOT read per body eval:
+    /// `summaries()` parses every save file, and an XXXL save is megabytes of JSON.
+    /// The hosts flush pending writes synchronously before opening (goHome /
+    /// openNewGame), so a refresh always sees disk truth.
+    @State private var saveSummaries: [SaveStore.SaveSummary] = []
     /// Brief in-app splash mirroring the OS launch image (which can't be delayed,
     /// being pre-process) so the hand-off into the title is seamless.
     @State private var showSplash = true
@@ -75,16 +81,17 @@ public struct GameView: View {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator, friends: friends, scene: scene, saveStore: saveStore)
-            // Title fade scoped to this overlay via `.animation(_:value:)` — an
+            // Home fade scoped to this overlay via `.animation(_:value:)` — an
             // imperative `withAnimation` would also animate the chrome's first
             // layout, making the status bar visibly settle.
-            TitleScreen(
+            HomeScreen(
                 settings: settings,
-                // "Press start": GameContent decides resume vs. New Game (it owns
-                // the save), so the tap just signals intent via a counter bump.
-                onStart: { navigator.startRequested &+= 1 },
-                onSettings: { navigator.showingSettings = true },
+                snapshots: saveSummaries,
+                onContinue: { resume($0) },
+                // Over the still-visible Home — leaving happens on the pick.
+                onNewGame: { navigator.showingNewGame = true },
                 onScores: { navigator.showingScores = true },
+                onSettings: { navigator.showingSettings = true },
                 onAbout: { navigator.showingAbout = true }
             )
             .opacity(navigator.showingTitle ? 1 : 0)
@@ -99,13 +106,8 @@ public struct GameView: View {
                     settings: settings,
                     onStart: { startSelectedGame() },
                     onClose: { navigator.showingNewGame = false },
-                    index: InProgressIndex(savedConfigs: resumeStore.all().map(\.config)),
-                    onResume: { config in
-                        guard let snapshot = resumeStore.load(config: config) else { return }
-                        navigator.showingNewGame = false
-                        viewModel.restore(from: snapshot)
-                        navigator.showingTitle = false
-                    }
+                    index: InProgressIndex(savedConfigs: saveSummaries.map(\.config)),
+                    onResume: { resume($0) }
                 )
                 .transition(.opacity)
                 .zIndex(2)
@@ -128,33 +130,25 @@ public struct GameView: View {
         // here: decode + classify, then let the receive prompt render the decision.
         .onOpenURL { receive($0) }
         .modifier(ReceivePrompt(navigator: navigator, friends: friends, scoreboard: scoreboard))
-        // The title's "Continue" list: pick an in-progress board to resume, or start
-        // fresh. Reads the same App Support `saves/` dir the game writes to.
-        .sheet(isPresented: $navigator.showingResumeList) {
-            ResumeListView(
-                snapshots: resumeStore.all(),
-                onResume: { config in
-                    guard let snapshot = resumeStore.load(config: config) else { return }
-                    navigator.showingResumeList = false
-                    viewModel.restore(from: snapshot)
-                    navigator.showingTitle = false
-                },
-                onNewGame: {
-                    navigator.showingResumeList = false
-                    navigator.showingTitle = false
-                    navigator.showingNewGame = true
-                },
-                onClose: { navigator.showingResumeList = false }
-            )
-        }
         // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
         .onChangeCompat(of: settings.syncScores) {
             scoreboard.syncEnabled = $0
             friends.syncEnabled = $0
         }
+        // Refresh the in-progress summaries whenever a surface that shows them
+        // opens. Both hosts flush pending saves synchronously first (goHome /
+        // openNewGame set the flag only after autosaveBlocking), so these reads
+        // never race a write.
+        .onChangeCompat(of: navigator.showingTitle) { showing in
+            if showing { saveSummaries = resumeStore.summaries() }
+        }
+        .onChangeCompat(of: navigator.showingNewGame) { showing in
+            if showing { saveSummaries = resumeStore.summaries() }
+        }
         // UI-test hooks (like -uitest-clean): jump straight to a modal, so
         // tests/screenshots don't depend on tapping through the title.
         .onAppear {
+            saveSummaries = resumeStore.summaries()
             let args = ProcessInfo.processInfo.arguments
             if args.contains("-uitest-open-newgame") {
                 navigator.showingNewGame = true
@@ -162,17 +156,24 @@ public struct GameView: View {
             if args.contains("-uitest-open-scores") {
                 navigator.showingScores = true
             }
-            if args.contains("-uitest-open-resume") {
-                navigator.showingResumeList = true
-            }
         }
     }
 
-    /// Start a fresh game with the popup's selection and leave the title — the
-    /// single entry point for the New Game button, result screen, and title tap.
+    /// Start a fresh game with the popup's selection and leave Home — the single
+    /// entry point for the New Game button and the result screen.
     private func startSelectedGame() {
         navigator.showingNewGame = false
         viewModel.newGame(config: settings.currentConfig)
+        navigator.showingTitle = false
+    }
+
+    /// Resume a saved board: load its snapshot, restore, and leave Home — shared by
+    /// the Home Continue card/list, the art tap, and the New Game popup's Continue.
+    /// A missing/unreadable save (e.g. a between-builds geometry retune) no-ops.
+    private func resume(_ config: GameConfig) {
+        guard let snapshot = resumeStore.load(config: config) else { return }
+        navigator.showingNewGame = false
+        viewModel.restore(from: snapshot)
         navigator.showingTitle = false
     }
 
