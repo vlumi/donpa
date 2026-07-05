@@ -99,8 +99,8 @@ extension BoardSelectionPicker {
         let selected = settings[keyPath: densityPath] == density
         // Filtered by the choices ABOVE it (family + current size), so the dot only
         // lights when a save exists reachable down THIS path.
-        let hasSave = index.densityHasSave(
-            density, family: settings.family, size: settings[keyPath: Settings.sizePath(settings.family)])
+        let size = settings[keyPath: Settings.sizePath(settings.family)]
+        let hasSave = index.densityHasSave(density, family: settings.family, size: size)
         return Button {
             settings[keyPath: densityPath] = density
             onFocusRow?(1)
