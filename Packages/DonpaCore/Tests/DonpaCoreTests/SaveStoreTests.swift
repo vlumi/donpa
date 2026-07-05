@@ -134,6 +134,18 @@ final class SaveStoreTests: XCTestCase {
         XCTAssertNil(store.load(config: .basic(.beginner)))
     }
 
+    /// A listed entry that can't be read as data at all (here: a directory squatting
+    /// on a save's name — in real life a race with deletion) is skipped, without
+    /// crashing and without dropping anything.
+    func testSummariesSkipUnreadableEntry() throws {
+        try FileManager.default.createDirectory(
+            at: fileURL(for: .basic(.beginner)), withIntermediateDirectories: true)
+        XCTAssertTrue(store.summaries().isEmpty)
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: fileURL(for: .basic(.beginner)).path),
+            "not treated as a droppable relic")
+    }
+
     /// A main file that isn't our container AT ALL (a pre-compression relic, or
     /// corruption) is DROPPED at listing time — main and sidecar both — even when a
     /// stale sidecar vouches for it. A lying sidecar made unreadable saves list as
