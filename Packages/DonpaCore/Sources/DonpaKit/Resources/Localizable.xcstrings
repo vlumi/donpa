@@ -758,6 +758,23 @@
         }
       }
     },
+    "Continue" : {
+      "comment" : "Continue list: sheet title — pick an in-progress board to resume",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jatka"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "続ける"
+          }
+        }
+      }
+    },
     "Copy link" : {
       "localizations" : {
         "en" : {
@@ -1741,6 +1758,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "このボードで新規ゲーム"
+          }
+        }
+      }
+    },
+    "New game…" : {
+      "comment" : "Continue list: start a fresh game instead of resuming (opens New Game)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uusi peli…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいゲーム…"
           }
         }
       }

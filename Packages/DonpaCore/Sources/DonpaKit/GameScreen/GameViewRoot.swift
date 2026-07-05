@@ -126,6 +126,25 @@ public struct GameView: View {
         // here: decode + classify, then let the receive prompt render the decision.
         .onOpenURL { receive($0) }
         .modifier(ReceivePrompt(navigator: navigator, friends: friends, scoreboard: scoreboard))
+        // The title's "Continue" list: pick an in-progress board to resume, or start
+        // fresh. Reads the same App Support `saves/` dir the game writes to.
+        .sheet(isPresented: $navigator.showingResumeList) {
+            ResumeListView(
+                snapshots: resumeStore.all(),
+                onResume: { config in
+                    guard let snapshot = resumeStore.load(config: config) else { return }
+                    navigator.showingResumeList = false
+                    viewModel.restore(from: snapshot)
+                    navigator.showingTitle = false
+                },
+                onNewGame: {
+                    navigator.showingResumeList = false
+                    navigator.showingTitle = false
+                    navigator.showingNewGame = true
+                },
+                onClose: { navigator.showingResumeList = false }
+            )
+        }
         // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
         .onChangeCompat(of: settings.syncScores) {
             scoreboard.syncEnabled = $0

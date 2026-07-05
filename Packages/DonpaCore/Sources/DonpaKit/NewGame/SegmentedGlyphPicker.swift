@@ -18,6 +18,10 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
     let label: (Value) -> String
     /// Called after a segment is chosen (e.g. to collapse an open detail).
     var onChange: (() -> Void)?
+    /// Whether a segment should carry a small corner badge (the New Game modal uses
+    /// this for the in-progress-save dot). Defaults to none, so other callers (the
+    /// scoreboard filters) render unbadged.
+    var badge: (Value) -> Bool = { _ in false }
 
     /// Outer corner radius; inner segment splits are square so the row reads as one
     /// connected control.
@@ -73,6 +77,7 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .modifier(SaveDot(show: badge(value)))
         .accessibilityLabel(Text(verbatim: text.isEmpty ? "\(value)" : text))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
