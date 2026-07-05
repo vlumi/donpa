@@ -257,7 +257,7 @@ public final class FriendsStore: ObservableObject {
     /// Publish own-only (tombstones filtered) — when sync is off or iCloud is away.
     private func rebuildFromOwn() {
         friends = FriendSyncMerge.live(allFriends)
-        groups = FriendSyncMerge.live(allGroups)
+        groups = sortedLive(allGroups)
     }
 
     /// Publish the merge of this device's records with every other device's blob.
@@ -266,7 +266,16 @@ public final class FriendsStore: ObservableObject {
         let mergedFriends = FriendSyncMerge.mergeFriends([allFriends] + others.map(\.friends))
         let mergedGroups = FriendSyncMerge.mergeGroups([allGroups] + others.map(\.groups))
         friends = FriendSyncMerge.live(mergedFriends)
-        groups = FriendSyncMerge.live(mergedGroups)
+        groups = sortedLive(mergedGroups)
+    }
+
+    /// Live groups (tombstones filtered) in a STABLE alphabetical order — the merge
+    /// yields dictionary order, which is otherwise arbitrary and shifts across launches.
+    private func sortedLive(_ groups: [FriendGroup]) -> [FriendGroup] {
+        FriendSyncMerge.live(groups).sorted {
+            let byName = $0.name.localizedCaseInsensitiveCompare($1.name)
+            return byName != .orderedSame ? byName == .orderedAscending : $0.id < $1.id
+        }
     }
 
     /// Decode every OTHER device's blob (skip our own slot; own records come from
@@ -318,7 +327,7 @@ public final class FriendsStore: ObservableObject {
             allFriends = stored.friends
             allGroups = stored.groups
             friends = FriendSyncMerge.live(allFriends)
-            groups = FriendSyncMerge.live(allGroups)
+            groups = sortedLive(allGroups)
             return
         }
         // Legacy format: a bare [Friend] whose `groups` held NAMES, not ids. Migrate:

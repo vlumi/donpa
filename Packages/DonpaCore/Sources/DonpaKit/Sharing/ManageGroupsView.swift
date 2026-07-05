@@ -19,6 +19,8 @@ struct ManageGroupsView: View {
     @State private var comparing: FriendGroup?
     /// The group whose membership is being edited (the multi-select checklist), or nil.
     @State private var editingMembers: FriendGroup?
+    /// The group pending a delete confirmation, or nil.
+    @State private var deleting: FriendGroup?
 
     var body: some View {
         chrome
@@ -31,6 +33,28 @@ struct ManageGroupsView: View {
             .sheet(item: $editingMembers) { group in
                 GroupMembersView(group: group, friends: friends)
             }
+            .confirmationDialog(
+                Text("Delete “\(deleting?.name ?? "")”?", bundle: .module),
+                isPresented: deleteBinding, titleVisibility: .visible,
+                presenting: deleting
+            ) { group in
+                Button(role: .destructive) {
+                    friends.deleteGroup(group.id)
+                } label: {
+                    Text("Delete group", bundle: .module)
+                }
+                Button(role: .cancel) {
+                } label: {
+                    Text("Cancel", bundle: .module)
+                }
+            } message: { _ in
+                Text("This removes the group. Your rivals and their scores stay.", bundle: .module)
+            }
+    }
+
+    /// Binding that drives the delete dialog from the optional `deleting` group.
+    private var deleteBinding: Binding<Bool> {
+        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
     }
 
     @ViewBuilder private var content: some View {
@@ -123,6 +147,14 @@ struct ManageGroupsView: View {
                 renameText = group.name
             } label: {
                 Image(systemName: "pencil")
+            }
+            .buttonStyle(.borderless)
+            // Explicit delete — swipe-to-delete is invisible on macOS, so a visible
+            // trash button (with confirmation) is the cross-platform way to remove one.
+            Button(role: .destructive) {
+                deleting = group
+            } label: {
+                Image(systemName: "trash")
             }
             .buttonStyle(.borderless)
         }
