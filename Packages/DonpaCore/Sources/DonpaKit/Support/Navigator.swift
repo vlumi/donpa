@@ -45,7 +45,7 @@ public final class Navigator: ObservableObject {
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {
         showingScores || showingSettings || showingAbout || showingNewGame
-            || incomingShare != nil || showingFriends
+            || incomingShare != nil || showingMessHall
     }
 
     /// A received share awaiting the user's decision (opened via a donpa.app link or
@@ -54,9 +54,10 @@ public final class Navigator: ObservableObject {
     /// that failed to verify. Cleared once handled.
     @Published public var incomingShare: IncomingShare?
 
-    /// Whether the friends list sheet is presented (view / rename / group / remove
-    /// tracked friends). Opened from the Service Record.
-    @Published public var showingFriends = false
+    /// Whether the Mess hall is presented — the social screen (share card, rivals,
+    /// squads, scan). Opened from Home, the Record's cross-link, and after adding a
+    /// rival.
+    @Published public var showingMessHall = false
 
     public init(showingTitle: Bool = true) {
         self.showingTitle = showingTitle

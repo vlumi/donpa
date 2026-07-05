@@ -16,7 +16,7 @@ struct GroupPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if friends.groups.isEmpty {
-                Text("No groups yet — create one below.", bundle: .module)
+                Text("No squads yet — create one below.", bundle: .module)
                     .font(.caption).foregroundStyle(.secondary)
             } else {
                 ForEach(friends.groups) { group in
@@ -42,7 +42,7 @@ struct GroupPicker: View {
 
             HStack(spacing: 8) {
                 TextField(text: $newName) {
-                    Text("New group", bundle: .module)
+                    Text("New squad", bundle: .module)
                 }
                 .textFieldStyle(.roundedBorder)
                 .onSubmit(create)

@@ -45,7 +45,7 @@ struct FriendDetailView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Groups", bundle: .module)
+                Text("Squads", bundle: .module)
                     .font(.caption).foregroundStyle(.secondary)
                 GroupPicker(friends: friends, selection: $groupSelection)
                     .onChangeCompat(of: groupSelection) {

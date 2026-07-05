@@ -94,6 +94,7 @@ public struct GameView: View {
                 // Over the still-visible Home — leaving happens on the pick.
                 onNewGame: { navigator.showingNewGame = true },
                 onScores: { navigator.showingScores = true },
+                onMessHall: { navigator.showingMessHall = true },
                 onSettings: { navigator.showingSettings = true },
                 onAbout: { navigator.showingAbout = true }
             )
@@ -132,7 +133,11 @@ public struct GameView: View {
         // A tapped donpa.app/s/… link (or a Universal Link from the Camera) arrives
         // here: decode + classify, then let the receive prompt render the decision.
         .onOpenURL { receive($0) }
-        .modifier(ReceivePrompt(navigator: navigator, friends: friends, scoreboard: scoreboard))
+        .modifier(
+            ReceivePrompt(
+                navigator: navigator, friends: friends, scoreboard: scoreboard,
+                settings: settings)
+        )
         // A saved board that couldn't be read: say so, and offer a fresh start on
         // the same board — never a silent nothing.
         .alert(
@@ -257,6 +262,7 @@ private struct ReceivePrompt: ViewModifier {
     @ObservedObject var navigator: Navigator
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
+    @ObservedObject var settings: Settings
 
     /// True only for `.failed`, which routes to the alert rather than the sheet.
     private var failure: ShareCodec.DecodeError? {
@@ -267,12 +273,27 @@ private struct ReceivePrompt: ViewModifier {
     func body(content: Content) -> some View {
         content
             .sheet(item: sheetBinding) { incoming in
-                ReceiveShareView(incoming: incoming, friends: friends) {
-                    navigator.incomingShare = nil
-                }
+                ReceiveShareView(
+                    incoming: incoming, friends: friends,
+                    onDone: { navigator.incomingShare = nil },
+                    // A fresh add lands in the Mess hall (deferred a tick — this
+                    // sheet is dismissing, and two sheet swaps in one runloop race),
+                    // so a new rival is never invisible.
+                    onAdded: {
+                        navigator.incomingShare = nil
+                        Task { @MainActor in navigator.showingMessHall = true }
+                    })
             }
-            .sheet(isPresented: $navigator.showingFriends) {
-                FriendsListView(friends: friends, scoreboard: scoreboard)
+            .sheet(isPresented: $navigator.showingMessHall) {
+                MessHallView(
+                    friends: friends, scoreboard: scoreboard, settings: settings,
+                    // A rival URL scanned inside the Mess hall's share sheet: the
+                    // view dismissed itself; classify and prompt at root (deferred
+                    // a tick for the same sheet-swap reason).
+                    onScanned: { url in
+                        let incoming = GameView.classify(url, existing: friends.friends)
+                        Task { @MainActor in navigator.incomingShare = incoming }
+                    })
             }
             .alert(
                 Text("Couldn't verify share", bundle: .module),

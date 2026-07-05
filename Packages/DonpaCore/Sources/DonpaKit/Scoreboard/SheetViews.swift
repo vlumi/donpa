@@ -24,13 +24,10 @@ struct ScoreboardView: View {
     /// Start a fresh game on a config (the row expansion's "New game on this board").
     /// The host wires this to begin the game and dismiss the sheet. nil = no button.
     var onPlay: ((GameConfig) -> Void)?
-    /// Route a scanned rival URL (from the Share sheet's Scan tab) into the receive
-    /// flow: the host closes the scoreboard and hands it to the root classify/prompt
-    /// path. nil = scanning disabled.
-    var onReceiveURL: ((URL) -> Void)?
-    /// Open the rivals list. The host dismisses this sheet and presents the list at the
-    /// root (so its sub-sheets don't stack on the scoreboard). nil = no rivals button.
-    var onFriends: (() -> Void)?
+    /// Open the Mess hall (the social screen) — the "Manage rivals" cross-link by
+    /// the rival-scope control. The host dismisses this sheet and presents the Mess
+    /// hall at the root. nil = no cross-link.
+    var onMessHall: (() -> Void)?
     /// Tracked friends, for the per-config rival comparison. No friends → no
     /// comparison shown, rows behave exactly as before.
     @ObservedObject var friends: FriendsStore
@@ -41,7 +38,6 @@ struct ScoreboardView: View {
     // Not `private`: the iOS toolbar lives in a `ScoreboardView` extension in another
     // file (ScoreboardToolbar) and drives these — Swift `private` is file-scoped.
     @Environment(\.dismiss) var dismiss
-    @State var sharing = false
 
     /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
     /// View-only state — a browsing choice, not persisted. Seeded in `onAppear` to
@@ -54,17 +50,6 @@ struct ScoreboardView: View {
     var body: some View {
         sheetChrome
             .onAppear(perform: seedFilterFromCurrent)
-            .sheet(isPresented: $sharing) {
-                ShareScoresView(
-                    scoreboard: scoreboard, settings: settings,
-                    onScanned: onReceiveURL.map { route in
-                        { url in
-                            sharing = false
-                            dismiss()  // close the scoreboard so the prompt shows at root
-                            route(url)
-                        }
-                    })
-            }
     }
 
     /// iOS: a NavigationStack with Reset / Done nav-bar items over the list. macOS:
@@ -100,24 +85,6 @@ struct ScoreboardView: View {
             HStack(spacing: 12) {
                 SyncFooterControl(settings: settings, scoreboard: scoreboard)
                 Spacer()
-                Button {
-                    sharing = true
-                } label: {
-                    Label {
-                        Text("Share", bundle: .module)
-                    } icon: {
-                        Image(systemName: "qrcode")
-                    }
-                }
-                if let onFriends {
-                    Button(action: onFriends) {
-                        Label {
-                            Text("Rivals", bundle: .module)
-                        } icon: {
-                            Image(systemName: "person.2")
-                        }
-                    }
-                }
                 Button {
                     dismiss()
                 } label: {

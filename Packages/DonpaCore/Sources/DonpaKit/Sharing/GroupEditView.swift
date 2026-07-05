@@ -36,22 +36,22 @@ struct GroupEditView: View {
                     friends.deleteGroup(group.id)
                     dismiss()
                 } label: {
-                    Text("Delete group", bundle: .module)
+                    Text("Delete squad", bundle: .module)
                 }
                 Button(role: .cancel) {
                 } label: {
                     Text("Cancel", bundle: .module)
                 }
             } message: {
-                Text("This removes the group. Your rivals and their scores stay.", bundle: .module)
+                Text("This removes the squad. Your rivals and their scores stay.", bundle: .module)
             }
     }
 
     @ViewBuilder private var content: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Group name", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                TextField(text: $name) { Text("Group name", bundle: .module) }
+                Text("Squad name", bundle: .module).font(.caption).foregroundStyle(.secondary)
+                TextField(text: $name) { Text("Squad name", bundle: .module) }
                     .textFieldStyle(.roundedBorder)
                     // Persist on each edit (blank is ignored by the store).
                     .onChangeCompat(of: name) { friends.renameGroup(group.id, to: $0) }
@@ -63,7 +63,7 @@ struct GroupEditView: View {
             Button(role: .destructive) {
                 confirmingDelete = true
             } label: {
-                Text("Delete group", bundle: .module)
+                Text("Delete squad", bundle: .module)
             }
             .padding(.top, 4)
         }
@@ -98,7 +98,7 @@ struct GroupEditView: View {
         #if os(iOS)
         NavigationStack {
             ScrollView { content.padding(20) }
-                .navigationTitle(Text("Edit group", bundle: .module))
+                .navigationTitle(Text("Edit squad", bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
@@ -112,7 +112,7 @@ struct GroupEditView: View {
         }
         #else
         VStack(spacing: 16) {
-            Text("Edit group", bundle: .module).font(.title2.bold())
+            Text("Edit squad", bundle: .module).font(.title2.bold())
             ScrollView { content }.frame(minHeight: 260)
             Button {
                 dismiss()
