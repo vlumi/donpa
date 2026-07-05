@@ -967,6 +967,28 @@
         }
       }
     },
+    "Edit group" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit group"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muokkaa ryhmää"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グループを編集"
+          }
+        }
+      }
+    },
     "Erase everywhere" : {
       "comment" : "Destructive button: confirm the global (all-devices) wipe",
       "localizations" : {
@@ -1130,6 +1152,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "別の名前を付ける（任意）"
+          }
+        }
+      }
+    },
+    "Group name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group name"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ryhmän nimi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "グループ名"
           }
         }
       }
@@ -1447,6 +1491,28 @@
         }
       }
     },
+    "Members" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Members"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jäsenet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メンバー"
+          }
+        }
+      }
+    },
     "Minefield cleared" : {
       "comment" : "VoiceOver label on the win result screen",
       "localizations" : {
@@ -1646,6 +1712,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "このボードのプレイ記録はまだありません。"
+          }
+        }
+      }
+    },
+    "No groups yet — create one above." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No groups yet — create one above."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei vielä ryhmiä — luo yksi yllä."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだグループがありません — 上で作成できます。"
           }
         }
       }
@@ -2869,6 +2957,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iCloud経由"
+          }
+        }
+      }
+    },
+    "View" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Näkymä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示"
           }
         }
       }
