@@ -316,6 +316,16 @@ struct BoardSelectionPicker: View {
                     .font(.caption.weight(selected ? .bold : .regular))
                     .lineLimit(1)  // keep e.g. "グリッド" on one line (don't wrap → taller tab)
                     .fixedSize()
+                    // Reserve the BOLD width always (a hidden bold twin sets the frame)
+                    // so selecting a tab doesn't widen it — that widening was the row
+                    // "wobble" as the selection moved between tabs.
+                    .background(
+                        Text(verbatim: family.label)
+                            .font(.caption.weight(.bold))
+                            .lineLimit(1)
+                            .fixedSize()
+                            .hidden()
+                    )
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 7)

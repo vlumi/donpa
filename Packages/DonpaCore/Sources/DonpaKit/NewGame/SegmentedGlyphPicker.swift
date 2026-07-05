@@ -77,7 +77,7 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .modifier(SaveDot(show: badge(value)))
+        .modifier(SaveDot(show: badge(value), onAccent: selected))
         .accessibilityLabel(Text(verbatim: text.isEmpty ? "\(value)" : text))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
