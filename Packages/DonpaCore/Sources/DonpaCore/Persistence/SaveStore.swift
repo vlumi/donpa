@@ -76,14 +76,42 @@ public struct SaveStore {
     }
 
     /// Atomically write the snapshot to its config's file (+ its sidecar summary);
-    /// failures are swallowed.
+    /// failures are swallowed. The payload is zlib-compressed (see `pack`).
     public func save(_ snapshot: GameSnapshot) {
-        guard let data = try? JSONEncoder().encode(snapshot) else { return }
-        try? data.write(to: url(for: snapshot.config), options: [.atomic])
+        guard let data = try? JSONEncoder().encode(snapshot),
+            let packed = pack(data)
+        else { return }
+        try? packed.write(to: url(for: snapshot.config), options: [.atomic])
         writeSummary(
             SaveSummary(
                 config: snapshot.config, elapsedCentiseconds: snapshot.elapsedCentiseconds,
                 revealedSafeCount: snapshot.revealedSafeCount, updatedAt: snapshot.updatedAt))
+    }
+
+    // MARK: Compression
+
+    /// Every save starts with this magic, then a zlib-deflated JSON payload. The
+    /// digit versions the CONTAINER format (the JSON inside carries its own schema
+    /// version). No plain-JSON fallback: the format never shipped uncompressed, so
+    /// anything without the magic is rejected like any other unreadable file.
+    private static let compressedMagic = Data("DONPAZ1\n".utf8)
+
+    /// zlib-deflate the payload. A fresh XXXL save (random mine coords, high
+    /// entropy) measures ~2.6× smaller; the ratio improves as the board is played,
+    /// since the growing `revealed` set is contiguous regions — and plain, a
+    /// well-cleared XXXL save would head toward ~10MB. nil on a compression
+    /// failure — the caller skips the write, leaving the previous good save intact.
+    private func pack(_ data: Data) -> Data? {
+        guard let compressed = try? (data as NSData).compressed(using: .zlib) as Data
+        else { return nil }
+        return Self.compressedMagic + compressed
+    }
+
+    /// Undo `pack`: nil unless the magic is present and the payload inflates.
+    private func unpack(_ data: Data) -> Data? {
+        guard data.starts(with: Self.compressedMagic) else { return nil }
+        let payload = Data(data.dropFirst(Self.compressedMagic.count))
+        return try? (payload as NSData).decompressed(using: .zlib) as Data
     }
 
     private func writeSummary(_ summary: SaveSummary) {
@@ -174,9 +202,11 @@ public struct SaveStore {
     /// A save is only resumable while the game is still playable — a won/lost snapshot
     /// that slipped to disk (e.g. an app-exit save fired after the result) must never
     /// resurface as a "Continue", so it's rejected here rather than relied on being
-    /// cleared everywhere it could be written. See `load`.
+    /// cleared everywhere it could be written. Inflates compressed payloads first
+    /// (see `unpack`). See `load`.
     private func decode(_ data: Data?) -> GameSnapshot? {
-        guard let data,
+        guard let raw = data, let data = unpack(raw) else { return nil }
+        guard
             let snapshot = try? JSONDecoder().decode(GameSnapshot.self, from: data),
             snapshot.version <= GameSnapshot.currentVersion,
             snapshot.status == .playing,

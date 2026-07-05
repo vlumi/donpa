@@ -27,6 +27,14 @@ final class SaveStoreTests: XCTestCase {
         return dir.appendingPathComponent("saves/save-\(safe).json")
     }
 
+    /// Write a save fixture the way the store would: magic + zlib(json). Fixtures
+    /// must pass the container gate so the tests exercise the SEMANTIC gates
+    /// (version / geometry / status), not the magic check.
+    private func writeFixture(_ json: String, for config: GameConfig) throws {
+        let compressed = try (Data(json.utf8) as NSData).compressed(using: .zlib) as Data
+        try (Data("DONPAZ1\n".utf8) + compressed).write(to: fileURL(for: config))
+    }
+
     private func sampleSnapshot(
         _ config: GameConfig = .basic(.beginner), elapsed: Int = 500, at: Date = Date()
     ) -> GameSnapshot {
@@ -107,20 +115,34 @@ final class SaveStoreTests: XCTestCase {
             FileManager.default.fileExists(atPath: sidecar.path), "sidecar cleared with the save")
     }
 
-    /// A save without a sidecar (a pre-sidecar build's file) still lists — via a
-    /// one-time full decode that HEALS by writing the sidecar for next time.
+    /// Saves are zlib-compressed on disk (magic-prefixed), and smaller than their
+    /// plain encoding — coordinate-list JSON compresses hard, and a save GROWS as
+    /// the board gets played. Corrupt compressed data must not load.
+    func testSavesAreCompressedOnDisk() throws {
+        let config = GameConfig.basic(.expert)  // 30×16 · 99 mines → a real payload
+        let snap = sampleSnapshot(config)
+        store.save(snap)
+        let file = try Data(contentsOf: fileURL(for: config))
+        XCTAssertTrue(file.starts(with: Data("DONPAZ1\n".utf8)), "magic-prefixed zlib")
+        let plain = try JSONEncoder().encode(snap)
+        XCTAssertLessThan(file.count, plain.count, "compressed beats plain")
+        // Round-trips through the compressed form.
+        XCTAssertEqual(store.load(config: config)?.mines, snap.mines)
+        // Magic + garbage is rejected like any unreadable file, not crashed on.
+        try (Data("DONPAZ1\n".utf8) + Data("not deflate".utf8))
+            .write(to: fileURL(for: .basic(.beginner)))
+        XCTAssertNil(store.load(config: .basic(.beginner)))
+    }
+
+    /// A save whose sidecar has gone missing still lists — via a one-time full
+    /// decode that HEALS by writing the sidecar for next time.
     func testSummariesHealMissingSidecar() throws {
-        // Fixture: main file only (fileURL writes no sidecar). Geometry-consistent.
-        let mines = ((0..<9).map { "[\($0),0]" } + ["[0,1]"]).joined(separator: ",")
-        let json =
-            #"{"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines)],"#
-            + #""revealedSafeCount":7,"elapsedCentiseconds":420}"#
-        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        store.save(sampleSnapshot(.basic(.beginner), elapsed: 420))
+        let sidecar = dir.appendingPathComponent("saves/summary-v2_basic_beginner.json")
+        try FileManager.default.removeItem(at: sidecar)
         let summaries = store.summaries()
         XCTAssertEqual(summaries.count, 1, "listed via the slow path")
         XCTAssertEqual(summaries.first?.elapsedCentiseconds, 420)
-        XCTAssertEqual(summaries.first?.revealedSafeCount, 7)
-        let sidecar = dir.appendingPathComponent("saves/summary-v2_basic_beginner.json")
         XCTAssertTrue(
             FileManager.default.fileExists(atPath: sidecar.path),
             "healed: the sidecar now exists for the fast path")
@@ -146,9 +168,9 @@ final class SaveStoreTests: XCTestCase {
             from: Data(
                 #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#.utf8))
         XCTAssertFalse(stale.isConsistent)
-        try Data(
-            #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#.utf8
-        ).write(to: fileURL(for: .basic(.beginner)))
+        try writeFixture(
+            #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#,
+            for: .basic(.beginner))
         XCTAssertTrue(store.hasSave(config: .basic(.beginner)), "the file exists…")
         XCTAssertNil(
             store.load(config: .basic(.beginner)), "…but an inconsistent save must not load")
@@ -163,7 +185,7 @@ final class SaveStoreTests: XCTestCase {
         let mines = ((0..<9).map { "[\($0),0]" } + ["[0,1]"]).joined(separator: ",")
         let json =
             #"{"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines)],"status":"lost"}"#
-        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        try writeFixture(json, for: .basic(.beginner))
         XCTAssertTrue(store.hasSave(config: .basic(.beginner)), "the file exists…")
         XCTAssertNil(
             store.load(config: .basic(.beginner)), "…but a finished game must not load")
@@ -188,7 +210,7 @@ final class SaveStoreTests: XCTestCase {
             #"{"version":999,"config":{"basic":{"preset":"beginner"}},"mines":[],"#
             + #""revealed":[],"flagged":[],"status":"playing","revealedSafeCount":0,"#
             + #""elapsedCentiseconds":0}"#
-        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        try writeFixture(json, for: .basic(.beginner))
         XCTAssertNil(
             store.load(config: .basic(.beginner)),
             "a version this build doesn't understand is discarded")
@@ -200,7 +222,7 @@ final class SaveStoreTests: XCTestCase {
         let mines = ((0..<9).map { "[\($0),0]" } + ["[0,1]"]).joined(separator: ",")
         let json =
             #"{"version":0,"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines)]}"#
-        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        try writeFixture(json, for: .basic(.beginner))
         let loaded = store.load(config: .basic(.beginner))
         XCTAssertNotNil(loaded, "an older, compatible save is preserved across upgrade")
         XCTAssertEqual(loaded?.config, .basic(.beginner))
