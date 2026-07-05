@@ -3,29 +3,38 @@ import DonpaCore
 import SwiftUI
 
 #if os(macOS)
-import AppKit
+import UniformTypeIdentifiers
 #endif
 
-/// The "add a friend by QR" sheet. iOS scans live with the camera; macOS (no
-/// built-in scan target and often no camera) imports an image of a QR and decodes
-/// it. Either way the decoded string is handed to `onFound` — the receive flow then
-/// verifies and prompts, exactly as a tapped link does. This view knows nothing
-/// about signatures.
-struct ScanShareView: View {
-    /// A decoded QR string (expected to be a donpa.app/s/… URL). The presenter
-    /// routes it through the same `receive(_:)` path as `onOpenURL`.
+/// The QR-scanning surface, reusable on its own or as the "Scan" tab of the Share
+/// sheet. iOS scans live with the camera; macOS imports/drops an image and decodes it.
+/// A decoded string is handed to `onFound` — the receive flow then verifies and prompts,
+/// exactly as a tapped link does. Knows nothing about signatures.
+struct ScanContent: View {
+    /// A decoded QR string (expected to be a donpa.app/s/… URL). The presenter routes
+    /// it through the same receive path as `onOpenURL`.
     let onFound: (URL) -> Void
-    @Environment(\.dismiss) private var dismiss
 
     #if os(macOS)
     @State private var importFailed = false
+    @State private var importing = false
+    @State private var dropTargeted = false
     #endif
 
     var body: some View {
-        chrome
+        inner
+            #if os(macOS)
+        .fileImporter(
+            isPresented: $importing,
+            allowedContentTypes: [.png, .jpeg, .image],
+            allowsMultipleSelection: false
+        ) { result in
+            handleImport(result)
+        }
+            #endif
     }
 
-    @ViewBuilder private var content: some View {
+    @ViewBuilder private var inner: some View {
         #if os(iOS)
         VStack(spacing: 16) {
             CameraScanner { deliver($0) }
@@ -34,19 +43,21 @@ struct ScanShareView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16).strokeBorder(.secondary, lineWidth: 1))
-            Text("Point the camera at your friend's QR code.", bundle: .module)
+            Text("Point the camera at a rival's QR code.", bundle: .module)
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         #elseif os(macOS)
         VStack(spacing: 16) {
             Image(systemName: "qrcode.viewfinder")
-                .font(.system(size: 64)).foregroundStyle(.secondary)
-            Text("Import an image of your friend's QR code.", bundle: .module)
+                .font(.system(size: 64))
+                .foregroundStyle(dropTargeted ? Color.accentColor : .secondary)
+            Text("Drag a rival's QR image here, or choose one.", bundle: .module)
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button {
-                importFromImage()
+                importFailed = false
+                importing = true
             } label: {
                 Text("Choose image…", bundle: .module)
             }
@@ -56,36 +67,60 @@ struct ScanShareView: View {
                     .font(.caption).foregroundStyle(.red)
             }
         }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(
+                    dropTargeted ? Color.accentColor : Color.secondary.opacity(0.4),
+                    style: StrokeStyle(lineWidth: 1.5, dash: [6]))
+        )
+        // Accept a dragged image (Finder file or an image dragged from another app).
+        .dropDestination(for: Data.self) { items, _ in
+            handleDrop(items)
+        } isTargeted: {
+            dropTargeted = $0
+        }
         #endif
     }
 
-    /// Hand a decoded string to the presenter as a URL, then dismiss. A non-URL (a
-    /// random QR) is dropped — the receive flow only understands donpa.app links, and
-    /// dismissing lets the user try again rather than routing a guaranteed failure.
+    /// Hand a decoded string to the presenter as a URL. A non-URL (a random QR) is
+    /// dropped — the receive flow only understands donpa.app links.
     private func deliver(_ string: String) {
-        guard let url = URL(string: string) else {
-            dismiss()
-            return
-        }
-        dismiss()
+        guard let url = URL(string: string) else { return }
         onFound(url)
     }
 
     #if os(macOS)
-    /// Open panel → decode the first QR in the picked image with a `CIDetector`.
-    private func importFromImage() {
-        importFailed = false
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.png, .jpeg, .image]
-        panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let url = panel.url,
-            let image = CIImage(contentsOf: url),
-            let string = Self.decodeQR(from: image)
-        else {
-            importFailed = true
+    /// Decode the first QR in the picked image with a `CIDetector`. The URL is
+    /// security-scoped (sandbox), so bracket the read with start/stop access.
+    private func handleImport(_ result: Result<[URL], Error>) {
+        guard let url = try? result.get().first else {
+            importFailed = true  // cancelled or errored
+            return
+        }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        guard let image = CIImage(contentsOf: url), let string = Self.decodeQR(from: image) else {
+            importFailed = true  // not a readable image / no QR found
             return
         }
         deliver(string)
+    }
+
+    /// A dropped image arrives as raw bytes (Finder file or an image from another app);
+    /// decode a QR straight from the data — no security-scoped URL needed.
+    @discardableResult
+    private func handleDrop(_ items: [Data]) -> Bool {
+        importFailed = false
+        guard let data = items.first, let image = CIImage(data: data),
+            let string = Self.decodeQR(from: image)
+        else {
+            importFailed = true
+            return false
+        }
+        deliver(string)
+        return true
     }
 
     /// First QR string in a `CIImage`, or nil. High-accuracy detector — a screenshot
@@ -98,36 +133,4 @@ struct ScanShareView: View {
         return features.compactMap { ($0 as? CIQRCodeFeature)?.messageString }.first
     }
     #endif
-
-    @ViewBuilder private var chrome: some View {
-        #if os(iOS)
-        NavigationStack {
-            content.padding(20)
-                .navigationTitle(Text("Scan QR", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Cancel", bundle: .module)
-                        }
-                    }
-                }
-        }
-        #else
-        VStack(spacing: 16) {
-            Text("Scan QR", bundle: .module).font(.title2.bold())
-            content
-            Button {
-                dismiss()
-            } label: {
-                Text("Cancel", bundle: .module)
-            }
-            .keyboardShortcut(.cancelAction)
-        }
-        .padding(24)
-        .frame(minWidth: 320)
-        #endif
-    }
 }

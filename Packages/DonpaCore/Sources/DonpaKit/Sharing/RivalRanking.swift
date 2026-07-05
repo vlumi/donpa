@@ -36,12 +36,16 @@ enum RivalRanking {
         allConfigs.map { ($0.storageKey, $0) }, uniquingKeysWith: { first, _ in first })
 
     /// A labeled head-to-head row (the sheet needs a human board name, not a key).
+    /// `holderName` names who on the other side holds `theirBest` (group compare only);
+    /// `gap` is your signed delta vs. theirs (negative = you faster).
     struct H2HRow: Identifiable {
         let key: String
         let label: String
         let yourBest: Int?
         let theirBest: Int?
         let lead: ScoreComparison.Lead
+        let holderName: String?
+        let gap: Int?
         var id: String { key }
     }
 
@@ -78,15 +82,18 @@ enum RivalRanking {
                 yourBests: yourBests(scoreboard), theirBests: bests(of: friend)))
     }
 
-    /// Head-to-head against a group's best (fastest member per board).
+    /// Head-to-head against a group's best (fastest member per board), naming who holds
+    /// each board's best so it isn't anonymous.
     static func headToHead(
         withGroup members: [Friend], scoreboard: Scoreboard
     ) -> H2H {
-        let groupBests = ScoreComparison.groupBests(members.map(bests(of:)))
+        let group = ScoreComparison.groupBests(
+            members.map { (name: $0.displayName, scores: bests(of: $0)) })
         return labeled(
             ScoreComparison.headToHead(
                 configKeys: Array(configByKey.keys),
-                yourBests: yourBests(scoreboard), theirBests: groupBests))
+                yourBests: yourBests(scoreboard), theirBests: group.times,
+                theirHolders: group.holders))
     }
 
     /// Attach board labels + keep the tally; drop rows whose key we can't label
@@ -101,7 +108,8 @@ enum RivalRanking {
                 guard let config = configByKey[row.configKey] else { return nil }
                 return H2HRow(
                     key: row.configKey, label: config.label,
-                    yourBest: row.yourBest, theirBest: row.theirBest, lead: row.lead)
+                    yourBest: row.yourBest, theirBest: row.theirBest, lead: row.lead,
+                    holderName: row.holderName, gap: row.gap)
             }
             .sorted { (order[$0.key] ?? .max) < (order[$1.key] ?? .max) }
         return H2H(rows: rows, youLead: h.youLead, theyLead: h.theyLead)

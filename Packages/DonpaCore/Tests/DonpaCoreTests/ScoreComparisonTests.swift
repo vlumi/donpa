@@ -60,13 +60,25 @@ final class ScoreComparisonTests: XCTestCase {
         XCTAssertEqual(h.rows[2].lead, .them)
     }
 
-    func testGroupBestsTakesFastestMember() {
+    func testGroupBestsTakesFastestMemberAndNamesHolder() {
         let group = ScoreComparison.groupBests([
-            ["a": 500],
-            ["a": 300, "b": 900],
-            [:],
+            (name: "Amy", scores: ["a": 500]),
+            (name: "Bob", scores: ["a": 300, "b": 900]),
+            (name: "Cid", scores: [:]),
         ])
-        XCTAssertEqual(group["a"], 300)  // fastest across members
-        XCTAssertEqual(group["b"], 900)
+        XCTAssertEqual(group.times["a"], 300)  // fastest across members
+        XCTAssertEqual(group.times["b"], 900)
+        XCTAssertEqual(group.holders["a"], "Bob")  // Bob holds board a's best
+        XCTAssertEqual(group.holders["b"], "Bob")
+    }
+
+    func testHeadToHeadGapAndHolder() {
+        let group = ScoreComparison.groupBests([(name: "Amy", scores: ["a": 800])])
+        let h = ScoreComparison.headToHead(
+            configKeys: ["a"], yourBests: ["a": 940],
+            theirBests: group.times, theirHolders: group.holders)
+        XCTAssertEqual(h.rows[0].gap, 140)  // you 9.40 vs 8.00 → +1.40s slower
+        XCTAssertEqual(h.rows[0].holderName, "Amy")
+        XCTAssertEqual(h.rows[0].lead, .them)
     }
 }

@@ -1,153 +1,214 @@
 import DonpaCore
 import SwiftUI
 
-/// The tracked-friends list: everyone you've pinned via a share. Sorted most-recent
-/// first (their latest share's `issuedAt`), each row showing the display name and a
-/// one-line summary. Tap a row to rename (your local alias), edit groups, or remove.
-/// Read-only over `FriendsStore` except through its methods — the display-merge
-/// invariant means removing a friend just drops their data, nothing to reconcile.
+/// The social sheet: two segmented tabs, **Rivals** and **Groups**, over one
+/// `FriendsStore`. In both, tapping a row COMPARES you head-to-head; a trailing pencil
+/// edits (a rival's alias/groups/removal, or a group's name/members/deletion). Sorted
+/// alphabetically. Read-only over the store except through its methods — the
+/// display-merge invariant means removing an entry just drops its data.
 struct FriendsListView: View {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
     @Environment(\.dismiss) private var dismiss
 
-    /// The friend whose detail sheet is open (rename / groups / remove).
-    @State private var editing: Friend?
-    /// The friend being compared head-to-head, or nil.
-    @State private var comparing: Friend?
-    /// Whether the group-management sheet (create/rename/delete) is open.
-    @State private var managingGroups = false
+    private enum Tab: Hashable { case rivals, groups }
+    @State private var tab: Tab = .rivals
 
-    /// Most-recent share first; ties broken by when you added them.
-    private var ordered: [Friend] {
+    /// The rival whose detail (edit) sheet is open, or nil.
+    @State private var editingRival: Friend?
+    /// The rival being compared head-to-head, or nil.
+    @State private var comparingRival: Friend?
+    /// The group being edited (name / members / delete), or nil.
+    @State private var editingGroup: FriendGroup?
+    /// The group being compared head-to-head, or nil.
+    @State private var comparingGroup: FriendGroup?
+    /// A new group's name field (Groups tab).
+    @State private var newGroupName = ""
+
+    /// Rivals alphabetical; ties broken by key for a stable order.
+    private var rivals: [Friend] {
         friends.friends.sorted {
-            ($0.lastIssuedAt, $0.addedAt) > ($1.lastIssuedAt, $1.addedAt)
+            let byName = $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
+            if byName != .orderedSame { return byName == .orderedAscending }
+            return $0.publicKey.lexicographicallyPrecedes($1.publicKey)
         }
     }
 
     var body: some View {
         chrome
-            .sheet(item: $editing) { friend in
-                FriendDetailView(friend: friend, friends: friends)
-            }
-            .sheet(item: $comparing) { friend in
+            .sheet(item: $editingRival) { FriendDetailView(friend: $0, friends: friends) }
+            .sheet(item: $comparingRival) { rival in
                 HeadToHeadView(
-                    scoreboard: scoreboard, opponentName: friend.displayName,
-                    result: RivalRanking.headToHead(with: friend, scoreboard: scoreboard))
+                    scoreboard: scoreboard, opponentName: rival.displayName,
+                    result: RivalRanking.headToHead(with: rival, scoreboard: scoreboard))
             }
-            .sheet(isPresented: $managingGroups) {
-                ManageGroupsView(friends: friends, scoreboard: scoreboard)
+            .sheet(item: $editingGroup) { GroupEditView(group: $0, friends: friends) }
+            .sheet(item: $comparingGroup) { group in
+                HeadToHeadView(
+                    scoreboard: scoreboard, opponentName: group.name,
+                    result: RivalRanking.headToHead(
+                        withGroup: friends.members(of: group.id), scoreboard: scoreboard))
             }
     }
 
-    /// A friend's group names, resolved from their membership ids via the catalog.
-    private func groupNames(for friend: Friend) -> [String] {
-        friend.groups.compactMap { id in friends.groups.first { $0.id == id }?.name }
+    // MARK: Tabs
+
+    private var tabPicker: some View {
+        Picker(selection: $tab) {
+            Text("Rivals", bundle: .module).tag(Tab.rivals)
+            Text("Groups", bundle: .module).tag(Tab.groups)
+        } label: {
+            Text("View", bundle: .module)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        #if os(macOS)
+        // ⌘1 / ⌘2 switch tabs (standard macOS segment nav). Hidden zero-size buttons
+        // carry the shortcuts without adding visible chrome.
+        .background {
+            Group {
+                Button("") { tab = .rivals }.keyboardShortcut("1", modifiers: .command)
+                Button("") { tab = .groups }.keyboardShortcut("2", modifiers: .command)
+            }
+            .opacity(0)
+        }
+        #endif
     }
 
-    @ViewBuilder private var content: some View {
-        if ordered.isEmpty {
-            emptyState
+    @ViewBuilder private var tabContent: some View {
+        switch tab {
+        case .rivals: rivalsList
+        case .groups: groupsList
+        }
+    }
+
+    // MARK: Rivals tab
+
+    @ViewBuilder private var rivalsList: some View {
+        if rivals.isEmpty {
+            emptyState(
+                icon: "person.2", title: "No rivals yet.",
+                detail: "Add a rival's scores by scanning their QR code or opening a share link.")
         } else {
             List {
-                ForEach(ordered) { friend in
-                    Button {
-                        editing = friend
-                    } label: {
-                        FriendRow(friend: friend, groupNames: groupNames(for: friend))
-                    }
-                    .buttonStyle(.plain)
-                    // Compare is a secondary action (tapping the row opens detail).
-                    .swipeActions(edge: .leading) {
-                        Button {
-                            comparing = friend
-                        } label: {
-                            Label {
-                                Text("Compare", bundle: .module)
-                            } icon: {
-                                Image(systemName: "chart.bar")
-                            }
-                        }
-                        .tint(.accentColor)
-                    }
-                    .contextMenu {
-                        Button {
-                            comparing = friend
-                        } label: {
-                            Label {
-                                Text("Compare", bundle: .module)
-                            } icon: {
-                                Image(systemName: "chart.bar")
-                            }
-                        }
+                ForEach(rivals) { rival in
+                    // Tap = compare (the primary action); trailing pencil = edit.
+                    rowButton(compare: { comparingRival = rival }, edit: { editingRival = rival }) {
+                        FriendRow(friend: rival, groupNames: groupNames(for: rival))
                     }
                 }
                 .onDelete { offsets in
-                    offsets.map { ordered[$0].publicKey }.forEach { friends.delete($0) }
+                    offsets.map { rivals[$0].publicKey }.forEach { friends.delete($0) }
                 }
             }
         }
     }
 
-    private var emptyState: some View {
+    /// A rival's group names, resolved from their membership ids via the catalog.
+    private func groupNames(for friend: Friend) -> [String] {
+        friend.groups.compactMap { id in friends.groups.first { $0.id == id }?.name }
+    }
+
+    // MARK: Groups tab
+
+    @ViewBuilder private var groupsList: some View {
+        List {
+            // Create a group, then jump straight into editing it (name + add members).
+            HStack(spacing: 8) {
+                TextField(text: $newGroupName) { Text("New group", bundle: .module) }
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit(createGroup)
+                Button(action: createGroup) { Text("Add", bundle: .module) }
+                    .disabled(newGroupName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+
+            if friends.groups.isEmpty {
+                Text("No groups yet — create one above.", bundle: .module)
+                    .font(.callout).foregroundStyle(.secondary)
+            } else {
+                ForEach(friends.groups) { group in
+                    // Tap = compare vs the group's best; pencil = edit (name/members/delete).
+                    rowButton(
+                        compare: { comparingGroup = group },
+                        edit: { editingGroup = group },
+                        compareDisabled: friends.members(of: group.id).isEmpty
+                    ) {
+                        HStack {
+                            Text(group.name)
+                            Spacer()
+                            Text("\(friends.members(of: group.id).count)", bundle: .module)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func createGroup() {
+        guard let group = friends.createGroup(named: newGroupName) else { return }
+        newGroupName = ""
+        editingGroup = group  // open the edit view so you can add rivals right away
+    }
+
+    // MARK: Shared row
+
+    /// A list row whose body taps to compare, with a trailing pencil to edit. Compare
+    /// can be disabled (e.g. an empty group has nothing to compare).
+    @ViewBuilder private func rowButton<Content: View>(
+        compare: @escaping () -> Void, edit: @escaping () -> Void,
+        compareDisabled: Bool = false, @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(spacing: 8) {
+            Button(action: compare) { content().contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+                .disabled(compareDisabled)
+            Button(action: edit) {
+                Image(systemName: "pencil").foregroundStyle(.secondary)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(Text("Edit", bundle: .module))
+        }
+    }
+
+    private func emptyState(
+        icon: String, title: LocalizedStringKey, detail: LocalizedStringKey
+    ) -> some View {
         VStack(spacing: 12) {
-            Image(systemName: "person.2")
-                .font(.system(size: 48)).foregroundStyle(.secondary)
-            Text("No friends yet.", bundle: .module).font(.headline)
-            Text(
-                "Add a friend by scanning their QR code or opening a share link.",
-                bundle: .module
-            )
-            .font(.callout).foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
+            Image(systemName: icon).font(.system(size: 48)).foregroundStyle(.secondary)
+            Text(title, bundle: .module).font(.headline)
+            Text(detail, bundle: .module)
+                .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // MARK: Chrome
+
     @ViewBuilder private var chrome: some View {
         #if os(iOS)
         NavigationStack {
-            content
-                .navigationTitle(Text("Friends", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            managingGroups = true
-                        } label: {
-                            Label {
-                                Text("Manage groups", bundle: .module)
-                            } icon: {
-                                Image(systemName: "folder")
-                            }
-                        }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                    }
-                }
-        }
-        #else
-        VStack(spacing: 12) {
-            HStack {
-                Text("Friends", bundle: .module).font(.title2.bold())
-                Spacer()
-                Button {
-                    managingGroups = true
-                } label: {
-                    Label {
-                        Text("Manage groups", bundle: .module)
-                    } icon: {
-                        Image(systemName: "folder")
+            VStack(spacing: 0) {
+                tabPicker.padding([.horizontal, .top], 12)
+                tabContent
+            }
+            .navigationTitle(Text("Rivals", bundle: .module))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done", bundle: .module)
                     }
                 }
             }
-            content.frame(minHeight: 240)
+        }
+        #else
+        VStack(spacing: 12) {
+            tabPicker
+            tabContent.frame(minHeight: 260)
             Button {
                 dismiss()
             } label: {
@@ -156,39 +217,50 @@ struct FriendsListView: View {
             .keyboardShortcut(.defaultAction)
         }
         .padding(20)
-        .frame(minWidth: 360, minHeight: 360)
+        .frame(minWidth: 360, minHeight: 380)
         #endif
     }
 }
 
-/// A friend's list row: display name (your alias wins), any group tags, and a compact
-/// score summary (boards won · total wins).
+/// A rival's list row: display name (your alias wins), their share date, groups, and a
+/// compact score summary (wins · boards), right-aligned.
 private struct FriendRow: View {
     let friend: Friend
-    /// The friend's group names, resolved from ids by the list (which holds the catalog).
     let groupNames: [String]
 
     private var boardsWon: Int { friend.scores.filter { $0.wins > 0 }.count }
     private var totalWins: Int { friend.scores.reduce(0) { $0 + $1.wins } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(friend.displayName).font(.body.bold())
-                // If a local alias is hiding their own name, show it faintly so you
-                // can still tell who they call themselves.
+                    .lineLimit(1).minimumScaleFactor(0.7)
                 if friend.localAlias != nil {
                     Text(friend.sharedName).font(.caption).foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                // Their share's own timestamp — makes plain these are a SNAPSHOT that
+                // only changes when they re-share, not something that updates itself.
+                Text(
+                    "Updated \(friend.lastIssuedAt.formatted(date: .abbreviated, time: .omitted))",
+                    bundle: .module
+                )
+                .font(.caption2).foregroundStyle(.secondary)
+                if !groupNames.isEmpty {
+                    Text(groupNames.joined(separator: " · "))
+                        .font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
                 }
             }
-            Text("\(boardsWon) boards · \(totalWins) wins", bundle: .module)
-                .font(.caption).foregroundStyle(.secondary)
-            if !groupNames.isEmpty {
-                Text(groupNames.joined(separator: " · "))
-                    .font(.caption2).foregroundStyle(.tertiary)
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(totalWins) wins", bundle: .module).font(.subheadline.bold())
+                Text("\(boardsWon) boards", bundle: .module)
+                    .font(.caption2).foregroundStyle(.secondary)
             }
+            .fixedSize()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
     }
 }

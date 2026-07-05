@@ -24,12 +24,12 @@ struct ScoreboardView: View {
     /// Start a fresh game on a config (the row expansion's "New game on this board").
     /// The host wires this to begin the game and dismiss the sheet. nil = no button.
     var onPlay: ((GameConfig) -> Void)?
-    /// Open the QR scanner to add a friend. The host dismisses this sheet and presents
-    /// the scanner at the root (so the scanner + receive prompt don't stack on top of
-    /// the scoreboard). nil = no scan button.
-    var onScan: (() -> Void)?
-    /// Open the friends list. Like `onScan`, the host dismisses this sheet and presents
-    /// the list at the root. nil = no friends button.
+    /// Route a scanned rival URL (from the Share sheet's Scan tab) into the receive
+    /// flow: the host closes the scoreboard and hands it to the root classify/prompt
+    /// path. nil = scanning disabled.
+    var onReceiveURL: ((URL) -> Void)?
+    /// Open the rivals list. The host dismisses this sheet and presents the list at the
+    /// root (so its sub-sheets don't stack on the scoreboard). nil = no rivals button.
     var onFriends: (() -> Void)?
     /// Tracked friends, for the per-config rival comparison. No friends → no
     /// comparison shown, rows behave exactly as before.
@@ -41,7 +41,6 @@ struct ScoreboardView: View {
     // Not `private`: the iOS toolbar lives in a `ScoreboardView` extension in another
     // file (ScoreboardToolbar) and drives these — Swift `private` is file-scoped.
     @Environment(\.dismiss) var dismiss
-    @State var confirmingReset = false
     @State var sharing = false
 
     /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
@@ -55,42 +54,16 @@ struct ScoreboardView: View {
     var body: some View {
         sheetChrome
             .onAppear(perform: seedFilterFromCurrent)
-            .confirmationDialog(
-                // When sync is active the wipe is global (all the player's devices);
-                // otherwise it's a local clear — the message says which so it's not a
-                // surprise. Follows the sync-scoped wipe rule.
-                scoreboard.isCloudActive
-                    ? Text("Erase scores on all your devices?", bundle: .module)
-                    : Text("Clear all high scores?", bundle: .module),
-                isPresented: $confirmingReset,
-                titleVisibility: .visible
-            ) {
-                Button(role: .destructive) {
-                    scoreboard.wipeAllSynced()
-                } label: {
-                    scoreboard.isCloudActive
-                        ? Text("Erase everywhere", bundle: .module)
-                        : Text("Clear scores", bundle: .module)
-                }
-                Button(role: .cancel) {
-                } label: {
-                    Text("Cancel", bundle: .module)
-                }
-            } message: {
-                if scoreboard.isCloudActive {
-                    Text(
-                        """
-                        This erases your high scores and career stats on every device \
-                        signed in to your iCloud. It can't be undone.
-                        """, bundle: .module)
-                } else {
-                    Text(
-                        "This clears your high scores and career stats on this device.",
-                        bundle: .module)
-                }
-            }
             .sheet(isPresented: $sharing) {
-                ShareScoresView(scoreboard: scoreboard, settings: settings)
+                ShareScoresView(
+                    scoreboard: scoreboard, settings: settings,
+                    onScanned: onReceiveURL.map { route in
+                        { url in
+                            sharing = false
+                            dismiss()  // close the scoreboard so the prompt shows at root
+                            route(url)
+                        }
+                    })
             }
     }
 
@@ -131,33 +104,19 @@ struct ScoreboardView: View {
                     sharing = true
                 } label: {
                     Label {
-                        Text("Share scores", bundle: .module)
+                        Text("Share", bundle: .module)
                     } icon: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                }
-                if let onScan {
-                    Button(action: onScan) {
-                        Label {
-                            Text("Add friend", bundle: .module)
-                        } icon: {
-                            Image(systemName: "qrcode.viewfinder")
-                        }
+                        Image(systemName: "qrcode")
                     }
                 }
                 if let onFriends {
                     Button(action: onFriends) {
                         Label {
-                            Text("Friends", bundle: .module)
+                            Text("Rivals", bundle: .module)
                         } icon: {
                             Image(systemName: "person.2")
                         }
                     }
-                }
-                Button(role: .destructive) {
-                    confirmingReset = true
-                } label: {
-                    Text("Reset", bundle: .module)
                 }
                 Button {
                     dismiss()

@@ -21,33 +21,34 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- **Share your scores with friends.** From the Service Record, tap Share to show a
-  QR code (or copy a link) built from your best scores. A friend adds you by scanning
-  the code or opening the link — no account, no server. Scores are signed so they
-  can't be forged, and a friend's scores stay separate from your own: remove them and
-  their data is simply gone.
-- **Friends list.** See everyone you've added, give them your own nickname, or remove
-  them — all from the Service Record. You can nickname and group a friend right as you
-  add them, too.
-- **Groups.** Sort friends into named groups (work, family, …): create and manage your
-  groups, then put each friend in as many as you like. Renaming a group keeps its
+- **Share your scores.** From the Service Record, tap Share to show a QR code (or copy
+  a link) built from your best scores. Someone adds you as a rival by scanning the code
+  or opening the link — no account, no server. Scores are signed so they can't be
+  forged, and a rival's scores stay separate from your own: remove them and their data
+  is simply gone.
+- **Rivals list.** Add rivals from their shared scores, give each your own nickname, or
+  remove them — all from the Service Record. Their scores are a snapshot from when they
+  last shared (with the date shown), not a live feed. You can nickname and group a rival
+  right as you add them, too.
+- **Groups.** Sort rivals into named groups (work, family, …): create and manage your
+  groups, then put each rival in as many as you like. Renaming a group keeps its
   members; deleting one just un-groups them. Tap a group to see who's in it.
-- **See how you rank against friends.** Expand any board in the Service Record for a
-  leaderboard — your best time slotted in among your friends', fastest first. A little
+- **See how you rank against rivals.** Expand any board in the Service Record for a
+  leaderboard — your best time slotted in among your rivals', fastest first. A little
   medal on each board shows your standing at a glance, and you can narrow the comparison
   to a single group.
-- **Head-to-head.** From the friends list, compare all your best times against one
-  friend — or a whole group's best — board by board, with a running tally of who leads.
-- **Friends and groups sync across your devices.** With iCloud sync on, the friends and
+- **Head-to-head.** From the rivals list, compare all your best times against one
+  rival — or a whole group's best — board by board, with a running tally of who leads.
+- **Rivals and groups sync across your devices.** With iCloud sync on, the rivals and
   groups you set up on one device show up on the rest — the same switch that syncs your
-  scores. Removing a friend removes them everywhere.
+  scores. Removing a rival removes them everywhere.
 
 ## [0.3.0] — Board variants
 
 **Board-topology variants: wrapped (torus) + hex grids** (see ROADMAP.md).
 Shipped to TestFlight (both platforms).
 
-### build 13
+### build 13 — 2026-07-04
 
 - **Localization polish (FI + JA).** A fresh-eyes pass over both languages:
   consistent terminology (FI "alueavaus" for chording, unified "tulokset"; JA
@@ -60,7 +61,7 @@ Shipped to TestFlight (both platforms).
 - **Filter labels fit.** Family/edge filter buttons shrink a long label to fit
   rather than truncating it (e.g. "Ruudukko").
 
-### build 12
+### build 12 — 2026-07-04
 
 - **The board can't go dead after a game ends (Mac).** Rapid-clicking through the
   end-of-game panel could leave the board silently ignoring *every* click until
@@ -76,7 +77,7 @@ Shipped to TestFlight (both platforms).
 - **Website link in About.** The About panel now links to **donpa.app** alongside
   the source-code link.
 
-### build 11
+### build 11 — 2026-07-03
 
 - **Play straight from the scoreboard.** Expand any board's row in the Service
   Record and tap **New game on this board** to jump right into it — handy for
@@ -85,7 +86,7 @@ Shipped to TestFlight (both platforms).
   tall on a taller iPhone, where the extra height read as dead space that didn't
   respond to taps.
 
-### build 10
+### build 10 — 2026-07-03
 
 - **Hex grids.** A new Modern **Shape** option: play on a hexagonal board where each
   cell has six neighbours instead of eight. Pick **Hex** in the New Game screen
@@ -163,7 +164,7 @@ Shipped to TestFlight (both platforms).
 **Cross-device sync & big boards** (see ROADMAP.md). Both pillars have landed;
 cross-device sync awaits a real two-device verification pass.
 
-### build 9
+### build 9 — 2026-06-30
 
 - **Big boards are much lighter.** The board scene was being rebuilt on every UI
   tick (the running clock alone re-creates the view ~10×/s), leaving extra scenes
@@ -179,7 +180,7 @@ cross-device sync awaits a real two-device verification pass.
   when iCloud isn't available (it can't sync), and on iOS the status is plain
   guidance to sign in rather than a link that just opened the app's own settings.
 
-### build 8
+### build 8 — 2026-06-29
 
 - **Scoreboard orientation.** The board you're playing gets a persistent "you are
   here" row band; opening the scoreboard mid-game scrolls that row into view (from
@@ -202,13 +203,13 @@ cross-device sync awaits a real two-device verification pass.
   could peg the CPU and stall after opening tiles; reveals, flagging, and idle are
   all much lighter now, especially on macOS.
 
-### build 7
+### build 7 — 2026-06-28
 
 - **Minimap appears immediately** on a board that only slightly exceeds the
   viewport (e.g. Modern S on an iPhone 14) — it no longer stayed hidden until a
   small pan.
 
-### build 6
+### build 6 — 2026-06-28
 
 - **Resuming keeps the dig/flag input mode** — it no longer reset to dig on
   restore.
@@ -221,7 +222,7 @@ cross-device sync awaits a real two-device verification pass.
   offline; a fix so a new record set on another device isn't double-counted.
 - Carousel modal no longer overflows on small iPhones (edges fade instead).
 
-### builds 4–5 (initial 0.2.0)
+### builds 4–5 (initial 0.2.0) — 2026-06-28
 
 - **Cross-device scoreboard sync (iCloud).** High scores and career totals follow
   the player across their devices via iCloud Key-Value Storage. Opt-in (off by
