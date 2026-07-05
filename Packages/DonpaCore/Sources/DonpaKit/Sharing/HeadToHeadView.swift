@@ -38,16 +38,29 @@ struct HeadToHeadView: View {
         }
     }
 
-    /// The scoreline: how many boards each side leads.
+    /// A centered sports-style scoreline — the two lead counts big and adjacent with a
+    /// dash between (8 – 3), each under its side's name.
     private var tally: some View {
-        HStack {
-            Text("You", bundle: .module).fontWeight(.bold)
-            Text(verbatim: "\(result.youLead)").font(.title3.monospaced().bold())
-            Spacer()
-            Text(verbatim: "\(result.theyLead)").font(.title3.monospaced().bold())
-            Text(verbatim: opponentName).fontWeight(.bold).lineLimit(1)
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            side(name: Text("You", bundle: .module), count: result.youLead, leading: true)
+            Text(verbatim: "–").font(.title2).foregroundStyle(.secondary)
+            side(name: Text(verbatim: opponentName), count: result.theyLead, leading: false)
         }
-        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 2)
+    }
+
+    /// One side of the scoreline: the big count with its name caption underneath. The
+    /// winning side's count is tinted so the leader reads at a glance.
+    private func side(name: Text, count: Int, leading: Bool) -> some View {
+        let winning = leading ? result.youLead > result.theyLead : result.theyLead > result.youLead
+        return VStack(spacing: 1) {
+            Text(verbatim: "\(count)")
+                .font(.largeTitle.monospaced().bold())
+                .foregroundStyle(winning ? Color.accentColor : .primary)
+            name.font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        }
+        .frame(maxWidth: 120)
     }
 
     private var header: some View {
