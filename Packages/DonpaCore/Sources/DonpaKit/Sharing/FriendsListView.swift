@@ -1,11 +1,11 @@
 import DonpaCore
 import SwiftUI
 
-/// The tracked-friends list: everyone you've pinned via a share. Sorted most-recent
-/// first (their latest share's `issuedAt`), each row showing the display name and a
-/// one-line summary. Tap a row to rename (your local alias), edit groups, or remove.
+/// The tracked-rivals list: everyone you've pinned via a share, sorted alphabetically.
+/// Each row shows the display name + a one-line summary. Tapping a row COMPARES you
+/// head-to-head; the trailing pencil edits (alias / groups / remove); swipe to delete.
 /// Read-only over `FriendsStore` except through its methods — the display-merge
-/// invariant means removing a friend just drops their data, nothing to reconcile.
+/// invariant means removing a rival just drops their data, nothing to reconcile.
 struct FriendsListView: View {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
@@ -18,10 +18,13 @@ struct FriendsListView: View {
     /// Whether the group-management sheet (create/rename/delete) is open.
     @State private var managingGroups = false
 
-    /// Most-recent share first; ties broken by when you added them.
+    /// Alphabetical by display name (case-insensitive), so a specific rival is easy to
+    /// find; ties broken by public key for a stable order.
     private var ordered: [Friend] {
         friends.friends.sorted {
-            ($0.lastIssuedAt, $0.addedAt) > ($1.lastIssuedAt, $1.addedAt)
+            let byName = $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
+            if byName != .orderedSame { return byName == .orderedAscending }
+            return $0.publicKey.lexicographicallyPrecedes($1.publicKey)
         }
     }
 
@@ -51,36 +54,23 @@ struct FriendsListView: View {
         } else {
             List {
                 ForEach(ordered) { friend in
+                    // Tapping a rival compares (the primary thing you do with a rival);
+                    // the trailing pencil edits (rename / groups / remove).
                     Button {
-                        editing = friend
+                        comparing = friend
                     } label: {
-                        FriendRow(friend: friend, groupNames: groupNames(for: friend))
+                        HStack(spacing: 8) {
+                            FriendRow(friend: friend, groupNames: groupNames(for: friend))
+                            Button {
+                                editing = friend
+                            } label: {
+                                Image(systemName: "pencil").foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel(Text("Edit", bundle: .module))
+                        }
                     }
                     .buttonStyle(.plain)
-                    // Compare is a secondary action (tapping the row opens detail).
-                    .swipeActions(edge: .leading) {
-                        Button {
-                            comparing = friend
-                        } label: {
-                            Label {
-                                Text("Compare", bundle: .module)
-                            } icon: {
-                                Image(systemName: "chart.bar")
-                            }
-                        }
-                        .tint(.accentColor)
-                    }
-                    .contextMenu {
-                        Button {
-                            comparing = friend
-                        } label: {
-                            Label {
-                                Text("Compare", bundle: .module)
-                            } icon: {
-                                Image(systemName: "chart.bar")
-                            }
-                        }
-                    }
                 }
                 .onDelete { offsets in
                     offsets.map { ordered[$0].publicKey }.forEach { friends.delete($0) }
