@@ -91,6 +91,9 @@ struct HeadToHeadView: View {
             .font(.callout.monospaced())
             .fontWeight(lead ? .bold : .regular)
             .foregroundStyle(lead ? Color.accentColor : .primary)
+            // A long duration ("10 h 39 min") mustn't wrap to two lines — shrink it.
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             .frame(width: 76, alignment: .trailing)
     }
 

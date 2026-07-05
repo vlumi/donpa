@@ -129,7 +129,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld t %lld min"
+            "value" : "%lld h %lld min"
           }
         },
         "ja" : {
