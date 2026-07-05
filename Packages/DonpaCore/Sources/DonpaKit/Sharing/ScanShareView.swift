@@ -20,6 +20,7 @@ struct ScanShareView: View {
     #if os(macOS)
     @State private var importFailed = false
     @State private var importing = false
+    @State private var dropTargeted = false
     #endif
 
     var body: some View {
@@ -53,8 +54,9 @@ struct ScanShareView: View {
         #elseif os(macOS)
         VStack(spacing: 16) {
             Image(systemName: "qrcode.viewfinder")
-                .font(.system(size: 64)).foregroundStyle(.secondary)
-            Text("Import an image of a rival's QR code.", bundle: .module)
+                .font(.system(size: 64))
+                .foregroundStyle(dropTargeted ? Color.accentColor : .secondary)
+            Text("Drag a rival's QR image here, or choose one.", bundle: .module)
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button {
@@ -68,6 +70,20 @@ struct ScanShareView: View {
                 Text("No QR code found in that image.", bundle: .module)
                     .font(.caption).foregroundStyle(.red)
             }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(
+                    dropTargeted ? Color.accentColor : Color.secondary.opacity(0.4),
+                    style: StrokeStyle(lineWidth: 1.5, dash: [6]))
+        )
+        // Accept a dragged image (Finder file or an image dragged from another app).
+        .dropDestination(for: Data.self) { items, _ in
+            handleDrop(items)
+        } isTargeted: {
+            dropTargeted = $0
         }
         #endif
     }
@@ -99,6 +115,22 @@ struct ScanShareView: View {
             return
         }
         deliver(string)
+    }
+
+    /// A dropped image arrives as raw bytes (Finder file or an image from another app);
+    /// decode a QR straight from the data — no security-scoped URL needed. Returns true
+    /// if we consumed a droppable item.
+    @discardableResult
+    private func handleDrop(_ items: [Data]) -> Bool {
+        importFailed = false
+        guard let data = items.first, let image = CIImage(data: data),
+            let string = Self.decodeQR(from: image)
+        else {
+            importFailed = true
+            return false
+        }
+        deliver(string)
+        return true
     }
 
     /// First QR string in a `CIImage`, or nil. High-accuracy detector — a screenshot
