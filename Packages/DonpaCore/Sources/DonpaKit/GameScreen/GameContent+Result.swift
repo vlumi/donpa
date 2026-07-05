@@ -57,7 +57,13 @@ extension GameContent {
                 centiseconds, for: config,
                 noFlag: !viewModel.usedFlagEver, noChord: !viewModel.usedChordEver)
             if isRecord {
-                let improvedBy = priorBest.map { $0 - centiseconds }
+                // The pill shows how much the DISPLAYED best changed (times truncate
+                // to tenths) — a raw delta could read "improved by 0.0s" when both
+                // times show the same tenth, or overstate by a tenth. nil (no pill)
+                // when the visible value didn't move, even though the record stands.
+                let improvedBy = priorBest.flatMap {
+                    TimeFormat.displayedImprovement(from: $0, to: centiseconds)
+                }
                 kind = .record(centiseconds: centiseconds, improvedBy: improvedBy)
             } else {
                 kind = .win
