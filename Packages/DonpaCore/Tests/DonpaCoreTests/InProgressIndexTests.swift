@@ -25,28 +25,28 @@ final class InProgressIndexTests: XCTestCase {
         XCTAssertTrue(index.familyHasSave(.basic))
     }
 
-    func testDensityDotFilteredByFamily() {
-        // 'normal' has a save in Grid, not in Hive; 'dense' the reverse.
-        XCTAssertTrue(index.densityHasSave(.normal, family: .grid))
-        XCTAssertFalse(index.densityHasSave(.hard, family: .grid))
-        XCTAssertTrue(index.densityHasSave(.hard, family: .hive))
-        XCTAssertFalse(index.densityHasSave(.normal, family: .hive))
+    func testSizeDotFilteredByFamily() {
+        // Grid has a save at M; Hive at S. Hierarchy: family → SIZE first.
+        XCTAssertTrue(index.sizeHasSave(.m, family: .grid))
+        XCTAssertFalse(index.sizeHasSave(.s, family: .grid))
+        XCTAssertTrue(index.sizeHasSave(.s, family: .hive))
+        XCTAssertFalse(index.sizeHasSave(.m, family: .hive))
     }
 
-    func testSizeDotFilteredByFamilyAndDensity() {
-        // Grid+normal has a save at M only.
-        XCTAssertTrue(index.sizeHasSave(.m, family: .grid, density: .normal))
-        XCTAssertFalse(index.sizeHasSave(.s, family: .grid, density: .normal))
-        // Grid+dense has none, so no size lights up under that path.
-        XCTAssertFalse(index.sizeHasSave(.m, family: .grid, density: .hard))
+    func testDensityDotFilteredByFamilyAndSize() {
+        // Grid+M has a save at 'normal' only.
+        XCTAssertTrue(index.densityHasSave(.normal, family: .grid, size: .m))
+        XCTAssertFalse(index.densityHasSave(.hard, family: .grid, size: .m))
+        // Grid+S has none, so no density lights up under that path.
+        XCTAssertFalse(index.densityHasSave(.normal, family: .grid, size: .s))
     }
 
     func testEdgesDotFilteredByFullPathAbove() {
-        // Grid+normal+M has a save at flat only.
-        XCTAssertTrue(index.edgesHasSave(.flat, family: .grid, density: .normal, size: .m))
-        XCTAssertFalse(index.edgesHasSave(.round, family: .grid, density: .normal, size: .m))
-        // Hive+dense+S is round.
-        XCTAssertTrue(index.edgesHasSave(.round, family: .hive, density: .hard, size: .s))
+        // Grid+M+normal has a save at flat only.
+        XCTAssertTrue(index.edgesHasSave(.flat, family: .grid, size: .m, density: .normal))
+        XCTAssertFalse(index.edgesHasSave(.round, family: .grid, size: .m, density: .normal))
+        // Hive+S+hard is round.
+        XCTAssertTrue(index.edgesHasSave(.round, family: .hive, size: .s, density: .hard))
     }
 
     func testEmptyIndexLightsNothing() {

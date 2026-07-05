@@ -4,7 +4,7 @@ import Foundation
 /// of saved configs — driving the Start→Continue swap and the drill-down dots on the
 /// selector chips.
 ///
-/// The dots are TOP-DOWN by the popup's visual hierarchy (family → density → size →
+/// The dots are TOP-DOWN by the popup's visual hierarchy (family → size → density →
 /// edges): each level is filtered by the choices ABOVE it, so following the lit chips
 /// down always lands on a real save (no dead ends). Pure — just set membership over
 /// `GameConfig` axes — so it's headless-testable.
@@ -28,22 +28,23 @@ public struct InProgressIndex {
         configs.contains { $0.family == family }
     }
 
-    /// A density has a save within the selected family (Grid/Hive only).
-    public func densityHasSave(_ density: Density, family: BoardFamily) -> Bool {
-        configs.contains { $0.family == family && $0.density == density }
+    /// A size has a save within the selected family (Grid/Hive only). Size is the first
+    /// axis under family in the hierarchy.
+    public func sizeHasSave(_ size: BoardSize, family: BoardFamily) -> Bool {
+        configs.contains { $0.family == family && $0.size == size }
     }
 
-    /// A size has a save within the selected family + density.
-    public func sizeHasSave(_ size: BoardSize, family: BoardFamily, density: Density) -> Bool {
-        configs.contains { $0.family == family && $0.density == density && $0.size == size }
+    /// A density has a save within the selected family + size.
+    public func densityHasSave(_ density: Density, family: BoardFamily, size: BoardSize) -> Bool {
+        configs.contains { $0.family == family && $0.size == size && $0.density == density }
     }
 
-    /// An edge has a save within the selected family + density + size.
+    /// An edge has a save within the selected family + size + density.
     public func edgesHasSave(
-        _ edges: BoardEdges, family: BoardFamily, density: Density, size: BoardSize
+        _ edges: BoardEdges, family: BoardFamily, size: BoardSize, density: Density
     ) -> Bool {
         configs.contains {
-            $0.family == family && $0.density == density && $0.size == size && $0.edges == edges
+            $0.family == family && $0.size == size && $0.density == density && $0.edges == edges
         }
     }
 

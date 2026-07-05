@@ -97,8 +97,9 @@ public struct GameView: View {
                     settings: settings,
                     onStart: { startSelectedGame() },
                     onClose: { navigator.showingNewGame = false },
-                    inProgress: resumeStore.all(),
-                    onResume: { snapshot in
+                    index: InProgressIndex(savedConfigs: resumeStore.all().map(\.config)),
+                    onResume: { config in
+                        guard let snapshot = resumeStore.load(config: config) else { return }
                         navigator.showingNewGame = false
                         viewModel.restore(from: snapshot)
                         navigator.showingTitle = false

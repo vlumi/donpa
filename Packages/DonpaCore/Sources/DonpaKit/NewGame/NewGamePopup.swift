@@ -12,11 +12,10 @@ struct NewGamePopup: View {
     let onStart: () -> Void
     /// Dismiss without starting (X, backdrop tap, or Escape).
     let onClose: () -> Void
-    /// In-progress games (one per config), newest-played first — the resume list.
-    /// Empty → the section is hidden.
-    var inProgress: [GameSnapshot] = []
-    /// Resume a saved game instead of starting a fresh one. nil → no resume.
-    var onResume: ((GameSnapshot) -> Void)?
+    /// In-progress saves — drives the Start→Continue swap + the selector dots.
+    var index = InProgressIndex(savedConfigs: [])
+    /// Resume the saved game for a config. nil → the button is always Start.
+    var onResume: ((GameConfig) -> Void)?
 
     #if os(macOS)
     /// Keyboard-focused picker row (0 = Mode). nil until the first arrow press.
@@ -132,9 +131,6 @@ struct NewGamePopup: View {
             if layout == .pager {
                 picker(layout: .pager).startButton
             }
-            if !inProgress.isEmpty, onResume != nil {
-                resumeSection
-            }
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
@@ -145,41 +141,17 @@ struct NewGamePopup: View {
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
     }
 
-    /// Resume an in-progress game — one row per config with a live save, newest
-    /// first, each showing the board and how far in it is. Tapping resumes that game
-    /// rather than starting fresh.
-    @ViewBuilder private var resumeSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Divider()
-            Text("In progress", bundle: .module)
-                .font(.caption).foregroundStyle(.secondary)
-            ForEach(inProgress, id: \.config) { snapshot in
-                Button {
-                    onResume?(snapshot)
-                } label: {
-                    HStack {
-                        Text(verbatim: snapshot.config.label).lineLimit(1)
-                        Spacer()
-                        Text(verbatim: TimeFormat.mmsst(centiseconds: snapshot.elapsedCentiseconds))
-                            .font(.caption.monospaced()).foregroundStyle(.secondary)
-                        Image(systemName: "arrow.uturn.forward.circle").foregroundStyle(.secondary)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     /// The `BoardSelectionPicker` for a layout.
     private func picker(layout: BoardSelectionPicker.Layout) -> BoardSelectionPicker {
         #if os(macOS)
         BoardSelectionPicker(
             settings: settings, focusedRow: focusedRow,
-            onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart)
+            onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart,
+            index: index, onResume: onResume)
         #else
-        BoardSelectionPicker(settings: settings, layout: layout, onStart: onStart)
+        BoardSelectionPicker(
+            settings: settings, layout: layout, onStart: onStart,
+            index: index, onResume: onResume)
         #endif
     }
 
@@ -200,16 +172,17 @@ struct NewGamePopup: View {
     /// Cycle the selection in the given row. Row 0 is Family; rows 1+ are the
     /// preset (Basic), or Density / Size / Edges (Grid/Hive).
     /// Cycle the value in the focused row (family is NOT a row — it's ⌘1/2/3).
-    /// Basic: the sole row is the preset. Grid/Hive: 0 = density, 1 = size, 2 = edges.
+    /// Basic: the sole row is the preset. Grid/Hive: 0 = size, 1 = density, 2 = edges
+    /// (the hierarchy order, matching the visual rows + in-progress drill-down).
     private func cycleSelection(in row: Int, by step: Int) {
         switch (settings.family, row) {
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
         case (.grid, 0), (.hive, 0):
-            let path = Settings.densityPath(settings.family)
+            let path = Settings.sizePath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, 1), (.hive, 1):
-            let path = Settings.sizePath(settings.family)
+            let path = Settings.densityPath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, _), (.hive, _):  // row 2: edges
             let path = Settings.edgesPath(settings.family)
