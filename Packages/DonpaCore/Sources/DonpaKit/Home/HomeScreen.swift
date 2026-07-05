@@ -32,18 +32,18 @@ struct HomeScreen: View {
     /// Whether the in-progress list (beyond the latest) is expanded.
     @State private var showAll = false
 
-    /// At/above this width the art sits beside the menu; below it, above.
-    private static let sideBySideMinWidth: CGFloat = 600
-
     var body: some View {
         GeometryReader { geo in
             ZStack {
                 Palette.resolved(for: colorScheme).pageBackground
                     .ignoresSafeArea()
-                if geo.size.width >= Self.sideBySideMinWidth {
-                    regularLayout
+                // Split by the window's own shape: a landscape window puts the menu
+                // beside the art; a portrait one puts it below. (Not a platform or
+                // width split — a tall Mac window stacks, a landscape phone doesn't.)
+                if geo.size.width > geo.size.height {
+                    landscapeLayout
                 } else {
-                    compactLayout(height: geo.size.height)
+                    portraitLayout
                 }
             }
             // Secondary utilities in the screen's top-right corner, as before.
@@ -67,36 +67,56 @@ struct HomeScreen: View {
 
     // MARK: Layouts
 
-    /// Portrait phone: art on top (capped so the menu always fits), menu below.
-    /// The menu scrolls only when the expanded in-progress list outgrows the room.
-    private func compactLayout(height: CGFloat) -> some View {
-        VStack(spacing: 8) {
-            artButton
-                .frame(maxHeight: height * 0.42)
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
-            ScrollView {
-                menu
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 8)
+    /// The menu column's width beside the art (landscape) / its cap below it
+    /// (portrait, where the art shares the same cap so they read as one column).
+    private static let menuWidth: CGFloat = 340
+    private static let portraitColumnMaxWidth: CGFloat = 480
+
+    /// Portrait (phone, or a tall window): one column — full-width art over the
+    /// menu, centered when it fits, scrolling when it doesn't (e.g. the expanded
+    /// in-progress list on a short phone).
+    private var portraitLayout: some View {
+        ViewThatFits(in: .vertical) {
+            portraitColumn
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ScrollView(showsIndicators: false) {
+                portraitColumn
+                    .frame(maxWidth: .infinity)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Wide (Mac / iPad / landscape): art beside the menu column.
-    private var regularLayout: some View {
-        HStack(spacing: 32) {
+    private var portraitColumn: some View {
+        VStack(spacing: 16) {
             artButton
-                .frame(maxWidth: 420)
-            ScrollView {
-                menu
-                    .frame(width: 320)
-                    .padding(.vertical, 16)
-            }
-            .fixedSize(horizontal: true, vertical: false)
+                .frame(maxWidth: Self.portraitColumnMaxWidth)
+            menu
+                .frame(maxWidth: Self.portraitColumnMaxWidth)
         }
-        .padding(24)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+    }
+
+    /// Landscape (Mac, iPad, phone landscape): the art fills the height — it's the
+    /// masthead, it should be BIG — with the menu hugging its content beside it,
+    /// the pair centered as one group. The menu scrolls internally only when the
+    /// expanded in-progress list outgrows the window.
+    private var landscapeLayout: some View {
+        HStack(spacing: 40) {
+            artButton
+            ViewThatFits(in: .vertical) {
+                menu
+                    .frame(width: Self.menuWidth)
+                ScrollView(showsIndicators: false) {
+                    menu
+                        .frame(width: Self.menuWidth)
+                }
+            }
+        }
+        // Extra headroom keeps the menu clear of the corner utilities even on a
+        // short window; the rest centers as a group.
+        .padding(.top, 64)
+        .padding([.horizontal, .bottom], 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -195,14 +215,16 @@ struct HomeScreen: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    /// The "In progress (N)" toggle revealing the non-latest saves.
+    /// The "More in progress (N)" toggle revealing the non-latest saves. The count
+    /// is what the accordion ADDS (the latest is already on the card above), so two
+    /// saves read as "More in progress (1)".
     private var expander: some View {
         Button {
             withAnimation(.snappy) { showAll.toggle() }
         } label: {
             HStack {
-                Text("In progress", bundle: .module)
-                Text(verbatim: "(\(snapshots.count))")
+                Text("More in progress", bundle: .module)
+                Text(verbatim: "(\(snapshots.count - 1))")
                 Spacer()
                 Image(systemName: "chevron.down")
                     .rotationEffect(.degrees(showAll ? 180 : 0))
