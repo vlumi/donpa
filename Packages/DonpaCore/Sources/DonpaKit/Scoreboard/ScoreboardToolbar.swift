@@ -15,7 +15,10 @@ extension ScoreboardView {
                 Label {
                     Text("Share", bundle: .module)
                 } icon: {
-                    Image(systemName: "square.and.arrow.up")
+                    // A QR glyph, not the generic share arrow — the sheet is about
+                    // exchanging QR codes (show yours / scan a rival's), not the system
+                    // share sheet.
+                    Image(systemName: "qrcode")
                 }
             }
             .accessibilityIdentifier("scoreboard.share")

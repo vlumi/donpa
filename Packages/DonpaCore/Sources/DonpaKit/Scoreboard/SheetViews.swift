@@ -106,7 +106,7 @@ struct ScoreboardView: View {
                     Label {
                         Text("Share", bundle: .module)
                     } icon: {
-                        Image(systemName: "square.and.arrow.up")
+                        Image(systemName: "qrcode")
                     }
                 }
                 if let onFriends {
