@@ -115,34 +115,41 @@ struct ShareScoresView: View {
         }
     }
 
-    /// A copy-link button + the system share sheet, for sending the link remotely.
+    /// Send the link (copy / system share) plus share a branded QR IMAGE — the framed
+    /// card, for posting where a bare link/QR has no context.
     @ViewBuilder private func shareButtons(for link: URL) -> some View {
-        HStack(spacing: 12) {
-            ShareLinkButton(url: link)
-            #if os(iOS)
-            Button {
-                UIPasteboard.general.url = link
-            } label: {
-                Label {
-                    Text("Copy link", bundle: .module)
-                } icon: {
-                    Image(systemName: "doc.on.doc")
-                }
+        VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                ShareLinkButton(url: link)
+                copyLinkButton(link)
             }
-            #elseif os(macOS)
-            Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(link.absoluteString, forType: .string)
-            } label: {
-                Label {
-                    Text("Copy link", bundle: .module)
-                } icon: {
-                    Image(systemName: "doc.on.doc")
-                }
+            if let qr {
+                ShareImageButton(qr: qr, name: currentName)
             }
-            #endif
         }
         .buttonStyle(.bordered)
+    }
+
+    @ViewBuilder private func copyLinkButton(_ link: URL) -> some View {
+        Button {
+            #if os(iOS)
+            UIPasteboard.general.url = link
+            #elseif os(macOS)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(link.absoluteString, forType: .string)
+            #endif
+        } label: {
+            Label {
+                Text("Copy link", bundle: .module)
+            } icon: {
+                Image(systemName: "doc.on.doc")
+            }
+        }
+    }
+
+    /// The name to stamp on the shared card — same trimmed input the payload used.
+    private var currentName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// The footer key: synced-across-devices vs. this-device-only, mirroring how the
@@ -222,5 +229,80 @@ private struct ShareLinkButton: View {
                 Image(systemName: "square.and.arrow.up")
             }
         }
+    }
+}
+
+/// Shares the branded QR card as a PNG. The rendered image is written to a temp file
+/// once and shared by URL — reliable on both iOS and macOS share sheets (sharing a
+/// bare in-memory image is fiddlier cross-platform).
+private struct ShareImageButton: View {
+    let qr: Image
+    let name: String
+    /// Rendered card image + its temp-file URL, built once on appear (rendering the
+    /// card on every body pass would be wasteful).
+    @State private var rendered: (image: PlatformImage, url: URL)?
+
+    var body: some View {
+        Group {
+            if let rendered {
+                ShareLink(
+                    item: rendered.url,
+                    preview: SharePreview(previewTitle, image: previewImage(rendered.image))
+                ) {
+                    label
+                }
+            } else {
+                label.opacity(0.5)
+            }
+        }
+        .task { if rendered == nil { rendered = await build() } }
+    }
+
+    private var label: some View {
+        Label {
+            Text("Share image", bundle: .module)
+        } icon: {
+            Image(systemName: "photo")
+        }
+    }
+
+    /// Render the branded card once, then write its PNG to a temp file.
+    @MainActor
+    private func build() async -> (PlatformImage, URL)? {
+        guard let image = ShareCard.render(qr: qr, name: name),
+            let url = Self.writePNG(image)
+        else { return nil }
+        return (image, url)
+    }
+
+    private var previewTitle: String {
+        String(localized: "Donpa Squad score share", bundle: .module)
+    }
+
+    private func previewImage(_ image: PlatformImage) -> Image {
+        #if os(iOS)
+        Image(uiImage: image)
+        #elseif os(macOS)
+        Image(nsImage: image)
+        #endif
+    }
+
+    /// PNG bytes for the platform image → a temp file the share sheet can hand off.
+    private static func writePNG(_ image: PlatformImage) -> URL? {
+        guard let data = pngData(image) else { return nil }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("donpa-rival-share.png")
+        return (try? data.write(to: url, options: .atomic)) == nil ? nil : url
+    }
+
+    private static func pngData(_ image: PlatformImage) -> Data? {
+        #if os(iOS)
+        return image.pngData()
+        #elseif os(macOS)
+        guard let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) else {
+            return nil
+        }
+        return rep.representation(using: .png, properties: [:])
+        #endif
     }
 }
