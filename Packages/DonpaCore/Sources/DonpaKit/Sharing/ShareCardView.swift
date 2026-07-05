@@ -1,5 +1,6 @@
 import DonpaCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The inline "share my scores" card — lives ON the Mess hall, not behind a sheet:
 /// your name, career opt-in, the QR (the primary, in-person channel — matches the
@@ -134,6 +135,11 @@ struct ShareCardView: View {
             // `link` keys the render: it changes whenever the QR does (name /
             // career edit), so the card image rebuilds to match.
             ShareImageButton(qr: qr, name: currentName, linkID: link)
+            #if os(macOS)
+            // macOS's share picker has NO save-to-disk service (iOS's sheet offers
+            // "Save to Files"), so saving the card is its own button + save panel.
+            SaveImageButton(qr: qr, name: currentName, linkID: link)
+            #endif
         }
     }
 
@@ -306,3 +312,59 @@ private struct QRZoomSheet: View {
         #endif
     }
 }
+
+#if os(macOS)
+/// Saves the branded QR card as a PNG via the system save panel — macOS's share
+/// picker offers no save-to-disk service, so the affordance must be the app's own.
+private struct SaveImageButton: View {
+    let qr: Image
+    let name: String
+    /// Identity that changes with the QR (the share URL) — re-renders on edit.
+    let linkID: URL
+
+    @State private var png: Data?
+    @State private var exporting = false
+
+    var body: some View {
+        Button {
+            exporting = true
+        } label: {
+            Label {
+                Text("Save image", bundle: .module)
+            } icon: {
+                Image(systemName: "square.and.arrow.down")
+            }
+        }
+        .disabled(png == nil)
+        .task(id: linkID) { png = await render() }
+        .fileExporter(
+            isPresented: $exporting,
+            document: PNGDocument(data: png ?? Data()),
+            contentType: .png,
+            defaultFilename: "donpa-scores"
+        ) { _ in }
+    }
+
+    @MainActor
+    private func render() async -> Data? {
+        guard let image = ShareCard.render(qr: qr, name: name, date: Date()),
+            let tiff = image.tiffRepresentation,
+            let rep = NSBitmapImageRep(data: tiff)
+        else { return nil }
+        return rep.representation(using: .png, properties: [:])
+    }
+}
+
+/// A PNG payload for `fileExporter`.
+private struct PNGDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.png] }
+    var data: Data
+    init(data: Data) { self.data = data }
+    init(configuration: ReadConfiguration) throws {
+        data = configuration.file.regularFileContents ?? Data()
+    }
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
+    }
+}
+#endif

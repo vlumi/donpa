@@ -2404,6 +2404,23 @@
         }
       }
     },
+    "Save image" : {
+      "comment" : "Share card (macOS): save the branded QR card as a PNG via the save panel",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tallenna kuva"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像を保存"
+          }
+        }
+      }
+    },
     "Scan QR" : {
       "localizations" : {
         "en" : {

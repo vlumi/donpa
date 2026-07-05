@@ -264,7 +264,9 @@ struct MessHallView: View {
             .keyboardShortcut(.defaultAction)
         }
         .padding(20)
-        .frame(minWidth: 360, minHeight: 380)
+        // Wide enough that the share card crosses its directly-scannable QR
+        // threshold (240pt needs a ~520pt card; 360 left it at the tap-to-zoom thumb).
+        .frame(minWidth: 600, minHeight: 420)
         #endif
     }
 }
