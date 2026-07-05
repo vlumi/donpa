@@ -53,9 +53,10 @@ The difficulty and size rows are a horizontal **carousel**: scroll/swipe (or
 click) to pick, with a line below the selection showing the board facts and a
 short flavour tagline.
 
-On macOS the popup is keyboard-drivable: **↑/↓** move between the rows (Family /
-Difficulty / Size / Edges), **←/→** cycle the selection within the highlighted
-row, **Return** starts, **Esc** closes.
+On macOS the popup is keyboard-drivable: **⌘1/2/3** pick the board family (Basic /
+Grid / Hive), **↑/↓** move between the remaining rows (Difficulty / Size / Edges),
+**←/→** cycle the selection within the highlighted row, **Return** starts, **Esc**
+closes.
 
 ## Controls
 
@@ -107,7 +108,7 @@ across the seam.
 | ⌘,       | Settings (macOS app menu)                          |
 | ⌘+ / ⌘−  | Zoom the board in / out (also ⌘-scroll)            |
 | ⌘0       | Toggle the minimap between small and large         |
-| ⌘1/2/3   | Basic presets: Beginner / Intermediate / Expert    |
+| ⌘1/2/3   | New Game popup: pick family (Basic/Grid/Hive)      |
 
 ## Start and end of a game
 
