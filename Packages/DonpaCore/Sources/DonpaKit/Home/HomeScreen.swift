@@ -43,7 +43,7 @@ struct HomeScreen: View {
                 if geo.size.width > geo.size.height {
                     landscapeLayout
                 } else {
-                    portraitLayout
+                    portraitLayout(width: geo.size.width)
                 }
             }
             // Secondary utilities in the screen's top-right corner, as before.
@@ -68,33 +68,39 @@ struct HomeScreen: View {
     // MARK: Layouts
 
     /// The menu column's width beside the art (landscape) / its cap below it
-    /// (portrait, where the art shares the same cap so they read as one column).
+    /// (desktop portrait, where the art can spread wider above it).
     private static let menuWidth: CGFloat = 340
-    private static let portraitColumnMaxWidth: CGFloat = 480
+    private static let portraitMenuMaxWidth: CGFloat = 480
+    /// Below this width a portrait window is phone-like: the art goes full width
+    /// and the page scrolls. At/above it (a tall desktop window) nothing scrolls
+    /// or clips — the art flexes into whatever height the menu leaves free.
+    private static let phoneLikeMaxWidth: CGFloat = 500
 
-    /// Portrait (phone, or a tall window): one column — full-width art over the
-    /// menu, centered when it fits, scrolling when it doesn't (e.g. the expanded
-    /// in-progress list on a short phone).
-    private var portraitLayout: some View {
-        ViewThatFits(in: .vertical) {
-            portraitColumn
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+    /// Portrait. Phone: one scrolling column, art full width (the masthead
+    /// dominates; the menu scrolls into view on a short screen). Desktop portrait:
+    /// the ART is the flexible element — it grows into a big window's spare height
+    /// and shrinks on a small one, so the menu below is never cut off.
+    @ViewBuilder private func portraitLayout(width: CGFloat) -> some View {
+        if width < Self.phoneLikeMaxWidth {
             ScrollView(showsIndicators: false) {
-                portraitColumn
-                    .frame(maxWidth: .infinity)
+                VStack(spacing: 16) {
+                    artButton
+                    menu
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
+                .frame(maxWidth: .infinity)
             }
+        } else {
+            VStack(spacing: 20) {
+                artButton
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                menu
+                    .frame(maxWidth: Self.portraitMenuMaxWidth)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-    }
-
-    private var portraitColumn: some View {
-        VStack(spacing: 16) {
-            artButton
-                .frame(maxWidth: Self.portraitColumnMaxWidth)
-            menu
-                .frame(maxWidth: Self.portraitColumnMaxWidth)
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
     }
 
     /// Landscape (Mac, iPad, phone landscape): the art fills the height — it's the
@@ -107,6 +113,9 @@ struct HomeScreen: View {
             ViewThatFits(in: .vertical) {
                 menu
                     .frame(width: Self.menuWidth)
+                    // Optically a touch above dead center beside the tall art —
+                    // true centering reads as sitting slightly low.
+                    .padding(.bottom, 48)
                 ScrollView(showsIndicators: false) {
                     menu
                         .frame(width: Self.menuWidth)
