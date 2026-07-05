@@ -3,7 +3,7 @@ import DonpaCore
 import SwiftUI
 
 #if os(macOS)
-import AppKit
+import UniformTypeIdentifiers
 #endif
 
 /// The "add a friend by QR" sheet. iOS scans live with the camera; macOS (no
@@ -19,10 +19,22 @@ struct ScanShareView: View {
 
     #if os(macOS)
     @State private var importFailed = false
+    @State private var importing = false
     #endif
 
     var body: some View {
         chrome
+            #if os(macOS)
+        // SwiftUI's importer (not a raw NSOpenPanel, which fails silently under
+        // the App Sandbox) — presents the picker and vends a security-scoped URL.
+        .fileImporter(
+            isPresented: $importing,
+            allowedContentTypes: [.png, .jpeg, .image],
+            allowsMultipleSelection: false
+        ) { result in
+            handleImport(result)
+        }
+            #endif
     }
 
     @ViewBuilder private var content: some View {
@@ -46,7 +58,8 @@ struct ScanShareView: View {
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button {
-                importFromImage()
+                importFailed = false
+                importing = true
             } label: {
                 Text("Choose image…", bundle: .module)
             }
@@ -72,17 +85,17 @@ struct ScanShareView: View {
     }
 
     #if os(macOS)
-    /// Open panel → decode the first QR in the picked image with a `CIDetector`.
-    private func importFromImage() {
-        importFailed = false
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.png, .jpeg, .image]
-        panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let url = panel.url,
-            let image = CIImage(contentsOf: url),
-            let string = Self.decodeQR(from: image)
-        else {
-            importFailed = true
+    /// Decode the first QR in the picked image with a `CIDetector`. The URL is
+    /// security-scoped (sandbox), so bracket the read with start/stop access.
+    private func handleImport(_ result: Result<[URL], Error>) {
+        guard let url = try? result.get().first else {
+            importFailed = true  // cancelled or errored
+            return
+        }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        guard let image = CIImage(contentsOf: url), let string = Self.decodeQR(from: image) else {
+            importFailed = true  // not a readable image / no QR found
             return
         }
         deliver(string)
