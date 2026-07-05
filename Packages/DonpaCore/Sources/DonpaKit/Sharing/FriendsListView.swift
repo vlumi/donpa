@@ -172,30 +172,41 @@ private struct FriendRow: View {
     private var totalWins: Int { friend.scores.reduce(0) { $0 + $1.wins } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack {
+        HStack(alignment: .top, spacing: 12) {
+            // Leading: who + when (the identity block).
+            VStack(alignment: .leading, spacing: 2) {
                 Text(friend.displayName).font(.body.bold())
+                    .lineLimit(1).minimumScaleFactor(0.7)
                 // If a local alias is hiding their own name, show it faintly so you
                 // can still tell who they call themselves.
                 if friend.localAlias != nil {
                     Text(friend.sharedName).font(.caption).foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                // Their share's own timestamp — makes plain these are a SNAPSHOT that
+                // only changes when they re-share, not something that updates itself.
+                Text(
+                    "Updated \(friend.lastIssuedAt.formatted(date: .abbreviated, time: .omitted))",
+                    bundle: .module
+                )
+                .font(.caption2).foregroundStyle(.secondary)
+                if !groupNames.isEmpty {
+                    Text(groupNames.joined(separator: " · "))
+                        .font(.caption2).foregroundStyle(.tertiary)
+                        .lineLimit(1)
                 }
             }
-            Text("\(boardsWon) boards · \(totalWins) wins", bundle: .module)
-                .font(.caption).foregroundStyle(.secondary)
-            // Their share's own timestamp — makes plain these are a SNAPSHOT that only
-            // changes when they re-share, not something that updates on its own.
-            Text(
-                "Updated \(friend.lastIssuedAt.formatted(date: .abbreviated, time: .omitted))",
-                bundle: .module
-            )
-            .font(.caption2).foregroundStyle(.secondary)
-            if !groupNames.isEmpty {
-                Text(groupNames.joined(separator: " · "))
-                    .font(.caption2).foregroundStyle(.tertiary)
+            Spacer(minLength: 8)
+            // Trailing: the score summary, right-aligned so the row fills its width.
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(totalWins) wins", bundle: .module)
+                    .font(.subheadline.bold())
+                Text("\(boardsWon) boards", bundle: .module)
+                    .font(.caption2).foregroundStyle(.secondary)
             }
+            .fixedSize()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
     }
 }
