@@ -919,6 +919,50 @@
         }
       }
     },
+    "Donpa Squad" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donpa Squad"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donpa Squad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ドンパ隊"
+          }
+        }
+      }
+    },
+    "Donpa Squad score share" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donpa Squad score share"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donpa Squad -tulosjako"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donpa Squad スコア共有"
+          }
+        }
+      }
+    },
     "Drag a rival's QR image here, or choose one." : {
       "localizations" : {
         "en" : {
@@ -2411,6 +2455,28 @@
         }
       }
     },
+    "Scan to add me as a rival" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan to add me as a rival"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skannaa lisätäksesi minut haastajaksi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スキャンして私をライバルに追加"
+          }
+        }
+      }
+    },
     "Scores were erased everywhere while sync was off. Turning sync on will reset this device too." : {
       "comment" : "Confirm dialog message: a wipe happened while sync was off",
       "localizations" : {
@@ -2502,6 +2568,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "共有"
+          }
+        }
+      }
+    },
+    "Share image" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share image"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaa kuva"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像を共有"
+          }
+        }
+      }
+    },
+    "Share link" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share link"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaa linkki"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リンクを共有"
           }
         }
       }
