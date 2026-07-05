@@ -51,6 +51,7 @@ extension BoardSelectionPicker {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .modifier(SaveDot(show: index.presetHasSave(preset)))
         .accessibilityLabel(Text(verbatim: "\(preset.label) — \(preset.detail)"))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
@@ -96,6 +97,10 @@ extension BoardSelectionPicker {
         _ density: Density, _ densityPath: ReferenceWritableKeyPath<Settings, Density>
     ) -> some View {
         let selected = settings[keyPath: densityPath] == density
+        // Filtered by the choices ABOVE it (family + current size), so the dot only
+        // lights when a save exists reachable down THIS path.
+        let hasSave = index.densityHasSave(
+            density, family: settings.family, size: settings[keyPath: Settings.sizePath(settings.family)])
         return Button {
             settings[keyPath: densityPath] = density
             onFocusRow?(1)
@@ -111,6 +116,7 @@ extension BoardSelectionPicker {
                     Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
         }
         .buttonStyle(.plain)
+        .modifier(SaveDot(show: hasSave))
         .accessibilityLabel(Text(verbatim: density.label))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
@@ -146,6 +152,8 @@ extension BoardSelectionPicker {
         _ size: BoardSize, _ sizePath: ReferenceWritableKeyPath<Settings, BoardSize>
     ) -> some View {
         let selected = settings[keyPath: sizePath] == size
+        // Size sits just under family in the hierarchy, so it's filtered by family only.
+        let hasSave = index.sizeHasSave(size, family: settings.family)
         return Button {
             settings[keyPath: sizePath] = size
             onFocusRow?(2)
@@ -163,20 +171,51 @@ extension BoardSelectionPicker {
                     Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
         }
         .buttonStyle(.plain)
+        .modifier(SaveDot(show: hasSave))
         .accessibilityLabel(Text(verbatim: "\(size.label) — \(size.detail)"))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     // MARK: Edges glyph toggle (row 3)
 
+    // (SaveDot lives at file scope below — the shared corner-badge modifier.)
+
     func edgesToggle(for family: BoardFamily) -> some View {
         let edgesPath = Settings.edgesPath(family)
+        let size = settings[keyPath: Settings.sizePath(family)]
+        let density = settings[keyPath: Settings.densityPath(family)]
         return SegmentedGlyphPicker(
             values: BoardEdges.allCases,
             selection: Binding(
                 get: { settings[keyPath: edgesPath] },
                 set: { settings[keyPath: edgesPath] = $0 }),
             glyph: { .edges($0) }, label: { $0.label },
-            onChange: { onFocusRow?(3) })
+            onChange: { onFocusRow?(3) },
+            // Edges is the leaf: filtered by the full path above (family + size + density).
+            badge: { index.edgesHasSave($0, family: family, size: size, density: density) })
+    }
+}
+
+/// A small badge marking a selector chip whose drill-down path holds an in-progress
+/// save, so following lit chips down (family → size → density → edges) always lands on
+/// a real saved board. Non-interactive, tucked in the chip's top-trailing corner; it
+/// rides an overlay so it never changes the chip's layout. Hidden when `show` is false.
+struct SaveDot: ViewModifier {
+    let show: Bool
+    func body(content: Content) -> some View {
+        content.overlay(alignment: .topTrailing) {
+            if show {
+                Circle()
+                    .fill(Color.accentColor)
+                    .frame(width: 8, height: 8)
+                    .overlay(Circle().stroke(Color.primary.opacity(0.25), lineWidth: 0.5))
+                    // Nudge onto the chip's shoulder rather than floating off it.
+                    .offset(x: 3, y: -3)
+                    .allowsHitTesting(false)
+                    // The chip's own a11y label already conveys the config; the dot is
+                    // a redundant visual cue, so it stays out of the a11y tree.
+                    .accessibilityHidden(true)
+            }
+        }
     }
 }

@@ -149,6 +149,7 @@ struct BoardSelectionPicker: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .modifier(SaveDot(show: index.familyHasSave(family)))
         .accessibilityLabel(Text(verbatim: family.label))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
@@ -326,6 +327,7 @@ struct BoardSelectionPicker: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .modifier(SaveDot(show: index.familyHasSave(family)))
         .accessibilityLabel(Text(verbatim: family.label))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
