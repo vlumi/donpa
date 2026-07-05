@@ -259,14 +259,15 @@ struct GameContent: View {
         }
     }
 
-    /// "Press start": resume a saved game if there is one, else open the New Game
-    /// popup over the already-primed board. The single place the resume decision
-    /// lives, since `saveStore` is owned here.
+    /// "Press start": if there are in-progress boards, show the Continue list (pick
+    /// one to resume, or start fresh); with none, open the New Game popup directly.
+    /// The title stays up behind either — the actual leave-title happens on the pick.
+    /// The single place the resume decision lives, since `saveStore` is owned here.
     private func handleStartRequest() {
-        navigator.showingTitle = false
-        if let snapshot = saveStore.latest() {
-            viewModel.restore(from: snapshot)
+        if saveStore.latest() != nil {
+            navigator.showingResumeList = true
         } else {
+            navigator.showingTitle = false
             navigator.showingNewGame = true
         }
     }

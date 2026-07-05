@@ -15,6 +15,9 @@ public final class Navigator: ObservableObject {
     @Published public var showingAbout = false
     /// Whether the New Game config popup is presented.
     @Published public var showingNewGame = false
+    /// Whether the "continue an in-progress board" list is presented. Shown from the
+    /// title art when saves exist (else the art opens New Game directly).
+    @Published public var showingResumeList = false
 
     /// Bumped on a title-art tap. `GameContent` routes it (resume a saved game, or
     /// open the New Game popup). A counter, not a Bool, so repeated taps fire.
@@ -42,7 +45,7 @@ public final class Navigator: ObservableObject {
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {
         showingScores || showingSettings || showingAbout || showingNewGame
-            || incomingShare != nil || showingFriends
+            || showingResumeList || incomingShare != nil || showingFriends
     }
 
     /// A received share awaiting the user's decision (opened via a donpa.app link or
