@@ -109,8 +109,8 @@ struct ShareScoresView: View {
     /// scoreboard footer labels sync state.
     private var provenanceKey: LocalizedStringKey {
         scoreboard.isCloudActive
-            ? "These are your best scores across all your devices."
-            : "Sync is off — sharing this device's scores only."
+            ? "These are your current best scores across all your devices."
+            : "Sync is off — sharing this device's current scores only."
     }
 
     /// Rebuild the payload → QR + link. Refresh from cloud first when sync is active
