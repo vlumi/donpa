@@ -83,8 +83,21 @@ struct NewGamePopup: View {
                 settings.family = families[n - 1]
                 focusedRow = nil  // reset focus into the new family's rows
             }
-        case .up: focusedRow = max(0, (focusedRow ?? 0) - 1)
-        case .down: focusedRow = min(rowCount - 1, (focusedRow ?? -1) + 1)
+        // Basic's presets are a single VERTICAL list, so ↑/↓ step through them
+        // (matching their layout); ←/→ do the same for good measure. Grid/Hive have
+        // multiple horizontal chip-rows, so ↑/↓ move BETWEEN rows and ←/→ cycle within.
+        case .up:
+            if settings.family == .basic {
+                cycleSelection(in: 0, by: -1)
+            } else {
+                focusedRow = max(0, (focusedRow ?? 0) - 1)
+            }
+        case .down:
+            if settings.family == .basic {
+                cycleSelection(in: 0, by: 1)
+            } else {
+                focusedRow = min(rowCount - 1, (focusedRow ?? -1) + 1)
+            }
         case .left: cycleSelection(in: focusedRow ?? 0, by: -1)
         case .right: cycleSelection(in: focusedRow ?? 0, by: 1)
         case .enter: onStart()
