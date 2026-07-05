@@ -54,11 +54,12 @@ struct HeadToHeadView: View {
             careerRow("Wins", career.yours.wins, career.theirs.wins)
             careerRow("No-flag wins", career.yours.noFlagWins, career.theirs.noFlagWins)
             careerRow("No-chord wins", career.yours.noChordWins, career.theirs.noChordWins)
+            // Opening actions grouped (tiles + chords), then flags/mines, per StatBlock.
             careerRow("Tiles cleared", career.yours.tilesOpened, career.theirs.tilesOpened)
+            careerRow("Chords used", career.yours.chordsUsed, career.theirs.chordsUsed)
             careerRow("Flags placed", career.yours.flagsPlaced, career.theirs.flagsPlaced)
             careerRow("Mines disarmed", career.yours.minesDisarmed, career.theirs.minesDisarmed)
             careerRow("Mines hit", career.yours.minesHit, career.theirs.minesHit, lowerBetter: true)
-            careerRow("Chords used", career.yours.chordsUsed, career.theirs.chordsUsed)
             careerRow(
                 "Time played", career.yours.playtimeCentiseconds,
                 career.theirs.playtimeCentiseconds, isTime: true)
