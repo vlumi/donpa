@@ -18,8 +18,9 @@ actor BackgroundSaveWriter {
         store.save(snapshot)
     }
 
-    /// Remove the save, serialized with writes so a clear can't race a pending write.
-    func clear() {
-        store.clear()
+    /// Remove a config's save, serialized with writes so a clear can't race a pending
+    /// write for the same config.
+    func clear(config: GameConfig) {
+        store.clear(config: config)
     }
 }

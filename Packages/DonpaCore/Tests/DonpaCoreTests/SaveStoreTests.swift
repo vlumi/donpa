@@ -5,60 +5,79 @@ import XCTest
 final class SaveStoreTests: XCTestCase {
     private var store: SaveStore!
     private var dir: URL!
-    private var filename: String!
 
     override func setUp() {
         super.setUp()
-        // A unique file in the temp dir, so tests don't collide or touch the
-        // real App Support save.
+        // A unique temp dir per test, so tests don't collide or touch the real
+        // App Support saves. The store keeps its files in a `saves/` subdir of this.
         dir = FileManager.default.temporaryDirectory
-        filename = "test-save-\(UUID().uuidString).json"
-        store = SaveStore(directory: dir, filename: filename)
-        store.clear()
+            .appendingPathComponent("donpa-savetest-\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        store = SaveStore(directory: dir)
     }
 
     override func tearDown() {
-        store.clear()
+        try? FileManager.default.removeItem(at: dir)
         super.tearDown()
     }
 
-    private func sampleSnapshot() -> GameSnapshot {
-        let config = GameConfig.basic(.beginner)
-        var game = Game(config: config)
-        game.reveal(Coord(0, 0))
-        return GameSnapshot(game: game, config: config, elapsedCentiseconds: 500)!
+    /// The `saves/save-<sanitized key>.json` path the store uses, for fixture writes.
+    private func fileURL(for config: GameConfig) -> URL {
+        let safe = String(config.storageKey.map { $0.isLetter || $0.isNumber ? $0 : "_" })
+        return dir.appendingPathComponent("saves/save-\(safe).json")
     }
 
-    /// A save whose geometry no longer matches its config (a between-builds
-    /// size/density retune) is discarded — restoring it would mangle the board.
-    func testLoadRejectsInconsistentSave() throws {
-        // Beginner claims 10 mines; this save carries 3 (written under an older
-        // meaning of the tier). Fabricated via decode — capture can't produce it.
-        let stale = try JSONDecoder().decode(
-            GameSnapshot.self,
-            from: Data(
-                #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#.utf8)
-        )
-        XCTAssertFalse(stale.isConsistent)
-        store.save(stale)
-        XCTAssertTrue(store.hasSave, "the file exists…")
-        XCTAssertNil(store.load(), "…but an inconsistent save must not load")
+    private func sampleSnapshot(
+        _ config: GameConfig = .basic(.beginner), elapsed: Int = 500, at: Date = Date()
+    ) -> GameSnapshot {
+        var game = Game(config: config)
+        game.reveal(Coord(0, 0))
+        return GameSnapshot(
+            game: game, config: config, elapsedCentiseconds: elapsed, updatedAt: at)!
     }
 
     func testSaveThenLoadRoundTrips() {
-        XCTAssertNil(store.load())
-        let snap = sampleSnapshot()
+        let config = GameConfig.basic(.beginner)
+        XCTAssertNil(store.load(config: config))
+        let snap = sampleSnapshot(config)
         store.save(snap)
-        XCTAssertTrue(store.hasSave)
-        let loaded = store.load()
+        XCTAssertTrue(store.hasSave(config: config))
+        let loaded = store.load(config: config)
         XCTAssertEqual(loaded?.elapsedCentiseconds, 500)
         XCTAssertEqual(loaded?.mines, snap.mines)
     }
 
+    func testSavesAreKeptPerConfig() {
+        let beginner = GameConfig.basic(.beginner)
+        let expert = GameConfig.basic(.expert)
+        store.save(sampleSnapshot(beginner, elapsed: 100))
+        store.save(sampleSnapshot(expert, elapsed: 900))
+        // Each config keeps its own game — saving one doesn't clobber the other.
+        XCTAssertEqual(store.load(config: beginner)?.elapsedCentiseconds, 100)
+        XCTAssertEqual(store.load(config: expert)?.elapsedCentiseconds, 900)
+        // Clearing one leaves the other.
+        store.clear(config: beginner)
+        XCTAssertFalse(store.hasSave(config: beginner))
+        XCTAssertTrue(store.hasSave(config: expert))
+    }
+
+    func testAllAndLatestSortByUpdatedAt() {
+        let t0 = Date(timeIntervalSince1970: 1_000_000)
+        store.save(sampleSnapshot(.basic(.beginner), at: t0))
+        store.save(sampleSnapshot(.basic(.expert), at: t0.addingTimeInterval(300)))
+        store.save(sampleSnapshot(.basic(.intermediate), at: t0.addingTimeInterval(60)))
+        // Newest-played first: expert (+300), intermediate (+60), beginner (0).
+        XCTAssertEqual(
+            store.all().map(\.config), [.basic(.expert), .basic(.intermediate), .basic(.beginner)])
+        XCTAssertEqual(store.latest()?.config, .basic(.expert))
+    }
+
+    func testLatestIsNilWhenNoSaves() {
+        XCTAssertNil(store.latest())
+        XCTAssertTrue(store.all().isEmpty)
+    }
+
     func testCameraViewSurvivesTheDiskRoundTrip() {
-        // The saved camera view must survive an actual save→file→load cycle (the
-        // real persistence path), not just an in-memory Codable round-trip — so a
-        // resumed game after a quit/relaunch returns to where you were looking.
         let config = GameConfig.basic(.beginner)
         var game = Game(config: config)
         game.reveal(Coord(0, 0))
@@ -66,71 +85,77 @@ final class SaveStoreTests: XCTestCase {
         let snap = GameSnapshot(
             game: game, config: config, elapsedCentiseconds: 500, camera: camera)!
         store.save(snap)
-        XCTAssertEqual(store.load()?.camera, camera, "the camera view persists to disk and back")
+        XCTAssertEqual(
+            store.load(config: config)?.camera, camera, "the camera view persists to disk")
     }
 
-    func testAppSupportFactoryProducesAUsableStore() {
-        // Exercise the production factory (App Support dir), but with a unique
-        // filename so it can't touch a real save; clean up after.
-        let appStore = SaveStore.appSupport(filename: "test-appsupport-\(UUID().uuidString).json")
-        defer { appStore.clear() }
-        XCTAssertNil(appStore.load())
-        appStore.save(sampleSnapshot())
-        XCTAssertTrue(appStore.hasSave)
-        XCTAssertEqual(appStore.load()?.elapsedCentiseconds, 500)
+    /// A save whose geometry no longer matches its config (a between-builds retune) is
+    /// discarded — restoring it would mangle the board.
+    func testLoadRejectsInconsistentSave() throws {
+        let stale = try JSONDecoder().decode(
+            GameSnapshot.self,
+            from: Data(
+                #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#.utf8))
+        XCTAssertFalse(stale.isConsistent)
+        try Data(
+            #"{"config":{"basic":{"preset":"beginner"}},"mines":[[0,0],[1,1],[2,2]]}"#.utf8
+        ).write(to: fileURL(for: .basic(.beginner)))
+        XCTAssertTrue(store.hasSave(config: .basic(.beginner)), "the file exists…")
+        XCTAssertNil(
+            store.load(config: .basic(.beginner)), "…but an inconsistent save must not load")
     }
 
     func testClearRemovesTheSave() {
-        store.save(sampleSnapshot())
-        store.clear()
-        XCTAssertFalse(store.hasSave)
-        XCTAssertNil(store.load())
+        let config = GameConfig.basic(.beginner)
+        store.save(sampleSnapshot(config))
+        store.clear(config: config)
+        XCTAssertFalse(store.hasSave(config: config))
+        XCTAssertNil(store.load(config: config))
     }
 
     func testLoadToleratesGarbage() throws {
-        // A corrupt/partial file must decode to nil, never throw or crash.
-        let url = dir.appendingPathComponent(filename)
-        try Data("not json at all".utf8).write(to: url)
-        XCTAssertNil(store.load())
+        try Data("not json at all".utf8).write(to: fileURL(for: .basic(.beginner)))
+        XCTAssertNil(store.load(config: .basic(.beginner)))
     }
 
     func testLoadRejectsNewerVersion() throws {
-        // A save from a *newer* app (version > current) may rely on a breaking
-        // change this build predates, so it's discarded rather than mis-read.
-        let url = dir.appendingPathComponent(filename)
         let json =
             #"{"version":999,"config":{"basic":{"preset":"beginner"}},"mines":[],"#
             + #""revealed":[],"flagged":[],"status":"playing","revealedSafeCount":0,"#
             + #""elapsedCentiseconds":0}"#
-        try Data(json.utf8).write(to: url)
-        XCTAssertNil(store.load(), "a version this build doesn't understand is discarded")
+        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        XCTAssertNil(
+            store.load(config: .basic(.beginner)),
+            "a version this build doesn't understand is discarded")
     }
 
     func testLoadAcceptsOlderVersion() throws {
-        // The format is additive: a save at or below currentVersion still loads
-        // (an in-progress game survives a compatible app upgrade). The fixture must
-        // be geometry-consistent (Beginner = 9×9, 10 mines) to pass the load gate.
-        let url = dir.appendingPathComponent(filename)
+        // Additive format: a save at/below currentVersion still loads. Geometry-
+        // consistent (Beginner = 9×9, 10 mines) to pass the load gate.
         let mines = ((0..<9).map { "[\($0),0]" } + ["[0,1]"]).joined(separator: ",")
         let json =
             #"{"version":0,"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines)]}"#
-        try Data(json.utf8).write(to: url)
-        let loaded = store.load()
+        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        let loaded = store.load(config: .basic(.beginner))
         XCTAssertNotNil(loaded, "an older, compatible save is preserved across upgrade")
         XCTAssertEqual(loaded?.config, .basic(.beginner))
+    }
+
+    /// The old single-slot `currentGame.json` is discarded on init (no migration).
+    func testDiscardsLegacySingleSave() throws {
+        let legacy = dir.appendingPathComponent("currentGame.json")
+        try Data(#"{"config":{"basic":{"preset":"beginner"}},"mines":[]}"#.utf8).write(to: legacy)
+        _ = SaveStore(directory: dir)  // init discards it
+        XCTAssertFalse(FileManager.default.fileExists(atPath: legacy.path))
     }
 
     // MARK: UI-test isolation
 
     func testEphemeralStoreStartsEmpty() {
-        // The UI-test store is a fresh temp dir with no save, so load() is nil and
-        // it never touches the real App Support store.
-        XCTAssertNil(SaveStore.ephemeral().load(), "a fresh ephemeral store has no saved game")
+        XCTAssertNil(SaveStore.ephemeral().latest(), "a fresh ephemeral store has no saved game")
     }
 
     func testUITestCleanLaunchFlagFalseInUnitTests() {
-        // The -uitest-clean arg is only passed by the XCUITest harness; a plain
-        // unit-test run is a normal launch.
         XCTAssertFalse(SaveStore.isUITestCleanLaunch)
     }
 }
