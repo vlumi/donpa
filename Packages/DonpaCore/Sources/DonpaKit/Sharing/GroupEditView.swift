@@ -80,7 +80,9 @@ struct GroupEditView: View {
                     friends.setMembership(!member, of: rival.publicKey, in: group.id)
                 } label: {
                     HStack {
-                        Image(systemName: member ? "checkmark.circle.fill" : "circle")
+                        // Square (checkbox) not circle — membership is multi-select; a
+                        // round check reads as a single-choice radio button.
+                        Image(systemName: member ? "checkmark.square.fill" : "square")
                             .foregroundStyle(member ? Color.accentColor : .secondary)
                         Text(rival.displayName)
                         Spacer()

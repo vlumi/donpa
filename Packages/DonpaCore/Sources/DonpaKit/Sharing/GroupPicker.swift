@@ -24,9 +24,10 @@ struct GroupPicker: View {
                         toggle(group.id)
                     } label: {
                         HStack {
+                            // Square (checkbox) not circle — multi-select, not radio.
                             Image(
                                 systemName: selection.contains(group.id)
-                                    ? "checkmark.circle.fill" : "circle"
+                                    ? "checkmark.square.fill" : "square"
                             )
                             .foregroundStyle(
                                 selection.contains(group.id) ? Color.accentColor : .secondary)

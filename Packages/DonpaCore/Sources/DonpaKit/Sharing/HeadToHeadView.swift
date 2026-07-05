@@ -54,7 +54,7 @@ struct HeadToHeadView: View {
         HStack {
             Text("Board", bundle: .module)
             Spacer()
-            Text("You", bundle: .module).frame(width: 72, alignment: .trailing)
+            Text("You", bundle: .module).frame(width: 76, alignment: .trailing)
             Text(verbatim: opponentName).frame(width: 72, alignment: .trailing).lineLimit(1)
         }
         .font(.caption).foregroundStyle(.secondary)
@@ -64,32 +64,33 @@ struct HeadToHeadView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: row.label).lineLimit(1).minimumScaleFactor(0.7)
-                // Sub-line: for a group, who holds the best; plus your signed gap.
-                if let sub = subline(row) {
-                    Text(sub).font(.caption2).foregroundStyle(.secondary)
+                // Group compare: who on the other side holds this board's best.
+                if let holder = row.holderName {
+                    Text(verbatim: holder).font(.caption2).foregroundStyle(.secondary)
                 }
             }
             Spacer()
-            time(row.yourBest, winner: row.lead == .you)
-                .frame(width: 72, alignment: .trailing)
+            // YOUR column: your time, and — beneath it — your signed, colored gap vs.
+            // them, so the delta unambiguously reads as *yours* (not the rival's).
+            VStack(alignment: .trailing, spacing: 1) {
+                time(row.yourBest, winner: row.lead == .you)
+                if let gap = row.gap, gap != 0 { gapLabel(gap) }
+            }
+            .frame(width: 76, alignment: .trailing)
             time(row.theirBest, winner: row.lead == .them)
                 .frame(width: 72, alignment: .trailing)
         }
         .font(.callout)
     }
 
-    /// The row's secondary line: who holds the other side's best (group compare) and
-    /// how far ahead/behind you are (signed gap), when both apply.
-    private func subline(_ row: RivalRanking.H2HRow) -> String? {
-        var parts: [String] = []
-        if let holder = row.holderName { parts.append(holder) }
-        if let gap = row.gap, gap != 0 {
-            let ahead = gap < 0
-            let mag = TimeFormat.mmsst(centiseconds: abs(gap))
-            // negative gap = you're faster.
-            parts.append((ahead ? "−" : "+") + mag)
-        }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    /// Your signed gap vs. theirs: −faster (green), +slower (red). Placed under YOUR
+    /// time so it clearly describes you.
+    private func gapLabel(_ gap: Int) -> some View {
+        let faster = gap < 0
+        let text = (faster ? "−" : "+") + TimeFormat.mmsst(centiseconds: abs(gap))
+        return Text(verbatim: text)
+            .font(.caption2.monospaced())
+            .foregroundStyle(faster ? Color.green : Color.red)
     }
 
     /// A time cell — bolded/tinted when it's the faster (winning) side, "—" if unwon.

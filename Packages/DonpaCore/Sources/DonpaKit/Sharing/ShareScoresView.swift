@@ -46,6 +46,16 @@ struct ShareScoresView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            #if os(macOS)
+            // ⌘1 / ⌘2 switch modes (standard macOS segment nav), via hidden buttons.
+            .background {
+                Group {
+                    Button("") { mode = .show }.keyboardShortcut("1", modifiers: .command)
+                    Button("") { mode = .scan }.keyboardShortcut("2", modifiers: .command)
+                }
+                .opacity(0)
+            }
+            #endif
 
             switch mode {
             case .show: showContent

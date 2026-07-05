@@ -62,6 +62,17 @@ struct FriendsListView: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
+        #if os(macOS)
+        // ⌘1 / ⌘2 switch tabs (standard macOS segment nav). Hidden zero-size buttons
+        // carry the shortcuts without adding visible chrome.
+        .background {
+            Group {
+                Button("") { tab = .rivals }.keyboardShortcut("1", modifiers: .command)
+                Button("") { tab = .groups }.keyboardShortcut("2", modifiers: .command)
+            }
+            .opacity(0)
+        }
+        #endif
     }
 
     @ViewBuilder private var tabContent: some View {
