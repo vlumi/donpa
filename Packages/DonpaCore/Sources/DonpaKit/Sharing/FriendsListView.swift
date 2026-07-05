@@ -40,7 +40,11 @@ struct FriendsListView: View {
             .sheet(item: $comparingRival) { rival in
                 HeadToHeadView(
                     scoreboard: scoreboard, opponentName: rival.displayName,
-                    result: RivalRanking.headToHead(with: rival, scoreboard: scoreboard))
+                    result: RivalRanking.headToHead(with: rival, scoreboard: scoreboard),
+                    // Career comparison only when this rival opted to share it.
+                    career: rival.career.map {
+                        (yours: SharePayloadBuilder.career(from: scoreboard), theirs: $0)
+                    })
             }
             .sheet(item: $editingGroup) { GroupEditView(group: $0, friends: friends) }
             .sheet(item: $comparingGroup) { group in

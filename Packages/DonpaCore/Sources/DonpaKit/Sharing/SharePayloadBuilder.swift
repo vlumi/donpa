@@ -33,8 +33,9 @@ enum SharePayloadBuilder {
     }
 
     /// Career totals summed across every merged config record — mirrors the
-    /// `StatFigures(career:)` scope used by the scoreboard's own career block.
-    private static func career(from scoreboard: Scoreboard) -> SharedCareer {
+    /// `StatFigures(career:)` scope used by the scoreboard's own career block. Not
+    /// private: the head-to-head career comparison reuses it for YOUR side.
+    static func career(from scoreboard: Scoreboard) -> SharedCareer {
         let records = Array(scoreboard.displayRecords.values)
         func sum(_ f: (ScoreRecord) -> Int) -> Int { records.reduce(0) { $0 + f($1) } }
         return SharedCareer(

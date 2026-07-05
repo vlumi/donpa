@@ -10,6 +10,9 @@ struct HeadToHeadView: View {
     let opponentName: String
     /// The computed head-to-head (built by `RivalRanking` from the live stores).
     let result: RivalRanking.H2H
+    /// Career totals to compare (yours vs. theirs), or nil — only for a single rival who
+    /// opted to share career (a group's career isn't meaningfully aggregated).
+    var career: (yours: SharedCareer, theirs: SharedCareer)?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -29,13 +32,66 @@ struct HeadToHeadView: View {
                 .frame(maxWidth: .infinity, minHeight: 80)
             } else {
                 List {
-                    header
-                    ForEach(result.rows) { row in
-                        rowView(row)
+                    Section {
+                        ForEach(result.rows) { rowView($0) }
+                    } header: {
+                        header
                     }
+                    if let career { careerSection(career) }
                 }
             }
         }
+    }
+
+    /// Lifetime career, you vs. them — shown only when the rival shared it. Each stat
+    /// is one row; the higher side is tinted so you see who leads at a glance. "More is
+    /// better" for every stat here except mines hit, where fewer is better.
+    @ViewBuilder private func careerSection(_ career: (yours: SharedCareer, theirs: SharedCareer))
+        -> some View
+    {
+        Section {
+            careerRow("Games played", career.yours.gamesPlayed, career.theirs.gamesPlayed)
+            careerRow("Wins", career.yours.wins, career.theirs.wins)
+            careerRow("No-flag wins", career.yours.noFlagWins, career.theirs.noFlagWins)
+            careerRow("No-chord wins", career.yours.noChordWins, career.theirs.noChordWins)
+            careerRow("Tiles cleared", career.yours.tilesOpened, career.theirs.tilesOpened)
+            careerRow("Flags placed", career.yours.flagsPlaced, career.theirs.flagsPlaced)
+            careerRow("Mines disarmed", career.yours.minesDisarmed, career.theirs.minesDisarmed)
+            careerRow("Mines hit", career.yours.minesHit, career.theirs.minesHit, lowerBetter: true)
+            careerRow("Chords used", career.yours.chordsUsed, career.theirs.chordsUsed)
+            careerRow(
+                "Time played", career.yours.playtimeCentiseconds,
+                career.theirs.playtimeCentiseconds, isTime: true)
+        } header: {
+            Text("Career", bundle: .module)
+        }
+    }
+
+    /// One career stat row: label, your value, their value; the leader tinted.
+    private func careerRow(
+        _ label: LocalizedStringKey, _ mine: Int, _ theirs: Int,
+        lowerBetter: Bool = false, isTime: Bool = false
+    ) -> some View {
+        let iLead = lowerBetter ? mine < theirs : mine > theirs
+        let theyLead = lowerBetter ? theirs < mine : theirs > mine
+        func fmt(_ v: Int) -> String {
+            isTime ? ScoreboardView.durationLabel(v) : ScoreboardView.grouped(v)
+        }
+        return HStack {
+            Text(label, bundle: .module)
+            Spacer()
+            careerValue(fmt(mine), lead: iLead)
+            careerValue(fmt(theirs), lead: theyLead)
+        }
+        .font(.callout)
+    }
+
+    private func careerValue(_ text: String, lead: Bool) -> some View {
+        Text(verbatim: text)
+            .font(.callout.monospaced())
+            .fontWeight(lead ? .bold : .regular)
+            .foregroundStyle(lead ? Color.accentColor : .primary)
+            .frame(width: 76, alignment: .trailing)
     }
 
     /// A centered sports-style scoreline — the two lead counts big and adjacent with a
