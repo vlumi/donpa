@@ -93,9 +93,9 @@ struct FriendsListView: View {
         VStack(spacing: 12) {
             Image(systemName: "person.2")
                 .font(.system(size: 48)).foregroundStyle(.secondary)
-            Text("No friends yet.", bundle: .module).font(.headline)
+            Text("No rivals yet.", bundle: .module).font(.headline)
             Text(
-                "Add a friend by scanning their QR code or opening a share link.",
+                "Add a rival's scores by scanning their QR code or opening a share link.",
                 bundle: .module
             )
             .font(.callout).foregroundStyle(.secondary)
@@ -109,7 +109,7 @@ struct FriendsListView: View {
         #if os(iOS)
         NavigationStack {
             content
-                .navigationTitle(Text("Friends", bundle: .module))
+                .navigationTitle(Text("Rivals", bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
@@ -135,7 +135,7 @@ struct FriendsListView: View {
         #else
         VStack(spacing: 12) {
             HStack {
-                Text("Friends", bundle: .module).font(.title2.bold())
+                Text("Rivals", bundle: .module).font(.title2.bold())
                 Spacer()
                 Button {
                     managingGroups = true
@@ -183,6 +183,13 @@ private struct FriendRow: View {
             }
             Text("\(boardsWon) boards · \(totalWins) wins", bundle: .module)
                 .font(.caption).foregroundStyle(.secondary)
+            // Their share's own timestamp — makes plain these are a SNAPSHOT that only
+            // changes when they re-share, not something that updates on its own.
+            Text(
+                "Updated \(friend.lastIssuedAt.formatted(date: .abbreviated, time: .omitted))",
+                bundle: .module
+            )
+            .font(.caption2).foregroundStyle(.secondary)
             if !groupNames.isEmpty {
                 Text(groupNames.joined(separator: " · "))
                     .font(.caption2).foregroundStyle(.tertiary)

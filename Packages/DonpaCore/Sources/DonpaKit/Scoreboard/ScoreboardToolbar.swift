@@ -23,7 +23,7 @@ extension ScoreboardView {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: onScan) {
                     Label {
-                        Text("Add friend", bundle: .module)
+                        Text("Add rival", bundle: .module)
                     } icon: {
                         Image(systemName: "qrcode.viewfinder")
                     }
@@ -35,7 +35,7 @@ extension ScoreboardView {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: onFriends) {
                     Label {
-                        Text("Friends", bundle: .module)
+                        Text("Rivals", bundle: .module)
                     } icon: {
                         Image(systemName: "person.2")
                     }

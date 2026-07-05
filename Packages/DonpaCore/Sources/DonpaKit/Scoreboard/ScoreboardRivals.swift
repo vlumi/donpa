@@ -14,7 +14,7 @@ extension ScoreboardView {
                 Button {
                     rivalGroupID = nil
                 } label: {
-                    Text("All friends", bundle: .module)
+                    Text("All rivals", bundle: .module)
                 }
                 ForEach(friends.groups) { group in
                     Button {
@@ -34,7 +34,7 @@ extension ScoreboardView {
     private var rivalScopeLabel: String {
         guard let rivalGroupID, let group = friends.groups.first(where: { $0.id == rivalGroupID })
         else {
-            return String(localized: "All friends", bundle: .module)
+            return String(localized: "All rivals", bundle: .module)
         }
         return group.name
     }

@@ -56,7 +56,7 @@ struct FriendDetailView: View {
             Button(role: .destructive) {
                 confirmingRemove = true
             } label: {
-                Text("Remove friend", bundle: .module)
+                Text("Remove rival", bundle: .module)
             }
             .padding(.top, 4)
         }

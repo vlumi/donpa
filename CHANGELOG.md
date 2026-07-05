@@ -21,26 +21,27 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- **Share your scores with friends.** From the Service Record, tap Share to show a
-  QR code (or copy a link) built from your best scores. A friend adds you by scanning
-  the code or opening the link — no account, no server. Scores are signed so they
-  can't be forged, and a friend's scores stay separate from your own: remove them and
-  their data is simply gone.
-- **Friends list.** See everyone you've added, give them your own nickname, or remove
-  them — all from the Service Record. You can nickname and group a friend right as you
-  add them, too.
-- **Groups.** Sort friends into named groups (work, family, …): create and manage your
-  groups, then put each friend in as many as you like. Renaming a group keeps its
+- **Share your scores.** From the Service Record, tap Share to show a QR code (or copy
+  a link) built from your best scores. Someone adds you as a rival by scanning the code
+  or opening the link — no account, no server. Scores are signed so they can't be
+  forged, and a rival's scores stay separate from your own: remove them and their data
+  is simply gone.
+- **Rivals list.** Add rivals from their shared scores, give each your own nickname, or
+  remove them — all from the Service Record. Their scores are a snapshot from when they
+  last shared (with the date shown), not a live feed. You can nickname and group a rival
+  right as you add them, too.
+- **Groups.** Sort rivals into named groups (work, family, …): create and manage your
+  groups, then put each rival in as many as you like. Renaming a group keeps its
   members; deleting one just un-groups them. Tap a group to see who's in it.
-- **See how you rank against friends.** Expand any board in the Service Record for a
-  leaderboard — your best time slotted in among your friends', fastest first. A little
+- **See how you rank against rivals.** Expand any board in the Service Record for a
+  leaderboard — your best time slotted in among your rivals', fastest first. A little
   medal on each board shows your standing at a glance, and you can narrow the comparison
   to a single group.
-- **Head-to-head.** From the friends list, compare all your best times against one
-  friend — or a whole group's best — board by board, with a running tally of who leads.
-- **Friends and groups sync across your devices.** With iCloud sync on, the friends and
+- **Head-to-head.** From the rivals list, compare all your best times against one
+  rival — or a whole group's best — board by board, with a running tally of who leads.
+- **Rivals and groups sync across your devices.** With iCloud sync on, the rivals and
   groups you set up on one device show up on the rest — the same switch that syncs your
-  scores. Removing a friend removes them everywhere.
+  scores. Removing a rival removes them everywhere.
 
 ## [0.3.0] — Board variants
 

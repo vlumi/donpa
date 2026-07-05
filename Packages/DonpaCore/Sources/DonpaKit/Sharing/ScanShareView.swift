@@ -34,7 +34,7 @@ struct ScanShareView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16).strokeBorder(.secondary, lineWidth: 1))
-            Text("Point the camera at your friend's QR code.", bundle: .module)
+            Text("Point the camera at a rival's QR code.", bundle: .module)
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -42,7 +42,7 @@ struct ScanShareView: View {
         VStack(spacing: 16) {
             Image(systemName: "qrcode.viewfinder")
                 .font(.system(size: 64)).foregroundStyle(.secondary)
-            Text("Import an image of your friend's QR code.", bundle: .module)
+            Text("Import an image of a rival's QR code.", bundle: .module)
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button {
