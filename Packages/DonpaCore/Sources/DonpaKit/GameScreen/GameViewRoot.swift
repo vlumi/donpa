@@ -136,9 +136,7 @@ public struct GameView: View {
             friends.syncEnabled = $0
         }
         // Refresh the in-progress summaries whenever a surface that shows them
-        // opens. Both hosts flush pending saves synchronously first (goHome /
-        // openNewGame set the flag only after autosaveBlocking), so these reads
-        // never race a write.
+        // opens (cheap: sidecar summaries, not full saves)…
         .onChangeCompat(of: navigator.showingTitle) { showing in
             if showing { saveSummaries = resumeStore.summaries() }
         }

@@ -59,10 +59,36 @@ public struct SaveStore {
         return directory.appendingPathComponent("save-\(safe).json")
     }
 
-    /// Atomically write the snapshot to its config's file; failures are swallowed.
+    /// The tiny sidecar summary next to a save (~150 bytes). Listing dozens of saves
+    /// by decoding the FULL files was a ~1s main-thread stall (an XXXL save is ~2MB
+    /// of JSON; 50 games ≈ 9MB parsed per Home/New Game open); the sidecars make it
+    /// milliseconds. Written and removed by the SAME code paths as the main file, so
+    /// there's no central index to drift — and `summaries()` self-heals a missing
+    /// one from the main file anyway.
+    private func summaryURL(forMainFile mainURL: URL) -> URL {
+        let name = mainURL.lastPathComponent.replacingOccurrences(
+            of: "save-", with: "summary-")
+        return mainURL.deletingLastPathComponent().appendingPathComponent(name)
+    }
+
+    private func summaryURL(for config: GameConfig) -> URL {
+        summaryURL(forMainFile: url(for: config))
+    }
+
+    /// Atomically write the snapshot to its config's file (+ its sidecar summary);
+    /// failures are swallowed.
     public func save(_ snapshot: GameSnapshot) {
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         try? data.write(to: url(for: snapshot.config), options: [.atomic])
+        writeSummary(
+            SaveSummary(
+                config: snapshot.config, elapsedCentiseconds: snapshot.elapsedCentiseconds,
+                revealedSafeCount: snapshot.revealedSafeCount, updatedAt: snapshot.updatedAt))
+    }
+
+    private func writeSummary(_ summary: SaveSummary) {
+        guard let data = try? JSONEncoder().encode(summary) else { return }
+        try? data.write(to: summaryURL(for: summary.config), options: [.atomic])
     }
 
     /// The saved snapshot for a config, or nil if none / unreadable / unsupported
@@ -84,7 +110,8 @@ public struct SaveStore {
     /// A lightweight view of one saved game, for lists and cues — everything the
     /// Home card / New Game dots need, WITHOUT retaining the board's coord sets
     /// (an XXXL snapshot holds ~1M coords; a list of those is a memory trap).
-    public struct SaveSummary: Equatable, Sendable {
+    /// Codable: persisted as the sidecar summary file next to each save.
+    public struct SaveSummary: Equatable, Sendable, Codable {
         public let config: GameConfig
         public let elapsedCentiseconds: Int
         public let revealedSafeCount: Int
@@ -98,25 +125,40 @@ public struct SaveStore {
         }
     }
 
-    /// Summaries of every live saved game, newest-played first. Decoding still
-    /// parses each file once (same gating as `all()` — version, in-progress,
-    /// geometry), but only the summary is retained, so callers can hold the result
-    /// across view updates cheaply. Refresh on demand, not per render.
+    /// Summaries of every live saved game, newest-played first — the fast path for
+    /// lists and cues. Reads each save's tiny sidecar; a save missing its sidecar
+    /// (e.g. written by a pre-sidecar build) falls back to a full decode and HEALS
+    /// by writing the sidecar, so the slow path runs at most once per save.
     public func summaries() -> [SaveSummary] {
-        all().map {
-            SaveSummary(
-                config: $0.config, elapsedCentiseconds: $0.elapsedCentiseconds,
-                revealedSafeCount: $0.revealedSafeCount, updatedAt: $0.updatedAt)
+        savedURLs()
+            .compactMap { summary(forMainFile: $0) }
+            .sorted { $0.updatedAt > $1.updatedAt }
+    }
+
+    private func summary(forMainFile mainURL: URL) -> SaveSummary? {
+        if let data = try? Data(contentsOf: summaryURL(forMainFile: mainURL)),
+            let summary = try? JSONDecoder().decode(SaveSummary.self, from: data)
+        {
+            return summary
         }
+        // No/unreadable sidecar: derive from the full save (same gating as `all()`)
+        // and heal, so the next listing takes the fast path.
+        guard let snapshot = decode(try? Data(contentsOf: mainURL)) else { return nil }
+        let summary = SaveSummary(
+            config: snapshot.config, elapsedCentiseconds: snapshot.elapsedCentiseconds,
+            revealedSafeCount: snapshot.revealedSafeCount, updatedAt: snapshot.updatedAt)
+        writeSummary(summary)
+        return summary
     }
 
     public func hasSave(config: GameConfig) -> Bool {
         fileManager.fileExists(atPath: url(for: config).path)
     }
 
-    /// Remove a config's save (on finish / new game on it / manual discard).
+    /// Remove a config's save + its sidecar (on finish / new game on it / discard).
     public func clear(config: GameConfig) {
         try? fileManager.removeItem(at: url(for: config))
+        try? fileManager.removeItem(at: summaryURL(for: config))
     }
 
     // MARK: Internals

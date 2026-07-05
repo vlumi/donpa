@@ -276,13 +276,14 @@ struct GameContent: View {
         }
     }
 
-    /// Open the New Game popup, flushing the live game to disk INLINE first so the
-    /// popup's in-progress cues are accurate the instant it appears. Without the flush
-    /// a just-started game (its save still debounced) shows no dot / a plain Start, and
-    /// a just-ended game (save cleared) could show a stale Continue. Ordered before
-    /// `showingNewGame = true` so disk is settled before the popup reads the index.
+    /// Open the New Game popup, flushing the live game to disk first so the popup's
+    /// in-progress cues are accurate. The flush is ASYNC — a blocking write meant
+    /// synchronously encoding a multi-MB XXXL board on the main thread, a visible
+    /// stall on open — and the popup catches up the moment the write commits via
+    /// `savesChanged` (the same signal that handles big boards whose first move is
+    /// still computing here).
     func openNewGame() {
-        autosaveBlocking()  // write-if-in-progress / clear-if-ended
+        autosave()  // write-if-in-progress / clear-if-ended, off the main thread
         navigator.showingNewGame = true
     }
 
@@ -379,12 +380,13 @@ struct GameContent: View {
     // GameContent+Result.swift.
 
     /// Return home WITHOUT ending the game: pause and save, so Home's Continue card
-    /// can resume where it left off. The save is INLINE (blocking) — Home refreshes
-    /// its in-progress list the moment `showingTitle` flips, so an async write would
-    /// race the read and show a stale card. Discarding is an explicit New Game.
+    /// can resume where it left off. The save is ASYNC (a blocking XXXL encode was a
+    /// visible stall on the Home button); the card reads the last debounced state
+    /// immediately and catches up via `savesChanged` when the write commits.
+    /// Discarding is an explicit New Game.
     func goHome() {
         viewModel.pause()
-        autosaveBlocking()
+        autosave()
         navigator.showingTitle = true
     }
 }

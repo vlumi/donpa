@@ -95,6 +95,37 @@ final class SaveStoreTests: XCTestCase {
         XCTAssertTrue(store.all().isEmpty)
     }
 
+    /// A save writes its tiny sidecar summary; clearing removes both. The sidecars
+    /// are what make listing dozens of saves cheap (a full XXXL save is ~2MB JSON).
+    func testSaveWritesSidecarAndClearRemovesIt() {
+        let config = GameConfig.basic(.beginner)
+        let sidecar = dir.appendingPathComponent("saves/summary-v2_basic_beginner.json")
+        store.save(sampleSnapshot(config))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: sidecar.path), "sidecar written")
+        store.clear(config: config)
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: sidecar.path), "sidecar cleared with the save")
+    }
+
+    /// A save without a sidecar (a pre-sidecar build's file) still lists — via a
+    /// one-time full decode that HEALS by writing the sidecar for next time.
+    func testSummariesHealMissingSidecar() throws {
+        // Fixture: main file only (fileURL writes no sidecar). Geometry-consistent.
+        let mines = ((0..<9).map { "[\($0),0]" } + ["[0,1]"]).joined(separator: ",")
+        let json =
+            #"{"config":{"basic":{"preset":"beginner"}},"mines":[\#(mines)],"#
+            + #""revealedSafeCount":7,"elapsedCentiseconds":420}"#
+        try Data(json.utf8).write(to: fileURL(for: .basic(.beginner)))
+        let summaries = store.summaries()
+        XCTAssertEqual(summaries.count, 1, "listed via the slow path")
+        XCTAssertEqual(summaries.first?.elapsedCentiseconds, 420)
+        XCTAssertEqual(summaries.first?.revealedSafeCount, 7)
+        let sidecar = dir.appendingPathComponent("saves/summary-v2_basic_beginner.json")
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: sidecar.path),
+            "healed: the sidecar now exists for the fast path")
+    }
+
     func testCameraViewSurvivesTheDiskRoundTrip() {
         let config = GameConfig.basic(.beginner)
         var game = Game(config: config)
