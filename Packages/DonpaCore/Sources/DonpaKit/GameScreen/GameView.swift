@@ -63,7 +63,7 @@ struct GameContent: View {
 
     init(
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
-        navigator: Navigator, friends: FriendsStore, scene: BoardScene
+        navigator: Navigator, friends: FriendsStore, scene: BoardScene, saveStore: SaveStore
     ) {
         self.viewModel = viewModel
         self.scoreboard = scoreboard
@@ -71,11 +71,11 @@ struct GameContent: View {
         self.navigator = navigator
         self.friends = friends
         self.scene = scene
-        // One store backs both the synchronous reads and the background writer.
-        let store =
-            SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
-        _saveStore = State(initialValue: store)
-        _saveWriter = State(initialValue: BackgroundSaveWriter(store: store))
+        // The store is owned by GameViewRoot and shared in, so the New Game popup's
+        // resume list / dots read the SAME files this view writes. The background
+        // writer wraps the same instance.
+        _saveStore = State(initialValue: saveStore)
+        _saveWriter = State(initialValue: BackgroundSaveWriter(store: saveStore))
     }
 
     /// One resolved scheme for chrome and scene. `colorScheme` is the iOS fallback,
@@ -259,6 +259,16 @@ struct GameContent: View {
         }
     }
 
+    /// Open the New Game popup, flushing the live game to disk INLINE first so the
+    /// popup's in-progress cues are accurate the instant it appears. Without the flush
+    /// a just-started game (its save still debounced) shows no dot / a plain Start, and
+    /// a just-ended game (save cleared) could show a stale Continue. Ordered before
+    /// `showingNewGame = true` so disk is settled before the popup reads the index.
+    func openNewGame() {
+        autosaveBlocking()  // write-if-in-progress / clear-if-ended
+        navigator.showingNewGame = true
+    }
+
     /// "Press start": if there are in-progress boards, show the Continue list (pick
     /// one to resume, or start fresh); with none, open the New Game popup directly.
     /// The title stays up behind either — the actual leave-title happens on the pick.
@@ -292,7 +302,7 @@ struct GameContent: View {
     /// stalling input (a beachball on a weak CPU mid-reveal). So capture the cheap
     /// Sendable inputs here, then build the snapshot AND encode/write off the main
     /// thread via `saveWriter`. Falls back to clearing the save once not in progress.
-    private func autosave() {
+    func autosave() {
         autosaveTask?.cancel()  // an explicit save subsumes any pending debounce
         if let inputs = viewModel.snapshotInputs() {
             Task.detached(priority: .utility) {

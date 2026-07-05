@@ -25,13 +25,15 @@ public struct GameView: View {
     @StateObject private var friends: FriendsStore
     @StateObject private var sceneHolder: SceneHolder
     private var scene: BoardScene { sceneHolder.scene }
-    /// Read-only store for the New Game popup's resume list. `GameContent` owns the
-    /// writing store; this reads `all()` from the same Application Support `saves/`
-    /// dir (a `SaveStore` is a stateless value over the filesystem). UI-test-clean
-    /// launches have no saves either way, so an ephemeral read is trivially empty.
-    private var resumeStore: SaveStore {
+    /// The single save store, shared with `GameContent` (which does the writing) so
+    /// the popup's resume list / dots read the SAME files the live game writes.
+    /// Must be stable `@State`: under `-uitest-clean` it's a fresh ephemeral dir, and
+    /// a recomputed `ephemeral()` would mint a NEW dir on every access — so the reader
+    /// and writer would never see each other's saves. In production both would resolve
+    /// the same App Support dir, but a shared instance keeps them honest either way.
+    @State private var saveStore: SaveStore =
         SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
-    }
+    private var resumeStore: SaveStore { saveStore }
     /// Brief in-app splash mirroring the OS launch image (which can't be delayed,
     /// being pre-process) so the hand-off into the title is seamless.
     @State private var showSplash = true
@@ -72,7 +74,7 @@ public struct GameView: View {
         ZStack {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
-                navigator: navigator, friends: friends, scene: scene)
+                navigator: navigator, friends: friends, scene: scene, saveStore: saveStore)
             // Title fade scoped to this overlay via `.animation(_:value:)` — an
             // imperative `withAnimation` would also animate the chrome's first
             // layout, making the status bar visibly settle.

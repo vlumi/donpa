@@ -43,7 +43,7 @@ extension GameContent {
     /// The current-game badge, tappable to open the New Game popup. Pulses with
     /// `restartPop` on a fresh game.
     private var configButton: some View {
-        Button(action: { navigator.showingNewGame = true }) {
+        Button(action: { openNewGame() }) {
             HStack(spacing: 6) {
                 // Grid/Hive config: rank insignia then size name (matching the
                 // scoreboard / picker); classic shows its plain preset name.

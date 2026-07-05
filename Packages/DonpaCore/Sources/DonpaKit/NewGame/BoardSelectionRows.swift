@@ -51,7 +51,7 @@ extension BoardSelectionPicker {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .modifier(SaveDot(show: index.presetHasSave(preset)))
+        .modifier(SaveDot(show: index.presetHasSave(preset), onAccent: selected))
         .accessibilityLabel(Text(verbatim: "\(preset.label) — \(preset.detail)"))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
@@ -116,7 +116,7 @@ extension BoardSelectionPicker {
                     Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
         }
         .buttonStyle(.plain)
-        .modifier(SaveDot(show: hasSave))
+        .modifier(SaveDot(show: hasSave, onAccent: selected))
         .accessibilityLabel(Text(verbatim: density.label))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
@@ -171,7 +171,7 @@ extension BoardSelectionPicker {
                     Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
         }
         .buttonStyle(.plain)
-        .modifier(SaveDot(show: hasSave))
+        .modifier(SaveDot(show: hasSave, onAccent: selected))
         .accessibilityLabel(Text(verbatim: "\(size.label) — \(size.detail)"))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
@@ -199,23 +199,46 @@ extension BoardSelectionPicker {
 /// A small badge marking a selector chip whose drill-down path holds an in-progress
 /// save, so following lit chips down (family → size → density → edges) always lands on
 /// a real saved board. Non-interactive, tucked in the chip's top-trailing corner; it
-/// rides an overlay so it never changes the chip's layout. Hidden when `show` is false.
+/// rides an overlay so it never changes the chip's layout.
+///
+/// Always present (scaled to zero when hidden) so it animates in step with the chip's
+/// selection change instead of independently fading. On a chip that's currently filled
+/// with the accent (`onAccent`), an accent dot would vanish — so it flips to white
+/// there. A contrasting ring keeps it legible against either background.
 struct SaveDot: ViewModifier {
     let show: Bool
+    /// The host chip is currently accent-filled (selected), so draw the dot in white
+    /// instead of accent — an accent dot on an accent fill is invisible.
+    var onAccent: Bool = false
+    /// The host clips its bounds (e.g. the segmented Flat/Round control), so the dot
+    /// must sit INSIDE the corner rather than overhanging — an overhang gets clipped.
+    var inset: Bool = false
+
     func body(content: Content) -> some View {
         content.overlay(alignment: .topTrailing) {
-            if show {
-                Circle()
-                    .fill(Color.accentColor)
-                    .frame(width: 8, height: 8)
-                    .overlay(Circle().stroke(Color.primary.opacity(0.25), lineWidth: 0.5))
-                    // Nudge onto the chip's shoulder rather than floating off it.
-                    .offset(x: 3, y: -3)
-                    .allowsHitTesting(false)
-                    // The chip's own a11y label already conveys the config; the dot is
-                    // a redundant visual cue, so it stays out of the a11y tree.
-                    .accessibilityHidden(true)
-            }
+            Circle()
+                .fill(onAccent ? Color.white : Color.accentColor)
+                .frame(width: 9, height: 9)
+                // A ring in the opposite tone so the dot reads on any background:
+                // white core gets an accent hairline, accent core gets a white one.
+                .overlay(
+                    Circle()
+                        .stroke(onAccent ? Color.accentColor.opacity(0.5) : .white, lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.25), radius: 0.5)
+                // On an overhang-safe chip, nudge onto its shoulder; on a clipping
+                // host, tuck it just inside the corner so it isn't sliced off.
+                .offset(x: inset ? -3 : 3, y: inset ? 3 : -3)
+                // Scale/opacity (not `if show`) so the badge grows/shrinks with the
+                // chip's own selection animation rather than fading on its own.
+                .scaleEffect(show ? 1 : 0.1)
+                .opacity(show ? 1 : 0)
+                .animation(.snappy, value: show)
+                .animation(.snappy, value: onAccent)
+                .allowsHitTesting(false)
+                // The chip's own a11y label already conveys the config; the dot is
+                // a redundant visual cue, so it stays out of the a11y tree.
+                .accessibilityHidden(true)
         }
     }
 }

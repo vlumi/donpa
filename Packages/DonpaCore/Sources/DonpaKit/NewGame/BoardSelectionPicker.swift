@@ -308,16 +308,17 @@ struct BoardSelectionPicker: View {
             withAnimation(.snappy) { settings.family = family }
             onFocusRow?(0)
         } label: {
-            // Hug the content: the hit area stays tight to the drawn tab, leaving
-            // the space between tabs free to grab for the page swipe.
             VStack(spacing: 3) {
                 BoardGlyph(kind: .family(family), size: 26)
                 Text(verbatim: family.label)
                     .font(.caption.weight(selected ? .bold : .regular))
                     .lineLimit(1)  // keep e.g. "グリッド" on one line (don't wrap → taller tab)
-                    .fixedSize()
+                    .minimumScaleFactor(0.8)  // a long label shrinks rather than widening its tab
             }
-            .padding(.horizontal, 16)
+            // Equal-width tabs: every tab fills the same share of the row, so neither
+            // the differing label lengths nor the regular↔bold selection swap can
+            // change a tab's width — that width change was the row "wobble".
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
             .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.65))
             .background(
