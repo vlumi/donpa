@@ -77,7 +77,9 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .modifier(SaveDot(show: badge(value), onAccent: selected))
+        // The control clips to its rounded container, so the dot insets into the
+        // corner rather than overhanging (which would get sliced off).
+        .modifier(SaveDot(show: badge(value), onAccent: selected, inset: true))
         .accessibilityLabel(Text(verbatim: text.isEmpty ? "\(value)" : text))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }

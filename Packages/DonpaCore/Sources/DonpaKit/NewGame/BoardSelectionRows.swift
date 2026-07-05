@@ -210,6 +210,9 @@ struct SaveDot: ViewModifier {
     /// The host chip is currently accent-filled (selected), so draw the dot in white
     /// instead of accent — an accent dot on an accent fill is invisible.
     var onAccent: Bool = false
+    /// The host clips its bounds (e.g. the segmented Flat/Round control), so the dot
+    /// must sit INSIDE the corner rather than overhanging — an overhang gets clipped.
+    var inset: Bool = false
 
     func body(content: Content) -> some View {
         content.overlay(alignment: .topTrailing) {
@@ -223,8 +226,9 @@ struct SaveDot: ViewModifier {
                         .stroke(onAccent ? Color.accentColor.opacity(0.5) : .white, lineWidth: 1)
                 )
                 .shadow(color: .black.opacity(0.25), radius: 0.5)
-                // Nudge onto the chip's shoulder rather than floating off it.
-                .offset(x: 3, y: -3)
+                // On an overhang-safe chip, nudge onto its shoulder; on a clipping
+                // host, tuck it just inside the corner so it isn't sliced off.
+                .offset(x: inset ? -3 : 3, y: inset ? 3 : -3)
                 // Scale/opacity (not `if show`) so the badge grows/shrinks with the
                 // chip's own selection animation rather than fading on its own.
                 .scaleEffect(show ? 1 : 0.1)
