@@ -49,6 +49,9 @@ under Unreleased as they merge.
 - **Rivals and groups sync across your devices.** With iCloud sync on, the rivals and
   groups you set up on one device show up on the rest — the same switch that syncs your
   scores. Removing a rival removes them everywhere.
+- **Browsing New Game no longer costs clock time.** Opening the New Game screen during
+  a game now pauses it, just like the Service Record does; closing without starting
+  picks the clock right back up.
 
 ## [0.3.0] — Board variants
 

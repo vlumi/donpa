@@ -38,6 +38,9 @@ struct GameContent: View {
     /// True when WE paused to show the scoreboard — used to auto-resume on dismiss,
     /// but only if the player hadn't already paused it themselves.
     @State private var pausedForScores = false
+    /// We paused the game for the New Game popup (vs. it already being paused) —
+    /// mirror of `pausedForScores`, so dismissing the popup resumes only OUR pause.
+    @State private var pausedForNewGame = false
     /// Atomic, crash-safe store for the in-progress game. Ephemeral under the
     /// UI-test launch arg so tests never touch the real save.
     @State private var saveStore: SaveStore
@@ -170,6 +173,22 @@ struct GameContent: View {
                 }
             } else if pausedForScores {
                 pausedForScores = false
+                viewModel.resume()
+            }
+        }
+        // Same for the New Game popup: choosing a board shouldn't cost clock time.
+        // Auto-resume on dismiss only if WE paused — a game already paused (e.g.
+        // backgrounded via Home) stays paused. Starting/continuing a game from the
+        // popup is safe either way: newGame/restore leave isPaused false, so the
+        // resume() here no-ops on them (it guards on isPaused).
+        .onChangeCompat(of: navigator.showingNewGame) { showing in
+            if showing {
+                if viewModel.game.status == .playing && !viewModel.isPaused {
+                    pausedForNewGame = true
+                    viewModel.pause()
+                }
+            } else if pausedForNewGame {
+                pausedForNewGame = false
                 viewModel.resume()
             }
         }
