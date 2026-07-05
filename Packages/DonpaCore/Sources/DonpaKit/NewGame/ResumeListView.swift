@@ -19,7 +19,9 @@ struct ResumeListView: View {
     let onClose: () -> Void
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            header
+            Divider()
             List {
                 Section {
                     ForEach(snapshots, id: \.config) { snapshot in
@@ -33,34 +35,57 @@ struct ResumeListView: View {
                 } header: {
                     Text("In progress", bundle: .module)
                 }
-
-                Section {
-                    Button(action: onNewGame) {
-                        Label {
-                            Text("New game…", bundle: .module)
-                        } icon: {
-                            Image(systemName: "plus.circle.fill")
-                        }
-                        .foregroundStyle(Color.accentColor)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("resume.newGame")
-                }
             }
-            .navigationTitle(Text("Continue", bundle: .module))
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            #if os(macOS)
+            .listStyle(.inset)
             #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        onClose()
-                    } label: {
-                        Text("Close", bundle: .module)
-                    }
-                }
-            }
+            Divider()
+            newGameBar
         }
+        // macOS sizes a sheet to its content's ideal, and a bare List reports a
+        // near-zero ideal — so the sheet collapsed and showed no rows. Give it a
+        // sensible frame there; iOS sheets fill the screen and need none.
+        #if os(macOS)
+        .frame(minWidth: 380, idealWidth: 440, minHeight: 320, idealHeight: 460)
+        #endif
+    }
+
+    /// The sheet's own title row with a trailing Close — a plain header rather than a
+    /// NavigationStack toolbar, which renders inconsistently inside a macOS sheet.
+    private var header: some View {
+        HStack {
+            Text("Continue", bundle: .module)
+                .font(.headline)
+            Spacer()
+            Button {
+                onClose()
+            } label: {
+                Text("Close", bundle: .module)
+            }
+            .keyboardShortcut(.cancelAction)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    /// A pinned "start fresh" bar under the list, so New Game is always reachable
+    /// without scrolling past a long in-progress list.
+    private var newGameBar: some View {
+        Button(action: onNewGame) {
+            Label {
+                Text("New game…", bundle: .module)
+            } icon: {
+                Image(systemName: "plus.circle.fill")
+            }
+            .font(.body.weight(.medium))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+            .foregroundStyle(Color.accentColor)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("resume.newGame")
     }
 }
 
