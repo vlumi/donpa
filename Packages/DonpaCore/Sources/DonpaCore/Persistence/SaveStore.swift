@@ -164,6 +164,24 @@ public struct SaveStore {
     }
 
     private func summary(forMainFile mainURL: URL) -> SaveSummary? {
+        // Container check FIRST — a sidecar must never vouch for a main file that
+        // can't load (that made unreadable saves list as phantom rows whose resume
+        // silently did nothing). Mapped read: the prefix check touches one page.
+        guard let raw = try? Data(contentsOf: mainURL, options: .mappedIfSafe) else {
+            return nil
+        }
+        guard raw.starts(with: Data("DONPAZ".utf8)) else {
+            // Not even our container family: a dead relic (pre-compression build,
+            // or corruption). Drop it and its sidecar so it stops haunting lists.
+            try? fileManager.removeItem(at: mainURL)
+            try? fileManager.removeItem(at: summaryURL(forMainFile: mainURL))
+            return nil
+        }
+        guard raw.starts(with: Self.compressedMagic) else {
+            // Our container, DIFFERENT version: a future build's save seen by a
+            // downgraded app. Hide it, but do NOT delete — that's their data.
+            return nil
+        }
         if let data = try? Data(contentsOf: summaryURL(forMainFile: mainURL)),
             let summary = try? JSONDecoder().decode(SaveSummary.self, from: data)
         {
@@ -171,7 +189,7 @@ public struct SaveStore {
         }
         // No/unreadable sidecar: derive from the full save (same gating as `all()`)
         // and heal, so the next listing takes the fast path.
-        guard let snapshot = decode(try? Data(contentsOf: mainURL)) else { return nil }
+        guard let snapshot = decode(raw) else { return nil }
         let summary = SaveSummary(
             config: snapshot.config, elapsedCentiseconds: snapshot.elapsedCentiseconds,
             revealedSafeCount: snapshot.revealedSafeCount, updatedAt: snapshot.updatedAt)

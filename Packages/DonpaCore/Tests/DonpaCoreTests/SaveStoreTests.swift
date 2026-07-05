@@ -134,6 +134,39 @@ final class SaveStoreTests: XCTestCase {
         XCTAssertNil(store.load(config: .basic(.beginner)))
     }
 
+    /// A main file that isn't our container AT ALL (a pre-compression relic, or
+    /// corruption) is DROPPED at listing time — main and sidecar both — even when a
+    /// stale sidecar vouches for it. A lying sidecar made unreadable saves list as
+    /// phantom rows whose resume silently did nothing.
+    func testSummariesDropDeadRelicsDespiteSidecar() throws {
+        let config = GameConfig.basic(.beginner)
+        // Plant a stale sidecar (as a previous build's heal pass would have), then
+        // overwrite the main file with plain JSON (the pre-compression format).
+        store.save(sampleSnapshot(config))
+        try Data(#"{"config":{"basic":{"preset":"beginner"}},"mines":[]}"#.utf8)
+            .write(to: fileURL(for: config))
+        XCTAssertTrue(store.summaries().isEmpty, "the phantom row is gone")
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: fileURL(for: config).path),
+            "the dead main file was dropped")
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: dir.appendingPathComponent("saves/summary-v2_basic_beginner.json").path),
+            "its sidecar too")
+    }
+
+    /// A FUTURE container version (a downgraded app seeing a newer build's save) is
+    /// hidden but NOT deleted — that's the future build's data, not a relic.
+    func testSummariesPreserveFutureContainerVersions() throws {
+        let config = GameConfig.basic(.beginner)
+        try (Data("DONPAZ9\n".utf8) + Data("whatever future bytes".utf8))
+            .write(to: fileURL(for: config))
+        XCTAssertTrue(store.summaries().isEmpty, "hidden from the list")
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: fileURL(for: config).path),
+            "but preserved on disk for the build that wrote it")
+    }
+
     /// A save whose sidecar has gone missing still lists — via a one-time full
     /// decode that HEALS by writing the sidecar for next time.
     func testSummariesHealMissingSidecar() throws {

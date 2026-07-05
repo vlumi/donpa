@@ -40,6 +40,9 @@ public struct GameView: View {
     /// The hosts flush pending writes synchronously before opening (goHome /
     /// openNewGame), so a refresh always sees disk truth.
     @State private var saveSummaries: [SaveStore.SaveSummary] = []
+    /// A saved board whose file couldn't be read when the player tried to resume
+    /// it — drives the broken-save alert (OK starts fresh on the same board).
+    @State private var failedResumeConfig: GameConfig?
     /// Brief in-app splash mirroring the OS launch image (which can't be delayed,
     /// being pre-process) so the hand-off into the title is seamless.
     @State private var showSplash = true
@@ -130,6 +133,26 @@ public struct GameView: View {
         // here: decode + classify, then let the receive prompt render the decision.
         .onOpenURL { receive($0) }
         .modifier(ReceivePrompt(navigator: navigator, friends: friends, scoreboard: scoreboard))
+        // A saved board that couldn't be read: say so, and offer a fresh start on
+        // the same board — never a silent nothing.
+        .alert(
+            Text("Couldn't load the saved game", bundle: .module),
+            isPresented: Binding(
+                get: { failedResumeConfig != nil },
+                set: { if !$0 { failedResumeConfig = nil } }),
+            presenting: failedResumeConfig
+        ) { config in
+            Button {
+                startFreshAfterFailedResume(config)
+                failedResumeConfig = nil
+            } label: {
+                Text("OK", bundle: .module)
+            }
+        } message: { _ in
+            Text(
+                "The save couldn't be read, so a fresh game starts on this board.",
+                bundle: .module)
+        }
         // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
         .onChangeCompat(of: settings.syncScores) {
             scoreboard.syncEnabled = $0
@@ -176,11 +199,27 @@ public struct GameView: View {
 
     /// Resume a saved board: load its snapshot, restore, and leave Home — shared by
     /// the Home Continue card/list, the art tap, and the New Game popup's Continue.
-    /// A missing/unreadable save (e.g. a between-builds geometry retune) no-ops.
+    /// An unreadable save (corruption, a between-builds geometry retune) raises the
+    /// broken-save alert instead of silently doing nothing; its OK starts a fresh
+    /// game on the same board.
     private func resume(_ config: GameConfig) {
-        guard let snapshot = resumeStore.load(config: config) else { return }
+        guard let snapshot = resumeStore.load(config: config) else {
+            failedResumeConfig = config
+            return
+        }
         navigator.showingNewGame = false
         viewModel.restore(from: snapshot)
+        navigator.showingTitle = false
+    }
+
+    /// The broken-save follow-up: discard the dead file and start fresh on the same
+    /// board (the alert already told the player why).
+    private func startFreshAfterFailedResume(_ config: GameConfig) {
+        resumeStore.clear(config: config)  // stop it haunting the lists
+        saveSummaries = resumeStore.summaries()
+        settings.adopt(config)
+        navigator.showingNewGame = false
+        viewModel.newGame(config: config)
         navigator.showingTitle = false
     }
 
