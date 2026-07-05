@@ -16,6 +16,13 @@ public final class Navigator: ObservableObject {
     /// Whether the New Game config popup is presented.
     @Published public var showingNewGame = false
 
+    /// Bumped whenever an in-progress save actually COMMITS to disk (write or
+    /// clear). Home's Continue card and the New Game dots re-read the saves on it —
+    /// crucial on big boards, where the first move can still be computing when the
+    /// popup opens: the open-time flush finds nothing to save yet, and the real
+    /// save lands seconds later via the debounce. A counter, so every commit fires.
+    @Published public var savesChanged = 0
+
     /// Bumped to "go home". Routed through `GameContent` rather than setting
     /// `showingTitle` directly, so going home pauses and saves rather than discards.
     @Published public var homeRequested = 0

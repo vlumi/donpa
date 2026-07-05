@@ -29,7 +29,7 @@ struct HomeScreen: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    /// Whether the in-progress list (beyond the latest) is expanded.
+    /// Whether the full in-progress list sheet is presented.
     @State private var showAll = false
 
     var body: some View {
@@ -62,6 +62,7 @@ struct HomeScreen: View {
                 }
                 .padding(16)
             }
+            .sheet(isPresented: $showAll) { inProgressSheet }
         }
     }
 
@@ -173,7 +174,10 @@ struct HomeScreen: View {
     // MARK: Continue
 
     /// The latest in-progress board as the leading card, plus — when there are more —
-    /// an expander revealing the rest inline (newest first).
+    /// a row opening the full list as a sheet. A sheet, NOT an inline accordion: with
+    /// dozens of saved boards an expansion swallowed the whole Home (the flexible art
+    /// shrank to nothing) and scrolled awkwardly; a modal scrolls naturally and never
+    /// reflows the menu.
     private func continueCard(latest: SaveStore.SaveSummary) -> some View {
         VStack(spacing: 0) {
             Button {
@@ -197,21 +201,7 @@ struct HomeScreen: View {
 
             if snapshots.count > 1 {
                 Divider()
-                expander
-                if showAll {
-                    ForEach(snapshots.dropFirst(), id: \.config) { snapshot in
-                        Divider()
-                        Button {
-                            onContinue(snapshot.config)
-                        } label: {
-                            savedGameRow(snapshot)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+                allGamesRow
             }
         }
         .background(
@@ -224,19 +214,18 @@ struct HomeScreen: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    /// The "More in progress (N)" toggle revealing the non-latest saves. The count
-    /// is what the accordion ADDS (the latest is already on the card above), so two
-    /// saves read as "More in progress (1)".
-    private var expander: some View {
+    /// The "In progress (N)" row opening the full list sheet. The count is the
+    /// sheet's total (the latest is in it too, so the numbers always agree with
+    /// what opens).
+    private var allGamesRow: some View {
         Button {
-            withAnimation(.snappy) { showAll.toggle() }
+            showAll = true
         } label: {
             HStack {
-                Text("More in progress", bundle: .module)
-                Text(verbatim: "(\(snapshots.count - 1))")
+                Text("In progress", bundle: .module)
+                Text(verbatim: "(\(snapshots.count))")
                 Spacer()
-                Image(systemName: "chevron.down")
-                    .rotationEffect(.degrees(showAll ? 180 : 0))
+                Image(systemName: "chevron.right")
             }
             .font(.subheadline.weight(.medium))
             .foregroundStyle(.secondary)
@@ -246,6 +235,47 @@ struct HomeScreen: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("home.inprogress")
+    }
+
+    /// The full in-progress list, newest played first — every saved board is a row
+    /// that resumes it. Header + explicit frame instead of NavigationStack chrome:
+    /// a bare List in a macOS sheet collapses to nothing (the #206 lesson).
+    private var inProgressSheet: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("In progress", bundle: .module)
+                    .font(.headline)
+                Spacer()
+                Button {
+                    showAll = false
+                } label: {
+                    Text("Close", bundle: .module)
+                }
+                .keyboardShortcut(.cancelAction)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            Divider()
+            List {
+                ForEach(snapshots, id: \.config) { snapshot in
+                    Button {
+                        showAll = false
+                        onContinue(snapshot.config)
+                    } label: {
+                        savedGameRow(snapshot)
+                            .padding(.vertical, 2)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            #if os(macOS)
+            .listStyle(.inset)
+            #endif
+        }
+        #if os(macOS)
+        .frame(minWidth: 400, idealWidth: 460, minHeight: 340, idealHeight: 520)
+        #endif
     }
 
     /// One in-progress board: glyph, family + config (with cleared %), and — trailing —

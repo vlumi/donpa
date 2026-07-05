@@ -309,14 +309,22 @@ struct GameContent: View {
     func autosave() {
         autosaveTask?.cancel()  // an explicit save subsumes any pending debounce
         if let inputs = viewModel.snapshotInputs() {
+            let navigator = navigator
             Task.detached(priority: .utility) {
                 guard let snapshot = GameSnapshot(inputs: inputs) else { return }
                 await saveWriter.write(snapshot)
+                // Signal the commit so Home / New Game re-read their save cues —
+                // this is what updates a dot whose save landed AFTER the popup
+                // opened (big boards: the first move is still computing at open).
+                await MainActor.run { navigator.savesChanged &+= 1 }
             }
         } else {
             // Not in progress (won/lost/not started) → discard THIS config's save.
             let config = viewModel.config
-            Task { await saveWriter.clear(config: config) }
+            Task {
+                await saveWriter.clear(config: config)
+                navigator.savesChanged &+= 1
+            }
         }
     }
 
@@ -347,6 +355,7 @@ struct GameContent: View {
     /// terminate the instant the handler returns, so the write must finish inline.
     private func autosaveBlocking() {
         autosaveTask?.cancel()
+        defer { navigator.savesChanged &+= 1 }
         if let snapshot = viewModel.snapshot() {
             saveStore.save(snapshot)
         } else {

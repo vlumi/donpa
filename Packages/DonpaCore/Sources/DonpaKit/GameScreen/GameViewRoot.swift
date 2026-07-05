@@ -145,6 +145,15 @@ public struct GameView: View {
         .onChangeCompat(of: navigator.showingNewGame) { showing in
             if showing { saveSummaries = resumeStore.summaries() }
         }
+        // …and when a save COMMITS while one of those surfaces is up. Big boards
+        // can still be computing the first move when the popup opens — the
+        // open-time flush has nothing to write yet, and the real save lands via
+        // the debounce seconds later. This keeps the dots/Continue live.
+        .onChangeCompat(of: navigator.savesChanged) { _ in
+            if navigator.showingTitle || navigator.showingNewGame {
+                saveSummaries = resumeStore.summaries()
+            }
+        }
         // UI-test hooks (like -uitest-clean): jump straight to a modal, so
         // tests/screenshots don't depend on tapping through the title.
         .onAppear {
