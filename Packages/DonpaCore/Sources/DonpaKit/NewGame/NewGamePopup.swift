@@ -54,7 +54,8 @@ struct NewGamePopup: View {
             GeometryReader { geo in
                 card(
                     layout: Self.layout(for: geo.size),
-                    width: Self.cardWidth(available: geo.size.width - 48)
+                    width: Self.cardWidth(available: geo.size.width - 48),
+                    short: geo.size.height < 420
                 )
                 // The X lives on the card (its actual width), so it sits in the
                 // card's corner rather than the screen's.
@@ -127,25 +128,29 @@ struct NewGamePopup: View {
 
     /// A card that hugs its content; the outer frame centres it. Both layouts are
     /// tuned to fit the shortest device (iPhone SE), so neither needs a ScrollView.
-    private func card(layout: BoardSelectionPicker.Layout, width: CGFloat) -> some View {
+    /// Start is pinned full-width at the card's BOTTOM in both layouts — the confirm
+    /// belongs at the bottom edge (with Start tucked under the family sidebar, the
+    /// Flat/Round toggle sat where Start was expected and got tapped as one). `short`
+    /// (landscape phone) compensates for that row via the picker's compact mode.
+    private func card(
+        layout: BoardSelectionPicker.Layout, width: CGFloat, short: Bool
+    ) -> some View {
         // The sidebar is the short-wide layout (landscape phone ~375pt tall), so it
         // packs tighter than the pager: less title gap and less card padding.
         let sidebar = layout == .sidebar
-        return VStack(spacing: sidebar ? 12 : 20) {
+        return VStack(spacing: sidebar ? (short ? 8 : 12) : 20) {
             Text("New game", bundle: .module).font(.title2.bold())
-            picker(layout: layout)
+            picker(layout: layout, compact: short)
             #if os(macOS)
             Text("⌘1–3 family · arrows to choose · Return to start", bundle: .module)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             #endif
-            if layout == .pager {
-                picker(layout: .pager).startButton
-            }
+            picker(layout: layout, compact: short).startButton
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
-        .padding(.vertical, sidebar ? 16 : 24)
+        .padding(.vertical, sidebar ? (short ? 10 : 16) : 24)
         .frame(width: width)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -153,16 +158,18 @@ struct NewGamePopup: View {
     }
 
     /// The `BoardSelectionPicker` for a layout.
-    private func picker(layout: BoardSelectionPicker.Layout) -> BoardSelectionPicker {
+    private func picker(
+        layout: BoardSelectionPicker.Layout, compact: Bool = false
+    ) -> BoardSelectionPicker {
         #if os(macOS)
         BoardSelectionPicker(
             settings: settings, focusedRow: focusedRow,
             onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart,
-            index: index, onResume: onResume)
+            index: index, onResume: onResume, compact: compact)
         #else
         BoardSelectionPicker(
             settings: settings, layout: layout, onStart: onStart,
-            index: index, onResume: onResume)
+            index: index, onResume: onResume, compact: compact)
         #endif
     }
 

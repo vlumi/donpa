@@ -30,6 +30,10 @@ struct BoardSelectionPicker: View {
     /// Resume the saved game for a config (when the current selection has one). nil →
     /// the button is always Start.
     var onResume: ((GameConfig) -> Void)?
+    /// Short-window mode (landscape phone): captions drop their tagline line and the
+    /// Start button slims — that buys back the height of the full-width Start row at
+    /// the card's bottom, so nothing scrolls on a landscape SE.
+    var compact = false
 
     /// The current selection has a save AND we can resume it → the button says Continue.
     private var canContinue: Bool {
@@ -64,15 +68,14 @@ struct BoardSelectionPicker: View {
 
     // MARK: Regular layout (iPad / Mac / landscape) — family sidebar + detail pane
 
-    /// Regular: a family sidebar (with Start below it) beside the detail pane. Both
-    /// columns hug their content; the card hugs the taller of the two.
+    /// Regular: a family sidebar beside the detail pane; the host pins Start below
+    /// BOTH columns (bottom-right is where a confirm belongs — with Start bottom-left
+    /// under the families, the Flat/Round toggle sat in the "start" position and got
+    /// tapped as one). Both columns hug their content; the card hugs the taller.
     private var regularLayout: some View {
         HStack(alignment: .top, spacing: 20) {
-            VStack(spacing: 16) {
-                familySidebar  // family: click a row (⌘1-3 on Mac) — not arrowed
-                startButton
-            }
-            .frame(width: 160)
+            familySidebar  // family: click a row (⌘1-3 on Mac) — not arrowed
+                .frame(width: 160)
             detailPaneStack
                 .frame(maxWidth: .infinity)
         }
@@ -97,7 +100,7 @@ struct BoardSelectionPicker: View {
             }
             .font(.title3.weight(.bold))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, compact ? 8 : 12)
             .background(Color.accentColor, in: Capsule())
             .foregroundStyle(.white)
         }
@@ -371,7 +374,11 @@ struct BoardSelectionPicker: View {
     func detailLine(detail: String, tagline: String) -> some View {
         VStack(spacing: 2) {
             captionText(detail, weight: .bold, opacity: 1)
-            captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
+            // Short windows drop the tagline — the board facts are the information;
+            // the flavor line is the first thing to give when height is tight.
+            if !compact {
+                captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
+            }
         }
         .frame(maxWidth: .infinity)
         .animation(.snappy, value: detail)

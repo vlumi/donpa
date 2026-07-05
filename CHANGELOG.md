@@ -60,6 +60,12 @@ under Unreleased as they merge.
 - **Rivals and groups sync across your devices.** With iCloud sync on, the rivals and
   groups you set up on one device show up on the rest — the same switch that syncs your
   scores. Removing a rival removes them everywhere.
+- **Start sits where you expect it.** In New Game's wide layout (Mac, iPad,
+  landscape phone), the Start/Continue button moved to the bottom of the card, full
+  width — it used to sit under the family list, leaving the Flat/Round toggle in the
+  spot where a start button usually lives (and getting tapped as one). On a short
+  landscape phone the card slims its captions so everything still fits without
+  scrolling.
 - **Browsing New Game no longer costs clock time.** Opening the New Game screen during
   a game now pauses it, just like the Service Record does; closing without starting
   picks the clock right back up.
