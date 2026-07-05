@@ -32,6 +32,12 @@ under Unreleased as they merge.
 - **Groups.** Sort friends into named groups (work, family, …): create and manage your
   groups, then put each friend in as many as you like. Renaming a group keeps its
   members; deleting one just un-groups them. Tap a group to see who's in it.
+- **See how you rank against friends.** Expand any board in the Service Record for a
+  leaderboard — your best time slotted in among your friends', fastest first. A little
+  medal on each board shows your standing at a glance, and you can narrow the comparison
+  to a single group.
+- **Head-to-head.** From the friends list, compare all your best times against one
+  friend — or a whole group's best — board by board, with a running tally of who leads.
 - **Friends and groups sync across your devices.** With iCloud sync on, the friends and
   groups you set up on one device show up on the rest — the same switch that syncs your
   scores. Removing a friend removes them everywhere.
