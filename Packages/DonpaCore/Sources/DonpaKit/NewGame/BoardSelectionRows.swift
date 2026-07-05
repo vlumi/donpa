@@ -9,14 +9,14 @@ extension BoardSelectionPicker {
 
     /// The Basic page's own layout: three big preset cards stacked vertically,
     /// always all visible, each carrying its board facts and tagline inside — no
-    /// scrolling. Keyboard row 1 (←/→ cycles the preset, same as the chip rows).
+    /// Keyboard row 0 for Basic — ←/→ cycles the preset (family is ⌘1-3, not a row).
     var basicCards: some View {
         VStack(spacing: 6) {
             ForEach(BasicPreset.allCases, id: \.self) { preset in
                 basicCard(preset)
             }
         }
-        .modifier(FocusRing(focused: focusedRow == 1))
+        .modifier(FocusRing(focused: focusedRow == 0))
     }
 
     private func basicCard(_ preset: BasicPreset) -> some View {
