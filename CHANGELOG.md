@@ -52,6 +52,12 @@ under Unreleased as they merge.
 - **Browsing New Game no longer costs clock time.** Opening the New Game screen during
   a game now pauses it, just like the Service Record does; closing without starting
   picks the clock right back up.
+- **Times never round up.** A clear at 49.95s used to record as "50.0" while the
+  in-game clock still read 49 — every time display now truncates to the tenth, so a
+  result never shows more than the timer did. The "improved by" note on a new record
+  now shows how much the displayed best changed (no more "improved by 0.0 s" when the
+  record moved from 18.24s to 18.15s — that now reads 0.1s, or skips the note when the
+  shown value didn't move).
 
 ## [0.3.0] — Board variants
 
