@@ -160,6 +160,9 @@ public struct GameView: View {
             if args.contains("-uitest-open-scores") {
                 navigator.showingScores = true
             }
+            if args.contains("-uitest-open-resume") {
+                navigator.showingResumeList = true
+            }
         }
     }
 
