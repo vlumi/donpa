@@ -75,17 +75,39 @@ struct NewGamePopup: View {
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .up: focusedRow = max(0, (focusedRow ?? 0) - 1)
+        // Family is picked by number (⌘1/2/3), not arrowed through — it's a list of
+        // distinct board types, not a value to step. Arrows drive the OTHER rows.
+        case .family(let n):
+            let families = BoardFamily.allCases
+            if (1...families.count).contains(n) {
+                settings.family = families[n - 1]
+                focusedRow = nil  // reset focus into the new family's rows
+            }
+        // Basic's presets are a single VERTICAL list, so ↑/↓ step through them
+        // (matching their layout); ←/→ do the same for good measure. Grid/Hive have
+        // multiple horizontal chip-rows, so ↑/↓ move BETWEEN rows and ←/→ cycle within.
+        case .up:
+            if settings.family == .basic {
+                cycleSelection(in: 0, by: -1)
+            } else {
+                focusedRow = max(0, (focusedRow ?? 0) - 1)
+            }
         case .down:
-            // grid/hive: family, density, size, edges
-            let rows = settings.family == .basic ? 2 : 4
-            focusedRow = min(rows - 1, (focusedRow ?? -1) + 1)
+            if settings.family == .basic {
+                cycleSelection(in: 0, by: 1)
+            } else {
+                focusedRow = min(rowCount - 1, (focusedRow ?? -1) + 1)
+            }
         case .left: cycleSelection(in: focusedRow ?? 0, by: -1)
         case .right: cycleSelection(in: focusedRow ?? 0, by: 1)
         case .enter: onStart()
         case .escape: onClose()
         }
     }
+
+    /// Arrow-navigable rows in the current family (family excluded — it's ⌘1/2/3):
+    /// Basic has one (preset); Grid/Hive have three (density, size, edges).
+    private var rowCount: Int { settings.family == .basic ? 1 : 3 }
     #endif
 
     /// A card that hugs its content; the outer frame centres it. Both layouts are
@@ -98,7 +120,7 @@ struct NewGamePopup: View {
             Text("New game", bundle: .module).font(.title2.bold())
             picker(layout: layout)
             #if os(macOS)
-            Text("Arrows to choose · Return to start", bundle: .module)
+            Text("⌘1–3 family · arrows to choose · Return to start", bundle: .module)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             #endif
@@ -142,19 +164,19 @@ struct NewGamePopup: View {
     #if os(macOS)
     /// Cycle the selection in the given row. Row 0 is Family; rows 1+ are the
     /// preset (Basic), or Density / Size / Edges (Grid/Hive).
+    /// Cycle the value in the focused row (family is NOT a row — it's ⌘1/2/3).
+    /// Basic: the sole row is the preset. Grid/Hive: 0 = density, 1 = size, 2 = edges.
     private func cycleSelection(in row: Int, by step: Int) {
         switch (settings.family, row) {
-        case (_, 0):
-            settings.family = Self.stepped(settings.family, by: step)
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
-        case (.grid, 1), (.hive, 1):
+        case (.grid, 0), (.hive, 0):
             let path = Settings.densityPath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
-        case (.grid, 2), (.hive, 2):
+        case (.grid, 1), (.hive, 1):
             let path = Settings.sizePath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
-        case (.grid, _), (.hive, _):  // row 3: edges
+        case (.grid, _), (.hive, _):  // row 2: edges
             let path = Settings.edgesPath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         }

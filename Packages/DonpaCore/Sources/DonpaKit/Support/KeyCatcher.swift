@@ -6,7 +6,9 @@ import SwiftUI
 /// Escape presses. Used by overlays because `@FocusState` can't reliably take it
 /// from the SpriteKit board, especially after a game ends.
 struct KeyCatcher: NSViewRepresentable {
-    enum Key { case up, down, left, right, enter, escape }
+    /// Arrow / Return / Escape, plus ⌘1–⌘3 (the New Game popup picks the board
+    /// family by number — families are a list, not something to arrow through).
+    enum Key { case up, down, left, right, enter, escape, family(Int) }
     let onKey: (Key) -> Void
 
     func makeNSView(context: Context) -> KeyCatcherView {
@@ -55,6 +57,18 @@ struct KeyCatcher: NSViewRepresentable {
             } else {
                 super.keyDown(with: event)
             }
+        }
+
+        /// ⌘1 / ⌘2 / ⌘3 pick the board family. These arrive as key equivalents
+        /// (⌘-combos don't come through `keyDown`), so handle them here.
+        override func performKeyEquivalent(with event: NSEvent) -> Bool {
+            guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                let n = Int(event.charactersIgnoringModifiers ?? ""), (1...3).contains(n)
+            else {
+                return super.performKeyEquivalent(with: event)
+            }
+            onKey?(.family(n))
+            return true
         }
     }
 }

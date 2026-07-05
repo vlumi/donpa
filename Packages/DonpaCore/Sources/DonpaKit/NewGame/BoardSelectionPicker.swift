@@ -45,8 +45,7 @@ struct BoardSelectionPicker: View {
     /// Start below this, so nothing here renders it.
     private var compactLayout: some View {
         VStack(spacing: 14) {
-            familyTabs
-                .modifier(FocusRing(focused: focusedRow == 0))
+            familyTabs  // family: tap a tab / swipe the pager (⌘1-3 on Mac) — not arrowed
 
             pager
         }
@@ -59,8 +58,7 @@ struct BoardSelectionPicker: View {
     private var regularLayout: some View {
         HStack(alignment: .top, spacing: 20) {
             VStack(spacing: 16) {
-                familySidebar
-                    .modifier(FocusRing(focused: focusedRow == 0))
+                familySidebar  // family: click a row (⌘1-3 on Mac) — not arrowed
                 startButton
             }
             .frame(width: 160)
@@ -332,11 +330,11 @@ struct BoardSelectionPicker: View {
         case .grid, .hive:
             VStack(spacing: gridHiveSpacing) {
                 densityChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 1))
+                    .modifier(FocusRing(focused: focusedRow == 0))
                 sizeChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 2))
+                    .modifier(FocusRing(focused: focusedRow == 1))
                 edgesToggle(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 3))
+                    .modifier(FocusRing(focused: focusedRow == 2))
             }
         }
     }
