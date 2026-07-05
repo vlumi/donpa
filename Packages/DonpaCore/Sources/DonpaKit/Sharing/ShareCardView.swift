@@ -18,11 +18,19 @@ struct ShareCardView: View {
     @State private var link: URL?
     @State private var qr: Image?
     @State private var failed = false
+    /// The full-size QR overlay (compact layouts show a thumb too dense to scan).
+    @State private var enlarged = false
+    /// Measured card width → picks the inline QR size (see `qrSize`).
+    @State private var cardWidth: CGFloat = 0
+
+    /// The share payload is DENSE (signed + every board's best), so small renders
+    /// don't resolve in a scanner. Wide layouts (Mac, iPad) get a directly-scannable
+    /// size inline; compact ones keep a thumb and rely on tap-to-enlarge.
+    private var qrSize: CGFloat { cardWidth >= 480 ? 240 : 132 }
 
     var body: some View {
-        // Compact: the QR sits beside the fields, so the card stays ~160pt tall and
-        // the rivals list below keeps the room. The QR is still comfortably scannable
-        // phone-to-phone at this size.
+        // The QR sits beside the fields so the card stays shallow and the rivals
+        // list below keeps the room. Tapping the QR opens it full size.
         VStack(spacing: 8) {
             HStack(alignment: .top, spacing: 14) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -36,6 +44,9 @@ struct ShareCardView: View {
                     }
                     Toggle(isOn: $includeCareer) {
                         Text("Include career stats", bundle: .module)
+                            // Wrap on a narrow column instead of truncating to
+                            // "Include care…".
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .onChangeCompat(of: includeCareer) { _ in rebuild() }
                     if let link {
@@ -55,6 +66,16 @@ struct ShareCardView: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.primary.opacity(0.05))
         )
+        // Measure the card's width to size the inline QR (no GeometryReader wrapper —
+        // it would fight the card's natural height).
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear { cardWidth = geo.size.width }
+                    .onChangeCompat(of: geo.size.width) { cardWidth = $0 }
+            }
+        )
+        .sheet(isPresented: $enlarged) { QRZoomSheet(qr: qr) }
         .onAppear {
             if name.isEmpty { name = settings.shareName }
             rebuild()
@@ -63,14 +84,29 @@ struct ShareCardView: View {
 
     @ViewBuilder private var qrThumb: some View {
         if let qr {
-            qr
-                .interpolation(.none)  // keep QR modules crisp
-                .resizable()
-                .scaledToFit()
-                .frame(width: 132, height: 132)
-                .padding(8)
-                .background(.white, in: RoundedRectangle(cornerRadius: 10))
-                .accessibilityLabel(Text("Share QR code", bundle: .module))
+            Button {
+                enlarged = true
+            } label: {
+                qr
+                    .interpolation(.none)  // keep QR modules crisp
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: qrSize, height: qrSize)
+                    .padding(8)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 10))
+                    // The "this grows" hint, tucked on the corner of the plate.
+                    .overlay(alignment: .bottomTrailing) {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(4)
+                            .background(.black.opacity(0.55), in: Circle())
+                            .padding(5)
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Share QR code", bundle: .module))
+            .accessibilityHint(Text("Shows the code full size.", bundle: .module))
         } else if failed {
             Text("Couldn't prepare your share.", bundle: .module)
                 .font(.caption).foregroundStyle(.secondary)
@@ -229,6 +265,44 @@ private struct ShareImageButton: View {
             return nil
         }
         return rep.representation(using: .png, properties: [:])
+        #endif
+    }
+}
+
+/// The QR at scanning size: near the full sheet width on iOS, a generous fixed
+/// square on macOS. Tap anywhere (or Close) to dismiss.
+private struct QRZoomSheet: View {
+    let qr: Image?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Close", bundle: .module)
+                }
+                .keyboardShortcut(.cancelAction)
+            }
+            if let qr {
+                qr
+                    .interpolation(.none)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 480)
+                    .padding(20)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                    .accessibilityLabel(Text("Share QR code", bundle: .module))
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(20)
+        .contentShape(Rectangle())
+        .onTapGesture { dismiss() }
+        #if os(macOS)
+        .frame(minWidth: 560, minHeight: 620)
         #endif
     }
 }

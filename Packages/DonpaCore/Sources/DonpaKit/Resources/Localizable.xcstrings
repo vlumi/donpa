@@ -897,7 +897,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete group"
+            "value" : "Delete squad"
           }
         },
         "fi" : {
@@ -1107,7 +1107,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit group"
+            "value" : "Edit squad"
           }
         },
         "fi" : {
@@ -1760,7 +1760,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New group"
+            "value" : "New squad"
           }
         },
         "fi" : {
@@ -1912,7 +1912,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No groups yet — create one above."
+            "value" : "No squads yet — create one above."
           }
         },
         "fi" : {
@@ -1934,7 +1934,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No groups yet — create one below."
+            "value" : "No squads yet — create one below."
           }
         },
         "fi" : {
@@ -2664,6 +2664,23 @@
         }
       }
     },
+    "Shows the code full size." : {
+      "comment" : "Accessibility hint on the share-card QR thumbnail (tap to enlarge)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Näyttää koodin täysikokoisena."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コードを拡大表示します。"
+          }
+        }
+      }
+    },
     "Sign into iCloud" : {
       "comment" : "Sync status: on but signed out — tappable nudge (short)",
       "localizations" : {
@@ -2703,7 +2720,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Group name"
+            "value" : "Squad name"
           }
         },
         "fi" : {
@@ -2725,7 +2742,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Groups"
+            "value" : "Squads"
           }
         },
         "fi" : {
@@ -2747,7 +2764,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Groups (optional)"
+            "value" : "Squads (optional)"
           }
         },
         "fi" : {
@@ -2938,7 +2955,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This removes the group. Your rivals and their scores stay."
+            "value" : "This removes the squad. Your rivals and their scores stay."
           }
         },
         "fi" : {
