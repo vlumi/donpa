@@ -24,7 +24,7 @@ final class QRRoundTripTests: XCTestCase {
 
         // Render at a large scale so the detector has plenty of module resolution.
         let image = try XCTUnwrap(QRCode.ciImage(from: url.absoluteString, scale: 10))
-        let decoded = try XCTUnwrap(ScanShareView.decodeQR(from: image))
+        let decoded = try XCTUnwrap(ScanContent.decodeQR(from: image))
 
         XCTAssertEqual(decoded, url.absoluteString)
         // And the decoded URL classifies as a clean add against an empty friends list.

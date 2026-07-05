@@ -186,14 +186,6 @@ private struct ReceivePrompt: ViewModifier {
                     navigator.incomingShare = nil
                 }
             }
-            .sheet(isPresented: $navigator.showingScanner) {
-                ScanShareView { url in
-                    // Route on the next runloop tick: the scanner sheet is dismissing,
-                    // and presenting the receive sheet in the same tick can race it.
-                    let incoming = GameView.classify(url, existing: friends.friends)
-                    Task { @MainActor in navigator.incomingShare = incoming }
-                }
-            }
             .sheet(isPresented: $navigator.showingFriends) {
                 FriendsListView(friends: friends, scoreboard: scoreboard)
             }

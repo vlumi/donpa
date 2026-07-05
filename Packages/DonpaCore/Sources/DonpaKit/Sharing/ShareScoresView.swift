@@ -9,10 +9,17 @@ import SwiftUI
 struct ShareScoresView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    /// A scanned rival URL to route into the receive flow. The host closes this sheet
+    /// and hands the URL to the root classify/prompt path (same as a tapped link).
+    var onScanned: ((URL) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     /// Minted lazily on first share; held for the sheet's lifetime.
     private let identityStore = ShareIdentityStore()
+
+    /// Show my QR to a rival, or scan a rival's. One sheet, two jobs.
+    private enum Mode: Hashable { case show, scan }
+    @State private var mode: Mode = .show
 
     @State private var name: String = ""
     @State private var includeCareer = false
@@ -28,7 +35,30 @@ struct ShareScoresView: View {
             }
     }
 
+    /// The mode switch + the active mode's body.
     @ViewBuilder private var content: some View {
+        VStack(spacing: 16) {
+            Picker(selection: $mode) {
+                Text("Show", bundle: .module).tag(Mode.show)
+                Text("Scan", bundle: .module).tag(Mode.scan)
+            } label: {
+                Text("Mode", bundle: .module)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+
+            switch mode {
+            case .show: showContent
+            case .scan:
+                ScanContent { url in
+                    dismiss()
+                    onScanned?(url)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var showContent: some View {
         VStack(spacing: 16) {
             // Name + career opt-in drive the payload; editing rebuilds the QR/link.
             VStack(alignment: .leading, spacing: 12) {
@@ -141,7 +171,7 @@ struct ShareScoresView: View {
         #if os(iOS)
         NavigationStack {
             ScrollView { content.padding(20) }
-                .navigationTitle(Text("Share scores", bundle: .module))
+                .navigationTitle(Text("Share", bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
@@ -155,7 +185,7 @@ struct ShareScoresView: View {
         }
         #else
         VStack(spacing: 16) {
-            Text("Share scores", bundle: .module).font(.title2.bold())
+            Text("Share", bundle: .module).font(.title2.bold())
             content
             Button {
                 dismiss()

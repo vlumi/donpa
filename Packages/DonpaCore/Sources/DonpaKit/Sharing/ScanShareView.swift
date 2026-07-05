@@ -6,16 +6,14 @@ import SwiftUI
 import UniformTypeIdentifiers
 #endif
 
-/// The "add a friend by QR" sheet. iOS scans live with the camera; macOS (no
-/// built-in scan target and often no camera) imports an image of a QR and decodes
-/// it. Either way the decoded string is handed to `onFound` — the receive flow then
-/// verifies and prompts, exactly as a tapped link does. This view knows nothing
-/// about signatures.
-struct ScanShareView: View {
-    /// A decoded QR string (expected to be a donpa.app/s/… URL). The presenter
-    /// routes it through the same `receive(_:)` path as `onOpenURL`.
+/// The QR-scanning surface, reusable on its own or as the "Scan" tab of the Share
+/// sheet. iOS scans live with the camera; macOS imports/drops an image and decodes it.
+/// A decoded string is handed to `onFound` — the receive flow then verifies and prompts,
+/// exactly as a tapped link does. Knows nothing about signatures.
+struct ScanContent: View {
+    /// A decoded QR string (expected to be a donpa.app/s/… URL). The presenter routes
+    /// it through the same receive path as `onOpenURL`.
     let onFound: (URL) -> Void
-    @Environment(\.dismiss) private var dismiss
 
     #if os(macOS)
     @State private var importFailed = false
@@ -24,10 +22,8 @@ struct ScanShareView: View {
     #endif
 
     var body: some View {
-        chrome
+        inner
             #if os(macOS)
-        // SwiftUI's importer (not a raw NSOpenPanel, which fails silently under
-        // the App Sandbox) — presents the picker and vends a security-scoped URL.
         .fileImporter(
             isPresented: $importing,
             allowedContentTypes: [.png, .jpeg, .image],
@@ -38,7 +34,7 @@ struct ScanShareView: View {
             #endif
     }
 
-    @ViewBuilder private var content: some View {
+    @ViewBuilder private var inner: some View {
         #if os(iOS)
         VStack(spacing: 16) {
             CameraScanner { deliver($0) }
@@ -88,15 +84,10 @@ struct ScanShareView: View {
         #endif
     }
 
-    /// Hand a decoded string to the presenter as a URL, then dismiss. A non-URL (a
-    /// random QR) is dropped — the receive flow only understands donpa.app links, and
-    /// dismissing lets the user try again rather than routing a guaranteed failure.
+    /// Hand a decoded string to the presenter as a URL. A non-URL (a random QR) is
+    /// dropped — the receive flow only understands donpa.app links.
     private func deliver(_ string: String) {
-        guard let url = URL(string: string) else {
-            dismiss()
-            return
-        }
-        dismiss()
+        guard let url = URL(string: string) else { return }
         onFound(url)
     }
 
@@ -118,8 +109,7 @@ struct ScanShareView: View {
     }
 
     /// A dropped image arrives as raw bytes (Finder file or an image from another app);
-    /// decode a QR straight from the data — no security-scoped URL needed. Returns true
-    /// if we consumed a droppable item.
+    /// decode a QR straight from the data — no security-scoped URL needed.
     @discardableResult
     private func handleDrop(_ items: [Data]) -> Bool {
         importFailed = false
@@ -143,36 +133,4 @@ struct ScanShareView: View {
         return features.compactMap { ($0 as? CIQRCodeFeature)?.messageString }.first
     }
     #endif
-
-    @ViewBuilder private var chrome: some View {
-        #if os(iOS)
-        NavigationStack {
-            content.padding(20)
-                .navigationTitle(Text("Scan QR", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Cancel", bundle: .module)
-                        }
-                    }
-                }
-        }
-        #else
-        VStack(spacing: 16) {
-            Text("Scan QR", bundle: .module).font(.title2.bold())
-            content
-            Button {
-                dismiss()
-            } label: {
-                Text("Cancel", bundle: .module)
-            }
-            .keyboardShortcut(.cancelAction)
-        }
-        .padding(24)
-        .frame(minWidth: 320)
-        #endif
-    }
 }

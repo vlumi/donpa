@@ -147,12 +147,12 @@ struct GameContent: View {
                 scoreboard: scoreboard, settings: settings, available: windowSize,
                 currentConfig: navigator.showingTitle ? nil : viewModel.config,
                 onPlay: { navigator.playConfigRequested = $0 },
-                // Close the scoreboard, then open the scanner at the root — so the
-                // scanner + receive prompt present cleanly, not stacked on this sheet.
-                // Deferred a tick: swapping two sheets in one runloop drops the second.
-                onScan: {
-                    navigator.showingScores = false
-                    Task { @MainActor in navigator.showingScanner = true }
+                // A rival URL scanned in the Share sheet's Scan tab: classify it and
+                // present the receive prompt at the root. Deferred a tick — the
+                // scoreboard is dismissing, and two sheet swaps in one runloop race.
+                onReceiveURL: { url in
+                    let incoming = GameView.classify(url, existing: friends.friends)
+                    Task { @MainActor in navigator.incomingShare = incoming }
                 },
                 onFriends: {
                     navigator.showingScores = false
@@ -174,7 +174,7 @@ struct GameContent: View {
             }
         }
         .sheet(isPresented: $navigator.showingSettings) {
-            SettingsView(settings: settings)
+            SettingsView(settings: settings, scoreboard: scoreboard)
         }
         .sheet(isPresented: $navigator.showingAbout) {
             AboutView()

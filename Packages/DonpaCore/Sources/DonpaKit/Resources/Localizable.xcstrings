@@ -614,6 +614,28 @@
         }
       }
     },
+    "Clears your scores and stats on this device." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clears your scores and stats on this device."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tyhjentää tämän laitteen tulokset ja tilastot."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このデバイスのスコアと統計を消去します。"
+          }
+        }
+      }
+    },
     "Close" : {
       "comment" : "Result screen: dismiss the panel",
       "localizations" : {
@@ -909,6 +931,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "すべてのデバイスの記録を消去しますか？"
+          }
+        }
+      }
+    },
+    "Erases your scores and stats on all your devices." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erases your scores and stats on all your devices."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poistaa tuloksesi ja tilastosi kaikilta laitteiltasi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてのデバイスのスコアと統計を消去します。"
           }
         }
       }
@@ -1401,6 +1445,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "残り地雷"
+          }
+        }
+      }
+    },
+    "Mode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tila"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モード"
           }
         }
       }
@@ -1947,6 +2013,28 @@
         }
       }
     },
+    "Reset scores" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset scores"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nollaa tulokset"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スコアをリセット"
+          }
+        }
+      }
+    },
     "Restart the app to change the language." : {
       "comment" : "Prominent notice after the language picker is changed",
       "localizations" : {
@@ -2059,6 +2147,28 @@
         }
       }
     },
+    "Scan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skannaa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スキャン"
+          }
+        }
+      }
+    },
     "Scan QR" : {
       "localizations" : {
         "en" : {
@@ -2154,6 +2264,28 @@
         }
       }
     },
+    "Share" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共有"
+          }
+        }
+      }
+    },
     "Share QR code" : {
       "localizations" : {
         "en" : {
@@ -2216,6 +2348,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "共有された名前"
+          }
+        }
+      }
+    },
+    "Show" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Näytä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示"
           }
         }
       }

@@ -10,7 +10,11 @@ import AppKit
 /// App settings: appearance, toggle side, language.
 struct SettingsView: View {
     @ObservedObject var settings: Settings
+    @ObservedObject var scoreboard: Scoreboard
     @Environment(\.dismiss) private var dismiss
+    /// The reset-scores confirmation (moved here from the scoreboard — rare +
+    /// destructive belongs in Settings, not a prominent toolbar button).
+    @State private var confirmingReset = false
     /// The language in effect when this sheet appeared. Moving away from it needs a
     /// restart to switch, surfaced via `restartNotice`.
     @State private var launchLanguage: LanguagePreference?
@@ -26,6 +30,37 @@ struct SettingsView: View {
         sheetChrome
             .onAppear { launchLanguage = settings.language }
             .animation(.easeInOut(duration: 0.2), value: languageChanged)
+            .confirmationDialog(
+                scoreboard.isCloudActive
+                    ? Text("Erase scores on all your devices?", bundle: .module)
+                    : Text("Clear all high scores?", bundle: .module),
+                isPresented: $confirmingReset,
+                titleVisibility: .visible
+            ) {
+                Button(role: .destructive) {
+                    scoreboard.wipeAllSynced()
+                } label: {
+                    scoreboard.isCloudActive
+                        ? Text("Erase everywhere", bundle: .module)
+                        : Text("Clear scores", bundle: .module)
+                }
+                Button(role: .cancel) {
+                } label: {
+                    Text("Cancel", bundle: .module)
+                }
+            } message: {
+                if scoreboard.isCloudActive {
+                    Text(
+                        """
+                        This erases your high scores and career stats on every device \
+                        signed in to your iCloud. It can't be undone.
+                        """, bundle: .module)
+                } else {
+                    Text(
+                        "This clears your high scores and career stats on this device.",
+                        bundle: .module)
+                }
+            }
     }
 
     private var settingsList: some View {
@@ -72,6 +107,28 @@ struct SettingsView: View {
             }
 
             // Score sync lives in the scoreboard; About on the title screen.
+
+            Divider()
+            resetRow
+        }
+    }
+
+    /// Reset scores — destructive, so it lives quietly at the bottom of Settings with
+    /// a confirmation. Wording + scope follow the sync state (global wipe when synced).
+    private var resetRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(role: .destructive) {
+                confirmingReset = true
+            } label: {
+                Text("Reset scores", bundle: .module)
+            }
+            Text(
+                scoreboard.isCloudActive
+                    ? "Erases your scores and stats on all your devices."
+                    : "Clears your scores and stats on this device.",
+                bundle: .module
+            )
+            .font(.caption).foregroundStyle(.secondary)
         }
     }
 
