@@ -61,8 +61,14 @@ struct HeadToHeadView: View {
     }
 
     private func rowView(_ row: RivalRanking.H2HRow) -> some View {
-        HStack {
-            Text(verbatim: row.label).lineLimit(1).minimumScaleFactor(0.7)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(verbatim: row.label).lineLimit(1).minimumScaleFactor(0.7)
+                // Sub-line: for a group, who holds the best; plus your signed gap.
+                if let sub = subline(row) {
+                    Text(sub).font(.caption2).foregroundStyle(.secondary)
+                }
+            }
             Spacer()
             time(row.yourBest, winner: row.lead == .you)
                 .frame(width: 72, alignment: .trailing)
@@ -70,6 +76,20 @@ struct HeadToHeadView: View {
                 .frame(width: 72, alignment: .trailing)
         }
         .font(.callout)
+    }
+
+    /// The row's secondary line: who holds the other side's best (group compare) and
+    /// how far ahead/behind you are (signed gap), when both apply.
+    private func subline(_ row: RivalRanking.H2HRow) -> String? {
+        var parts: [String] = []
+        if let holder = row.holderName { parts.append(holder) }
+        if let gap = row.gap, gap != 0 {
+            let ahead = gap < 0
+            let mag = TimeFormat.mmsst(centiseconds: abs(gap))
+            // negative gap = you're faster.
+            parts.append((ahead ? "−" : "+") + mag)
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     /// A time cell — bolded/tinted when it's the faster (winning) side, "—" if unwon.

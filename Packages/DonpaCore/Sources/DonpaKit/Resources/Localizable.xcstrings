@@ -1694,6 +1694,28 @@
         }
       }
     },
+    "No rivals to add yet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No rivals to add yet."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei vielä haastajia lisättäväksi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ追加できるライバルがいません。"
+          }
+        }
+      }
+    },
     "No rivals yet." : {
       "localizations" : {
         "en" : {

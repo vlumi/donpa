@@ -56,12 +56,17 @@ public enum ScoreComparison {
     /// Who's ahead on a board in a head-to-head.
     public enum Lead: Equatable, Sendable { case you, them, tie, neither }
 
-    /// One board's line in a head-to-head: your time, their time, and who's ahead.
+    /// One board's line in a head-to-head: your time, their time, who's ahead, and —
+    /// for a group opponent — WHO on the other side holds that best (nil for a single
+    /// rival, where the name is in the sheet title). `gap` is your signed time delta
+    /// vs. theirs in centiseconds (negative = you faster), nil unless both have a time.
     public struct HeadToHeadRow: Equatable, Sendable {
         public let configKey: String
         public let yourBest: Int?
         public let theirBest: Int?
         public let lead: Lead
+        public let holderName: String?
+        public let gap: Int?
     }
 
     /// A full head-to-head: per-board rows (only boards either side has a bearing on)
@@ -77,7 +82,8 @@ public enum ScoreComparison {
     /// boards to consider. Bests are keyed only where a board was WON — an absent key
     /// means unwon (no double-optionals).
     public static func headToHead(
-        configKeys: [String], yourBests: [String: Int], theirBests: [String: Int]
+        configKeys: [String], yourBests: [String: Int], theirBests: [String: Int],
+        theirHolders: [String: String] = [:]
     ) -> HeadToHead {
         var rows: [HeadToHeadRow] = []
         var youLead = 0
@@ -90,22 +96,31 @@ public enum ScoreComparison {
             let lead = leadFor(mine: mine, theirs: theirs)
             if lead == .you { youLead += 1 }
             if lead == .them { theyLead += 1 }
+            // Your signed gap vs. theirs (negative = you faster) when both have a time.
+            let gap: Int? = (mine != nil && theirs != nil) ? mine! - theirs! : nil
             rows.append(
-                HeadToHeadRow(configKey: key, yourBest: mine, theirBest: theirs, lead: lead))
+                HeadToHeadRow(
+                    configKey: key, yourBest: mine, theirBest: theirs, lead: lead,
+                    holderName: theirHolders[key], gap: gap))
         }
         return HeadToHead(rows: rows, youLead: youLead, theyLead: theyLead)
     }
 
-    /// For a GROUP opponent, reduce members' scores to the group's best time per board
-    /// (the fastest member), so the head-to-head is you vs "the group's best".
-    public static func groupBests(_ membersScores: [[String: Int]]) -> [String: Int] {
+    /// The group's best time per board and WHO holds it (the fastest member), so the
+    /// head-to-head is you vs "the group's best" but names the holder rather than being
+    /// anonymous. `members` is (name, scores) per member.
+    public static func groupBests(
+        _ members: [(name: String, scores: [String: Int])]
+    ) -> (times: [String: Int], holders: [String: String]) {
         var best: [String: Int] = [:]
-        for scores in membersScores {
-            for (key, time) in scores {
-                best[key] = min(best[key] ?? time, time)
+        var holder: [String: String] = [:]
+        for member in members {
+            for (key, time) in member.scores where time < (best[key] ?? .max) {
+                best[key] = time
+                holder[key] = member.name
             }
         }
-        return best
+        return (best, holder)
     }
 
     // MARK: Ordering

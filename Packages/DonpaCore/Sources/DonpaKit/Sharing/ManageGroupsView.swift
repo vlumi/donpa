@@ -17,6 +17,8 @@ struct ManageGroupsView: View {
     @State private var expandedID: String?
     /// The group being compared head-to-head (vs its best per board), or nil.
     @State private var comparing: FriendGroup?
+    /// The group whose membership is being edited (the multi-select checklist), or nil.
+    @State private var editingMembers: FriendGroup?
 
     var body: some View {
         chrome
@@ -25,6 +27,9 @@ struct ManageGroupsView: View {
                     scoreboard: scoreboard, opponentName: group.name,
                     result: RivalRanking.headToHead(
                         withGroup: friends.members(of: group.id), scoreboard: scoreboard))
+            }
+            .sheet(item: $editingMembers) { group in
+                GroupMembersView(group: group, friends: friends)
             }
     }
 
@@ -75,40 +80,53 @@ struct ManageGroupsView: View {
                 }
             }
         } else {
-            HStack {
-                Text(group.name)
-                Spacer()
-                // Tap the count to expand/collapse the member list.
-                Button {
-                    expandedID = (expandedID == group.id) ? nil : group.id
-                } label: {
-                    let count = friends.members(of: group.id).count
-                    HStack(spacing: 4) {
-                        Text("\(count)").font(.caption)
-                        Image(systemName: expandedID == group.id ? "chevron.up" : "chevron.down")
-                            .font(.caption2)
-                    }
-                    .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.borderless)
-                // Compare vs this group's best per board.
-                Button {
-                    comparing = group
-                } label: {
-                    Image(systemName: "chart.bar")
-                }
-                .buttonStyle(.borderless)
-                .disabled(friends.members(of: group.id).isEmpty)
-                Button {
-                    renamingID = group.id
-                    renameText = group.name
-                } label: {
-                    Image(systemName: "pencil")
-                }
-                .buttonStyle(.borderless)
-            }
-            .contentShape(Rectangle())
+            displayRow(for: group)
         }
+    }
+
+    /// A group's static row: name, member-count toggle, add-members / compare / rename.
+    @ViewBuilder private func displayRow(for group: FriendGroup) -> some View {
+        HStack {
+            Text(group.name)
+            Spacer()
+            // Tap the count to expand/collapse the member list.
+            Button {
+                expandedID = (expandedID == group.id) ? nil : group.id
+            } label: {
+                let count = friends.members(of: group.id).count
+                HStack(spacing: 4) {
+                    Text("\(count)").font(.caption)
+                    Image(systemName: expandedID == group.id ? "chevron.up" : "chevron.down")
+                        .font(.caption2)
+                }
+                .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.borderless)
+            // Add/remove members in one place (a rival checklist for this group).
+            Button {
+                editingMembers = group
+            } label: {
+                Image(systemName: "person.badge.plus")
+            }
+            .buttonStyle(.borderless)
+            .disabled(friends.friends.isEmpty)
+            // Compare vs this group's best per board.
+            Button {
+                comparing = group
+            } label: {
+                Image(systemName: "chart.bar")
+            }
+            .buttonStyle(.borderless)
+            .disabled(friends.members(of: group.id).isEmpty)
+            Button {
+                renamingID = group.id
+                renameText = group.name
+            } label: {
+                Image(systemName: "pencil")
+            }
+            .buttonStyle(.borderless)
+        }
+        .contentShape(Rectangle())
     }
 
     /// The friends in a group, shown inline under its row when expanded.
