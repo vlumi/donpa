@@ -123,6 +123,26 @@ final class DonpaUITests: XCTestCase {
             "the just-played config offers Continue, not a fresh Start")
     }
 
+    /// Regression: the New Game popup pauses a live game (browsing configs shouldn't
+    /// cost clock time) and resumes on dismiss — the resume is owned by the popup, so
+    /// it only fires when the popup did the pausing.
+    func testNewGamePopupPausesTheGame() {
+        startGame()
+        XCTAssertTrue(
+            app.buttons["newgame.start"].waitForNonExistence(timeout: 5),
+            "New Game popup dismissed")
+        app.otherElements["game.board"].tap()  // first move → clock running
+        waitFor(app.buttons["game.pause"])
+        // Open New Game over the live game — the clock must freeze.
+        app.buttons["game.config"].tap()
+        waitFor(app.buttons["newgame.start"])
+        let paused = app.descendants(matching: .any)["game.paused"]
+        waitFor(paused)
+        // Dismiss without starting — the game resumes.
+        app.buttons["Close"].tap()
+        XCTAssertTrue(paused.waitForNonExistence(timeout: 5), "dismiss resumes the game")
+    }
+
     func testPauseAndResume() {
         startGame()
         // Wait for the New Game popup to finish fading out — its dimmed scrim
