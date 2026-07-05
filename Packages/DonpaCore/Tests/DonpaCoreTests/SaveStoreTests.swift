@@ -158,4 +158,13 @@ final class SaveStoreTests: XCTestCase {
     func testUITestCleanLaunchFlagFalseInUnitTests() {
         XCTAssertFalse(SaveStore.isUITestCleanLaunch)
     }
+
+    /// Exercise the production factory (resolves the real App Support dir) with a
+    /// READ-ONLY call — `latest()` just lists, never writes, so it can't disturb a real
+    /// save. Covers the `appSupport()` / `appSupportDirectory` path.
+    func testAppSupportFactoryResolves() {
+        // Doesn't assert a value (the machine may or may not have saves); the point is
+        // the factory + dir resolution run without crashing.
+        _ = SaveStore.appSupport().latest()
+    }
 }

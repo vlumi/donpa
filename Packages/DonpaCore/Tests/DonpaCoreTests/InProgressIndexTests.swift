@@ -49,9 +49,16 @@ final class InProgressIndexTests: XCTestCase {
         XCTAssertTrue(index.edgesHasSave(.round, family: .hive, size: .s, density: .hard))
     }
 
+    func testPresetDots() {
+        // Basic has no size/density/edges to drill — the preset chip lights directly.
+        XCTAssertTrue(index.presetHasSave(.expert))
+        XCTAssertFalse(index.presetHasSave(.beginner))
+    }
+
     func testEmptyIndexLightsNothing() {
         let empty = InProgressIndex(savedConfigs: [])
         XCTAssertFalse(empty.familyHasSave(.grid))
+        XCTAssertFalse(empty.presetHasSave(.expert))
         XCTAssertFalse(empty.hasSave(for: .grid(.m, .normal, .flat)))
     }
 }
