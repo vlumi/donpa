@@ -24,6 +24,17 @@ struct BoardSelectionPicker: View {
     /// so each layout can place it (sidebar: below its column; pager: the host pins
     /// it full-width below).
     var onStart: () -> Void = {}
+    /// Which configs have an in-progress save — drives the Start→Continue button swap
+    /// and the drill-down dots on the selector chips.
+    var index = InProgressIndex(savedConfigs: [])
+    /// Resume the saved game for a config (when the current selection has one). nil →
+    /// the button is always Start.
+    var onResume: ((GameConfig) -> Void)?
+
+    /// The current selection has a save AND we can resume it → the button says Continue.
+    private var canContinue: Bool {
+        onResume != nil && index.hasSave(for: settings.currentConfig)
+    }
 
     /// Live drag offset while swiping the pager; snaps back with the same
     /// spring the page change uses, so release always lands smoothly.
@@ -69,12 +80,20 @@ struct BoardSelectionPicker: View {
     }
 
     /// The Start button — a filled capsule. Placed by each layout (see `onStart`).
+    /// Becomes **Continue** (and resumes) when the current selection has an in-progress
+    /// save, so you pick the board up where you left it instead of restarting it.
     var startButton: some View {
-        Button(action: onStart) {
+        Button {
+            if canContinue {
+                onResume?(settings.currentConfig)
+            } else {
+                onStart()
+            }
+        } label: {
             Label {
-                Text("Start", bundle: .module)
+                Text(canContinue ? "Continue" : "Start", bundle: .module)
             } icon: {
-                Image(systemName: "play.fill")
+                Image(systemName: canContinue ? "arrow.uturn.forward.circle.fill" : "play.fill")
             }
             .font(.title3.weight(.bold))
             .frame(maxWidth: .infinity)
@@ -328,10 +347,12 @@ struct BoardSelectionPicker: View {
         case .basic:
             basicCards
         case .grid, .hive:
+            // Hierarchy order (matches the in-progress drill-down + keyboard rows):
+            // size → density → edges. Size is the fundamental scale; density tunes it.
             VStack(spacing: gridHiveSpacing) {
-                densityChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 0))
                 sizeChips(for: family)
+                    .modifier(FocusRing(focused: focusedRow == 0))
+                densityChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 1))
                 edgesToggle(for: family)
                     .modifier(FocusRing(focused: focusedRow == 2))

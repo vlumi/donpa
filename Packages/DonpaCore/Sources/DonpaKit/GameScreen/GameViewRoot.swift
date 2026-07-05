@@ -25,6 +25,13 @@ public struct GameView: View {
     @StateObject private var friends: FriendsStore
     @StateObject private var sceneHolder: SceneHolder
     private var scene: BoardScene { sceneHolder.scene }
+    /// Read-only store for the New Game popup's resume list. `GameContent` owns the
+    /// writing store; this reads `all()` from the same Application Support `saves/`
+    /// dir (a `SaveStore` is a stateless value over the filesystem). UI-test-clean
+    /// launches have no saves either way, so an ephemeral read is trivially empty.
+    private var resumeStore: SaveStore {
+        SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
+    }
     /// Brief in-app splash mirroring the OS launch image (which can't be delayed,
     /// being pre-process) so the hand-off into the title is seamless.
     @State private var showSplash = true
@@ -89,7 +96,14 @@ public struct GameView: View {
                 NewGamePopup(
                     settings: settings,
                     onStart: { startSelectedGame() },
-                    onClose: { navigator.showingNewGame = false }
+                    onClose: { navigator.showingNewGame = false },
+                    index: InProgressIndex(savedConfigs: resumeStore.all().map(\.config)),
+                    onResume: { config in
+                        guard let snapshot = resumeStore.load(config: config) else { return }
+                        navigator.showingNewGame = false
+                        viewModel.restore(from: snapshot)
+                        navigator.showingTitle = false
+                    }
                 )
                 .transition(.opacity)
                 .zIndex(2)

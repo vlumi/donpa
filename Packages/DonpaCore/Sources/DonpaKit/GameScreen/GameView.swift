@@ -212,7 +212,8 @@ struct GameContent: View {
         }
         if let scenario = PerfScenario.current {
             startPerfScenario(scenario)
-        } else if let snapshot = saveStore.load() {
+        } else if let snapshot = saveStore.latest() {
+            // Auto-resume the most-recently-played in-progress game (per-config saves).
             viewModel.restore(from: snapshot)
             navigator.showingTitle = false
         } else if viewModel.config != settings.currentConfig {
@@ -263,7 +264,7 @@ struct GameContent: View {
     /// lives, since `saveStore` is owned here.
     private func handleStartRequest() {
         navigator.showingTitle = false
-        if let snapshot = saveStore.load() {
+        if let snapshot = saveStore.latest() {
             viewModel.restore(from: snapshot)
         } else {
             navigator.showingNewGame = true
@@ -298,7 +299,9 @@ struct GameContent: View {
                 await saveWriter.write(snapshot)
             }
         } else {
-            Task { await saveWriter.clear() }
+            // Not in progress (won/lost/not started) → discard THIS config's save.
+            let config = viewModel.config
+            Task { await saveWriter.clear(config: config) }
         }
     }
 
@@ -332,7 +335,7 @@ struct GameContent: View {
         if let snapshot = viewModel.snapshot() {
             saveStore.save(snapshot)
         } else {
-            saveStore.clear()
+            saveStore.clear(config: viewModel.config)
         }
     }
 

@@ -12,6 +12,10 @@ struct NewGamePopup: View {
     let onStart: () -> Void
     /// Dismiss without starting (X, backdrop tap, or Escape).
     let onClose: () -> Void
+    /// In-progress saves — drives the Start→Continue swap + the selector dots.
+    var index = InProgressIndex(savedConfigs: [])
+    /// Resume the saved game for a config. nil → the button is always Start.
+    var onResume: ((GameConfig) -> Void)?
 
     #if os(macOS)
     /// Keyboard-focused picker row (0 = Mode). nil until the first arrow press.
@@ -142,9 +146,12 @@ struct NewGamePopup: View {
         #if os(macOS)
         BoardSelectionPicker(
             settings: settings, focusedRow: focusedRow,
-            onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart)
+            onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart,
+            index: index, onResume: onResume)
         #else
-        BoardSelectionPicker(settings: settings, layout: layout, onStart: onStart)
+        BoardSelectionPicker(
+            settings: settings, layout: layout, onStart: onStart,
+            index: index, onResume: onResume)
         #endif
     }
 
@@ -165,16 +172,17 @@ struct NewGamePopup: View {
     /// Cycle the selection in the given row. Row 0 is Family; rows 1+ are the
     /// preset (Basic), or Density / Size / Edges (Grid/Hive).
     /// Cycle the value in the focused row (family is NOT a row — it's ⌘1/2/3).
-    /// Basic: the sole row is the preset. Grid/Hive: 0 = density, 1 = size, 2 = edges.
+    /// Basic: the sole row is the preset. Grid/Hive: 0 = size, 1 = density, 2 = edges
+    /// (the hierarchy order, matching the visual rows + in-progress drill-down).
     private func cycleSelection(in row: Int, by step: Int) {
         switch (settings.family, row) {
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
         case (.grid, 0), (.hive, 0):
-            let path = Settings.densityPath(settings.family)
+            let path = Settings.sizePath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, 1), (.hive, 1):
-            let path = Settings.sizePath(settings.family)
+            let path = Settings.densityPath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
         case (.grid, _), (.hive, _):  // row 2: edges
             let path = Settings.edgesPath(settings.family)

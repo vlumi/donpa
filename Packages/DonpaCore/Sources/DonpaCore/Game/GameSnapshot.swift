@@ -47,6 +47,10 @@ public struct GameSnapshot: Codable, Sendable {
     /// The dig/flag input mode the player left on, so a resumed game keeps it
     /// (defaults to `.reveal` for older saves).
     public let inputMode: InputMode
+    /// When this save was last written — the last-played stamp. Sorts the in-progress
+    /// list and picks the auto-resume game. Old saves (pre per-config) decode to
+    /// `distantPast`, so they sort last if one ever lingers.
+    public let updatedAt: Date
 
     /// Tolerant decode: `config` + `mines` required; everything else defaults.
     public init(from decoder: Decoder) throws {
@@ -63,12 +67,13 @@ public struct GameSnapshot: Codable, Sendable {
             try c.decodeIfPresent(Int.self, forKey: .elapsedCentiseconds) ?? 0
         camera = try c.decodeIfPresent(CameraView.self, forKey: .camera)
         inputMode = try c.decodeIfPresent(InputMode.self, forKey: .inputMode) ?? .reveal
+        updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .distantPast
     }
 
     /// Capture a snapshot of a live game; nil unless it's genuinely in progress.
     public init?(
         game: Game, config: GameConfig, elapsedCentiseconds: Int, camera: CameraView? = nil,
-        inputMode: InputMode = .reveal
+        inputMode: InputMode = .reveal, updatedAt: Date = Date()
     ) {
         guard game.status == .playing else { return nil }
         self.version = Self.currentVersion
@@ -82,6 +87,7 @@ public struct GameSnapshot: Codable, Sendable {
         self.elapsedCentiseconds = elapsedCentiseconds
         self.camera = camera
         self.inputMode = inputMode
+        self.updatedAt = updatedAt
     }
 
     /// Build from captured inputs — used to construct the snapshot OFF the main
