@@ -293,7 +293,10 @@ private struct ReceivePrompt: ViewModifier {
                     onScanned: { url in
                         let incoming = GameView.classify(url, existing: friends.friends)
                         Task { @MainActor in navigator.incomingShare = incoming }
-                    })
+                    },
+                    // A head-to-head rematch: same rail as the Service Record's
+                    // play button (GameView owns the actual start).
+                    onPlay: { navigator.playConfigRequested = $0 })
             }
             .alert(
                 Text("Couldn't verify share", bundle: .module),

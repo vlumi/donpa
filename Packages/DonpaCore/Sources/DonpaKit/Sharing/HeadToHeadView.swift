@@ -3,7 +3,7 @@ import SwiftUI
 
 /// A head-to-head: your best times against one friend's (or a group's best) across
 /// every board either side has cleared, with a win/loss tally. Reached from the
-/// friends list. Read-only.
+/// friends list.
 struct HeadToHeadView: View {
     @ObservedObject var scoreboard: Scoreboard
     /// The opponent's display name (friend's name, or the group's name).
@@ -13,6 +13,9 @@ struct HeadToHeadView: View {
     /// Career totals to compare (yours vs. theirs), or nil — only for a single rival who
     /// opted to share career (a group's career isn't meaningfully aggregated).
     var career: (yours: SharedCareer, theirs: SharedCareer)?
+    /// Start a fresh game on a row's board — the "I'm trailing here, rematch" loop.
+    /// The host owns the navigation (dismissing this sheet included).
+    var onPlay: ((GameConfig) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -136,11 +139,22 @@ struct HeadToHeadView: View {
     private func rowView(_ row: RivalRanking.H2HRow) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: row.label).lineLimit(1).minimumScaleFactor(0.7)
+                boardLabel(row.config)
                 // Group compare: who on the other side holds this board's best.
                 if let holder = row.holderName {
                     Text(verbatim: holder).font(.caption2).foregroundStyle(.secondary)
                 }
+            }
+            if let onPlay {
+                Button {
+                    onPlay(row.config)
+                } label: {
+                    Image(systemName: "play.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(Text("New game on this board", bundle: .module))
             }
             Spacer()
             // YOUR column: your time, and — beneath it — your signed, colored gap vs.
@@ -154,6 +168,30 @@ struct HeadToHeadView: View {
                 .frame(width: 72, alignment: .trailing)
         }
         .font(.callout)
+    }
+
+    /// The board, Service Record-style: the density as its rank insignia (not its
+    /// name) beside the family and size; Round called out, Flat unmarked. Basic
+    /// presets are just their name. The full spoken form stays available to
+    /// VoiceOver via `fullLabel`.
+    @ViewBuilder private func boardLabel(_ config: GameConfig) -> some View {
+        HStack(spacing: 6) {
+            if let density = config.density, let size = config.size {
+                DensityInsignia.image(density)
+                    .resizable().scaledToFit().frame(width: 30, height: 20)
+                Text(verbatim: contextText(family: config.family, size: size, edges: config.edges))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            } else {
+                Text(verbatim: config.label).lineLimit(1).minimumScaleFactor(0.7)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: config.fullLabel))
+    }
+
+    private func contextText(family: BoardFamily, size: BoardSize, edges: BoardEdges) -> String {
+        let base = "\(family.label) · \(size.label)"
+        return edges.wraps ? "\(base) · \(edges.label)" : base
     }
 
     /// Your signed gap vs. theirs: −faster (green), +slower (red). Placed under YOUR

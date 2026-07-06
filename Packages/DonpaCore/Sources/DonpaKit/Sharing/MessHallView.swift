@@ -15,6 +15,9 @@ struct MessHallView: View {
     /// Route a scanned rival URL into the receive flow: the host closes this sheet
     /// and hands the URL to the root classify/prompt path (same as a tapped link).
     var onScanned: ((URL) -> Void)?
+    /// Start a game on a board picked inside a head-to-head (the rematch loop).
+    /// This view closes itself; the host routes the config into a fresh game.
+    var onPlay: ((GameConfig) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     /// Whether the Add-rival scanner sheet is presented.
@@ -60,15 +63,26 @@ struct MessHallView: View {
                     // Career comparison only when this rival opted to share it.
                     career: rival.career.map {
                         (yours: SharePayloadBuilder.career(from: scoreboard), theirs: $0)
-                    })
+                    },
+                    onPlay: play)
             }
             .sheet(item: $editingGroup) { GroupEditView(group: $0, friends: friends) }
             .sheet(item: $comparingGroup) { group in
                 HeadToHeadView(
                     scoreboard: scoreboard, opponentName: group.name,
                     result: RivalRanking.headToHead(
-                        withGroup: friends.members(of: group.id), scoreboard: scoreboard))
+                        withGroup: friends.members(of: group.id), scoreboard: scoreboard),
+                    onPlay: play)
             }
+    }
+
+    /// A head-to-head row's play tapped: collapse this whole surface (the sheet
+    /// stack folds with it) and hand the board to the host to start the game.
+    private func play(_ config: GameConfig) {
+        comparingRival = nil
+        comparingGroup = nil
+        dismiss()
+        onPlay?(config)
     }
 
     // MARK: Share / scan header
