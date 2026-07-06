@@ -21,18 +21,6 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- **A game in progress on every board.** Each board keeps its own in-progress game now,
-  not one shared slot — so starting a quick round on another board no longer discards
-  the big one you had going. In New Game, the Start button becomes Continue when the
-  current board has a game going, and a small dot marks each selector that leads to
-  one — so you can drill down to any saved board. A game is cleared when you win or
-  lose it.
-- **The title screen is now a home screen.** The app opens to a proper menu: a Continue
-  card showing your latest in-progress board (with its progress, time, and when you
-  last played — expandable to all of them), a New Game button, and the Service Record.
-  No more silent jump into whichever game you played last — continuing is one
-  predictable tap, and the title art still works as that shortcut. On a wide screen
-  (Mac, iPad, landscape) the art and menu sit side by side.
 - **The Mess hall.** Everything social now lives in one place, straight off the home
   screen: share your scores, add rivals by scanning theirs, and manage your rivals and
   squads — no more hunting through the Service Record's toolbar. The Record keeps the
@@ -41,9 +29,10 @@ under Unreleased as they merge.
   landed.
 - **Share your scores.** In the Mess hall, tap Share my scores for a QR code (or copy
   a link) built from your best scores. Someone adds you as a rival by scanning the code
-  or opening the link — no account, no server. Shares are signed, so no one can pass
-  one off in someone else's name, and a rival's scores stay separate from your own:
-  remove them and their data is simply gone.
+  or opening the link — no account, no server. Shares are signed, so once you've added
+  a rival, updates to their scores can only come from that same person — someone else
+  reusing the name can't overwrite them. And a rival's scores stay separate from your
+  own: remove them and their data is simply gone.
 - **Rivals list.** Add rivals from their shared scores, give each your own nickname, or
   remove them — all in the Mess hall. Their scores are a snapshot from when they
   last shared (with the date shown), not a live feed. You can nickname a rival and put
@@ -57,12 +46,31 @@ under Unreleased as they merge.
   to a single group.
 - **Head-to-head.** From the rivals list, compare all your best times against one
   rival — or a whole group's best — board by board, with a running tally of who leads.
-- **Rivals and groups sync across your devices.** With iCloud sync on, the rivals and
-  groups you set up on one device show up on the rest — the same switch that syncs your
+- **Rivals and squads sync across your devices.** With iCloud sync on, the rivals and
+  squads you set up on one device show up on the rest — the same switch that syncs your
   scores. Removing a rival removes them everywhere.
-- **The New Game screen no longer balloons on a portrait phone.** A layout feedback
-  loop could stretch the card to fill the screen, pushing its close button behind the
-  Dynamic Island.
+- **A game in progress on every board.** Each board keeps its own in-progress game now,
+  not one shared slot — so starting a quick round on another board no longer discards
+  the big one you had going. In New Game, the Start button becomes Continue when the
+  current board has a game going, and a small dot marks each selector that leads to
+  one — so you can drill down to any saved board. A game is cleared when you win or
+  lose it.
+- **The title screen is now a home screen.** The app opens to a proper menu: a Continue
+  card showing your latest in-progress board (with its progress, time, and when you
+  last played — expandable to all of them), a New Game button, and the Service Record.
+  No more silent jump into whichever game you played last — continuing is one
+  predictable tap, and the title art still works as that shortcut. On a wide screen
+  (Mac, iPad, landscape) the art and menu sit side by side.
+- **Full-clear times.** The Service Record now groups each family's boards by size,
+  and once you've won every difficulty at a size, the group shows your combined
+  best — the full-clear time for that tier. Until then it counts down the boards
+  left (2/5 cleared). Basic gets a Total for the classic trifecta. Sums stay within
+  one size on purpose: adding XXXL to XS would make everything else a rounding
+  error.
+- **Breakdown bars in your career.** The Tour of Duty now shows where your play
+  goes — proportion bars across family, size, and difficulty, switchable between
+  playtime and game count. One glance answers "have I really only been playing
+  S-size Sapper?"
 - **The Mac Game menu speaks Barracks.** ⌘B now takes you home, pausing and saving
   the game (the old ⌘T "Title Screen" retires with the title screen itself), and the
   in-game home button's tooltip says Barracks too. The ⌘1–3 shortcuts that jumped
@@ -77,19 +85,9 @@ under Unreleased as they merge.
 - **Browsing New Game no longer costs clock time.** Opening the New Game screen during
   a game now pauses it, just like the Service Record does; closing without starting
   picks the clock right back up.
-- **Full-clear times.** The Service Record now groups each family's boards by size,
-  and once you've won every difficulty at a size, the group shows your combined
-  best — the full-clear time for that tier. Until then it counts down the boards
-  left (2/5 cleared). Basic gets a Total for the classic trifecta. Sums stay within
-  one size on purpose: adding XXXL to XS would make everything else a rounding
-  error.
-- **Breakdown bars in your career.** The Tour of Duty now shows where your play
-  goes — proportion bars across family, size, and difficulty, switchable between
-  playtime and game count. One glance answers "have I really only been playing
-  S-size Sapper?"
-- **About speaks the game's language.** The genre blurb ("A Minesweeper game for
-  Apple platforms") gave way to the game's own tagline — 地雷を除去し、命を守れ /
-  Clear the mines, save lives.
+- **The New Game screen no longer balloons on a portrait phone.** A layout feedback
+  loop could stretch the card to fill the screen, pushing its close button behind the
+  Dynamic Island.
 - **Times never round up.** A clear at 49.95s used to record as "50.0" while the
   in-game clock still read 49 — every time display now truncates to the tenth, so a
   result never shows more than the timer did. The "improved by" note on a new record
@@ -97,6 +95,9 @@ under Unreleased as they merge.
   record moved from 18.24s to 18.15s — that now reads 0.1s, or skips the note when the
   shown value didn't move).
 
+- **About speaks the game's language.** The genre blurb ("A Minesweeper game for
+  Apple platforms") gave way to the game's own tagline — 地雷を除去し、命を守れ /
+  Clear the mines, save lives.
 ## [0.3.0] — Board variants
 
 **Board-topology variants: wrapped (torus) + hex grids** (see ROADMAP.md).
