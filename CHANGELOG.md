@@ -21,6 +21,8 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 14 — 2026-07-06
+
 - **The Mess hall.** Everything social now lives in one place, straight off the home
   screen: share your scores, add rivals by scanning theirs, and manage your rivals and
   squads — no more hunting through the Service Record's toolbar. The Record keeps the
