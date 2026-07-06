@@ -64,7 +64,7 @@ struct ScoreRow: View {
             Text(verbatim: ScoreboardView.grouped(scoreboard.wins(for: config)))
                 .font(.body.monospaced())
                 .numericCell()
-                .frame(width: 56, alignment: .trailing)
+                .frame(width: ScoreColumns.cleared, alignment: .trailing)
             HStack(spacing: 3) {
                 if recordMarker == .progress { newBestMarker }
                 if let progress = scoreboard.bestProgress(for: config) {
@@ -75,7 +75,7 @@ struct ScoreRow: View {
                     Text("—").foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 64, alignment: .trailing)
+            .frame(width: ScoreColumns.bestProgress, alignment: .trailing)
             HStack(spacing: 3) {
                 if let rank = ranking?.yourRank { rankBadge(rank) }
                 if recordMarker == .time { newBestMarker }
@@ -86,7 +86,7 @@ struct ScoreRow: View {
                     Text("—").foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 80, alignment: .trailing)
+            .frame(width: ScoreColumns.bestTime, alignment: .trailing)
         }
         .contentShape(Rectangle())
         .padding(.vertical, 10)

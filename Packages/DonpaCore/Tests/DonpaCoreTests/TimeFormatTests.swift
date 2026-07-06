@@ -23,8 +23,20 @@ final class TimeFormatTests: XCTestCase {
     }
 
     func testUncappedLongTimes() {
-        // Well past the old 999s cap (1000s = 16:40.0).
+        // Well past the old 999s cap (1000s = 16:40.0), still under an hour.
         XCTAssertEqual(TimeFormat.mmsst(centiseconds: 100_000), "16:40.0")
+    }
+
+    /// Past an hour the format rolls into h:mm:ss.t, so a marathon XXXL clear stays
+    /// narrow (a 3h game read "180:00.0" before) — and minutes/seconds zero-pad.
+    func testRollsIntoHours() {
+        XCTAssertEqual(TimeFormat.mmsst(centiseconds: 359_990), "59:59.9")  // just under 1h
+        XCTAssertEqual(TimeFormat.mmsst(centiseconds: 360_000), "1:00:00.0")  // exactly 1h
+        XCTAssertEqual(TimeFormat.mmsst(centiseconds: 1_080_000), "3:00:00.0")  // 3h
+        // 1h 23m 43.5s (502356cs) → hours + zero-padded m:ss.
+        XCTAssertEqual(TimeFormat.mmsst(centiseconds: 502_356), "1:23:43.5")
+        // Tens of hours (a marathon XXXL) still formats — hours aren't capped.
+        XCTAssertEqual(TimeFormat.mmsst(centiseconds: 8_493_000), "23:35:30.0")
     }
 
     /// Truncation, never rounding up: the in-game timer truncates to whole seconds,
