@@ -83,6 +83,10 @@ under Unreleased as they merge.
   left (2/5 cleared). Basic gets a Total for the classic trifecta. Sums stay within
   one size on purpose: adding XXXL to XS would make everything else a rounding
   error.
+- **Breakdown bars in your career.** The Tour of Duty now shows where your play
+  goes — proportion bars across family, size, and difficulty, switchable between
+  playtime and game count. One glance answers "have I really only been playing
+  S-size Sapper?"
 - **About speaks the game's language.** The genre blurb ("A Minesweeper game for
   Apple platforms") gave way to the game's own tagline — 地雷を除去し、命を守れ /
   Clear the mines, save lives.
