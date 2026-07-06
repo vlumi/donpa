@@ -77,6 +77,12 @@ under Unreleased as they merge.
 - **Browsing New Game no longer costs clock time.** Opening the New Game screen during
   a game now pauses it, just like the Service Record does; closing without starting
   picks the clock right back up.
+- **Full-clear times.** The Service Record now groups each family's boards by size,
+  and once you've won every difficulty at a size, the group shows your combined
+  best — the full-clear time for that tier. Until then it counts down the boards
+  left (2/5 cleared). Basic gets a Total for the classic trifecta. Sums stay within
+  one size on purpose: adding XXXL to XS would make everything else a rounding
+  error.
 - **About speaks the game's language.** The genre blurb ("A Minesweeper game for
   Apple platforms") gave way to the game's own tagline — 地雷を除去し、命を守れ /
   Clear the mines, save lives.

@@ -262,26 +262,35 @@ struct ScoreboardView: View {
         .opacity(filterFamily == .basic ? 0.4 : 1)
     }
 
-    /// The selected Family × Edges leaf, every size × rank shown (played or not).
+    /// The selected Family × Edges leaf, every size × rank shown (played or not),
+    /// grouped by size with a full-clear subheader per group (see ScoreboardGroups).
     /// Pinned to full width so the sheet never resizes when switching between a
     /// family with long labels (Basic's "Intermediate") and short ones (Grid "XS").
     @ViewBuilder private var leafRows: some View {
         let edges: BoardEdges = filterFamily == .basic ? .flat : filterEdges
-        let configs = GameConfig.configs(family: filterFamily, edges: edges)
+        let groups = Self.groups(family: filterFamily, edges: edges)
         let rivals = RivalRanking.rivals(from: friends, group: rivalGroupID)
         VStack(spacing: 0) {
             columnHeader
-            ForEach(configs, id: \.self) { config in
-                ScoreRow(
-                    scoreboard: scoreboard, config: config,
-                    currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
-                    isExpanded: expandedKey == config.storageKey,
-                    onToggle: { toggleExpanded(config.storageKey) },
-                    onPlay: onPlay.map { play in { play(config) } },
-                    rivals: rivals, yourName: settings.shareName
-                )
-                .id(config.storageKey)  // scroll anchor for the current-config jump
-                if config != configs.last { Divider() }
+            ForEach(groups) { group in
+                if let label = group.label {
+                    groupHeader(label, standing: standing(for: group))
+                }
+                ForEach(group.configs, id: \.self) { config in
+                    ScoreRow(
+                        scoreboard: scoreboard, config: config,
+                        currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
+                        isExpanded: expandedKey == config.storageKey,
+                        onToggle: { toggleExpanded(config.storageKey) },
+                        onPlay: onPlay.map { play in { play(config) } },
+                        rivals: rivals, yourName: settings.shareName
+                    )
+                    .id(config.storageKey)  // scroll anchor for the current-config jump
+                    if config != group.configs.last { Divider() }
+                }
+                if group.label == nil {
+                    trifectaFooter(standing: standing(for: group))
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
