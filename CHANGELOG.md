@@ -21,6 +21,8 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 15 — 2026-07-06
+
 - **Head-to-head names every board fully — and offers a rematch.** Rows used to
   read just "M · Veteran", leaving Grid vs Hive and Flat vs Round boards
   indistinguishable. The list now groups under sticky family sections titled
