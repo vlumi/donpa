@@ -235,12 +235,16 @@ struct ScoreboardView: View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .bottom, spacing: 20) {
                 familyPicker
-                edgesPicker
+                // Same-line layout: Basic keeps the edges SLOT (invisible) so the
+                // family picker doesn't jump between half- and full-width.
+                edgesPicker(placeholderWhenBasic: true)
             }
             .frame(minWidth: Self.twoColumnMinWidth)
             VStack(alignment: .leading, spacing: 10) {
                 familyPicker
-                edgesPicker
+                // Stacked layout: drop the row outright — a blank reserved line
+                // would just read as a layout bug.
+                edgesPicker(placeholderWhenBasic: false)
             }
         }
         .labelsHidden()
@@ -254,16 +258,23 @@ struct ScoreboardView: View {
             onChange: { expandedKey = nil })
     }
 
-    /// Hidden entirely for Basic (not just disabled) — the family has no edges
-    /// axis, and a ghosted control just begs "why can't I press this?".
-    @ViewBuilder private var edgesPicker: some View {
+    /// Gone for Basic (the family has no edges axis; a ghosted control begs "why
+    /// can't I press this?") — but on the same-line layout the SLOT is preserved
+    /// invisibly, so hiding it doesn't reflow the family picker.
+    @ViewBuilder private func edgesPicker(placeholderWhenBasic: Bool) -> some View {
         if filterFamily != .basic {
-            SegmentedGlyphPicker(
-                values: BoardEdges.allCases, selection: $filterEdges,
-                glyph: { .edges($0) }, label: { $0.label },
-                onChange: { expandedKey = nil }
-            )
+            edgesPickerControl
+        } else if placeholderWhenBasic {
+            edgesPickerControl.hidden()
         }
+    }
+
+    private var edgesPickerControl: some View {
+        SegmentedGlyphPicker(
+            values: BoardEdges.allCases, selection: $filterEdges,
+            glyph: { .edges($0) }, label: { $0.label },
+            onChange: { expandedKey = nil }
+        )
     }
 
     /// The selected Family × Edges leaf, every size × rank shown (played or not),
