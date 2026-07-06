@@ -14,9 +14,9 @@ summarized in the [README](README.md) version history — this roadmap stays
 forward-looking. For the record: **v0.1.0** (classic), **v0.2.0** (cross-device
 sync + big boards), and **v0.3.0** (board variants — wrapped + hex — and the New
 Game / scoreboard redesign) shipped to TestFlight; **v0.4.0** (friendly rivalry —
-score sharing, rivals + squads, the home-screen redesign, per-board saves) is
-feature-complete on `main`, awaiting a release build. Carry-over notes from those
-milestones live in the Backlog below.
+score sharing, rivals + squads, the home-screen redesign, per-board saves) is in
+TestFlight, with one late addition still to land (forced-guess tracking, below).
+Carry-over notes from those milestones live in the Backlog below.
 
 ---
 
@@ -81,6 +81,38 @@ these slot into whichever release they're ready for.
       the enum (`isLive` / `isFinished` / `isPlaying`). Pure readability; no
       behaviour change.
 
+## v0.4.0 — remaining: forced-guess ("luck") tracking
+
+Pulled forward from the progression milestone so the counters accrue history
+before the achievements that read them exist. Every worse-than-even guess in
+Minesweeper is a **sealed pocket** — a few unopened cells walled in by the board
+edge and already-found mines, where the reachable information (one number, or
+just the mine counter) admits several equally likely layouts. Survival odds =
+the fraction of layouts where the clicked cell is empty: a lone pair splitting
+one mine is the classic **1/2**; a "sees-everything" number leaving two mines
+among three cells is **1/3**; a sealed 2×2 with three mines left is **1/4**.
+Dense boards build these walls; Easy can't — the stat is effectively
+density-gated content.
+
+- [ ] **DonpaCore guess engine** (pure, tested): player-visible pre-reveal state
+      + clicked cell → `(forced, survivalProbability)`. Cheap pre-check with the
+      existing `Solver` fixpoint (not stuck → not forced, skip); then exact
+      enumeration over the clicked cell's frontier component with binomial
+      weighting for the unconstrained interior. **Forced = no cell anywhere has
+      survival probability 1** (falls out of the same enumeration — an
+      unexplored interior usually beats the pocket's odds, so poking it early is
+      a choice, not fate). Bail out silently on pathological components (>~25
+      frontier cells) and gate the whole analysis to boards ≤ L (the fixpoint
+      per click on a 1M board is real cost).
+- [ ] **Three per-config `ScoreRecord` fields** (additive — safe in the
+      per-device-blob model): `forcedGuesses` + `guessesSurvived` counters, and
+      `luckiestGuess` — the lowest survival odds ever survived, merged by min
+      like a best time. The record field is what makes the later achievements
+      retroactive.
+- [ ] **A luck line in the Service Record career** — "Forced guesses survived:
+      12 of 31 (39%) · luckiest: 25%". Computed async off the pre-reveal
+      snapshot; zero input latency.
+
 ## v0.5.0 — Progression: achievements, gating & practice
 
 Engagement features grouped because they all ride one **game-end event layer** and
@@ -99,18 +131,36 @@ the no-leaderboards decision, and the design principles. Build-out:
 **Progressive gating** — content unlocks so a new player isn't hit with the full
 size × rank × family matrix at once. A second consumer (`UnlockEngine`) of the same
 game-end events — an unlock can trigger on the same signals without being a visible
-badge. The paged New Game is built for it: a locked **family is a whole page** with
-a teaser ("clear a Grid at Veteran+ to open the Hive"), not a greyed-out control.
+badge. Content design settled (2026-07):
+
+- **Locked options show as teasers**, not hidden — progression works because you
+  can see the next rung. A locked family is a whole page with a teaser, not a
+  greyed-out control.
+- **Gate on wins, not games played** — fast for the skilled, never grindy; every
+  gate openable in one sitting by someone who's simply good.
+- **Derive, don't store**: `UnlockEngine` is a pure function over the existing
+  per-config win records — veterans auto-pass everything (no migration), and
+  sync is free (derived from the already-synced blobs).
+- **The ladder**: Basic never gates (the classics are the anchor). Sizes start
+  XS/S/M; winning a size unlocks the next (M→L→XL→XXL→XXXL). Ranks start
+  Easy/Normal; winning a rank at ≥S unlocks the next (global, not per-family —
+  hex's denser table makes per-family fiddly). Hive unlocks on the first Grid
+  win (a first-session discovery moment). Round edges unlock on the first win
+  at ≥M. Gates are *access, not goals* — the XXL-win→XXXL gate is fine even
+  though no achievement demands XXXL.
 
 - [ ] UnlockEngine beside the achievement layer (shared events, separate concept)
-- [ ] Unlock triggers + which axes gate (extreme sizes? families?) decided
 - [ ] Locked-page presentation in New Game (ships ungated with the redesign)
 
 **Feat-based public rank** — the hack-resistant face of progression, deferred here
 from the friendly-rivalry milestone (it needs this milestone's feat/event layer):
 a rank derived from achievements/feats rather than raw times, so faking it means
 faking the feat — "you only cheat yourself". Surfaces in the Mess hall; raw scores
-stay trusted-circle only.
+stay trusted-circle only. Each rank should require **specific named feats, not
+points** — a rank then *says something* ("a Major has beaten Insane") and stays
+comparable; sketch ~7 army ranks (Recruit → … → General), with the top ranks built
+from full-clears, purity feats and Insane (respecting the one-sitting cap — no
+XXXL requirement).
 
 - [ ] Rank derivation from the earned feat set (design the tiers with the
       achievement list, same permanence care)
@@ -223,27 +273,43 @@ only cheats yourself. So: Game Center **achievements yes, leaderboards no.**
   `clear.modern.large.insane`, `streak.10`, `time.sub60`).
 
 **Design — keep it decoupled:** the game emits to an **internal achievement layer**
-(an `AchievementEvent` per win carrying `GameConfig` + time + streak) with a local
-store and in-app display; Game Center bolts on later as one backend behind it, no
-rework. Achievements can thus be tracked and shown **offline now**. It crosses a
+(an `AchievementEvent` per game-end carrying `GameConfig` + time + the purity bits —
+`usedFlagEver`/`usedChordEver`, defaulting to violated on a restored save — plus the
+guess-odds data) with a local store and in-app display; Game Center bolts on later
+as one backend behind it, no rework. Achievements can thus be tracked and shown **offline now**. It crosses a
 line the app hasn't yet — **online + account-bound** — so the GC auth flow must
 degrade gracefully to the local layer when declined/failed.
 
-**Design principles** (decide the actual list when building). Avoid filler: plain
-"clear each size/difficulty" is *inevitable, not earned*. Every achievement should
-reward one of:
+**Design principles** (content design settled 2026-07; lock IDs when building).
+Avoid filler: plain "clear each size/difficulty" is *inevitable, not earned*. Two
+hard rules, then the categories:
 
-- **Skill / mastery** — speed thresholds (sub-N seconds), no-flag wins (flag
-  count stayed 0), efficiency (few clicks), conquering the near-unsolvable Insane
-  tier, or boards the solver rated unsolvable-without-guessing.
-- **Streaks / tension** — N wins in a row (a loss resets); rewards nerve, far
-  better than "total wins" grind milestones.
+- **The one-sitting cap**: no achievement may demand more than a single session —
+  beyond that, the Service Record itself is the trophy (the full-clear sums
+  already celebrate XL+). Achievement ceiling = size **L**; no "win XXXL", no
+  "full-clear every size".
+- **No win streaks** — luck-heavy on the dense ranks; rewards variance, not nerve.
+
+- **Skill / mastery** (floored at ≥ M Normal so they can't be farmed on XS Easy) —
+  no-flag win, no-chord win, both at once ("bare hands"); the classic Expert
+  speed ladder (sub-100 s, sub-60, sub-40); an Insane win (≥ M — XS Insane is a
+  lottery, and Insane itself must be unlocked first); a Round win at L+.
+- **Guess-odds feats** — survive a *forced* guess, tiered by the odds: **Coin
+  flip** (~1/2), **Long shot** (≤ 1/3), **Miracle** (≤ 1/4). Reads the v0.4.0
+  forced-guess tracking (the `luckiestGuess` record makes these retroactive).
+  Worse than 1/4 exists but is rare even on Insane — the tiers stop at Miracle.
+  Farming bad odds self-punishes: you mostly die.
+- **Full-clear tie-ins** — full-clear a size (≤ L), the Basic trifecta, the
+  trifecta under a total time (the Record already computes the sums).
+- **Tiered milestones** (deliberately few — texture, not the game) — wins
+  10/100/1000, tiles opened 100k/1M, mines disarmed 1k/10k/100k.
 - **Hidden / playful** — quirky surprises players stumble into and screenshot:
-  win in under 3 clicks, oddly-specific times (the "13-second cursed clear"), a
-  flag-everything win, losing on the *second* click (a wink — the first is safe).
-- **Identity / epic-tied** — feats unique to Donpa's variants once they
-  ship: first torus clear, hex Insane, "went around the world" (a wrap exploit).
-  Generic Minesweeper can't offer these — the strongest long-term hook.
+  losing on the *second* click (a wink — the first is safe), the 13-second
+  cursed clear, a loss at ≥ 99% progress ("so close"), a win past 999 seconds
+  ("Overtime" — the old timer-cap joke).
+- **Identity / epic-tied** — feats unique to Donpa's variants: first torus
+  clear, hex Insane. Generic Minesweeper can't offer these — the strongest
+  long-term hook.
 
 Lean toward a curated set where each entry is interesting; a couple of gentle
 starters (first clear) are fine as an on-ramp, but the bulk should be earned.
