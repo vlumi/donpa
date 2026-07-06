@@ -60,6 +60,14 @@ under Unreleased as they merge.
 - **Rivals and groups sync across your devices.** With iCloud sync on, the rivals and
   groups you set up on one device show up on the rest — the same switch that syncs your
   scores. Removing a rival removes them everywhere.
+- **The New Game screen no longer balloons on a portrait phone.** A layout feedback
+  loop could stretch the card to fill the screen, pushing its close button behind the
+  Dynamic Island.
+- **The Mac Game menu speaks Barracks.** ⌘B now takes you home, pausing and saving
+  the game (the old ⌘T "Title Screen" retires with the title screen itself), and the
+  in-game home button's tooltip says Barracks too. The ⌘1–3 shortcuts that jumped
+  straight into the classic presets are gone — every new game goes through the New
+  Game screen, where all the boards live.
 - **Start sits where you expect it.** In New Game's wide layout (Mac, iPad,
   landscape phone), the Start/Continue button moved to the bottom of the card, full
   width — it used to sit under the family list, leaving the Flat/Round toggle in the

@@ -161,7 +161,7 @@ struct BoardSelectionPicker: View {
     /// as a pager page (`familyContent`) — the sidebar just packs the Grid/Hive rows
     /// a touch tighter, since it's the short-wide layout.
     private func detailPane(for family: BoardFamily) -> some View {
-        familyContent(for: family, gridHiveSpacing: 8)
+        familyContent(for: family, gridHiveSpacing: 8, distribute: true)
     }
 
     /// Move to the previous/next family page, clamped at the ends.
@@ -339,7 +339,11 @@ struct BoardSelectionPicker: View {
     // MARK: Pages
 
     private func page(for family: BoardFamily) -> some View {
-        familyContent(for: family, gridHiveSpacing: 12)
+        // Fixed spacing, NOT distribution: the pager sizes its slot by MEASURING the
+        // pages, and greedy (Spacer-filled) content expands to whatever's proposed —
+        // the measurement then reports that stretched height, ratcheting the card up
+        // until it filled the screen and pushed Close behind the Dynamic Island.
+        familyContent(for: family, gridHiveSpacing: 12, distribute: false)
     }
 
     /// A family's option rows, shared by the pager page and the sidebar detail pane.
@@ -347,7 +351,7 @@ struct BoardSelectionPicker: View {
     /// rows, stacked with the caller's spacing (the pager breathes a little more,
     /// the short-wide sidebar packs tighter).
     @ViewBuilder private func familyContent(
-        for family: BoardFamily, gridHiveSpacing: CGFloat
+        for family: BoardFamily, gridHiveSpacing: CGFloat, distribute: Bool
     ) -> some View {
         switch family {
         case .basic:
@@ -355,22 +359,23 @@ struct BoardSelectionPicker: View {
         case .grid, .hive:
             // Hierarchy order (matches the in-progress drill-down + keyboard rows):
             // size → density → edges. Size is the fundamental scale; density tunes it.
-            // Spacers, not fixed spacing: the pane is sized to the TALLEST family
-            // (Basic's three preset cards), so a fixed-spacing stack left Basic's
-            // extra height as a dead gap under the edges row. The spacers distribute
-            // it between the rows instead; on an exactly-fitting window (landscape
-            // phone) they collapse to the old spacing.
-            VStack(spacing: 0) {
+            // In the SIDEBAR (`distribute`), spacers spread the rows over the pane —
+            // it's sized to the tallest family (Basic's three preset cards), so fixed
+            // spacing left Basic's extra height as a dead gap under the edges row;
+            // the sidebar's `fixedSize` measures the IDEAL height, so greedy spacers
+            // are safe there (unlike the pager — see `page(for:)`). On an
+            // exactly-fitting window they collapse to the plain spacing.
+            VStack(spacing: distribute ? 0 : gridHiveSpacing) {
                 sizeChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
-                Spacer(minLength: gridHiveSpacing)
+                if distribute { Spacer(minLength: gridHiveSpacing) }
                 densityChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 1, inset: compact ? 3 : 6))
-                Spacer(minLength: gridHiveSpacing)
+                if distribute { Spacer(minLength: gridHiveSpacing) }
                 edgesToggle(for: family)
                     .modifier(FocusRing(focused: focusedRow == 2, inset: compact ? 3 : 6))
             }
-            .frame(maxHeight: .infinity)
+            .frame(maxHeight: distribute ? .infinity : nil)
         }
     }
 
