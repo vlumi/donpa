@@ -254,14 +254,16 @@ struct ScoreboardView: View {
             onChange: { expandedKey = nil })
     }
 
-    private var edgesPicker: some View {
-        SegmentedGlyphPicker(
-            values: BoardEdges.allCases, selection: $filterEdges,
-            glyph: { .edges($0) }, label: { $0.label },
-            onChange: { expandedKey = nil }
-        )
-        .disabled(filterFamily == .basic)
-        .opacity(filterFamily == .basic ? 0.4 : 1)
+    /// Hidden entirely for Basic (not just disabled) — the family has no edges
+    /// axis, and a ghosted control just begs "why can't I press this?".
+    @ViewBuilder private var edgesPicker: some View {
+        if filterFamily != .basic {
+            SegmentedGlyphPicker(
+                values: BoardEdges.allCases, selection: $filterEdges,
+                glyph: { .edges($0) }, label: { $0.label },
+                onChange: { expandedKey = nil }
+            )
+        }
     }
 
     /// The selected Family × Edges leaf, every size × rank shown (played or not),
