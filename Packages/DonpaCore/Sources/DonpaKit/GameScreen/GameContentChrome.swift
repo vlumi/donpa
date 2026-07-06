@@ -187,7 +187,9 @@ extension GameContent {
     private func actionView(_ action: GameAction) -> some View {
         switch action {
         case .home:
-            actionButton(.home, help: "Home") { navigator.homeRequested &+= 1 }
+            // "Barracks" — the army vocabulary's name for Home, used in the small
+            // doses the design allows: this tooltip/a11y label and the Mac menu.
+            actionButton(.home, help: "Barracks") { navigator.homeRequested &+= 1 }
                 .accessibilityIdentifier("game.home")
         case .retry:
             actionButton(.retry, help: "Retry", tint: newGameTint) { viewModel.newGame() }

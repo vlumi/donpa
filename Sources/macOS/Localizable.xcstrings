@@ -18,6 +18,23 @@
         }
       }
     },
+    "Barracks" : {
+      "comment" : "Game menu: go to the home screen (pause + save) — ⌘B",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kasarmi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "兵舎"
+          }
+        }
+      }
+    },
     "Game" : {
       "comment" : "Menu bar menu title for game commands",
       "localizations" : {
@@ -133,23 +150,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "開くモードに切り替え"
-          }
-        }
-      }
-    },
-    "Title Screen" : {
-      "comment" : "Menu command: return to the title screen",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aloitusnäyttö"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タイトル画面"
           }
         }
       }

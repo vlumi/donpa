@@ -56,9 +56,10 @@ struct DonpaApp: App {
                 .disabled(modalOpen)
             }
             CommandGroup(replacing: .newItem) {
-                // New Game opens the config popup (pick mode/size, then Start);
-                // Restart replays the same board; the difficulty items below jump
-                // straight to a fresh game with a chosen classic config.
+                // New Game opens the config popup (pick mode/size, then Start) — the
+                // ONLY path to a fresh board, deliberately: the picker is where the
+                // families/sizes/densities live, so no preset quick-starts here.
+                // Restart replays the same board.
                 Button {
                     navigator.showingNewGame = true
                 } label: {
@@ -74,12 +75,13 @@ struct DonpaApp: App {
                 .keyboardShortcut("r", modifiers: .command)
                 .disabled(modalOpen)
                 Button {
-                    // Pause + save (handled in GameContent), not discard.
+                    // Pause + save (handled in GameContent), not discard. "Barracks"
+                    // is the army vocabulary's name for Home — B for Barracks.
                     navigator.homeRequested &+= 1
                 } label: {
-                    Text("Title Screen")
+                    Text("Barracks")
                 }
-                .keyboardShortcut("t", modifiers: .command)
+                .keyboardShortcut("b", modifiers: .command)
                 .disabled(modalOpen)
             }
             // Text overload for the same extraction reason as the Buttons above —
@@ -140,12 +142,6 @@ struct DonpaApp: App {
                 }
                 .keyboardShortcut("-", modifiers: .command)
                 .disabled(modalOpen)
-
-                Divider()
-
-                basicButton(.beginner, key: "1")
-                basicButton(.intermediate, key: "2")
-                basicButton(.expert, key: "3")
             }
         }
     }
@@ -155,15 +151,5 @@ struct DonpaApp: App {
     /// so they don't mutate or navigate the game hidden beneath the modal.
     private var modalOpen: Bool {
         navigator.isModalPresented || showingAbout
-    }
-
-    private func basicButton(_ preset: BasicPreset, key: KeyEquivalent) -> some View {
-        Button(preset.label) {
-            settings.family = .basic
-            settings.basicPreset = preset
-            viewModel.newGame(config: .basic(preset))
-        }
-        .keyboardShortcut(key, modifiers: .command)
-        .disabled(modalOpen)
     }
 }
