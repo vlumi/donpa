@@ -163,6 +163,7 @@ struct HeadToHeadView: View {
         let text = (faster ? "−" : "+") + TimeFormat.mmsst(centiseconds: abs(gap))
         return Text(verbatim: text)
             .font(.caption2.monospaced())
+            .numericCell()
             .foregroundStyle(faster ? Color.green : Color.red)
     }
 
@@ -172,6 +173,7 @@ struct HeadToHeadView: View {
             Text(TimeFormat.mmsst(centiseconds: centis))
                 .font(.body.monospaced())
                 .fontWeight(winner ? .bold : .regular)
+                .numericCell()
                 .foregroundStyle(winner ? Color.accentColor : .primary)
         } else {
             Text("—").foregroundStyle(.secondary)
