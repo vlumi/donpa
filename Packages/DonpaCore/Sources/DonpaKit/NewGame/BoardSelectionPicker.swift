@@ -355,14 +355,22 @@ struct BoardSelectionPicker: View {
         case .grid, .hive:
             // Hierarchy order (matches the in-progress drill-down + keyboard rows):
             // size → density → edges. Size is the fundamental scale; density tunes it.
-            VStack(spacing: gridHiveSpacing) {
+            // Spacers, not fixed spacing: the pane is sized to the TALLEST family
+            // (Basic's three preset cards), so a fixed-spacing stack left Basic's
+            // extra height as a dead gap under the edges row. The spacers distribute
+            // it between the rows instead; on an exactly-fitting window (landscape
+            // phone) they collapse to the old spacing.
+            VStack(spacing: 0) {
                 sizeChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
+                Spacer(minLength: gridHiveSpacing)
                 densityChips(for: family)
                     .modifier(FocusRing(focused: focusedRow == 1, inset: compact ? 3 : 6))
+                Spacer(minLength: gridHiveSpacing)
                 edgesToggle(for: family)
                     .modifier(FocusRing(focused: focusedRow == 2, inset: compact ? 3 : 6))
             }
+            .frame(maxHeight: .infinity)
         }
     }
 
