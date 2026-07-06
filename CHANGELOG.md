@@ -27,16 +27,21 @@ under Unreleased as they merge.
   as its rank insignia, like the Service Record (Round is called out). And when
   you spot a board where you're trailing, a play button on the row jumps
   straight into a fresh game on it.
-- **The name-collision prompt looks like the warning it is.** When a share
-  arrives under an already-taken name from a different person, the prompt now
-  carries an alert triangle and an amber Keep both — clearly not the routine add
-  sheet — and Return no longer triggers Keep both while you're typing a name:
-  accepting a same-name share is a deliberate tap now.
 - **A typed squad name can no longer vanish.** In the add-rival and rival-detail
   sheets, a new squad only existed after tapping the field's own button — typing
   a name and confirming the sheet silently threw it away. Confirming now creates
   the squad (and puts the rival in it), and the field's button says Create, so
   it no longer mirrors the sheet's Add.
+- **Your share name follows you across devices.** The name on your share card
+  was stored per device, so your Mac could introduce you blankly (or as someone
+  else) even though it shares under the same identity. The name now travels
+  with the signing key via iCloud Keychain; a name you'd already set is adopted
+  automatically.
+- **The name-collision prompt looks like the warning it is.** When a share
+  arrives under an already-taken name from a different person, the prompt now
+  carries an alert triangle and an amber Keep both — clearly not the routine add
+  sheet — and Return no longer triggers Keep both while you're typing a name:
+  accepting a same-name share is a deliberate tap now.
 
 ### build 14 — 2026-07-06
 

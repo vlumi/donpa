@@ -10,6 +10,7 @@ import Foundation
 /// the lazy-mint policy, kept in DonpaKit because Keychain access is platform I/O.
 public final class ShareIdentityStore {
     private let account = "fi.misaki.donpa.share-identity"
+    private let nameAccount = "fi.misaki.donpa.share-name"
     private let service = "fi.misaki.donpa"
 
     public init() {}
@@ -18,22 +19,44 @@ public final class ShareIdentityStore {
     /// only if the Keychain write genuinely fails (rare; caller can surface "couldn't
     /// prepare sharing" rather than crash).
     public func identity() -> ShareIdentity? {
-        if let data = load(), let id = try? ShareIdentity(privateKeyRepresentation: data) {
+        if let data = load(account: account),
+            let id = try? ShareIdentity(privateKeyRepresentation: data)
+        {
             return id
         }
         // Lazy mint: no key yet → create, store, return. (First share only.)
         let fresh = ShareIdentity()
-        guard store(fresh.privateKeyRepresentation) else { return nil }
+        guard store(fresh.privateKeyRepresentation, account: account) else { return nil }
         return fresh
     }
 
     /// Whether an identity has been minted yet (a share has happened). Lets the UI
     /// avoid minting just to check — e.g. "you haven't shared yet" states.
-    public var exists: Bool { load() != nil }
+    public var exists: Bool { load(account: account) != nil }
+
+    /// The share display name — the other half of the identity, kept as a SECOND
+    /// synchronizable item so it rides the same iCloud Keychain rail as the key.
+    /// Deliberately NOT folded into the key's item: released builds parse that item
+    /// as raw key bytes, and reformatting it would make a mixed-version sibling
+    /// device fail the parse and mint a fresh identity. An empty string is a real
+    /// value ("cleared everywhere"); nil means never set (or Keychain unavailable).
+    public var sharedName: String? {
+        get {
+            guard let data = load(account: nameAccount) else { return nil }
+            return String(bytes: data, encoding: .utf8)
+        }
+        set {
+            guard let newValue else {
+                SecItemDelete(baseQuery(account: nameAccount) as CFDictionary)
+                return
+            }
+            _ = store(Data(newValue.utf8), account: nameAccount)
+        }
+    }
 
     // MARK: Keychain
 
-    private func baseQuery() -> [String: Any] {
+    private func baseQuery(account: String) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -43,8 +66,8 @@ public final class ShareIdentityStore {
         ]
     }
 
-    private func load() -> Data? {
-        var q = baseQuery()
+    private func load(account: String) -> Data? {
+        var q = baseQuery(account: account)
         q[kSecReturnData as String] = kCFBooleanTrue
         q[kSecMatchLimit as String] = kSecMatchLimitOne
         var out: CFTypeRef?
@@ -52,10 +75,10 @@ public final class ShareIdentityStore {
         return out as? Data
     }
 
-    private func store(_ data: Data) -> Bool {
+    private func store(_ data: Data, account: String) -> Bool {
         // Delete any stale item first so add can't collide.
-        SecItemDelete(baseQuery() as CFDictionary)
-        var q = baseQuery()
+        SecItemDelete(baseQuery(account: account) as CFDictionary)
+        var q = baseQuery(account: account)
         q[kSecValueData as String] = data
         // Available after first unlock, including in the background; the key is not
         // needed pre-unlock and this class is the most permissive that still
