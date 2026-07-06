@@ -23,8 +23,9 @@ under Unreleased as they merge.
 
 - **Head-to-head names every board fully — and offers a rematch.** Rows used to
   read just "M · Veteran", leaving Grid vs Hive and Flat vs Round boards
-  indistinguishable; now each row shows the family and size with the difficulty
-  as its rank insignia, like the Service Record (Round is called out). And when
+  indistinguishable. The list now groups under sticky family sections titled
+  with the New Game glyphs (Round called out), so each row stays as slim as the
+  Service Record's: the size with the difficulty as its rank insignia. And when
   you spot a board where you're trailing, a play button on the row jumps
   straight into a fresh game on it.
 - **A typed squad name can no longer vanish.** In the add-rival and rival-detail
