@@ -55,7 +55,7 @@ struct NewGamePopup: View {
                 card(
                     layout: Self.layout(for: geo.size),
                     width: Self.cardWidth(available: geo.size.width - 48),
-                    short: geo.size.height < 420
+                    short: geo.size.height < 390
                 )
                 // The X lives on the card (its actual width), so it sits in the
                 // card's corner rather than the screen's.
@@ -139,7 +139,7 @@ struct NewGamePopup: View {
         // packs tighter than the pager: less title gap and less card padding.
         let sidebar = layout == .sidebar
         return VStack(spacing: sidebar ? (short ? 8 : 12) : 20) {
-            Text("New game", bundle: .module).font(.title2.bold())
+            Text("New game", bundle: .module).font(short ? .headline : .title2.bold())
             picker(layout: layout, compact: short)
             #if os(macOS)
             Text("⌘1–3 family · arrows to choose · Return to start", bundle: .module)

@@ -357,11 +357,11 @@ struct BoardSelectionPicker: View {
             // size → density → edges. Size is the fundamental scale; density tunes it.
             VStack(spacing: gridHiveSpacing) {
                 sizeChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 0))
+                    .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
                 densityChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 1))
+                    .modifier(FocusRing(focused: focusedRow == 1, inset: compact ? 3 : 6))
                 edgesToggle(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 2))
+                    .modifier(FocusRing(focused: focusedRow == 2, inset: compact ? 3 : 6))
             }
         }
     }
@@ -371,16 +371,27 @@ struct BoardSelectionPicker: View {
     /// The caption under a chip row: board facts (bold) then tagline (italic). Each
     /// line is fixed-height and shrinks to fit its width, so a long value scales
     /// down instead of wrapping and the block's height never changes.
-    func detailLine(detail: String, tagline: String) -> some View {
-        VStack(spacing: 2) {
-            captionText(detail, weight: .bold, opacity: 1)
-            // Short windows drop the tagline — the board facts are the information;
-            // the flavor line is the first thing to give when height is tight.
-            if !compact {
-                captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
+    @ViewBuilder func detailLine(detail: String, tagline: String) -> some View {
+        Group {
+            if compact {
+                // Short windows keep the tagline — it's the game's voice — but merge
+                // it onto the facts line, shrink-to-fit, to reclaim the second row.
+                (Text(verbatim: detail).font(.body.weight(.bold))
+                    + Text(verbatim: "  ")
+                    + Text(verbatim: tagline).font(.body).italic()
+                    .foregroundColor(.secondary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(height: Self.captionLineHeight)
+                    .frame(maxWidth: .infinity)
+            } else {
+                VStack(spacing: 2) {
+                    captionText(detail, weight: .bold, opacity: 1)
+                    captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
+                }
+                .frame(maxWidth: .infinity)
             }
         }
-        .frame(maxWidth: .infinity)
         .animation(.snappy, value: detail)
     }
 
@@ -422,10 +433,12 @@ private struct PageHeightsKey: PreferenceKey {
 /// Wraps a control with the keyboard focus ring used across the picker rows.
 struct FocusRing: ViewModifier {
     let focused: Bool
+    /// Ring padding — compact (short-window) mode shaves it to reclaim height.
+    var inset: CGFloat = 6
     func body(content: Content) -> some View {
         content
             // Always-present panel, recoloured on focus (never resizes).
-            .padding(6)
+            .padding(inset)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.accentColor.opacity(focused ? 0.12 : 0))
