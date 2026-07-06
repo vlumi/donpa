@@ -35,10 +35,16 @@ struct HeadToHeadView: View {
                 .frame(maxWidth: .infinity, minHeight: 80)
             } else {
                 List {
-                    Section {
-                        ForEach(result.rows) { rowView($0) }
-                    } header: {
-                        header
+                    // Sticky family+edges sub-sections (New Game's ordering falls
+                    // out of the canonical config order), so the rows themselves
+                    // stay as slim as the Service Record's — the full per-row
+                    // "Family · Size · …" text truncated on an SE.
+                    ForEach(RivalRanking.grouped(result.rows)) { group in
+                        Section {
+                            ForEach(group.rows) { rowView($0) }
+                        } header: {
+                            groupHeader(group)
+                        }
                     }
                     if let career { careerSection(career) }
                 }
@@ -126,9 +132,18 @@ struct HeadToHeadView: View {
         .frame(maxWidth: 120)
     }
 
-    private var header: some View {
-        HStack {
-            Text("Board", bundle: .module)
+    /// A group's sticky title: the family's New Game glyph + name (Round called out
+    /// with its glyph; Flat is the unmarked default), with the column captions on
+    /// the trailing side — repeated per section so they survive a long scroll.
+    private func groupHeader(_ group: RivalRanking.H2HGroup) -> some View {
+        HStack(spacing: 5) {
+            BoardGlyph(kind: .family(group.family), size: 16, tint: .secondary)
+            Text(verbatim: group.family.label)
+            if group.edges.wraps {
+                BoardGlyph(kind: .edges(group.edges), size: 16, tint: .secondary)
+                    .padding(.leading, 3)
+                Text(verbatim: group.edges.label)
+            }
             Spacer()
             Text("You", bundle: .module).frame(width: 76, alignment: .trailing)
             Text(verbatim: opponentName).frame(width: 72, alignment: .trailing).lineLimit(1)
@@ -170,8 +185,8 @@ struct HeadToHeadView: View {
         .font(.callout)
     }
 
-    /// The board, Service Record-style: the density as its rank insignia (not its
-    /// name) beside the family and size; Round called out, Flat unmarked. Basic
+    /// The board, Service Record-style: the density as its rank insignia beside the
+    /// size letter — the section title already carries the family and edges. Basic
     /// presets are just their name. The full spoken form stays available to
     /// VoiceOver via `fullLabel`.
     @ViewBuilder private func boardLabel(_ config: GameConfig) -> some View {
@@ -179,19 +194,13 @@ struct HeadToHeadView: View {
             if let density = config.density, let size = config.size {
                 DensityInsignia.image(density)
                     .resizable().scaledToFit().frame(width: 30, height: 20)
-                Text(verbatim: contextText(family: config.family, size: size, edges: config.edges))
-                    .lineLimit(1).minimumScaleFactor(0.7)
+                Text(verbatim: size.label).lineLimit(1).minimumScaleFactor(0.7)
             } else {
                 Text(verbatim: config.label).lineLimit(1).minimumScaleFactor(0.7)
             }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: config.fullLabel))
-    }
-
-    private func contextText(family: BoardFamily, size: BoardSize, edges: BoardEdges) -> String {
-        let base = "\(family.label) · \(size.label)"
-        return edges.wraps ? "\(base) · \(edges.label)" : base
     }
 
     /// Your signed gap vs. theirs: −faster (green), +slower (red). Placed under YOUR

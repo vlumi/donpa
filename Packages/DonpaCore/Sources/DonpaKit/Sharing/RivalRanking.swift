@@ -56,6 +56,34 @@ enum RivalRanking {
         let theyLead: Int
     }
 
+    /// One family+edges run of the head-to-head, for the sheet's sticky sub-section
+    /// titles — the group carries the family/edge identity so the rows can stay as
+    /// slim as the Service Record's (insignia + size).
+    struct H2HGroup: Identifiable {
+        let family: BoardFamily
+        let edges: BoardEdges
+        let rows: [H2HRow]
+        var id: String { "\(family.rawValue)|\(edges.rawValue)" }
+    }
+
+    /// Chunk canonical-ordered rows into their family+edges groups. Rows arrive
+    /// already contiguous per group (the canonical config order is family-outer,
+    /// edges-inner), so this is a single pass.
+    static func grouped(_ rows: [H2HRow]) -> [H2HGroup] {
+        var out: [H2HGroup] = []
+        for row in rows {
+            let family = row.config.family
+            let edges = row.config.edges
+            if let last = out.last, last.family == family, last.edges == edges {
+                out[out.count - 1] = H2HGroup(
+                    family: family, edges: edges, rows: last.rows + [row])
+            } else {
+                out.append(H2HGroup(family: family, edges: edges, rows: [row]))
+            }
+        }
+        return out
+    }
+
     /// Your best time per config key (only boards you've won).
     private static func yourBests(_ scoreboard: Scoreboard) -> [String: Int] {
         var out: [String: Int] = [:]
