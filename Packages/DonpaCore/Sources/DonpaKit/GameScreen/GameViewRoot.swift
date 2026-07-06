@@ -68,6 +68,12 @@ public struct GameView: View {
         _scoreboard = StateObject(wrappedValue: scoreboard)
         _settings = StateObject(wrappedValue: settings)
         _navigator = ObservedObject(wrappedValue: navigator)
+        // Bridge the share name to the synchronizable Keychain beside the signing
+        // key (assigning reconciles). Skipped under -uitest-clean: a clean launch
+        // must not adopt a name a previous run synced.
+        if !SaveStore.isUITestCleanLaunch {
+            settings.shareNameStore = ShareIdentityStore()
+        }
         // Friend list + groups sync under the SAME `syncScores` gate as the scoreboard
         // (one social picture), over their own KVS blob namespace + the shared deviceID.
         let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false

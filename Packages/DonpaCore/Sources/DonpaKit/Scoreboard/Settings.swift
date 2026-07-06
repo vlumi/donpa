@@ -136,9 +136,33 @@ public final class Settings: ObservableObject {
         didSet { defaults.set(basicPreset.rawValue, forKey: presetKey) }
     }
     /// The display name last used when sharing scores — remembered so the share
-    /// sheet pre-fills it. Not an identity (that's the signing key); just a label.
+    /// sheet pre-fills it. The local defaults copy is a CACHE; the durable home is
+    /// the synchronizable Keychain beside the signing key (via `shareNameStore`),
+    /// so the name half of the identity follows the key across devices.
     @Published public var shareName: String {
-        didSet { defaults.set(shareName, forKey: shareNameKey) }
+        didSet {
+            defaults.set(shareName, forKey: shareNameKey)
+            shareNameStore?.sharedName = shareName
+        }
+    }
+
+    /// The Keychain bridge for `shareName`, set by the app at startup (nil in
+    /// tests — defaults-only there). Assigning reconciles immediately.
+    public var shareNameStore: ShareIdentityStore? {
+        didSet { reconcileShareName() }
+    }
+
+    /// Adopt the synced name — the Keychain copy wins, it's the latest cross-device
+    /// write (an empty synced value is a real "cleared" and clears here too). A
+    /// pre-existing local-only name with nothing synced yet is pushed up instead
+    /// (the migration for installs that set a name before the name synced).
+    public func reconcileShareName() {
+        guard let store = shareNameStore else { return }
+        if let synced = store.sharedName {
+            if synced != shareName { shareName = synced }
+        } else if !shareName.isEmpty {
+            store.sharedName = shareName
+        }
     }
 
     /// Key paths to a family's own axes, so the picker and keyboard nav bind to

@@ -78,6 +78,10 @@ struct ShareCardView: View {
         )
         .sheet(isPresented: $enlarged) { QRZoomSheet(qr: qr) }
         .onAppear {
+            // Pull the latest synced name (iCloud Keychain has no change
+            // notifications, so opening the card is the refresh point) BEFORE
+            // seeding the field from it.
+            settings.reconcileShareName()
             if name.isEmpty { name = settings.shareName }
             rebuild()
         }
