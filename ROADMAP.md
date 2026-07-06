@@ -12,10 +12,11 @@ meaty release: v0.4.0 = friendly rivalry (score sharing); v0.5.0 = progression
 **Shipped milestones live in [CHANGELOG.md](CHANGELOG.md)** (full detail) and are
 summarized in the [README](README.md) version history — this roadmap stays
 forward-looking. For the record: **v0.1.0** (classic), **v0.2.0** (cross-device
-sync + big boards) shipped to TestFlight; **v0.3.0** (board variants — wrapped +
-hex — and the New Game / scoreboard redesign) is feature-complete on `main`,
-awaiting a release build. Carry-over notes from those milestones live in the
-Backlog below.
+sync + big boards), and **v0.3.0** (board variants — wrapped + hex — and the New
+Game / scoreboard redesign) shipped to TestFlight; **v0.4.0** (friendly rivalry —
+score sharing, rivals + squads, the home-screen redesign, per-board saves) is
+feature-complete on `main`, awaiting a release build. Carry-over notes from those
+milestones live in the Backlog below.
 
 ---
 
@@ -36,9 +37,6 @@ these slot into whichever release they're ready for.
 
 **Navigation / UX:**
 
-- [ ] **macOS `⌘1/2/3`** (classic presets) jump straight into a Classic game,
-      jarringly switching mode mid-play. Rethink: pre-select in the New Game
-      popup instead of starting immediately? Or be Modern-aware?
 - [ ] **Minimap drag-to-reposition** — move the HUD out of the way (the toggle
       hides it; dragging relocates it). Also wire an opener for when it's hidden.
 - [ ] **Minimap polish** — higher-contrast revealed shading; handedness-aware
@@ -85,37 +83,6 @@ these slot into whichever release they're ready for.
       the enum (`isLive` / `isFinished` / `isPlaying`). Pure readability; no
       behaviour change.
 
-## v0.4.0 — Friendly rivalry (score sharing)
-
-Peer-to-peer competition built on **trust, not anti-cheat** (no server, no global
-tracking): share scores as a QR code — or a tappable link — between people who know
-each other, compare, and track rivals. Design settled 2026-07; depends on the
-scoreboard redesign (shipped — the table it overlays). Sequenced BEFORE progression
-on purpose: it's self-contained and rides the finished scoreboard, while
-progression's permanent commitments (achievement IDs, balance) are best done last.
-
-- [ ] QR share: best + wins per config (career opt-in), display name typed at share
-      time — no identity stored in the scores themselves
-- [ ] **Universal Link delivery** — the share is an `https://` link (static
-      apple-app-site-association, no backend); the QR just encodes it, so it also
-      opens from the **system Camera / Messages** and on **macOS**, falling back to
-      a web page when the app isn't installed. Self-contained (payload in the URL)
-      to keep the no-server stance; the in-app scanner becomes the fallback path
-- [ ] Signed payloads (spoof-resistant, trust-on-first-use) with a cross-device
-      share identity; hardened decode (size caps, validation, versioned envelope)
-- [ ] In-app scanner (iOS; Mac via image import) + a separate, deletable friends
-      store — shared data is **never merged into your own stats**
-- [ ] **Groups** (receiver-side only): organize contacts into circles — family, a
-      tight friend group — with strangers sandboxed in their own; the share payload
-      knows nothing of groups
-- [ ] Comparison report: career side-by-side + per-board head-to-head + tally
-- [ ] Rivals interleave into the high-score table as ranked rows, scoped by **one
-      active comparison target — a single friend or a group** (off by default, so
-      nothing touches your table unless chosen)
-- [ ] Feat-based public **rank** — the hack-resistant face of progression. Depends
-      on the progression milestone's feat/event layer, so it lands with or after
-      that (deferred from the first sharing pass; raw scores stay trusted-circle only).
-
 ## v0.5.0 — Progression: achievements, gating & practice
 
 Engagement features grouped because they all ride one **game-end event layer** and
@@ -141,10 +108,23 @@ a teaser ("clear a Grid at Veteran+ to open the Hive"), not a greyed-out control
 - [ ] Unlock triggers + which axes gate (extreme sizes? families?) decided
 - [ ] Locked-page presentation in New Game (ships ungated with the redesign)
 
+**Feat-based public rank** — the hack-resistant face of progression, deferred here
+from the friendly-rivalry milestone (it needs this milestone's feat/event layer):
+a rank derived from achievements/feats rather than raw times, so faking it means
+faking the feat — "you only cheat yourself". Surfaces in the Mess hall; raw scores
+stay trusted-circle only.
+
+- [ ] Rank derivation from the earned feat set (design the tiers with the
+      achievement list, same permanence care)
+- [ ] Rank in the share payload + rival rows (a coarse, comparable public face)
+
 **Practice mode (no-guess boards)** — a deduction-only **onboarding** mode, framed
 as *practice*, NOT as a "fairer" alternative to the real game (the standard modes
 keep the classic forced-guess risk). Solver-gated generation resamples until the
-board is fully deducible.
+board is fully deducible. When designing it, also settle the **Basic → "Boot
+camp"** reframe (deferred to ride this design): either practice claims the name,
+or Boot camp becomes the whole training wing — the classic presets plus practice
+under one banner.
 
 - [ ] Generate guaranteed-solvable boards (reuse `Solver` / `TierAnalysis`)
 - [ ] Frame it clearly as **practice** in the New Game UI — its own thing, not a

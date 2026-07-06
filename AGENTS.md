@@ -157,6 +157,22 @@ with the Xcode toolchain, which CI pins via `XCODE_VERSION`.
 - `.vscode/` is gitignored and must not be pushed.
 - When you change game rules or controls, update `README.md` too.
 
+### String catalogs (`.xcstrings`)
+
+- **Xcode's serialized form is canonical** (spaced colons, 2-space indent).
+  After any scripted/CLI edit, normalize before committing:
+  `plutil -convert json -r -o FILE FILE` — then opening the project in Xcode
+  produces no churn.
+- **Renaming a key must update its explicit `en` unit too.** Some entries carry
+  an `en` localization whose value *overrides* the key at runtime; renaming the
+  key while keeping the old unit leaves English silently showing the old text
+  (fi/ja updated, en stale — only visible running the app in English). Audit:
+  flag any entry whose explicit `en` value ≠ its key (positional-format entries
+  like `%1$@…` are the legit exceptions).
+- Localize the **concept**, not the word — each locale by a native ear (e.g. the
+  social screen is Mess hall / 食堂 / *Sotku*: each army's own social room, not
+  translations of one another).
+
 ## Gotchas
 
 - SourceKit in-IDE diagnostics may report `No such module 'DonpaCore'`

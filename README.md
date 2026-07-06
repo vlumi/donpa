@@ -11,8 +11,9 @@ touching the game logic.
 
 **v0.1.0** (classic mode), **v0.2.0** (big boards + cross-device sync), and
 **v0.3.0** (board variants + the config/scoreboard redesign) have shipped to
-TestFlight; **v0.4.0** (friendly rivalry — peer-to-peer score sharing) is in
-development. See
+TestFlight; **v0.4.0** (friendly rivalry — peer-to-peer score sharing, rivals
+and squads, plus the home-screen redesign and per-board saves) is
+feature-complete on `main`, awaiting its release build. See
 [CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md) for
 the path to v1.0, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
 decisions.
@@ -23,6 +24,7 @@ decisions.
 - [Controls](#controls)
 - [Start and end of a game](#start-and-end-of-a-game)
 - [Scores](#scores)
+- [Rivals — the Mess hall](#rivals--the-mess-hall)
 - [Settings](#settings)
 - [AI assistance](#ai-assistance)
 - [Version history](#version-history)
@@ -32,8 +34,8 @@ decisions.
 ## Board families
 
 A **Basic / Grid / Hive** switch in the **New Game popup** chooses the board
-family (open it from the title art, the in-game **config badge**, the result
-screen, or `⌘N`):
+family (open it from the home screen's **New game** button, the in-game
+**config badge**, the result screen, or `⌘N`):
 
 - **Basic** — the original Beginner / Intermediate / Expert presets.
 - **Grid** — square cells (eight neighbours); pick a **Difficulty** and a
@@ -49,9 +51,12 @@ tier is near-unguessable), so it composes with any size. Each tier carries its
 **military rank insignia** — chevron stripes for the lower ranks, a star, then a
 star-in-laurel for the apex. The chosen family and selections are remembered.
 
-The difficulty and size rows are a horizontal **carousel**: scroll/swipe (or
-click) to pick, with a line below the selection showing the board facts and a
-short flavour tagline.
+The size and difficulty rows are **chip rows** — every option visible, one tap
+to pick — with a line below each showing the board facts and a short flavour
+tagline. A small dot on a chip marks a selection path with a game in progress
+(family → size → difficulty → edges, each level filtered by the ones above), so
+you can find a parked game by following the lit chips down — and the **Start**
+button becomes **Continue** when the exact selection has one.
 
 On macOS the popup is keyboard-drivable: **⌘1/2/3** pick the board family (Basic /
 Grid / Hive), **↑/↓** move between the remaining rows (Difficulty / Size / Edges),
@@ -99,10 +104,11 @@ across the seam.
 | Key      | Action                                             |
 | -------- | -------------------------------------------------- |
 | Space    | Toggle mode while playing                          |
+| Return   | On the home screen: continue the latest game       |
 | Esc      | Pause / resume; close a popup or the result panel  |
 | ⌘N       | New Game (opens the config popup, macOS menu)      |
 | ⌘R       | Restart with the same setup (macOS menu)           |
-| ⌘T       | Return to the title screen (macOS menu)            |
+| ⌘B       | Return home to the Barracks (macOS menu)           |
 | ⌘F       | Toggle mode (macOS menu)                           |
 | ⌘⇧S      | High Scores (macOS menu)                           |
 | ⌘,       | Settings (macOS app menu)                          |
@@ -112,11 +118,19 @@ across the seam.
 
 ## Start and end of a game
 
-The app opens on a **title screen** that doubles as the home hub: tapping the
-art opens the **New Game popup** to pick a board and start. The 🎖️ High Scores,
-⚙️ Settings, and ⓘ About buttons sit on the art's corner. You can return to the
-title any time from the in-game **Home** button or the **Title Screen** menu item
-(⌘T) on macOS.
+The app opens on a **home screen** built around the title art: a **Continue**
+card shows your latest in-progress board (its progress, time, and when you last
+played — expandable to every board you have going), with **New game**, the
+**Service Record**, and the **Mess hall** below, and ⚙️ Settings / ⓘ About in
+the corner. Tapping the art continues the latest game (or opens New Game when
+nothing's in progress).
+
+**Every board keeps its own in-progress game** — starting a quick round on
+another board no longer discards the big one you had going; a game is cleared
+when you win or lose it, and opening New Game or the Service Record mid-game
+pauses the clock. Return home any time from the in-game **Home** button or the
+**Barracks** menu item (⌘B) on macOS — the game pauses and saves, never
+discards.
 
 When a game ends, a comic **result panel** slides in over the **board** — a
 triumphant one on a win, a dramatic one on a loss, with a "new record" flourish
@@ -131,11 +145,16 @@ live:
 
 ## Scores
 
-The 🎖️ button (in the top strip in-game, or on the title art) opens the
+The 🎖️ button (in the top strip in-game, or on the home screen) opens the
 **Service Record**: per-board records — best time, games cleared, and best
 cleared-% from losses — plus lifetime career totals (games, tiles, flags, mines,
-playtime). The row for the board you're playing is highlighted, and a new best is
-celebrated on the result panel (with the improvement over your old record).
+playtime) and a **Breakdown** of where your play goes (proportion bars across
+family, size, and difficulty, by playtime or game count). The board list groups
+by size, and once you've won every difficulty at a size the group shows your
+combined best — the **full-clear time** for that tier (Basic gets a Total for
+the classic trifecta). The row for the board you're playing is highlighted, and
+a new best is celebrated on the result panel (with the improvement over your
+old record).
 
 Scores live locally (via `UserDefaults`) and can optionally sync across your
 devices with **iCloud** — an opt-in toggle in the Service Record footer, off by
@@ -147,6 +166,32 @@ reconnects). With sync off, everything stays on-device.
 Stats are keyed by board geometry, not by tier name, so the format stays stable
 across variants: every family × edges combination — and any re-tuned tier — gets
 its own scoreboard entries rather than reinterpreting existing scores.
+
+## Rivals — the Mess hall
+
+The **Mess hall** (from the home screen) is the social room — peer-to-peer,
+with **no server and no accounts**:
+
+- **Share your scores.** Your share card sits right on the screen: type a
+  display name, optionally include career totals, and hand someone the **QR
+  code** (tap it to enlarge to scanning size) or the **donpa.app link** — or
+  share the branded card as an image (macOS can also save it to disk). Shares
+  are **signed** by a key in your Keychain so they can't be forged; your own
+  devices present one identity via iCloud Keychain.
+- **Add rivals.** Scan a rival's QR (**Add rival**; macOS imports or drags an
+  image) or just open their link — it works from the system Camera and Messages
+  too. What you receive is a **snapshot** of the scores they chose to share
+  (updated only when they share again), kept strictly separate from your own
+  records; removing a rival simply deletes their data. You can nickname a rival
+  and sort them into **squads** (work, family, …), and compare **head-to-head**
+  against one rival or a whole squad's best, board by board with a running
+  tally.
+- **See where you stand.** In the Service Record, expand any board for a
+  leaderboard — your best slotted in among your rivals', fastest first, with a
+  standing medal on the row — and narrow the comparison to a single squad with
+  the **Compare with** picker.
+- With iCloud sync on, your rivals and squads follow you across your own
+  devices under the same switch as scores.
 
 ## Settings
 
