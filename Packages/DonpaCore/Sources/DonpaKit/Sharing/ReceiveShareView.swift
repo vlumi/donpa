@@ -144,6 +144,7 @@ private struct ResolveCollisionView: View {
                 finish(added: true)
             },
             onCancel: { finish(added: false) },
+            isWarning: true,
             extraButton: AnyView(
                 Button(role: .destructive) {
                     friends.replaceOnCollision(payload, replacing: existingKey)
@@ -215,25 +216,40 @@ private struct SharePromptChrome<Content: View>: View {
     let confirmTitle: LocalizedStringKey
     let onConfirm: () -> Void
     let onCancel: () -> Void
+    /// Warning dress for the unusual prompts (name collision): an alert triangle by
+    /// the title and an amber confirm, so it can't be mistaken for the routine add
+    /// sheet — and NO Return shortcut on confirm, because accepting a same-name,
+    /// different-key share is a trust decision that must be a deliberate tap, not a
+    /// stray Return while typing in the alias field.
+    var isWarning = false
     var extraButton: AnyView?
     @ViewBuilder let content: Content
 
     init(
         title: LocalizedStringKey, confirmTitle: LocalizedStringKey,
         onConfirm: @escaping () -> Void, onCancel: @escaping () -> Void,
+        isWarning: Bool = false,
         extraButton: AnyView? = nil, @ViewBuilder content: () -> Content
     ) {
         self.title = title
         self.confirmTitle = confirmTitle
         self.onConfirm = onConfirm
         self.onCancel = onCancel
+        self.isWarning = isWarning
         self.extraButton = extraButton
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text(title, bundle: .module).font(.title2.bold())
+            HStack(spacing: 8) {
+                if isWarning {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+                Text(title, bundle: .module)
+            }
+            .font(.title2.bold())
             content
             buttons
         }
@@ -247,7 +263,8 @@ private struct SharePromptChrome<Content: View>: View {
                 Text(confirmTitle, bundle: .module).frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .keyboardShortcut(.defaultAction)
+            .tint(isWarning ? .orange : nil)
+            .keyboardShortcut(isWarning ? nil : .defaultAction)
 
             if let extraButton {
                 extraButton.frame(maxWidth: .infinity)
