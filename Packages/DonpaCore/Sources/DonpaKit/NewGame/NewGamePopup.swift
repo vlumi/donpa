@@ -55,7 +55,11 @@ struct NewGamePopup: View {
                 card(
                     layout: Self.layout(for: geo.size),
                     width: Self.cardWidth(available: geo.size.width - 48),
-                    short: geo.size.height < 390
+                    // Every landscape-phone-height window packs compact (SE proved
+                    // the fit; the 17 Pro clipped without it) — since compact keeps
+                    // the taglines (merged onto the facts line), it's no longer a
+                    // trade-off. iPad/Mac landscape (600pt+) keep two-line captions.
+                    short: geo.size.height < 480
                 )
                 // The X lives on the card (its actual width), so it sits in the
                 // card's corner rather than the screen's.
