@@ -327,6 +327,19 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
+    /// Context-free label naming every distinguishing axis, for lists that mix
+    /// families and edges in one flat table (head-to-head) where `label` alone
+    /// is ambiguous. Flat is the unmarked default; Round is called out.
+    public var fullLabel: String {
+        switch self {
+        case .basic(let preset):
+            return preset.label
+        case .grid(let size, let density, let edges), .hive(let size, let density, let edges):
+            let base = "\(family.label) · \(size.label) · \(density.label)"
+            return edges.wraps ? "\(base) · \(edges.label)" : base
+        }
+    }
+
     /// Stable, versioned, geometry-bearing persistence key. Encodes every axis
     /// explicitly so keys never become ambiguous. `v2` = the family vocabulary
     /// (v1 spoke classic/modern + a shape axis; v1 keys are orphaned by the 0.3.0

@@ -93,6 +93,28 @@ final class GameConfigTests: XCTestCase {
         XCTAssertEqual(GameConfig.hive(.s, .hard, .round).label, "S · Veteran")
     }
 
+    func testFullLabels() {
+        // Family always named; Flat is the unmarked default, Round called out.
+        XCTAssertEqual(GameConfig.basic(.beginner).fullLabel, "Beginner")
+        XCTAssertEqual(GameConfig.grid(.s, .hard, .flat).fullLabel, "Grid · S · Veteran")
+        XCTAssertEqual(GameConfig.hive(.s, .hard, .round).fullLabel, "Hive · S · Veteran · Round")
+    }
+
+    /// Every config in the head-to-head universe must be distinguishable by its
+    /// full label — the exact ambiguity `label` has ("M · Veteran" ×4).
+    func testFullLabelsAreUnique() {
+        let all = BoardFamily.allCases.flatMap { family in
+            BoardEdges.allCases.flatMap { edges in
+                GameConfig.configs(family: family, edges: edges)
+            }
+        }
+        // Basic ignores edges, so the sweep yields its presets twice — dedupe by
+        // key first (as head-to-head does), then labels must be one per config.
+        let unique = Dictionary(all.map { ($0.storageKey, $0) }) { first, _ in first }
+        let labels = unique.values.map(\.fullLabel)
+        XCTAssertEqual(labels.count, Set(labels).count)
+    }
+
     // MARK: Rank insignia + axis accessors
 
     func testDensityInsigniaAscends() {

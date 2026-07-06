@@ -290,6 +290,7 @@ struct GameContent: View {
         pausedForScores = false
         navigator.playConfigRequested = nil
         navigator.showingScores = false
+        navigator.showingMessHall = false  // a head-to-head rematch arrives from here
         settings.adopt(config)  // remember it as the current selection (New Game / relaunch)
         viewModel.newGame(config: config)
         navigator.showingTitle = false

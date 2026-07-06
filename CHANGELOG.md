@@ -21,6 +21,13 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Head-to-head names every board fully — and offers a rematch.** Rows used to
+  read just "M · Veteran", leaving Grid vs Hive and Flat vs Round boards
+  indistinguishable; now each row shows the family and size with the difficulty
+  as its rank insignia, like the Service Record (Round is called out). And when
+  you spot a board where you're trailing, a play button on the row jumps
+  straight into a fresh game on it.
+
 ### build 14 — 2026-07-06
 
 - **The Mess hall.** Everything social now lives in one place, straight off the home

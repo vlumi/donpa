@@ -35,12 +35,13 @@ enum RivalRanking {
     private static let configByKey: [String: GameConfig] = Dictionary(
         allConfigs.map { ($0.storageKey, $0) }, uniquingKeysWith: { first, _ in first })
 
-    /// A labeled head-to-head row (the sheet needs a human board name, not a key).
-    /// `holderName` names who on the other side holds `theirBest` (group compare only);
-    /// `gap` is your signed delta vs. theirs (negative = you faster).
+    /// A labeled head-to-head row: carries the full `GameConfig` so the sheet can
+    /// render the board like the Service Record does (insignia + names) and start a
+    /// game on it. `holderName` names who on the other side holds `theirBest` (group
+    /// compare only); `gap` is your signed delta vs. theirs (negative = you faster).
     struct H2HRow: Identifiable {
         let key: String
-        let label: String
+        let config: GameConfig
         let yourBest: Int?
         let theirBest: Int?
         let lead: ScoreComparison.Lead
@@ -96,7 +97,7 @@ enum RivalRanking {
                 theirHolders: group.holders))
     }
 
-    /// Attach board labels + keep the tally; drop rows whose key we can't label
+    /// Attach board configs + keep the tally; drop rows whose key we can't resolve
     /// (unknown/legacy configs), then order by the app's canonical config order.
     private static func labeled(_ h: ScoreComparison.HeadToHead) -> H2H {
         let order = Dictionary(
@@ -107,7 +108,7 @@ enum RivalRanking {
             .compactMap { row -> H2HRow? in
                 guard let config = configByKey[row.configKey] else { return nil }
                 return H2HRow(
-                    key: row.configKey, label: config.label,
+                    key: row.configKey, config: config,
                     yourBest: row.yourBest, theirBest: row.theirBest, lead: row.lead,
                     holderName: row.holderName, gap: row.gap)
             }
