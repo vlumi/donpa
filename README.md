@@ -176,9 +176,11 @@ with **no server and no accounts**:
   display name, optionally include career totals, and hand someone the **QR
   code** (tap it to enlarge to scanning size) or the **donpa.app link** — or
   share the branded card as an image (macOS can also save it to disk). Shares
-  are **signed** by a key in your Keychain, so no one can pass a share off in
-  someone else's name — a rival's later updates are provably from the same
-  person; your own devices present one identity via iCloud Keychain.
+  are **signed** by a key in your Keychain. The signature is what keeps a rival
+  *being* the same person over time: the first share is taken on trust, but from
+  then on updates apply only when they come from that same person — someone else
+  reusing the name shows up as a separate add, never a silent overwrite. Your
+  own devices present one identity via iCloud Keychain.
 - **Add rivals.** Scan a rival's QR (**Add rival**; macOS imports or drags an
   image) or just open their link — it works from the system Camera and Messages
   too. What you receive is a **snapshot** of the scores they chose to share
@@ -225,8 +227,9 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 
 - **New:** **peer-to-peer score sharing** — hand someone a QR code or a
   donpa.app link built from your best times (career totals opt-in). Shares are
-  signed, so no one can pass one off in someone else's name; no server, no
-  accounts. Opens from the system Camera and Messages too.
+  signed, so once someone adds you, later updates to your scores can only come
+  from you; no server, no accounts. Opens from the system Camera and Messages
+  too.
 - **New:** **rivals and squads** — people you add stay as read-only snapshots,
   nicknamed and sorted into squads, with **head-to-head** comparisons and your
   rank slotted into every board's leaderboard. The **Mess hall** gathers all of
