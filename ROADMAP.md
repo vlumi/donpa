@@ -49,8 +49,6 @@ these slot into whichever release they're ready for.
       truncation escaped exactly this gap). Profile huge boards on real hardware
       (the simulator software-renders SpriteKit and overstates cost), and confirm
       the XXXL (1M) first-arm/reveal feel + baseline memory in Instruments.
-- [ ] **Two-device iCloud sync verification** — KVS is unreliable on the simulator;
-      confirm score/career sync on a real iPhone + Mac under one Apple ID.
 - [ ] **JA/FI native review** — the strings are the maker's drafts; refine from
       play-testing feedback ("report weirdnesses"), not a string-by-string review
       pass. Catalog review markers were dropped as noise while strings churn —
