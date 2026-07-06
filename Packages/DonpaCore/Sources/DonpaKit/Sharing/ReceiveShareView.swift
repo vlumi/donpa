@@ -50,6 +50,8 @@ private struct ConfirmAddView: View {
     @State private var alias = ""
     /// Groups to put the friend in, staged until confirm (they aren't stored yet).
     @State private var groupSelection: Set<String> = []
+    /// A typed-but-not-created new squad name; confirm commits it (see GroupPicker).
+    @State private var pendingGroupName = ""
 
     private var isRefresh: Bool {
         if case .add = outcome { return false }
@@ -84,7 +86,9 @@ private struct ConfirmAddView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Squads (optional)", bundle: .module)
                             .font(.caption).foregroundStyle(.secondary)
-                        GroupPicker(friends: friends, selection: $groupSelection)
+                        GroupPicker(
+                            friends: friends, selection: $groupSelection,
+                            pendingName: $pendingGroupName)
                     }
                 }
             }
@@ -96,8 +100,14 @@ private struct ConfirmAddView: View {
         if !isRefresh {
             let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty { friends.setAlias(trimmed, for: payload.publicKey) }
-            if !groupSelection.isEmpty {
-                friends.setGroups(Array(groupSelection), for: payload.publicKey)
+            // A squad name typed but never committed with Create still counts —
+            // discarding it silently was how squads "didn't appear".
+            var selection = groupSelection
+            if let pending = friends.createGroup(named: pendingGroupName) {
+                selection.insert(pending.id)
+            }
+            if !selection.isEmpty {
+                friends.setGroups(Array(selection), for: payload.publicKey)
             }
         }
         dismiss()
