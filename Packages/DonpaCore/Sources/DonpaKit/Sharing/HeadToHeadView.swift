@@ -146,9 +146,15 @@ struct HeadToHeadView: View {
             }
             Spacer()
             Text("You", bundle: .module).frame(width: 76, alignment: .trailing)
-            Text(verbatim: opponentName).frame(width: 72, alignment: .trailing).lineLimit(1)
+            Text(verbatim: opponentName).frame(width: 72, alignment: .trailing)
         }
         .font(.caption).foregroundStyle(.secondary)
+        // The List's default uppercase transform inflated the FI names past an SE's
+        // width ("RUUDUKKO · PYÖREÄ" wrapped mid-word); normal case + shrink-to-fit
+        // keeps every header to its one line.
+        .textCase(nil)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
     }
 
     private func rowView(_ row: RivalRanking.H2HRow) -> some View {
@@ -255,7 +261,10 @@ struct HeadToHeadView: View {
             .keyboardShortcut(.defaultAction)
         }
         .padding(20)
-        .frame(minWidth: 380, minHeight: 420)
+        // Roomy enough that the sectioned list breathes and a long comparison
+        // doesn't live behind a deep scroll (380×420 read cramped over the
+        // 600-wide Mess hall).
+        .frame(minWidth: 520, minHeight: 640)
         #endif
     }
 }
