@@ -30,6 +30,10 @@ struct BoardSelectionPicker: View {
     /// Resume the saved game for a config (when the current selection has one). nil →
     /// the button is always Start.
     var onResume: ((GameConfig) -> Void)?
+    /// Short-window mode (landscape phone): captions drop their tagline line and the
+    /// Start button slims — that buys back the height of the full-width Start row at
+    /// the card's bottom, so nothing scrolls on a landscape SE.
+    var compact = false
 
     /// The current selection has a save AND we can resume it → the button says Continue.
     private var canContinue: Bool {
@@ -64,15 +68,14 @@ struct BoardSelectionPicker: View {
 
     // MARK: Regular layout (iPad / Mac / landscape) — family sidebar + detail pane
 
-    /// Regular: a family sidebar (with Start below it) beside the detail pane. Both
-    /// columns hug their content; the card hugs the taller of the two.
+    /// Regular: a family sidebar beside the detail pane; the host pins Start below
+    /// BOTH columns (bottom-right is where a confirm belongs — with Start bottom-left
+    /// under the families, the Flat/Round toggle sat in the "start" position and got
+    /// tapped as one). Both columns hug their content; the card hugs the taller.
     private var regularLayout: some View {
         HStack(alignment: .top, spacing: 20) {
-            VStack(spacing: 16) {
-                familySidebar  // family: click a row (⌘1-3 on Mac) — not arrowed
-                startButton
-            }
-            .frame(width: 160)
+            familySidebar  // family: click a row (⌘1-3 on Mac) — not arrowed
+                .frame(width: 160)
             detailPaneStack
                 .frame(maxWidth: .infinity)
         }
@@ -97,7 +100,7 @@ struct BoardSelectionPicker: View {
             }
             .font(.title3.weight(.bold))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, compact ? 8 : 12)
             .background(Color.accentColor, in: Capsule())
             .foregroundStyle(.white)
         }
@@ -352,14 +355,22 @@ struct BoardSelectionPicker: View {
         case .grid, .hive:
             // Hierarchy order (matches the in-progress drill-down + keyboard rows):
             // size → density → edges. Size is the fundamental scale; density tunes it.
-            VStack(spacing: gridHiveSpacing) {
+            // Spacers, not fixed spacing: the pane is sized to the TALLEST family
+            // (Basic's three preset cards), so a fixed-spacing stack left Basic's
+            // extra height as a dead gap under the edges row. The spacers distribute
+            // it between the rows instead; on an exactly-fitting window (landscape
+            // phone) they collapse to the old spacing.
+            VStack(spacing: 0) {
                 sizeChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 0))
+                    .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
+                Spacer(minLength: gridHiveSpacing)
                 densityChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 1))
+                    .modifier(FocusRing(focused: focusedRow == 1, inset: compact ? 3 : 6))
+                Spacer(minLength: gridHiveSpacing)
                 edgesToggle(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 2))
+                    .modifier(FocusRing(focused: focusedRow == 2, inset: compact ? 3 : 6))
             }
+            .frame(maxHeight: .infinity)
         }
     }
 
@@ -368,12 +379,27 @@ struct BoardSelectionPicker: View {
     /// The caption under a chip row: board facts (bold) then tagline (italic). Each
     /// line is fixed-height and shrinks to fit its width, so a long value scales
     /// down instead of wrapping and the block's height never changes.
-    func detailLine(detail: String, tagline: String) -> some View {
-        VStack(spacing: 2) {
-            captionText(detail, weight: .bold, opacity: 1)
-            captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
+    @ViewBuilder func detailLine(detail: String, tagline: String) -> some View {
+        Group {
+            if compact {
+                // Short windows keep the tagline — it's the game's voice — but merge
+                // it onto the facts line, shrink-to-fit, to reclaim the second row.
+                (Text(verbatim: detail).font(.body.weight(.bold))
+                    + Text(verbatim: "  ")
+                    + Text(verbatim: tagline).font(.body).italic()
+                    .foregroundColor(.secondary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(height: Self.captionLineHeight)
+                    .frame(maxWidth: .infinity)
+            } else {
+                VStack(spacing: 2) {
+                    captionText(detail, weight: .bold, opacity: 1)
+                    captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
+                }
+                .frame(maxWidth: .infinity)
+            }
         }
-        .frame(maxWidth: .infinity)
         .animation(.snappy, value: detail)
     }
 
@@ -409,21 +435,5 @@ private struct PageHeightsKey: PreferenceKey {
         value: inout [BoardFamily: CGFloat], nextValue: () -> [BoardFamily: CGFloat]
     ) {
         value.merge(nextValue()) { _, new in new }
-    }
-}
-
-/// Wraps a control with the keyboard focus ring used across the picker rows.
-struct FocusRing: ViewModifier {
-    let focused: Bool
-    func body(content: Content) -> some View {
-        content
-            // Always-present panel, recoloured on focus (never resizes).
-            .padding(6)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.accentColor.opacity(focused ? 0.12 : 0))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.accentColor.opacity(focused ? 1 : 0), lineWidth: 2)))
     }
 }

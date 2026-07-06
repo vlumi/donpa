@@ -16,7 +16,7 @@ extension BoardSelectionPicker {
                 basicCard(preset)
             }
         }
-        .modifier(FocusRing(focused: focusedRow == 0))
+        .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
     }
 
     private func basicCard(_ preset: BasicPreset) -> some View {
@@ -240,5 +240,23 @@ struct SaveDot: ViewModifier {
                 // a redundant visual cue, so it stays out of the a11y tree.
                 .accessibilityHidden(true)
         }
+    }
+}
+
+/// Wraps a control with the keyboard focus ring used across the picker rows.
+struct FocusRing: ViewModifier {
+    let focused: Bool
+    /// Ring padding — compact (short-window) mode shaves it to reclaim height.
+    var inset: CGFloat = 6
+    func body(content: Content) -> some View {
+        content
+            // Always-present panel, recoloured on focus (never resizes).
+            .padding(inset)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.accentColor.opacity(focused ? 0.12 : 0))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.accentColor.opacity(focused ? 1 : 0), lineWidth: 2)))
     }
 }
