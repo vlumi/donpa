@@ -10,8 +10,8 @@ The app runs on your device and, if you turn on score syncing, your own iCloud:
   no analytics, no advertising, and no third-party SDKs. We receive nothing.
 - **What's stored locally.** Your settings (appearance, handedness, language,
   last board), per-board scores (best times and games cleared), career stats, and
-  any in-progress game are saved on your device (via the system's standard local
-  storage) so they persist between launches.
+  your in-progress games (one per board) are saved on your device (via the
+  system's standard local storage) so they persist between launches.
 - **Optional iCloud score sync.** If you enable "Sync" in the scoreboard, your
   scores and career totals are stored in **your own iCloud account** (Apple's
   iCloud Key-Value Storage) so they follow you across your devices. This goes only

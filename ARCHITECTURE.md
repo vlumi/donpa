@@ -153,19 +153,45 @@ documented at its call site:
 
 ## Persistence: compact, tagged, atomic, tolerant
 
-The in-progress-game save (`GameSnapshot`) and the scoreboard (`Scoreboard`) are
-the two persisted stores. Both follow the same compatibility rules so an app
-update never costs a player their data — the scoreboard especially (losing a
-mid-game is a shrug; losing your records is not).
+The in-progress-game saves (`GameSnapshot` via `SaveStore`) and the scoreboard
+(`Scoreboard`) are the two persisted stores. Both follow the same compatibility
+rules so an app update never costs a player their data — the scoreboard
+especially (losing a mid-game is a shrug; losing your records is not).
 
-- **Compact + tagged.** `GameSnapshot` stores the **`GameConfig`** (which
-  *carries* the topology kind + params — the `any Topology` existential is never
-  encoded) plus the first-click-safe mine layout and the revealed/flagged cells
-  as **coordinate sets**, not the full cell dict (a 1000² board would be huge
-  otherwise; dovetails with the v0.2 flat-storage rework). The scoreboard is a
-  `[storageKey: ScoreRecord]` map (see below).
-- **Atomic.** `SaveStore` writes the game save with `Data.write(.atomic)` (temp
-  file + rename), so a crash mid-save can't corrupt it — the prior save survives.
+- **One save per config; the directory IS the index.** `SaveStore` keeps one
+  file per board config under `saves/` (`save-<sanitized storageKey>`), so a
+  round on another board never discards the huge XXXL game parked on the
+  backburner. There is deliberately **no separate index file or database** —
+  the directory listing is the index (enumerate to list, `unlink` to discard,
+  nothing to drift). Finished (won/lost) games are cleared, and the tolerant
+  decode also *rejects* a non-playing snapshot, so a stale save can never
+  resurface as a "Continue".
+- **Compact + tagged + compressed.** `GameSnapshot` stores the **`GameConfig`**
+  (which *carries* the topology kind + params — the `any Topology` existential
+  is never encoded) plus the first-click-safe mine layout and the
+  revealed/flagged cells as **coordinate sets**, not the full cell dict (a
+  1000² board would be huge otherwise). On disk each save is a
+  **`DONPAZ1`-magic zlib container** — the magic versions the *container* while
+  the JSON inside keeps its own schema version, and there is no plain-JSON
+  fallback (anything without the magic is rejected like garbage; provably-dead
+  relics are deleted on sight, while a *future* container version is hidden but
+  preserved for the build that wrote it). A fresh XXXL save measures ~2.6×
+  smaller, and the ratio improves as the contiguous revealed region grows. The
+  scoreboard is a `[storageKey: ScoreRecord]` map (see below).
+- **Sidecar summaries make listing cheap.** Every save gets a ~150-byte
+  `summary-<key>` sidecar (config, elapsed, progress, last-played) written and
+  removed **by the same code paths** as the main file — an index with no
+  central registry to drift, self-healing (a missing sidecar is rebuilt from
+  one full decode). Home's Continue card and the New Game in-progress dots read
+  summaries, never the multi-MB saves; listing ~50 games went from ~1 s of JSON
+  parsing to milliseconds. A `savesChanged` signal fires on every commit so
+  those cues stay live even when a big board's first move is still computing
+  when the surface opens.
+- **Atomic.** `SaveStore` writes with `Data.write(.atomic)` (temp file +
+  rename), so a crash mid-save can't corrupt it — the prior save survives.
+  In-UI flushes are async (a blocking XXXL encode on the main thread was a
+  visible stall); **blocking** saves remain only where the process may die
+  (backgrounding, ⌘Q).
 - **Versioned + additive.** Each store has a format `version`. New fields are
   added **optional-with-default**, so an older save still decodes in a newer app
   (the common, non-breaking case is free — no migration needed). A save from a
@@ -222,6 +248,38 @@ that no device ever *overwrites* another's history:
   their next read — including a device whose sync was off during the wipe, which
   is warned before opting back in. The epoch floor also doubles as a one-time
   "orphan all pre-rebalance scores" switch.
+
+## Navigation: a Home hub over an always-mounted board
+
+The app is a **game with a menu, not an app with tabs** — a tab bar over a
+pan/zoom board is hostile (edge pans, mis-taps) and translates badly to the Mac
+window, so the 0.4.0 nav redesign made the title a real **Home hub** instead:
+Continue (the latest in-progress board, expandable to all of them), New Game,
+the Service Record, and the **Mess hall** (the social screen: share card,
+rivals, squads, scanner), with Settings/About as corner utilities.
+
+- **The board stays mounted underneath; Home is an opaque overlay.** That's what
+  makes resume instant — leaving a game is `pause + save + showingTitle = true`,
+  never a teardown. `Navigator` (an `ObservableObject` of presentation flags
+  shared with the macOS menu bar) drives everything.
+- **Launch lands on Home** — no silent auto-resume into "whichever board was
+  last": the Continue card is one predictable tap (`⏎` on Mac).
+- **One `SaveStore` instance, shared reader/writer.** `GameViewRoot` owns it and
+  passes it into `GameContent`; the popup's cues read the *same* files the game
+  writes. (Two independently-constructed stores once diverged silently under the
+  UI-test ephemeral mode — the reader minted a fresh temp dir per access.)
+- **Every path to a fresh game goes through the full New Game picker** — no
+  quick-start presets on Home or in the Mac menu, deliberately: the picker is
+  the feature showcase (families, sizes, densities, edges), and the classics are
+  intentionally un-promoted. The picker defaults to the last-played config, so
+  repeat starts are one tap anyway.
+
+One layout lesson from the redesign worth keeping: **never make measured-slot
+content greedy.** The New Game pager sizes its slot by *measuring* its pages;
+when the pages gained `Spacer`-based distribution, the measurement reported the
+stretched height and ratcheted the card to full screen. Spacer-distribution is
+safe only where the container measures the *ideal* height (`fixedSize`), like
+the sidebar's pane stack.
 
 ## Score sharing: signed, serverless, peer-to-peer
 
