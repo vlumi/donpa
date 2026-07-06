@@ -48,6 +48,10 @@ struct HeadToHeadView: View {
                     }
                     if let career { careerSection(career) }
                 }
+                // Plain, not the sheet-default inset-grouped: only plain PINS its
+                // section headers while scrolling — the whole point of the family
+                // sub-sections on a long comparison.
+                .listStyle(.plain)
             }
         }
     }
@@ -140,9 +144,12 @@ struct HeadToHeadView: View {
             BoardGlyph(kind: .family(group.family), size: 16, tint: .secondary)
             Text(verbatim: group.family.label)
             if group.edges.wraps {
+                // The globe glyph alone — it IS the Round identity (the New Game
+                // toggle's icon); the word beside it pushed FI headers past an SE's
+                // width even shrunk. VoiceOver still gets the name.
                 BoardGlyph(kind: .edges(group.edges), size: 16, tint: .secondary)
                     .padding(.leading, 3)
-                Text(verbatim: group.edges.label)
+                    .accessibilityLabel(Text(verbatim: group.edges.label))
             }
             Spacer()
             Text("You", bundle: .module).frame(width: 76, alignment: .trailing)
