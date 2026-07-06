@@ -60,7 +60,10 @@ public struct AboutView: View {
                 }
             }
 
-            Text("A Minesweeper game for Apple platforms.", bundle: .module)
+            // The game's own tagline (the title art's subtitle), not a genre blurb —
+            // whoever reads the in-app About already knows both halves of
+            // "a Minesweeper game for Apple platforms".
+            Text("Clear the mines, save lives.", bundle: .module)
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

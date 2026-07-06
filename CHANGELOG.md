@@ -77,6 +77,9 @@ under Unreleased as they merge.
 - **Browsing New Game no longer costs clock time.** Opening the New Game screen during
   a game now pauses it, just like the Service Record does; closing without starting
   picks the clock right back up.
+- **About speaks the game's language.** The genre blurb ("A Minesweeper game for
+  Apple platforms") gave way to the game's own tagline — 地雷を除去し、命を守れ /
+  Clear the mines, save lives.
 - **Times never round up.** A clear at 49.95s used to record as "50.0" while the
   in-game clock still read 49 — every time display now truncates to the tenth, so a
   result never shows more than the timer did. The "improved by" note on a new record
