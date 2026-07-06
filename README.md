@@ -220,6 +220,30 @@ later, this note will credit it.
 High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
 in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
 
+### 0.4.0 — friendly rivalry & the home screen
+
+- **New:** **peer-to-peer score sharing** — hand someone a QR code or a
+  donpa.app link built from your best times (career totals opt-in). Signed so it
+  can't be forged; no server, no accounts. Opens from the system Camera and
+  Messages too.
+- **New:** **rivals and squads** — people you add stay as read-only snapshots,
+  nicknamed and sorted into squads, with **head-to-head** comparisons and your
+  rank slotted into every board's leaderboard. The **Mess hall** gathers all of
+  it on one screen, and rivals/squads sync across your own devices with the same
+  switch as scores.
+- **New:** **a game in progress on every board** — starting a quick round no
+  longer discards the big board you had going; New Game marks selections with a
+  game in progress and offers **Continue**.
+- **Changed:** the title screen became a **home screen** — a Continue card for
+  your latest board (expandable to all of them), New Game, the Service Record,
+  and the Mess hall. The Mac Game menu speaks it too (**⌘B** for home).
+- **New:** the Service Record shows **full-clear times** (your combined best
+  once every difficulty at a size is won) and a **Breakdown** of where your play
+  goes, by playtime or game count.
+- **Changed:** times **truncate** instead of rounding up (a 49.95s clear is
+  49.9, matching the in-game clock), record improvements show the change you
+  actually see, and long clears roll into `h:mm:ss.t`.
+
 ### 0.3.0 — board variants & the config redesign
 
 - **New:** **Hive (hex) boards** — a six-neighbour hexagonal grid alongside the
