@@ -13,6 +13,8 @@ struct FriendDetailView: View {
     @State private var alias: String
     @State private var groupSelection: Set<String>
     @State private var confirmingRemove = false
+    /// A typed-but-not-created new squad name; Done commits it (see GroupPicker).
+    @State private var pendingGroupName = ""
 
     init(friend: Friend, friends: FriendsStore) {
         self.friend = friend
@@ -47,10 +49,13 @@ struct FriendDetailView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Squads", bundle: .module)
                     .font(.caption).foregroundStyle(.secondary)
-                GroupPicker(friends: friends, selection: $groupSelection)
-                    .onChangeCompat(of: groupSelection) {
-                        friends.setGroups(Array($0), for: friend.publicKey)
-                    }
+                GroupPicker(
+                    friends: friends, selection: $groupSelection,
+                    pendingName: $pendingGroupName
+                )
+                .onChangeCompat(of: groupSelection) {
+                    friends.setGroups(Array($0), for: friend.publicKey)
+                }
             }
 
             Button(role: .destructive) {
@@ -67,6 +72,16 @@ struct FriendDetailView: View {
         dismiss()
     }
 
+    /// Done: commit a squad name typed but never committed with Create (silently
+    /// discarding it was how squads "didn't appear"), then close.
+    private func done() {
+        if let pending = friends.createGroup(named: pendingGroupName) {
+            groupSelection.insert(pending.id)
+            friends.setGroups(Array(groupSelection), for: friend.publicKey)
+        }
+        dismiss()
+    }
+
     @ViewBuilder private var chrome: some View {
         #if os(iOS)
         NavigationStack {
@@ -75,9 +90,7 @@ struct FriendDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
+                        Button(action: done) {
                             Text("Done", bundle: .module)
                         }
                     }
@@ -91,9 +104,7 @@ struct FriendDetailView: View {
         VStack(spacing: 16) {
             Text(friend.displayName).font(.title2.bold())
             content
-            Button {
-                dismiss()
-            } label: {
+            Button(action: done) {
                 Text("Done", bundle: .module)
             }
             .keyboardShortcut(.defaultAction)

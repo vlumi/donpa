@@ -27,6 +27,11 @@ under Unreleased as they merge.
   as its rank insignia, like the Service Record (Round is called out). And when
   you spot a board where you're trailing, a play button on the row jumps
   straight into a fresh game on it.
+- **A typed squad name can no longer vanish.** In the add-rival and rival-detail
+  sheets, a new squad only existed after tapping the field's own button — typing
+  a name and confirming the sheet silently threw it away. Confirming now creates
+  the squad (and puts the rival in it), and the field's button says Create, so
+  it no longer mirrors the sheet's Add.
 
 ### build 14 — 2026-07-06
 
