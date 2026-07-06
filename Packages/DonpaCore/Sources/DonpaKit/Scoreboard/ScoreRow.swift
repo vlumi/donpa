@@ -63,27 +63,30 @@ struct ScoreRow: View {
             Spacer()
             Text(verbatim: ScoreboardView.grouped(scoreboard.wins(for: config)))
                 .font(.body.monospaced())
-                .frame(width: 56, alignment: .trailing)
+                .numericCell()
+                .frame(width: ScoreColumns.cleared, alignment: .trailing)
             HStack(spacing: 3) {
                 if recordMarker == .progress { newBestMarker }
                 if let progress = scoreboard.bestProgress(for: config) {
                     // Floor, not round: a 99.7%-cleared loss must not read "100%".
                     Text("\(Int((progress * 100).rounded(.down)))%").font(.body.monospaced())
+                        .numericCell()
                 } else {
                     Text("—").foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 64, alignment: .trailing)
+            .frame(width: ScoreColumns.bestProgress, alignment: .trailing)
             HStack(spacing: 3) {
                 if let rank = ranking?.yourRank { rankBadge(rank) }
                 if recordMarker == .time { newBestMarker }
                 if let best = scoreboard.best(for: config) {
                     Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced().bold())
+                        .numericCell()
                 } else {
                     Text("—").foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 80, alignment: .trailing)
+            .frame(width: ScoreColumns.bestTime, alignment: .trailing)
         }
         .contentShape(Rectangle())
         .padding(.vertical, 10)
@@ -139,11 +142,11 @@ struct ScoreRow: View {
         HStack(spacing: 8) {
             Text("\(place)").font(.caption.monospaced())
                 .foregroundStyle(.secondary).frame(width: 20, alignment: .trailing)
-            Text(entry.name).lineLimit(1)
+            Text(entry.name).lineLimit(1).minimumScaleFactor(0.7)
                 .fontWeight(entry.isYou ? .bold : .regular)
             Spacer()
             if let best = entry.best {
-                Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced())
+                Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced()).numericCell()
             } else {
                 Text("—").foregroundStyle(.secondary)
             }

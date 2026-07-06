@@ -137,7 +137,7 @@ struct StatBlock: View {
         HStack {
             Text(label, bundle: .module).font(labelFont)
             Spacer(minLength: 12)
-            Text(verbatim: value).font(valueFont)
+            Text(verbatim: value).font(valueFont).numericCell()
         }
         .padding(.vertical, rowVPad)
         .padding(.horizontal, rowInset)
@@ -156,6 +156,7 @@ struct StatBlock: View {
                         .frame(width: 22, alignment: .leading)
                     Text(TimeFormat.mmsst(centiseconds: t.centiseconds))
                         .font(.body.monospaced().bold())
+                        .numericCell()
                     Spacer(minLength: 12)
                     Text(verbatim: Self.relative(t.achievedAt))
                         .font(.caption).foregroundStyle(.secondary)

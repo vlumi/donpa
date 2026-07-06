@@ -292,11 +292,11 @@ struct ScoreboardView: View {
         HStack {
             Spacer()
             Text("Cleared", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                .frame(width: 56, alignment: .trailing)
+                .frame(width: ScoreColumns.cleared, alignment: .trailing)
             Text("Best %", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                .frame(width: 64, alignment: .trailing)
+                .frame(width: ScoreColumns.bestProgress, alignment: .trailing)
             Text("Best", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                .frame(width: 80, alignment: .trailing)
+                .frame(width: ScoreColumns.bestTime, alignment: .trailing)
         }
         .padding(.vertical, 4)
         .padding(.horizontal, Self.rowInset)
