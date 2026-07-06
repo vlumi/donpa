@@ -41,9 +41,9 @@ under Unreleased as they merge.
   landed.
 - **Share your scores.** In the Mess hall, tap Share my scores for a QR code (or copy
   a link) built from your best scores. Someone adds you as a rival by scanning the code
-  or opening the link — no account, no server. Scores are signed so they can't be
-  forged, and a rival's scores stay separate from your own: remove them and their data
-  is simply gone.
+  or opening the link — no account, no server. Shares are signed, so no one can pass
+  one off in someone else's name, and a rival's scores stay separate from your own:
+  remove them and their data is simply gone.
 - **Rivals list.** Add rivals from their shared scores, give each your own nickname, or
   remove them — all in the Mess hall. Their scores are a snapshot from when they
   last shared (with the date shown), not a live feed. You can nickname a rival and put
