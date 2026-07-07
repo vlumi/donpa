@@ -46,10 +46,12 @@ family (open it from the home screen's **New game** button, the in-game
 
 The Grid/Hive size ladder runs XS / S / M / L / XL / XXL / XXXL as powers of two
 (8² up to 1024² = a million cells); the larger boards are panned and zoomed, with
-a minimap for navigation. Difficulty is mine density (the deliberately brutal top
-tier is near-unguessable), so it composes with any size. Each tier carries its
-**military rank insignia** — chevron stripes for the lower ranks, a star, then a
-star-in-laurel for the apex. The chosen family and selections are remembered.
+a minimap for navigation. Difficulty is mine density, so it composes with any
+size — six tiers from Trainee up to **Lunatic** (classic Expert's 20%, where
+essentially every game forces real gambles). Each tier carries its **military
+rank insignia** — chevron stripes for the lower ranks, a star, a star-in-laurel,
+and the crescent moon for Lunatic. The chosen family and selections are
+remembered.
 
 The size and difficulty rows are **chip rows** — every option visible, one tap
 to pick — with a line below each showing the board facts and a short flavour
@@ -244,6 +246,13 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 - **New:** the Service Record shows **full-clear times** (your combined best
   once every difficulty at a size is won) and a **Breakdown** of where your play
   goes, by playtime or game count.
+- **New:** **luck, tracked honestly** — when no safe move exists (or a sealed
+  pocket could never be resolved anyway), the exact odds of the guess you take
+  are computed from what the board showed; the Record counts forced guesses
+  faced, survived, and your luckiest escape, with a toast mid-game and the
+  verdict stamped on the result screen. Chords count too.
+- **New:** a sixth difficulty, **Lunatic** (20% mines; Hive 22%) — the tier
+  where the board fights back.
 - **Changed:** times **truncate** instead of rounding up (a 49.95s clear is
   49.9, matching the in-game clock), record improvements show the change you
   actually see, and long clears roll into `h:mm:ss.t`.
