@@ -21,6 +21,16 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The Record now tracks your luck.** Sometimes the board corners you — no safe
+  move exists anywhere, and you have to guess. Donpa now recognizes those
+  moments exactly, computing the true odds of the cell you clicked from what
+  the board showed at that instant, and keeps score: how many forced guesses
+  you've faced, how many you survived, and your luckiest escape — down to the
+  odds, like walking away from a one-in-four. Only genuine predicaments count:
+  if a safe move existed and you gambled anyway, that's on you, not on luck.
+  Shown in the Tour of Duty and each board's expanded stats once a board has
+  forced your hand (tracked on boards up to L).
+
 ### build 15 — 2026-07-06
 
 - **Head-to-head names every board fully — and offers a rematch.** Rows used to

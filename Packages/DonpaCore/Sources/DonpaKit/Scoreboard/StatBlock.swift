@@ -15,6 +15,10 @@ struct StatFigures {
     var noFlagWins = 0
     var noChordWins = 0
     var playtimeCentiseconds = 0
+    var forcedGuesses = 0
+    var guessesSurvived = 0
+    /// Longest-odds forced guess survived (lower = luckier), or nil if none yet.
+    var luckiestGuess: LuckiestGuess?
     /// Fastest winning times, fastest first (may be empty). Shown only in a single
     /// config's expansion — the global career has no meaningful "top times" list.
     var topTimes: [BestTime] = []
@@ -32,6 +36,9 @@ struct StatFigures {
         noFlagWins = record.noFlagWins.total
         noChordWins = record.noChordWins.total
         playtimeCentiseconds = record.playtimeCentiseconds.total
+        forcedGuesses = record.forcedGuesses.total
+        guessesSurvived = record.guessesSurvived.total
+        luckiestGuess = record.luckiestGuess
         topTimes = record.topTimes
         firstPlayed = record.firstPlayed
     }
@@ -49,6 +56,11 @@ struct StatFigures {
             noFlagWins += r.noFlagWins.total
             noChordWins += r.noChordWins.total
             playtimeCentiseconds += r.playtimeCentiseconds.total
+            forcedGuesses += r.forcedGuesses.total
+            guessesSurvived += r.guessesSurvived.total
+            if let lucky = r.luckiestGuess {
+                luckiestGuess = min(luckiestGuess ?? lucky, lucky)
+            }
             if let f = r.firstPlayed { firstPlayed = min(firstPlayed ?? f, f) }
         }
     }
@@ -117,7 +129,7 @@ struct StatBlock: View {
 
     /// Label/value pairs, in display order.
     private var statPairs: [(LocalizedStringKey, String)] {
-        [
+        var pairs: [(LocalizedStringKey, String)] = [
             ("Games played", grouped(figures.gamesPlayed)),
             ("Wins", grouped(figures.wins)),
             ("No-flag wins", grouped(figures.noFlagWins)),
@@ -131,6 +143,26 @@ struct StatBlock: View {
             ("Mines hit", grouped(figures.minesHit)),
             ("Time played", ScoreboardView.durationLabel(figures.playtimeCentiseconds)),
         ]
+        // The luck line — only once the board has actually forced a guess (a row
+        // of "0/0" would just be noise), and the record only with it.
+        if figures.forcedGuesses > 0 {
+            let ratio = Double(figures.guessesSurvived) / Double(figures.forcedGuesses)
+            pairs.append(
+                (
+                    "Guesses survived",
+                    "\(grouped(figures.guessesSurvived))/\(grouped(figures.forcedGuesses))"
+                        + " (\(Self.percent(ratio)))"
+                ))
+            if let lucky = figures.luckiestGuess {
+                pairs.append(("Luckiest guess", Self.percent(lucky.survival)))
+            }
+        }
+        return pairs
+    }
+
+    /// A whole-number locale percentage ("33 %" in FI, "33%" in EN).
+    static func percent(_ fraction: Double) -> String {
+        fraction.formatted(.percent.precision(.fractionLength(0)))
     }
 
     private func statRow(_ label: LocalizedStringKey, _ value: String) -> some View {

@@ -223,6 +223,11 @@ struct GameContent: View {
                 for: viewModel.config, tilesOpened: tiles, flagsPlaced: flags,
                 playtimeCentiseconds: centiseconds)
         }
+        // A forced guess (no certainly-safe cell existed) → the luck stats. The
+        // config rides along because the analysis is async.
+        viewModel.onForcedGuess = { config, survival, survived in
+            scoreboard.recordForcedGuess(for: config, survival: survival, survived: survived)
+        }
         if let scenario = PerfScenario.current {
             startPerfScenario(scenario)
         } else if viewModel.config != settings.currentConfig {
