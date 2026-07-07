@@ -290,9 +290,9 @@ final class GuessOddsTests: XCTestCase {
 
     /// Boards past the analysis ceiling get no verdict at all.
     func testBailsOnHugeBoard() {
-        let topo = BoundedSquareTopology(width: 128, height: 64)  // 8192 > maxCells
+        let topo = BoundedSquareTopology(width: 512, height: 256)  // 131,072 > maxCells
         var game = Game(topology: topo, mines: [Coord(0, 0)])
-        game.reveal(Coord(64, 32))
+        game.reveal(Coord(256, 128))
         XCTAssertNil(GuessOdds.analyze(game, clicked: Coord(1, 0)))
     }
 

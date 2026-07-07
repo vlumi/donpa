@@ -28,10 +28,13 @@ public enum GuessOdds {
         public let survival: Double
     }
 
-    /// Analysis ceiling: boards up to L (64² cells). The full-board scan per
-    /// reveal is real cost on the huge boards, and the one-sitting achievement
-    /// ceiling is L anyway.
-    public static let maxCells = 4096
+    /// Analysis ceiling: boards up to XXL (256² cells). The per-reveal setup
+    /// scans the whole board and indexes every unknown — ~5–10 ms off-main at
+    /// XXL, harmless; on XXXL it would be 100 ms+ per click plus a second
+    /// million-cell board copy held during analysis (the XXXL-CPU lesson), so
+    /// the million-cell board alone sits out. (A locality-bounded sealed-pocket
+    /// check could cover it later — the relaxed unresolvable rule is local.)
+    public static let maxCells = 65_536
     /// A frontier component bigger than this is not enumerated (bail, nil).
     public static let maxComponentCells = 25
     /// Backtracking step budget per component (bail, nil).
