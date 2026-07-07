@@ -249,8 +249,9 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 - **New:** **luck, tracked honestly** — when no safe move exists (or a sealed
   pocket could never be resolved anyway), the exact odds of the guess you take
   are computed from what the board showed; the Record counts forced guesses
-  faced, survived, and your luckiest escape, with a toast mid-game and the
-  verdict stamped on the result screen. Chords count too. The number on the
+  faced, survived, and your luckiest escape, with a toast mid-game — its
+  wording escalating with the odds beaten, from a lucky guess to a MIRACLE —
+  and the same verdict stamped on the result screen. Chords count too. The number on the
   toast and the *forced guess* stamp is always the **survival odds your click
   had at that moment** — 86% on a loss means genuinely robbed, 25% on a win is
   one for the memoirs. A guess-death with no stamp means a safe move still

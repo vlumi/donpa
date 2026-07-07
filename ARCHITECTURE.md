@@ -281,6 +281,32 @@ stretched height and ratcheted the card to full screen. Spacer-distribution is
 safe only where the container measures the *ideal* height (`fixedSize`), like
 the sidebar's pane stack.
 
+## Forced-guess odds: exact enumeration, conservative by construction
+
+`GuessOdds` (DonpaCore, pure, tested) scores every player reveal and chord
+against the PRE-action state, from player-visible information only — revealed
+numbers plus the total mine count; flags are marks, not facts. Frontier
+components are enumerated by backtracking (25-cell/step-budget caps), the
+unconstrained interior couples in via binomial weights, and everything combines
+in log space over non-negative counts so *certain safety* detection is exact.
+Two verdict halves: **forced** = no certainly-safe cell anywhere, OR the pocket
+is **sealed** (no future reveal can ever constrain it) and **rigid** (same mine
+count in every layout) — an unresolvable coin you'd have to flip eventually.
+**Survival** is the exact probability the action had; a chord's gamble is the
+whole set it opens.
+
+Boards ≤ XXL get the full analysis (~5–10 ms/click, off-main). The million-cell
+XXXL uses a **local path**: walk the click's constraint component outward
+(bounded by the same 25-cell cap — an easy board's sprawling frontier bails in
+microseconds, measured 0.02 ms/click) and report only sealed+rigid pockets,
+whose odds rigidity makes exact without global knowledge. The invariant
+everywhere: **exact or silent** — a position too tangled to analyze records
+nothing rather than an estimate, so the stats are guaranteed accurate but not
+guaranteed complete. Verdicts flow through `GameViewModel.onForcedGuess`
+(stats) and `lastForcedGuess` (the toast/result-pill feedback, tiered by
+`GuessTier`), landing in per-config `ScoreRecord` counters plus a min-merged
+`luckiestGuess` record.
+
 ## Score sharing: signed, serverless, peer-to-peer
 
 Sharing scores with other people (v0.4.0, "friendly rivalry") is **serverless and
