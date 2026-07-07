@@ -19,6 +19,12 @@ public enum PracticeBoard {
     /// a deep reseed budget drives failure to effectively zero.
     static let maxRounds = 400
     static let maxSeeds = 10
+
+    /// The Range's mine density: Sapper-tier boards (Normal is 12%) with the
+    /// luck surgically removed — real patterns, zero dice. Chosen over a
+    /// below-Easy tier deliberately: the no-guess guarantee is the mode's
+    /// point, not sparseness (Easy is already nearly guess-free).
+    public static let mineFraction = 0.12
     /// Fresh-solve verifications per seed (each failure re-enters repair).
     static let maxVerifyRounds = 12
 

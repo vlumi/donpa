@@ -135,6 +135,10 @@ public final class Settings: ObservableObject {
     @Published public var basicPreset: BasicPreset {
         didSet { defaults.set(basicPreset.rawValue, forKey: presetKey) }
     }
+    /// The Range's own remembered size (its only axis — density is fixed).
+    @Published public var practiceSize: BoardSize {
+        didSet { defaults.set(practiceSize.rawValue, forKey: "donpa.practice.size") }
+    }
     /// The display name last used when sharing scores — remembered so the share
     /// sheet pre-fills it. The local defaults copy is a CACHE; the durable home is
     /// the synchronizable Keychain beside the signing key (via `shareNameStore`),
@@ -176,7 +180,11 @@ public final class Settings: ObservableObject {
     public static func sizePath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
         Settings, BoardSize
     > {
-        family == .hive ? \.hiveSize : \.gridSize
+        switch family {
+        case .hive: return \.hiveSize
+        case .practice: return \.practiceSize
+        default: return \.gridSize
+        }
     }
     public static func densityPath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
         Settings, Density
@@ -269,6 +277,9 @@ public final class Settings: ObservableObject {
         hiveSize = axis("donpa.hive.size", BoardSize.init(rawValue:), else: sharedSize)
         hiveDensity = axis("donpa.hive.density", Density.init(rawValue:), else: sharedDensity)
         hiveEdges = axis("donpa.hive.edges", Self.edgesValue(from:), else: sharedEdges)
+        // The Range is post-legacy, so no shared-key seeding — default S, like the
+        // other families' size axes.
+        practiceSize = axis("donpa.practice.size", BoardSize.init(rawValue:), else: .s)
         basicPreset =
             defaults.string(forKey: presetKey).flatMap(BasicPreset.init(rawValue:)) ?? .beginner
         shareName = defaults.string(forKey: shareNameKey) ?? ""
@@ -294,6 +305,7 @@ public final class Settings: ObservableObject {
         case .basic: return .basic(basicPreset)
         case .grid: return .grid(gridSize, gridDensity, gridEdges)
         case .hive: return .hive(hiveSize, hiveDensity, hiveEdges)
+        case .practice: return .practice(practiceSize)
         }
     }
 
@@ -315,6 +327,8 @@ public final class Settings: ObservableObject {
             hiveSize = size
             hiveDensity = density
             hiveEdges = edges
+        case .practice(let size):
+            practiceSize = size
         }
     }
 

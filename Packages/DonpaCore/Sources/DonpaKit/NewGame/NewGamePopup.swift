@@ -200,6 +200,8 @@ struct NewGamePopup: View {
         switch (settings.family, row) {
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
+        case (.practice, _):  // size is The Range's only row
+            settings.practiceSize = Self.stepped(settings.practiceSize, by: step)
         case (.grid, 0), (.hive, 0):
             let path = Settings.sizePath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)

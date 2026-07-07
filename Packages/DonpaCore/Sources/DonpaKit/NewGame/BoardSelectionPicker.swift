@@ -356,6 +356,12 @@ struct BoardSelectionPicker: View {
         switch family {
         case .basic:
             basicCards
+        case .practice:
+            // Size is The Range's only axis (density fixed, edges Flat). The page
+            // proper — XS–XL-only chips, caption, no-guess messaging — lands with
+            // the UI PR that un-gates the family.
+            sizeChips(for: family)
+                .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
         case .grid, .hive:
             // Hierarchy order (matches the in-progress drill-down + keyboard rows):
             // size → density → edges. Size is the fundamental scale; density tunes it.

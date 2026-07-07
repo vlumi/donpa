@@ -26,6 +26,15 @@ public struct BoardDimensions: Equatable, Sendable {
 /// first axis of every storage key.
 public enum BoardFamily: String, CaseIterable, Sendable, Codable, Identifiable {
     case basic, grid, hive
+    /// The Range (FI Sotaharjoitus, JA 演習): guaranteed no-guess practice
+    /// boards at 12%, XS–XL — see `PracticeBoard`.
+    case practice
+
+    /// GATED: practice is fully wired but not yet surfaced — its New Game page
+    /// ships in the follow-up UI PR, which flips this back to every case (and
+    /// puts The Range leftmost). Everything that enumerates families (pickers,
+    /// scoreboard filters, head-to-head, breakdowns) keys off this list.
+    public static var allCases: [BoardFamily] { [.basic, .grid, .hive] }
 
     public var id: String { rawValue }
 
@@ -34,6 +43,7 @@ public enum BoardFamily: String, CaseIterable, Sendable, Codable, Identifiable {
         case .basic: return String(localized: "Basic", bundle: .module)
         case .grid: return String(localized: "Grid", bundle: .module)
         case .hive: return String(localized: "Hive", bundle: .module)
+        case .practice: return String(localized: "The Range", bundle: .module)
         }
     }
 }
@@ -240,6 +250,9 @@ public enum GameConfig: Hashable, Sendable {
     case basic(BasicPreset)
     case grid(BoardSize, Density, BoardEdges)
     case hive(BoardSize, Density, BoardEdges)
+    /// The Range: a square no-guess board (see `PracticeBoard`) — size is the
+    /// only axis; density is fixed at `PracticeBoard.mineFraction`, edges Flat.
+    case practice(BoardSize)
 
     /// The board family — the page this config lives on.
     public var family: BoardFamily {
@@ -247,13 +260,14 @@ public enum GameConfig: Hashable, Sendable {
         case .basic: return .basic
         case .grid: return .grid
         case .hive: return .hive
+        case .practice: return .practice
         }
     }
 
-    /// Flat for Basic; the chosen edges for Grid/Hive.
+    /// Flat for Basic and The Range; the chosen edges for Grid/Hive.
     public var edges: BoardEdges {
         switch self {
-        case .basic: return .flat
+        case .basic, .practice: return .flat
         case .grid(_, _, let edges), .hive(_, _, let edges): return edges
         }
     }
@@ -261,21 +275,27 @@ public enum GameConfig: Hashable, Sendable {
     /// Hexagonal cells (the Hive family)?
     public var isHex: Bool { family == .hive }
 
-    /// The Grid/Hive size, or nil for a Basic config.
+    /// The board size, or nil for a Basic config.
     public var size: BoardSize? {
         switch self {
         case .basic: return nil
         case .grid(let size, _, _), .hive(let size, _, _): return size
+        case .practice(let size): return size
         }
     }
 
-    /// The Grid/Hive difficulty tier, or nil for a Basic config.
+    /// The Grid/Hive difficulty tier, or nil for Basic and The Range.
     public var density: Density? {
         switch self {
-        case .basic: return nil
+        case .basic, .practice: return nil
         case .grid(_, let density, _), .hive(_, let density, _): return density
         }
     }
+
+    /// The Range's size ladder: XS–XL. The huge boards stay out — their
+    /// endgames defeat the no-guess generator, and the mode's audience doesn't
+    /// need a million cells to learn or speedrun on.
+    public static let practiceSizes: [BoardSize] = [.xs, .s, .m, .l, .xl]
 
     /// Build a Grid/Hive config from its axes; nil for `.basic` (presets carry no
     /// axes — construct those with `.basic(preset)` directly).
@@ -283,7 +303,7 @@ public enum GameConfig: Hashable, Sendable {
         _ family: BoardFamily, _ size: BoardSize, _ density: Density, _ edges: BoardEdges
     ) -> GameConfig? {
         switch family {
-        case .basic: return nil
+        case .basic, .practice: return nil
         case .grid: return .grid(size, density, edges)
         case .hive: return .hive(size, density, edges)
         }
@@ -300,6 +320,10 @@ public enum GameConfig: Hashable, Sendable {
         case .grid(let size, let density, _), .hive(let size, let density, _):
             let side = size.side
             let mines = Int((Double(side * side) * density.fraction(hex: isHex)).rounded())
+            return BoardDimensions(width: side, height: side, mines: mines)
+        case .practice(let size):
+            let side = size.side
+            let mines = Int((Double(side * side) * PracticeBoard.mineFraction).rounded())
             return BoardDimensions(width: side, height: side, mines: mines)
         }
     }
@@ -332,6 +356,8 @@ public enum GameConfig: Hashable, Sendable {
             return preset.label
         case .grid(let size, let density, _), .hive(let size, let density, _):
             return "\(size.label) · \(density.label)"
+        case .practice(let size):
+            return size.label
         }
     }
 
@@ -345,6 +371,8 @@ public enum GameConfig: Hashable, Sendable {
         case .grid(let size, let density, let edges), .hive(let size, let density, let edges):
             let base = "\(family.label) · \(size.label) · \(density.label)"
             return edges.wraps ? "\(base) · \(edges.label)" : base
+        case .practice(let size):
+            return "\(family.label) · \(size.label)"
         }
     }
 
@@ -353,9 +381,10 @@ public enum GameConfig: Hashable, Sendable {
     /// (v1 spoke classic/modern + a shape axis; v1 keys are orphaned by the 0.3.0
     /// score reset, not migrated).
     ///
-    ///   basic:  v2|basic|beginner
-    ///   grid:   v2|grid|flat|16x16|m31
-    ///   hive:   v2|hive|round|16x16|m36
+    ///   basic:    v2|basic|beginner
+    ///   grid:     v2|grid|flat|16x16|m31
+    ///   hive:     v2|hive|round|16x16|m36
+    ///   practice: v2|practice|16x16|m31
     public var storageKey: String {
         switch self {
         case .basic(let preset):
@@ -363,6 +392,8 @@ public enum GameConfig: Hashable, Sendable {
         case .grid, .hive:
             return
                 "v2|\(family.rawValue)|\(edges.rawValue)|\(width)x\(height)|m\(mineCount)"
+        case .practice:
+            return "v2|practice|\(width)x\(height)|m\(mineCount)"
         }
     }
 
@@ -378,6 +409,8 @@ public enum GameConfig: Hashable, Sendable {
             return BoardSize.allCases.flatMap { size in
                 Density.allCases.compactMap { custom(family, size, $0, edges) }
             }
+        case .practice:
+            return practiceSizes.map(GameConfig.practice)
         }
     }
 
@@ -385,49 +418,4 @@ public enum GameConfig: Hashable, Sendable {
     public static let beginner = GameConfig.basic(.beginner)
     public static let intermediate = GameConfig.basic(.intermediate)
     public static let expert = GameConfig.basic(.expert)
-}
-
-// Readable-key wire format, new in the family vocabulary (`{"grid":{"size":…}}`).
-// A save written in the old classic/modern shape fails to decode and is discarded
-// by the loader — accepted: the 0.3.0 release already resets scores and drops
-// in-progress saves (a mid-game is a shrug; records are the thing we never lose).
-extension GameConfig: Codable {
-    private enum CaseKey: String, CodingKey { case basic, grid, hive }
-    private enum BasicKey: String, CodingKey { case preset }
-    private enum CustomKey: String, CodingKey { case size, density, edges }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CaseKey.self)
-        if let basic = try? c.nestedContainer(keyedBy: BasicKey.self, forKey: .basic) {
-            self = .basic(try basic.decode(BasicPreset.self, forKey: .preset))
-            return
-        }
-        for (key, family) in [(CaseKey.grid, BoardFamily.grid), (.hive, .hive)] {
-            if let custom = try? c.nestedContainer(keyedBy: CustomKey.self, forKey: key) {
-                let size = try custom.decode(BoardSize.self, forKey: .size)
-                let density = try custom.decode(Density.self, forKey: .density)
-                let edges = try custom.decode(BoardEdges.self, forKey: .edges)
-                guard let config = GameConfig.custom(family, size, density, edges) else { break }
-                self = config
-                return
-            }
-        }
-        throw DecodingError.dataCorrupted(
-            .init(codingPath: decoder.codingPath, debugDescription: "unknown GameConfig case"))
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CaseKey.self)
-        switch self {
-        case .basic(let preset):
-            var basic = c.nestedContainer(keyedBy: BasicKey.self, forKey: .basic)
-            try basic.encode(preset, forKey: .preset)
-        case .grid(let size, let density, let edges), .hive(let size, let density, let edges):
-            let key: CaseKey = family == .grid ? .grid : .hive
-            var custom = c.nestedContainer(keyedBy: CustomKey.self, forKey: key)
-            try custom.encode(size, forKey: .size)
-            try custom.encode(density, forKey: .density)
-            try custom.encode(edges, forKey: .edges)
-        }
-    }
 }
