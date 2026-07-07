@@ -8,7 +8,9 @@ import Foundation
 @MainActor
 public final class GameClock: ObservableObject {
     /// Elapsed centiseconds, from the wall clock (not a tick count) so it's exact.
-    @Published public fileprivate(set) var elapsedCentiseconds: Int = 0
+    /// Setter internal (was fileprivate): the writers live in
+    /// GameViewModel+Timer.swift, split out for the file-length budget.
+    @Published public internal(set) var elapsedCentiseconds: Int = 0
 }
 
 /// Bridges the pure `Game` value type to SwiftUI/SpriteKit: owns the current
@@ -39,14 +41,17 @@ public final class GameViewModel: ObservableObject {
 
     @Published public var inputMode: InputMode = .reveal
 
-    private var timer: AnyCancellable?
+    // Timer state — internal (not `private`, which is file-scoped): the timer
+    // methods live in GameViewModel+Timer.swift for the file-length budget.
+    var timer: AnyCancellable?
     /// Segmented clock: `elapsed = accumulated + (now − runningSince)`. Pausing
     /// folds the live span into `accumulated` (a plain number, persists cleanly).
-    private var accumulatedCentiseconds = 0
-    private var runningSince: Date?
+    var accumulatedCentiseconds = 0
+    var runningSince: Date?
 
     /// Clock paused mid-game (game live, clock stopped) — drives the pause overlay.
-    @Published public private(set) var isPaused = false
+    /// Setter internal for GameViewModel+Timer.swift (see the timer state above).
+    @Published public internal(set) var isPaused = false
 
     /// True while a reveal/chord computes OFF the main thread (heavy flood-fill /
     /// placement on a huge board). Blocks board input so a tap can't land on a
@@ -80,6 +85,14 @@ public final class GameViewModel: ObservableObject {
     /// Core never references it.
     public var onActivityFlush:
         ((_ tilesDelta: Int, _ flagsDelta: Int, _ centisecondsDelta: Int) -> Void)?
+
+    /// A reveal was a FORCED guess (no certainly-safe cell existed — see
+    /// `GuessOdds`): reports its survival odds and whether the player survived it.
+    /// Carries the config the guess was made on, since the analysis is async and
+    /// the player may have moved to another board by the time it lands. Set by the
+    /// host (which owns the scoreboard); Core never references it.
+    public var onForcedGuess:
+        ((_ config: GameConfig, _ survival: Double, _ survived: Bool) -> Void)?
 
     /// Flush this game's activity delta via `onActivityFlush`. Idempotent.
     public func flushActivity() {
@@ -211,10 +224,39 @@ public final class GameViewModel: ObservableObject {
             "reveal \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         let wasNotStarted = game.status == .notStarted
+        // Capture the PRE-reveal state for the guess analysis (O(1) COW copy) —
+        // only when analysis is even possible, so the huge boards never retain a
+        // second board copy. Chord reveals are deliberately NOT analyzed: a chord
+        // is a deduction claim, and dying to a wrong flag is an error, not a guess.
+        let pre =
+            (game.status == .playing && game.board.cellCount <= GuessOdds.maxCells)
+            ? game : nil
         computeOffMain({ game in game.reveal(c) }) { [weak self] in
+            guard let self else { return }
             // The first reveal places mines and starts the clock.
-            if wasNotStarted, self?.game.status == .playing { self?.startTimer() }
-            self?.finishIfEnded()
+            if wasNotStarted, self.game.status == .playing { self.startTimer() }
+            self.finishIfEnded()
+            // A single reveal only ever loses on the clicked cell, so
+            // post-state loss ⟺ died to it.
+            if let pre {
+                self.analyzeGuess(pre: pre, clicked: c, survived: self.game.status != .lost)
+            }
+        }
+    }
+
+    /// Score a completed reveal against its pre-reveal state, off the main thread;
+    /// report it via `onForcedGuess` when it was a genuine forced guess.
+    /// Internal (not private) for the wiring test.
+    func analyzeGuess(pre: Game, clicked: Coord, survived: Bool) {
+        let config = self.config
+        Task.detached(priority: .utility) { [weak self] in
+            guard let verdict = GuessOdds.analyze(pre, clicked: clicked), verdict.forced
+            else { return }
+            // Recaptured immutably — referencing the outer `self` var from this
+            // second concurrent closure is a Swift 6 error.
+            await MainActor.run { [weak self] in
+                self?.onForcedGuess?(config, verdict.survival, survived)
+            }
         }
     }
 
@@ -383,63 +425,6 @@ public final class GameViewModel: ObservableObject {
         }
         resultCounter += 1
         lastResult = GameResultEvent(id: resultCounter, result: result)
-    }
-
-    // MARK: Timer
-
-    /// Pause the clock mid-game (game stays playable-but-frozen). No-op unless live.
-    public func pause() {
-        guard game.status == .playing, !isPaused else { return }
-        // Flush while the clock is still live, so the scoreboard (opened via a
-        // pause) shows current tiles/flags/time.
-        flushActivity()
-        foldRunningSpan()
-        timer?.cancel()
-        timer = nil
-        isPaused = true
-    }
-
-    public func resume() {
-        guard isPaused else { return }
-        isPaused = false
-        // The final reveal can finish OFF-main while paused (pause during the
-        // compute); don't restart the clock on a decided board — it would tick
-        // past the recorded final time.
-        if game.status == .playing { startTimer() }
-    }
-
-    private func startTimer() {
-        runningSince = Date()
-        // Tick ~10×/sec for tenths; the value is from the wall clock, so no drift.
-        timer = Timer.publish(every: 0.1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                guard let self else { return }
-                self.clock.elapsedCentiseconds = self.currentCentiseconds()
-            }
-    }
-
-    /// `accumulated` + the live span (if running).
-    private func currentCentiseconds() -> Int {
-        guard let runningSince else { return accumulatedCentiseconds }
-        let span = max(0, Int((Date().timeIntervalSince(runningSince) * 100).rounded()))
-        return accumulatedCentiseconds + span
-    }
-
-    /// Move the live running span into `accumulated` and clear it.
-    private func foldRunningSpan() {
-        accumulatedCentiseconds = currentCentiseconds()
-        runningSince = nil
-        clock.elapsedCentiseconds = accumulatedCentiseconds
-    }
-
-    private func resetTimer() {
-        timer?.cancel()
-        timer = nil
-        accumulatedCentiseconds = 0
-        runningSince = nil
-        isPaused = false
-        clock.elapsedCentiseconds = 0
     }
 
     private func bump() { revision &+= 1 }

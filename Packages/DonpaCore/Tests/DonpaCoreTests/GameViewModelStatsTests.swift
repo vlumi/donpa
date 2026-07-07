@@ -109,4 +109,31 @@ final class GameViewModelStatsTests: XCTestCase {
         XCTAssertTrue(vm.usedFlagEver, "restore can't prove a clean run → violated")
         XCTAssertTrue(vm.usedChordEver)
     }
+
+    /// The forced-guess wiring: analysis of a coin-flip position reaches the
+    /// host's `onForcedGuess` with the exact odds, the survived flag, and the
+    /// captured config (the engine itself is covered by `GuessOddsTests`).
+    func testForcedGuessReportsThroughHook() async {
+        let vm = GameViewModel(config: .beginner)
+        // The canonical sealed coin flip (see GuessOddsTests) as the PRE state.
+        let topo = BoundedSquareTopology(width: 5, height: 3)
+        let pocket: Set<Coord> = [Coord(0, 2), Coord(1, 2)]
+        let mines: Set<Coord> = [
+            Coord(0, 1), Coord(1, 1), Coord(2, 1), Coord(2, 2), Coord(0, 2),
+        ]
+        var pre = Game(topology: topo, mines: mines)
+        for c in topo.allCoords() where !mines.contains(c) && !pocket.contains(c) {
+            pre.reveal(c)
+        }
+
+        let reported = expectation(description: "forced guess reported")
+        vm.onForcedGuess = { config, survival, survived in
+            XCTAssertEqual(config, .beginner, "the config rides along")
+            XCTAssertEqual(survival, 0.5, accuracy: 1e-9)
+            XCTAssertTrue(survived)
+            reported.fulfill()
+        }
+        vm.analyzeGuess(pre: pre, clicked: Coord(1, 2), survived: true)
+        await fulfillment(of: [reported], timeout: 5)
+    }
 }
