@@ -15,7 +15,6 @@ struct ShareCardView: View {
     private let identityStore = ShareIdentityStore()
 
     @State private var name: String = ""
-    @State private var includeCareer = false
     @State private var link: URL?
     @State private var qr: Image?
     @State private var failed = false
@@ -43,13 +42,13 @@ struct ShareCardView: View {
                         settings.shareName = name
                         rebuild()
                     }
-                    Toggle(isOn: $includeCareer) {
+                    Toggle(isOn: $settings.shareIncludeCareer) {
                         Text("Include career stats", bundle: .module)
                             // Wrap on a narrow column instead of truncating to
                             // "Include care…".
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    .onChangeCompat(of: includeCareer) { _ in rebuild() }
+                    .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
                     if let link {
                         shareButtons(for: link)
                     }
@@ -171,7 +170,8 @@ struct ShareCardView: View {
         guard let identity = identityStore.identity(),
             let payload = SharePayloadBuilder.build(
                 from: scoreboard, identity: identity,
-                name: trimmed.isEmpty ? "?" : trimmed, includeCareer: includeCareer, now: Date()),
+                name: trimmed.isEmpty ? "?" : trimmed,
+                includeCareer: settings.shareIncludeCareer, now: Date()),
             let url = try? ShareLink.url(for: payload)
         else {
             qr = nil

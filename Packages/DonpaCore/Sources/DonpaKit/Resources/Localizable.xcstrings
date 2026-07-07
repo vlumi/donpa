@@ -1799,51 +1799,6 @@
         }
       }
     },
-    "lucky guess" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "lucky guess"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "onnekas arvaus"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "強運"
-          }
-        }
-      }
-    },
-    "Lucky guess! (%@)" : {
-      "comment" : "Guess toast, mild tier (survival > 1\/2)",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lucky guess! (%@)"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Onnekas arvaus! (%@)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "強運！（%@）"
-          }
-        }
-      }
-    },
     "Lucky guesses" : {
       "comment" : "Record stat row: forced guesses survived \/ faced (value like 2\/5 (40%))",
       "localizations" : {

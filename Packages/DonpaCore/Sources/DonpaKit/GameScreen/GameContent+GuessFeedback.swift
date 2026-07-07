@@ -22,16 +22,22 @@ enum GuessTier {
         }
     }
 
-    /// The pill's stamp word (rendered uppercased; the loss pill says
-    /// "forced guess" instead — dying is never lucky).
+    /// The pill's stamp word (rendered uppercased). Surviving better-than-even
+    /// odds isn't luck, so the mild tier stamps the neutral "forced guess" —
+    /// the same word every loss stamps (dying is never lucky either).
     var pillLabel: LocalizedStringKey {
         switch self {
-        case .lucky: return "lucky guess"
+        case .lucky: return "forced guess"
         case .coinFlip: return "coin flip"
         case .longShot: return "long shot"
         case .miracle: return "miracle"
         }
     }
+
+    /// Fanfare starts where luck does: at the coin flip. Better-than-even
+    /// gambles are tracked without a toast (a stuck tap into the open field
+    /// usually survives — repeating "lucky!" at 85% is noise, not news).
+    var deservesToast: Bool { self != .lucky }
 }
 
 /// In-the-moment forced-guess feedback: a transient toast when a mid-game guess
@@ -47,7 +53,9 @@ extension GameContent {
     /// instead (reactively — `mangaPanel` reads `lastForcedGuess` directly), so
     /// the final move never shows both.
     func handleGuessEvent(_ event: ForcedGuessEvent?) {
-        guard let event, event.survived, viewModel.status == .playing else { return }
+        guard let event, event.survived, viewModel.status == .playing,
+            GuessTier(survival: event.survival).deservesToast
+        else { return }
         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { guessToast = event }
         guessToastTask?.cancel()
         guessToastTask = Task {
@@ -69,7 +77,7 @@ extension GameContent {
         let odds = StatBlock.percent(event.survival)
         let label: LocalizedStringKey =
             panel.isWin ? GuessTier(survival: event.survival).pillLabel : "forced guess"
-        return (odds, label)
+        return (odds, label)  // mild-tier wins also read "forced guess" (see pillLabel)
     }
 
     /// The survived-guess toast, top-center over the board, self-dismissing.
@@ -99,7 +107,8 @@ extension GameContent {
 
     private func toastText(tier: GuessTier, percent: String) -> Text {
         switch tier {
-        case .lucky: return Text("Lucky guess! (\(percent))", bundle: .module)
+        case .lucky:  // gated out by deservesToast; keep the fallback total
+            return Text("Coin flip! (\(percent))", bundle: .module)
         case .coinFlip: return Text("Coin flip! (\(percent))", bundle: .module)
         case .longShot: return Text("Long shot! (\(percent))", bundle: .module)
         case .miracle: return Text("A MIRACLE! (\(percent))", bundle: .module)
