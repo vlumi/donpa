@@ -131,8 +131,11 @@ public enum BoardSize: String, CaseIterable, Sendable, Codable {
 /// Grid/Hive difficulty = mine density (fraction of cells). Even 2-point steps,
 /// from fair (easy) to near-unsolvable-by-logic (insane), chosen via solver
 /// analysis on the power-of-two size ladder: bigger boards saturate to ~100%
-/// forced-guess sooner, so the top tier stays modest to keep all five distinct on
-/// the boards people actually play.
+/// forced-guess sooner, so the (original) top tier stays modest to keep the
+/// tiers distinct on the boards people actually play. **Lunatic (20%, classic
+/// Expert's density) sits deliberately past that line**: essentially every game
+/// demands forced gambles (XS 90% / S 98% solver guess-rate vs Legend's
+/// 81%/91%) — the tier where the luck tracking is the game's texture.
 ///
 /// **Hive runs +2 points denser than Grid** (12/14/16/18/20% vs 10/12/14/16/18%):
 /// a hex cell has 6 neighbours vs 8, so the same mine% cascades more and plays
@@ -140,7 +143,7 @@ public enum BoardSize: String, CaseIterable, Sendable, Codable {
 /// hex difficulty back to square roughly tier-for-tier. See the TierAnalysis dev
 /// tool, which measures both topologies.
 public enum Density: String, CaseIterable, Sendable, Codable {
-    case easy, normal, hard, brutal, insane
+    case easy, normal, hard, brutal, insane, lunatic
 
     /// Mine fraction for a given family. Grid is the base ladder; Hive adds two
     /// points per tier to offset its gentler 6-neighbour cascades.
@@ -155,6 +158,7 @@ public enum Density: String, CaseIterable, Sendable, Codable {
         case .hard: return 0.14
         case .brutal: return 0.16
         case .insane: return 0.18
+        case .lunatic: return 0.20
         }
     }
 
@@ -167,6 +171,7 @@ public enum Density: String, CaseIterable, Sendable, Codable {
         case .hard: return String(localized: "Veteran", bundle: .module)
         case .brutal: return String(localized: "Ace", bundle: .module)
         case .insane: return String(localized: "Legend", bundle: .module)
+        case .lunatic: return String(localized: "Lunatic", bundle: .module)
         }
     }
 
@@ -186,6 +191,7 @@ public enum Density: String, CaseIterable, Sendable, Codable {
         case .hard: return String(localized: "Sweating now", bundle: .module)
         case .brutal: return String(localized: "This is mean", bundle: .module)
         case .insane: return String(localized: "No pain, no gain", bundle: .module)
+        case .lunatic: return String(localized: "The board fights back", bundle: .module)
         }
     }
 
@@ -194,7 +200,8 @@ public enum Density: String, CaseIterable, Sendable, Codable {
     public enum Insignia: Sendable {
         case chevrons(Int)  // N stacked stripes
         case star  // single officer star
-        case staredLaurel  // star in a laurel wreath (apex)
+        case staredLaurel  // star in a laurel wreath (the mortal apex)
+        case moonedLaurel  // crescent moon in the laurel — luna, for the Lunatic
     }
     public var insignia: Insignia {
         switch self {
@@ -203,6 +210,7 @@ public enum Density: String, CaseIterable, Sendable, Codable {
         case .hard: return .chevrons(3)
         case .brutal: return .star
         case .insane: return .staredLaurel
+        case .lunatic: return .moonedLaurel
         }
     }
 }

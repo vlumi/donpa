@@ -58,7 +58,7 @@ extension BoardSelectionPicker {
 
     // MARK: Difficulty chips (row 1)
 
-    /// The difficulty as five always-visible rank-insignia chips — NOT a drum: a
+    /// The difficulty as six always-visible rank-insignia chips — NOT a drum: a
     /// horizontally-scrolling row inside a horizontally-swiped pager is two
     /// gestures fighting over the same axis. The selected tier's name, honest mine
     /// percentage (Hive runs denser), and tagline sit in the caption below.
@@ -66,7 +66,7 @@ extension BoardSelectionPicker {
         let densityPath = Settings.densityPath(family)
         let selected = settings[keyPath: densityPath]
         return VStack(spacing: 6) {
-            // All five chips in one row when there's room; 3 + 2 when not (matching
+            // All six chips in one row when there's room; 3 + 3 when not (matching
             // the size chips' wrap).
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) { densityRow(Density.allCases, densityPath) }

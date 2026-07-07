@@ -56,6 +56,13 @@ enum DensityInsignia {
                 Image(systemName: "star.fill").font(.system(size: 11, weight: .black))
                 Image(systemName: "laurel.trailing").font(.system(size: 20, weight: .bold))
             }
+        case .moonedLaurel:
+            // Luna in the laurel — the tier past the mortal apex.
+            HStack(spacing: -3) {
+                Image(systemName: "laurel.leading").font(.system(size: 20, weight: .bold))
+                Image(systemName: "moon.fill").font(.system(size: 11, weight: .black))
+                Image(systemName: "laurel.trailing").font(.system(size: 20, weight: .bold))
+            }
         }
     }
 
