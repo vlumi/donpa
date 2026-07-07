@@ -14,9 +14,9 @@ summarized in the [README](README.md) version history — this roadmap stays
 forward-looking. For the record: **v0.1.0** (classic), **v0.2.0** (cross-device
 sync + big boards), and **v0.3.0** (board variants — wrapped + hex — and the New
 Game / scoreboard redesign) shipped to TestFlight; **v0.4.0** (friendly rivalry —
-score sharing, rivals + squads, the home-screen redesign, per-board saves) is in
-TestFlight, with one late addition still to land (forced-guess tracking, below).
-Carry-over notes from those milestones live in the Backlog below.
+score sharing, rivals + squads, the home-screen redesign, per-board saves, and
+the forced-guess luck tracking) is in TestFlight. Carry-over notes from those
+milestones live in the Backlog below.
 
 ---
 
@@ -80,38 +80,6 @@ these slot into whichever release they're ready for.
       `status == .notStarted || status == .playing` with computed properties on
       the enum (`isLive` / `isFinished` / `isPlaying`). Pure readability; no
       behaviour change.
-
-## v0.4.0 — remaining: forced-guess ("luck") tracking
-
-Pulled forward from the progression milestone so the counters accrue history
-before the achievements that read them exist. Every worse-than-even guess in
-Minesweeper is a **sealed pocket** — a few unopened cells walled in by the board
-edge and already-found mines, where the reachable information (one number, or
-just the mine counter) admits several equally likely layouts. Survival odds =
-the fraction of layouts where the clicked cell is empty: a lone pair splitting
-one mine is the classic **1/2**; a "sees-everything" number leaving two mines
-among three cells is **1/3**; a sealed 2×2 with three mines left is **1/4**.
-Dense boards build these walls; Easy can't — the stat is effectively
-density-gated content.
-
-- [ ] **DonpaCore guess engine** (pure, tested): player-visible pre-reveal state
-      + clicked cell → `(forced, survivalProbability)`. Cheap pre-check with the
-      existing `Solver` fixpoint (not stuck → not forced, skip); then exact
-      enumeration over the clicked cell's frontier component with binomial
-      weighting for the unconstrained interior. **Forced = no cell anywhere has
-      survival probability 1** (falls out of the same enumeration — an
-      unexplored interior usually beats the pocket's odds, so poking it early is
-      a choice, not fate). Bail out silently on pathological components (>~25
-      frontier cells) and gate the whole analysis to boards ≤ L (the fixpoint
-      per click on a 1M board is real cost).
-- [ ] **Three per-config `ScoreRecord` fields** (additive — safe in the
-      per-device-blob model): `forcedGuesses` + `guessesSurvived` counters, and
-      `luckiestGuess` — the lowest survival odds ever survived, merged by min
-      like a best time. The record field is what makes the later achievements
-      retroactive.
-- [ ] **A luck line in the Service Record career** — "Forced guesses survived:
-      12 of 31 (39%) · luckiest: 25%". Computed async off the pre-reveal
-      snapshot; zero input latency.
 
 ## v0.5.0 — Progression: achievements, gating & practice
 
