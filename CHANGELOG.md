@@ -40,7 +40,6 @@ under Unreleased as they merge.
   on a loss (fate, not error). And silence teaches too: no message on a
   guess-death means playing on could still have resolved those cells — the
   board had more to say.
-
 - **A sixth difficulty: Lunatic.** Past Legend lies 20% mines (Hive: 22%) —
   classic Expert's density on Donpa's boards, where essentially every game
   forces real gambles and the new luck tracking earns its keep. The crescent
