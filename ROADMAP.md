@@ -13,10 +13,11 @@ meaty release: v0.4.0 = friendly rivalry (score sharing); v0.5.0 = progression
 summarized in the [README](README.md) version history — this roadmap stays
 forward-looking. For the record: **v0.1.0** (classic), **v0.2.0** (cross-device
 sync + big boards), and **v0.3.0** (board variants — wrapped + hex — and the New
-Game / scoreboard redesign) shipped to TestFlight; **v0.4.0** (friendly rivalry —
-score sharing, rivals + squads, the home-screen redesign, per-board saves, and
-the forced-guess luck tracking) is in TestFlight. Carry-over notes from those
-milestones live in the Backlog below.
+Game / scoreboard redesign), and **v0.4.0** (friendly rivalry — score sharing,
+rivals + squads, the home-screen redesign, per-board saves, the forced-guess
+luck tracking, and the Lunatic tier) shipped to TestFlight. **v0.5.0
+(progression) is now in development.** Carry-over notes from shipped milestones
+live in the Backlog below.
 
 ---
 

@@ -10,10 +10,11 @@ was architected for are landing on schedule: huge zoomable maps, **Round
 touching the game logic.
 
 **v0.1.0** (classic mode), **v0.2.0** (big boards + cross-device sync), and
-**v0.3.0** (board variants + the config/scoreboard redesign) have shipped to
-TestFlight; **v0.4.0** (friendly rivalry — peer-to-peer score sharing, rivals
-and squads, plus the home-screen redesign and per-board saves) is
-feature-complete on `main`, awaiting its release build. See
+**v0.3.0** (board variants + the config/scoreboard redesign), and **v0.4.0**
+(friendly rivalry — peer-to-peer score sharing, rivals and squads, the
+home-screen redesign, per-board saves, forced-guess luck tracking, and the
+Lunatic tier) have shipped to TestFlight; **v0.5.0** (progression) is in
+development. See
 [CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md) for
 the path to v1.0, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
 decisions.

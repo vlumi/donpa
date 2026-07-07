@@ -14,12 +14,18 @@ build's heading and opens a fresh empty one. Keep that heading immediately
 followed by its list items (no prose between), so the release script can promote
 it with a one-line edit.
 
-## [0.4.0] — Friendly rivalry
+## [0.5.0] — Progression
 
-**Peer-to-peer score sharing** (see ROADMAP.md). In development — entries land
-under Unreleased as they merge.
+**Achievements, progressive gating & practice mode** (see ROADMAP.md). In
+development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
+
+## [0.4.0] — Friendly rivalry
+
+**Peer-to-peer score sharing: rivals, squads, the home screen — and the
+forced-guess luck tracking** (see ROADMAP.md). Shipped to TestFlight (both
+platforms).
 
 ### build 17 — 2026-07-07
 
