@@ -104,7 +104,7 @@
       }
     },
     "Ace" : {
-      "comment" : "Difficulty tier 4\/5, sapper skill ladder",
+      "comment" : "Difficulty tier 4\/6, sapper skill ladder",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -314,7 +314,7 @@
       }
     },
     "Legend" : {
-      "comment" : "Difficulty tier 5\/5 (hardest), sapper skill ladder",
+      "comment" : "Difficulty tier 5\/6, sapper skill ladder",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -326,6 +326,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "伝説"
+          }
+        }
+      }
+    },
+    "Lunatic" : {
+      "comment" : "Difficulty tier 6\/6 (hardest), sapper skill ladder — the Touhou-style ultra tier past Legend",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lunatic"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mielipuoli"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ルナティック"
           }
         }
       }
@@ -371,7 +394,7 @@
       }
     },
     "No pain, no gain" : {
-      "comment" : "Density Legend tagline — cheesy 'no pain, no gain' bravado (hardest difficulty)",
+      "comment" : "Density Legend tagline — cheesy 'no pain, no gain' bravado",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -496,7 +519,7 @@
       }
     },
     "Sapper" : {
-      "comment" : "Difficulty tier 2\/5, sapper skill ladder (the character's own role)",
+      "comment" : "Difficulty tier 2\/6, sapper skill ladder (the character's own role)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -525,6 +548,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "汗ばんできたな"
+          }
+        }
+      }
+    },
+    "The board fights back" : {
+      "comment" : "Density Lunatic tagline — at 20% mines the field genuinely resists (forced gambles every game)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board fights back"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kenttä panee vastaan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "盤面が牙をむく"
           }
         }
       }
@@ -564,7 +610,7 @@
       }
     },
     "Trainee" : {
-      "comment" : "Difficulty tier 1\/5 (easiest), sapper skill ladder",
+      "comment" : "Difficulty tier 1\/6 (easiest), sapper skill ladder",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -581,7 +627,7 @@
       }
     },
     "Veteran" : {
-      "comment" : "Difficulty tier 3\/5, sapper skill ladder",
+      "comment" : "Difficulty tier 3\/6, sapper skill ladder",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
