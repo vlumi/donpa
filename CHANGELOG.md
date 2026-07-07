@@ -21,6 +21,8 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 16 — 2026-07-07
+
 - **The Record now tracks your luck.** Sometimes the board corners you — no safe
   move exists anywhere, and you have to guess. Donpa now recognizes those
   moments exactly, computing the true odds of the cell you clicked from what
