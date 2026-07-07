@@ -27,7 +27,7 @@ extension GameContent {
                 MangaPanelView(
                     kind: panel,
                     reduceMotion: reduceMotion,
-                    guessOdds: panelGuessOdds,
+                    guess: panelGuess,
                     onContinue: { dismissPanel() }
                 )
                 .transition(.opacity)

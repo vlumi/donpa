@@ -112,11 +112,12 @@ struct MangaPanelView: View {
 
     let kind: Kind
     let reduceMotion: Bool
-    /// The odds of the guess that ENDED this game, when its final action was a
-    /// genuine forced guess (nil otherwise) — the "was that luck or my mistake?"
-    /// answer, straight on the result. Arrives async (it's computed off-thread),
-    /// so the host passes it reactively.
-    var guessOdds: String?
+    /// The guess that ENDED this game, when its final action was a genuine
+    /// forced guess (nil otherwise) — the "was that luck or my mistake?" answer,
+    /// straight on the result. The label escalates with the odds on a win
+    /// ("coin flip", "miracle"…) and stamps "forced guess" on a loss. Arrives
+    /// async (computed off-thread), so the host passes it reactively.
+    var guess: (odds: String, label: LocalizedStringKey)?
     /// Dismiss to inspect the finished board (X / tap / Esc).
     let onContinue: () -> Void
 
@@ -191,7 +192,7 @@ struct MangaPanelView: View {
 
     /// The guess pill folded into the spoken label (overlays are ignored children).
     private var guessA11ySuffix: String {
-        guard let odds = guessOdds else { return "" }
+        guard let odds = guess?.odds else { return "" }
         return " "
             + (kind.isWin
                 ? String(localized: "Won on a forced guess (\(odds)).", bundle: .module)
@@ -202,11 +203,11 @@ struct MangaPanelView: View {
     /// the result. On a loss this is the consolation ("fate, not error"); on a win,
     /// the brag. Bottom corner — the top corners belong to the record/best pills.
     @ViewBuilder private var guessPill: some View {
-        if let odds = guessOdds {
+        if let guess {
             VStack(spacing: 0) {
-                Text(verbatim: odds)
+                Text(verbatim: guess.odds)
                     .font(.system(size: 17, weight: .black, design: .rounded))
-                Text(kind.isWin ? "lucky guess" : "forced guess", bundle: .module)
+                Text(guess.label, bundle: .module)
                     .font(.system(size: 9, weight: .heavy, design: .rounded))
                     .textCase(.uppercase)
             }
