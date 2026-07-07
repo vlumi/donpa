@@ -43,9 +43,19 @@ public enum GuessOdds {
             game.board[clicked].state == .hidden,
             let pos = position(for: game)
         else { return nil }
-        return verdict(
-            clicked: pos.unknownIndex[clicked]!, tallies: pos.tallies,
-            interiorCount: pos.interiorCount, mines: pos.mines)
+        let idx = pos.unknownIndex[clicked]!
+        guard
+            let v = verdict(
+                clicked: idx, tallies: pos.tallies,
+                interiorCount: pos.interiorCount, mines: pos.mines)
+        else { return nil }
+        // The relaxed half of "forced": a safe move may exist elsewhere, but if
+        // this pocket can NEVER be resolved, the coin must be flipped eventually —
+        // flipping it now counts (see isUnresolvable).
+        if !v.forced, isUnresolvable(seeds: [idx], pos: pos, game: game) {
+            return Verdict(forced: true, survival: v.survival)
+        }
+        return v
     }
 
     /// Analyze a CHORD at `c` against the PRE-chord state. A chord's gamble is
@@ -66,31 +76,37 @@ public enum GuessOdds {
         // Every opened cell neighbours `c`, whose constraint links them all into
         // one component.
         let openedIndices = Set(opened.map { pos.unknownIndex[$0]! })
-        return chordVerdict(opened: openedIndices, pos: pos)
+        guard let v = chordVerdict(opened: openedIndices, pos: pos) else { return nil }
+        if !v.forced, isUnresolvable(seeds: Array(openedIndices), pos: pos, game: game) {
+            return Verdict(forced: true, survival: v.survival)
+        }
+        return v
     }
 
     /// The shared position prep: unknowns, constraints, components, and each
     /// component's enumerated layouts. nil past any bail-out.
-    private struct Position {
+    struct Position {
         var unknownIndex: [Coord: Int]
+        var unknownCoords: [Coord]
         var tallies: [ComponentTally]
         var components: [Component]
         var interiorCount: Int
         var mines: Int
     }
 
-    private static func position(for game: Game) -> Position? {
+    static func position(for game: Game) -> Position? {
         guard game.status == .playing else { return nil }  // first click is never a guess
         let board = game.board
         guard board.cellCount <= maxCells else { return nil }
 
         // Unknowns = every non-revealed cell (flags are player marks, not facts).
         var unknownIndex: [Coord: Int] = [:]
-        var unknownCount = 0
+        var unknownCoords: [Coord] = []
         for c in board.allCoords where board[c].state != .revealed {
-            unknownIndex[c] = unknownCount
-            unknownCount += 1
+            unknownIndex[c] = unknownCoords.count
+            unknownCoords.append(c)
         }
+        let unknownCount = unknownCoords.count
         let mines = game.mineCount
         guard mines > 0, mines <= unknownCount else { return nil }
 
@@ -123,57 +139,19 @@ public enum GuessOdds {
         }
 
         return Position(
-            unknownIndex: unknownIndex, tallies: tallies, components: components,
-            interiorCount: interiorCount, mines: mines)
+            unknownIndex: unknownIndex, unknownCoords: unknownCoords, tallies: tallies,
+            components: components, interiorCount: interiorCount, mines: mines)
     }
 
     // MARK: - Frontier components
 
-    private struct Component {
+    struct Component {
         var cells: [Int]  // global unknown indices, discovery order
         var constraints: [(cells: [Int], count: Int)]  // cells as LOCAL indices
     }
-
-    private static func components(
-        unknownCount: Int, constraints: [(cells: [Int], count: Int)]
-    ) -> [Component] {
-        // Map each frontier cell to its constraints, then BFS over shared membership.
-        var byCell: [[Int]] = Array(repeating: [], count: unknownCount)
-        for (i, constraint) in constraints.enumerated() {
-            for cell in constraint.cells { byCell[cell].append(i) }
-        }
-        var cellSeen = Array(repeating: false, count: unknownCount)
-        var constraintSeen = Array(repeating: false, count: constraints.count)
-        var out: [Component] = []
-        for start in 0..<unknownCount where !byCell[start].isEmpty && !cellSeen[start] {
-            var cells: [Int] = []
-            var members: [Int] = []
-            var queue = [start]
-            cellSeen[start] = true
-            while let cell = queue.popLast() {
-                cells.append(cell)
-                for ci in byCell[cell] where !constraintSeen[ci] {
-                    constraintSeen[ci] = true
-                    members.append(ci)
-                    for next in constraints[ci].cells where !cellSeen[next] {
-                        cellSeen[next] = true
-                        queue.append(next)
-                    }
-                }
-            }
-            var local: [Int: Int] = [:]
-            for (i, cell) in cells.enumerated() { local[cell] = i }
-            let localConstraints = members.map { ci in
-                (cells: constraints[ci].cells.map { local[$0]! }, count: constraints[ci].count)
-            }
-            out.append(Component(cells: cells, constraints: localConstraints))
-        }
-        return out
-    }
-
     // MARK: - Component enumeration
 
-    private struct ComponentTally {
+    struct ComponentTally {
         var cells: [Int]  // global unknown indices
         /// solutions[m] = number of consistent layouts with m mines in the component.
         var solutions: [Int: Double]
@@ -184,7 +162,7 @@ public enum GuessOdds {
     /// Enumerate a component's consistent layouts. `forcedSafe` (local indices)
     /// restricts to layouts where those cells hold no mine — the chord math. nil
     /// only past the step budget; an empty tally means no consistent layout.
-    private static func enumerate(
+    static func enumerate(
         component: Component, forcedSafe: Set<Int> = []
     ) -> ComponentTally? {
         let n = component.cells.count
@@ -403,5 +381,46 @@ public enum GuessOdds {
     private static func logBinomial(_ n: Int, _ k: Int) -> Double {
         guard k >= 0, k <= n else { return -.infinity }
         return lgamma(Double(n + 1)) - lgamma(Double(k + 1)) - lgamma(Double(n - k + 1))
+    }
+}
+
+// Split from the enum body for the type-length budget.
+extension GuessOdds {
+
+    static func components(
+        unknownCount: Int, constraints: [(cells: [Int], count: Int)]
+    ) -> [Component] {
+        // Map each frontier cell to its constraints, then BFS over shared membership.
+        var byCell: [[Int]] = Array(repeating: [], count: unknownCount)
+        for (i, constraint) in constraints.enumerated() {
+            for cell in constraint.cells { byCell[cell].append(i) }
+        }
+        var cellSeen = Array(repeating: false, count: unknownCount)
+        var constraintSeen = Array(repeating: false, count: constraints.count)
+        var out: [Component] = []
+        for start in 0..<unknownCount where !byCell[start].isEmpty && !cellSeen[start] {
+            var cells: [Int] = []
+            var members: [Int] = []
+            var queue = [start]
+            cellSeen[start] = true
+            while let cell = queue.popLast() {
+                cells.append(cell)
+                for ci in byCell[cell] where !constraintSeen[ci] {
+                    constraintSeen[ci] = true
+                    members.append(ci)
+                    for next in constraints[ci].cells where !cellSeen[next] {
+                        cellSeen[next] = true
+                        queue.append(next)
+                    }
+                }
+            }
+            var local: [Int: Int] = [:]
+            for (i, cell) in cells.enumerated() { local[cell] = i }
+            let localConstraints = members.map { ci in
+                (cells: constraints[ci].cells.map { local[$0]! }, count: constraints[ci].count)
+            }
+            out.append(Component(cells: cells, constraints: localConstraints))
+        }
+        return out
     }
 }

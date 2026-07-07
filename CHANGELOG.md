@@ -26,8 +26,10 @@ under Unreleased as they merge.
   moments exactly, computing the true odds of the cell you clicked from what
   the board showed at that instant, and keeps score: how many forced guesses
   you've faced, how many you survived, and your luckiest escape — down to the
-  odds, like walking away from a one-in-four. Only genuine predicaments count:
-  if a safe move existed and you gambled anyway, that's on you, not on luck.
+  odds, like walking away from a one-in-four. Only genuine gambles count: if a
+  safe move existed that could still have shed light on your cells, gambling
+  early is on you, not on luck — but a sealed coin flip that no amount of play
+  could ever resolve counts the moment you take it (why wait?).
   Chords count too — a chord's gamble is every cell it opens at once, so a
   throwaway flag placed just to skip switching modes still gets its guess
   scored honestly. Shown in the Tour of Duty and each board's expanded stats
@@ -36,7 +38,8 @@ under Unreleased as they merge.
   small toast says so, with the odds; when a forced guess ends the game, the
   result screen stamps it in the corner — the brag on a win, the consolation
   on a loss (fate, not error). And silence teaches too: no message on a
-  guess-death means the board had already told you, somewhere.
+  guess-death means playing on could still have resolved those cells — the
+  board had more to say.
 
 ### build 15 — 2026-07-06
 

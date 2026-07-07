@@ -211,6 +211,81 @@ final class GuessOddsTests: XCTestCase {
         XCTAssertEqual(flagged!.survival, 1.0 / 3.0, accuracy: 1e-9)
     }
 
+    // MARK: Unresolvable pockets count as forced (the relaxed rule)
+
+    /// The field-report board shape: a sealed corner coin flip (its neighbours are
+    /// all revealed numbers or provably mines, its mine count is 1 in every
+    /// layout) PLUS a solvable region with certainly-safe cells. Old rule: not
+    /// forced (safe moves exist). Relaxed rule: the pair can never be resolved —
+    /// the coin must be flipped eventually, so flipping it now is forced.
+    ///
+    ///     ?  1  0  0  1  ?      ? = pair (one mine)   right column: a b
+    ///     ?  3  1  0  1  ?                                           c d
+    ///     M  M  1  0  2  ?      a+b=1, a+b+c=1 → c safe; b,d mines; a safe
+    ///     2  2  1  0  1  ?
+    private func sealedPairBoard() -> Game {
+        position(
+            width: 6, height: 4,
+            mines: [
+                Coord(0, 0),  // the pair's actual mine
+                Coord(0, 2), Coord(1, 2),  // pinned by the "2"s below them
+                Coord(5, 1), Coord(5, 3),  // the solvable right column
+            ],
+            pocket: [Coord(0, 0), Coord(0, 1), Coord(5, 0), Coord(5, 1), Coord(5, 2), Coord(5, 3)])
+    }
+
+    func testSealedRigidPairIsForcedDespiteSafeMovesElsewhere() {
+        let game = sealedPairBoard()
+        // The right column really is solvable (certain safe exists).
+        let safe = GuessOdds.analyze(game, clicked: Coord(5, 0))
+        XCTAssertEqual(safe?.forced, false)
+        XCTAssertEqual(safe!.survival, 1.0, accuracy: 1e-9)
+
+        // And yet the sealed pair counts as forced, at its eternal 50%.
+        for c in [Coord(0, 0), Coord(0, 1)] {
+            let v = GuessOdds.analyze(game, clicked: c)
+            XCTAssertEqual(v?.forced, true, "\(c)")
+            XCTAssertEqual(v!.survival, 0.5, accuracy: 1e-9)
+        }
+    }
+
+    /// The same pair executed as a chord (flag one pair cell + the pinned mines,
+    /// chord the "3"): the opened set is the other pair cell — same eternal coin.
+    func testSealedPairChordIsForced() {
+        var game = sealedPairBoard()
+        for f in [Coord(0, 0), Coord(0, 2), Coord(1, 2)] { game.toggleFlag(f) }
+        let v = GuessOdds.analyzeChord(game, at: Coord(1, 1))
+        XCTAssertEqual(v?.forced, true)
+        XCTAssertEqual(v!.survival, 0.5, accuracy: 1e-9)
+    }
+
+    /// Certainty is never a gamble: a certain-mine click stays unforced (suicide,
+    /// not luck) even though it sits next to the unresolvable machinery.
+    func testCertainMineClickIsNotForced() {
+        let game = sealedPairBoard()
+        let v = GuessOdds.analyze(game, clicked: Coord(5, 1))
+        XCTAssertEqual(v?.forced, false)
+        XCTAssertEqual(v!.survival, 0, accuracy: 1e-9)
+    }
+
+    /// The unresolvable test itself stays strict: a pocket that future reveals
+    /// could still constrain (unsealed — it touches anonymous unknowns) is NOT
+    /// unresolvable, from either the frontier or the interior side.
+    func testResolvablePocketsStayResolvable() {
+        let topo = BoundedSquareTopology(width: 4, height: 4)
+        var game = Game(topology: topo, mines: [Coord(0, 0), Coord(3, 3)])
+        game.reveal(Coord(1, 0))
+        let pos = GuessOdds.position(for: game)!
+
+        // A frontier cell of the "1": its pocket touches the anonymous interior.
+        let frontier = pos.unknownIndex[Coord(0, 1)]!
+        XCTAssertFalse(GuessOdds.isUnresolvable(seeds: [frontier], pos: pos, game: game))
+
+        // An interior cell: the interior touches uncertain frontier cells.
+        let interior = pos.unknownIndex[Coord(3, 3)]!
+        XCTAssertFalse(GuessOdds.isUnresolvable(seeds: [interior], pos: pos, game: game))
+    }
+
     // MARK: Bail-outs
 
     /// Boards past the analysis ceiling get no verdict at all.

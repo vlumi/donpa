@@ -5,8 +5,8 @@ import SwiftUI
 /// is survived, and the odds handed to the result panel's corner pill when the
 /// game-ending action was a genuine forced guess. Without these the tracking is
 /// honest but mute — you can't tell "I got lucky", "I died to fate" and "I died
-/// to a deduction I missed" apart. (No message on a guess-death means the board
-/// had told you.)
+/// to a deduction I missed" apart. (No message on a guess-death means playing
+/// on could still have resolved those cells — see GuessOdds+Unresolvable.)
 extension GameContent {
 
     /// A new verdict landed (async, off the reveal/chord that produced it).
