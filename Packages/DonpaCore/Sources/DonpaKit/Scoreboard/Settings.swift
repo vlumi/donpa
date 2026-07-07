@@ -146,6 +146,12 @@ public final class Settings: ObservableObject {
         }
     }
 
+    /// Whether shares include career totals — sticky per device, so the choice
+    /// survives reopening the share card (it used to reset to off every time).
+    @Published public var shareIncludeCareer: Bool {
+        didSet { defaults.set(shareIncludeCareer, forKey: shareIncludeCareerKey) }
+    }
+
     /// The Keychain bridge for `shareName`, set by the app at startup (nil in
     /// tests — defaults-only there). Assigning reconciles immediately.
     public var shareNameStore: ShareIdentityStore? {
@@ -218,6 +224,7 @@ public final class Settings: ObservableObject {
     private let familyKey = "donpa.family"
     private let presetKey = "donpa.classicPreset"
     private let shareNameKey = "donpa.shareName"
+    private let shareIncludeCareerKey = "donpa.shareIncludeCareer"
     // Legacy (pre-family / pre-split) selection keys, read once for migration:
     // mode+shape became the family; the shared size/density/edges seed BOTH
     // families' own axes.
@@ -265,6 +272,7 @@ public final class Settings: ObservableObject {
         basicPreset =
             defaults.string(forKey: presetKey).flatMap(BasicPreset.init(rawValue:)) ?? .beginner
         shareName = defaults.string(forKey: shareNameKey) ?? ""
+        shareIncludeCareer = defaults.object(forKey: shareIncludeCareerKey) as? Bool ?? false
         handedness =
             defaults.string(forKey: handednessKey).flatMap(Handedness.init(rawValue:)) ?? .left
         // Default ON: check presence explicitly, since `bool(forKey:)` is false when

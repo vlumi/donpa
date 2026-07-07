@@ -21,6 +21,14 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Toasts only for real luck.** Surviving better-than-even odds is Tuesday,
+  not luck: the survived-guess toast now fires only at coin-flip odds or worse
+  (an 85% tap into the open field stays tracked in the Record, without
+  fanfare), and a better-than-even guess that happens to win the game stamps
+  the neutral "forced guess" instead of claiming "lucky guess".
+- **Sharing remembers the career toggle.** "Include career stats" on the
+  share card no longer resets to off every time you open the Mess hall.
+
 ### build 16 — 2026-07-07
 
 - **The Record now tracks your luck.** Sometimes the board corners you — no safe
