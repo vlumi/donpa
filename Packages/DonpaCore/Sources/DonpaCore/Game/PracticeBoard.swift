@@ -143,8 +143,10 @@ public enum PracticeBoard {
     /// A flag on a sealed region's wall, touching both the revealed outside and
     /// the hidden inside — the cell to turn into the region's doorway. Every
     /// wall flag has a revealed neighbour (rule 1 flagged it from one), so when
-    /// sealed regions exist a door always does too.
-    private static func doorway(in game: Game) -> Coord? {
+    /// sealed regions exist a door always does too. Internal (not private) for
+    /// the no-qualifying-flag unit test — that branch is defensive and
+    /// unreachable through `mines()`.
+    static func doorway(in game: Game) -> Coord? {
         let topology = game.board.topology
         for c in game.board.flaggedCoords {
             let neighbours = topology.neighbors(of: c)

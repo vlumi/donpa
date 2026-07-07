@@ -61,6 +61,19 @@ final class PracticeBoardTests: XCTestCase {
         verify(topology: WrappedSquareTopology(width: 16, height: 16), mineCount: 31, seed: 7)
     }
 
+    /// The doorway picker: a flag qualifies only when it touches both the
+    /// revealed outside and the hidden inside; with no such flag (or none at
+    /// all) there is no door.
+    func testDoorwaySelection() {
+        let topo = BoundedSquareTopology(width: 3, height: 2)
+        var game = Game(topology: topo, mines: [Coord(0, 0)])
+        game.reveal(Coord(1, 0))  // a "1"; everything else stays hidden
+        XCTAssertNil(PracticeBoard.doorway(in: game), "no flags → no door")
+
+        game.toggleFlag(Coord(0, 0))  // touches the 1 (revealed) and (0,1) (hidden)
+        XCTAssertEqual(PracticeBoard.doorway(in: game), Coord(0, 0))
+    }
+
     /// An off-board first click yields nothing; near-saturated boards stress
     /// every repair path (flag-sealed doorways included) — the generator must
     /// terminate, and whatever it does return must verify as no-guess (nil is
