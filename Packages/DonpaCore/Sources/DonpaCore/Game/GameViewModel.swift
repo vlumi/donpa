@@ -94,6 +94,15 @@ public final class GameViewModel: ObservableObject {
     public var onForcedGuess:
         ((_ config: GameConfig, _ survival: Double, _ survived: Bool) -> Void)?
 
+    /// The verdict on the LATEST analyzed action, for in-the-moment UI feedback
+    /// (the toast / result-panel pill). Cleared on every new reveal/chord and on
+    /// new game/restore, so a non-nil value always describes the most recent
+    /// action — on a finished game, the one that ended it. Setter internal for
+    /// GameViewModel+Guess.swift (Swift private is file-scoped).
+    @Published public internal(set) var lastForcedGuess: ForcedGuessEvent?
+    /// Monotonic id for `lastForcedGuess` events (see `ForcedGuessEvent.id`).
+    var guessEventCounter = 0
+
     /// Flush this game's activity delta via `onActivityFlush`. Idempotent.
     public func flushActivity() {
         let tiles = game.revealedSafeCount
@@ -224,6 +233,7 @@ public final class GameViewModel: ObservableObject {
             "reveal \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         let wasNotStarted = game.status == .notStarted
+        lastForcedGuess = nil  // the feedback event tracks the LATEST action
         // Capture the PRE-reveal state for the guess analysis (O(1) COW copy) —
         // only when analysis is even possible, so the huge boards never retain a
         // second board copy.
@@ -239,27 +249,6 @@ public final class GameViewModel: ObservableObject {
                 self.reportGuess(survived: self.game.status != .lost) {
                     GuessOdds.analyze(pre, clicked: c)
                 }
-            }
-        }
-    }
-
-    /// The pre-action state for guess analysis, or nil when analysis can't apply
-    /// (so the huge boards never retain a second board copy).
-    private func preGuessState() -> Game? {
-        (game.status == .playing && game.board.cellCount <= GuessOdds.maxCells) ? game : nil
-    }
-
-    /// Compute a completed reveal/chord's verdict off the main thread and report
-    /// it via `onForcedGuess` when it was a genuine forced guess.
-    /// Internal (not private) for the wiring test.
-    func reportGuess(survived: Bool, verdict: @escaping @Sendable () -> GuessOdds.Verdict?) {
-        let config = self.config
-        Task.detached(priority: .utility) { [weak self] in
-            guard let verdict = verdict(), verdict.forced else { return }
-            // Recaptured immutably — referencing the outer `self` var from this
-            // second concurrent closure is a Swift 6 error.
-            await MainActor.run { [weak self] in
-                self?.onForcedGuess?(config, verdict.survival, survived)
             }
         }
     }
@@ -295,6 +284,7 @@ public final class GameViewModel: ObservableObject {
         guard game.canChord(c) else { return }
         chordsThisGame += 1
         usedChordEver = true
+        lastForcedGuess = nil  // the feedback event tracks the LATEST action
         // A chord is analyzed as a guess too (the SET of cells it opens at once):
         // a throwaway flag placed just to avoid switching input modes makes the
         // chord itself the guess being executed. Provably-safe chords report
@@ -320,6 +310,7 @@ public final class GameViewModel: ObservableObject {
         clock.elapsedCentiseconds = 0
         lastWin = nil
         lastResult = nil
+        lastForcedGuess = nil
         inputMode = .reveal
         pendingCameraRestore = nil
         cameraView = nil
@@ -390,6 +381,7 @@ public final class GameViewModel: ObservableObject {
         game = snapshot.makeGame()
         lastWin = nil
         lastResult = nil
+        lastForcedGuess = nil
         inputMode = snapshot.inputMode
         pendingCameraRestore = snapshot.camera
         cameraView = snapshot.camera

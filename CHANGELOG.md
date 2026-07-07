@@ -32,6 +32,11 @@ under Unreleased as they merge.
   throwaway flag placed just to skip switching modes still gets its guess
   scored honestly. Shown in the Tour of Duty and each board's expanded stats
   once a board has forced your hand (tracked on boards up to L).
+- **Luck shows itself in the moment.** Survive a forced guess mid-game and a
+  small toast says so, with the odds; when a forced guess ends the game, the
+  result screen stamps it in the corner — the brag on a win, the consolation
+  on a loss (fate, not error). And silence teaches too: no message on a
+  guess-death means the board had already told you, somewhere.
 
 ### build 15 — 2026-07-06
 
