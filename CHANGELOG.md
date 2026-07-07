@@ -21,6 +21,8 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 17 — 2026-07-07
+
 - **Toasts only for real luck.** Surviving better-than-even odds is Tuesday,
   not luck: the survived-guess toast now fires only at coin-flip odds or worse
   (an 85% tap into the open field stays tracked in the Record, without
