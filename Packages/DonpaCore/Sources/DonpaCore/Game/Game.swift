@@ -111,6 +111,11 @@ public struct Game: Sendable {
     /// Arm the board off-thread before the first click is known: place all mines
     /// with NO safe zone; the first reveal relocates any under it. Only acts on a
     /// fresh board.
+    /// Generator seam (see `PracticeBoard`): relocate one mine mid-deduction.
+    mutating func moveMineForGeneration(from old: Coord, to new: Coord) {
+        board.moveMine(from: old, to: new)
+    }
+
     public mutating func placeMinesEagerly<R: RandomNumberGenerator>(using rng: inout R) {
         guard !minesPlaced else { return }
         let mines = MinePlacer.randomMines(topology: topology, mineCount: mineCount, using: &rng)
