@@ -39,12 +39,50 @@ public enum GuessOdds {
 
     /// Analyze a reveal of `clicked` against the PRE-reveal `game` state.
     public static func analyze(_ game: Game, clicked: Coord) -> Verdict? {
+        guard let clicked = game.board.topology.normalize(clicked),
+            game.board[clicked].state == .hidden,
+            let pos = position(for: game)
+        else { return nil }
+        return verdict(
+            clicked: pos.unknownIndex[clicked]!, tallies: pos.tallies,
+            interiorCount: pos.interiorCount, mines: pos.mines)
+    }
+
+    /// Analyze a CHORD at `c` against the PRE-chord state. A chord's gamble is
+    /// the SET of cells it opens at once (the hidden, unflagged neighbours):
+    /// survival = P(every one of them is safe). Flags are still not facts — they
+    /// only pick which cells the chord opens, so a throwaway flag placed to avoid
+    /// switching input modes makes the chord itself the guess being executed. A
+    /// provably-safe set reads 1.0 (and a certain move elsewhere reads not-forced),
+    /// exactly like a certain single reveal.
+    public static func analyzeChord(_ game: Game, at c: Coord) -> Verdict? {
+        guard let c = game.board.topology.normalize(c),
+            game.board[c].state == .revealed
+        else { return nil }
+        let opened = game.board.topology.neighbors(of: c).filter {
+            game.board[$0].state == .hidden
+        }
+        guard !opened.isEmpty, let pos = position(for: game) else { return nil }
+        // Every opened cell neighbours `c`, whose constraint links them all into
+        // one component.
+        let openedIndices = Set(opened.map { pos.unknownIndex[$0]! })
+        return chordVerdict(opened: openedIndices, pos: pos)
+    }
+
+    /// The shared position prep: unknowns, constraints, components, and each
+    /// component's enumerated layouts. nil past any bail-out.
+    private struct Position {
+        var unknownIndex: [Coord: Int]
+        var tallies: [ComponentTally]
+        var components: [Component]
+        var interiorCount: Int
+        var mines: Int
+    }
+
+    private static func position(for game: Game) -> Position? {
         guard game.status == .playing else { return nil }  // first click is never a guess
         let board = game.board
         guard board.cellCount <= maxCells else { return nil }
-        guard let clicked = board.topology.normalize(clicked),
-            board[clicked].state == .hidden
-        else { return nil }
 
         // Unknowns = every non-revealed cell (flags are player marks, not facts).
         var unknownIndex: [Coord: Int] = [:]
@@ -78,13 +116,14 @@ public enum GuessOdds {
         tallies.reserveCapacity(components.count)
         for component in components {
             guard component.cells.count <= maxComponentCells,
-                let tally = enumerate(component: component)
+                let tally = enumerate(component: component),
+                !tally.solutions.isEmpty
             else { return nil }
             tallies.append(tally)
         }
 
-        return verdict(
-            clicked: unknownIndex[clicked]!, tallies: tallies,
+        return Position(
+            unknownIndex: unknownIndex, tallies: tallies, components: components,
             interiorCount: interiorCount, mines: mines)
     }
 
@@ -142,7 +181,12 @@ public enum GuessOdds {
         var mineSolutions: [[Int: Double]]
     }
 
-    private static func enumerate(component: Component) -> ComponentTally? {
+    /// Enumerate a component's consistent layouts. `forcedSafe` (local indices)
+    /// restricts to layouts where those cells hold no mine — the chord math. nil
+    /// only past the step budget; an empty tally means no consistent layout.
+    private static func enumerate(
+        component: Component, forcedSafe: Set<Int> = []
+    ) -> ComponentTally? {
         let n = component.cells.count
         // Per-constraint running state for O(1) pruning per assignment.
         var needed = component.constraints.map(\.count)
@@ -175,7 +219,7 @@ public enum GuessOdds {
                 }
                 return
             }
-            for mine in [false, true] {
+            for mine in (forcedSafe.contains(cell) ? [false] : [false, true]) {
                 isMine[cell] = mine
                 // The placement loop bails mid-way on violation; unwind exactly
                 // what it did.
@@ -195,7 +239,7 @@ public enum GuessOdds {
             }
         }
         recurse(0, minesSoFar: 0)
-        guard !overBudget, !solutions.isEmpty else { return nil }
+        guard !overBudget else { return nil }
         return ComponentTally(
             cells: component.cells, solutions: solutions, mineSolutions: mineSolutions)
     }
@@ -287,6 +331,50 @@ public enum GuessOdds {
             }
         }
         return (anySafe, logClickedMine)
+    }
+
+    /// The chord verdict: forced is the usual whole-board scan; survival is the
+    /// weight of layouts where EVERY opened cell is safe, over the total — the
+    /// opened component re-enumerated with those cells pinned safe.
+    private static func chordVerdict(opened: Set<Int>, pos: Position) -> Verdict? {
+        let logSolutions: [[Int: Double]] = pos.tallies.map { tally in
+            tally.solutions.mapValues { log($0) }
+        }
+        let convAll = convolve(logSolutions)
+        var logTotal = -Double.infinity
+        for (s, w) in convAll {
+            logTotal = logAdd(logTotal, w + logBinomial(pos.interiorCount, pos.mines - s))
+        }
+        guard logTotal > -.infinity else { return nil }
+
+        let interior = interiorScan(
+            convAll: convAll, interiorCount: pos.interiorCount, mines: pos.mines)
+        let frontier = frontierScan(
+            clicked: -1, tallies: pos.tallies, logSolutions: logSolutions,
+            interiorCount: pos.interiorCount, mines: pos.mines)
+        let interiorSafe = pos.interiorCount > 0 && !interior.canHoldMines
+        let forced = !frontier.anySafe && !interiorSafe
+
+        // Re-enumerate the opened cells' component with them pinned safe. (They
+        // all neighbour the chorded number, so they share its constraint — one
+        // component by construction.)
+        guard let j = pos.tallies.firstIndex(where: { !opened.isDisjoint(with: $0.cells) })
+        else { return nil }
+        var local: [Int: Int] = [:]
+        for (i, cell) in pos.components[j].cells.enumerated() { local[cell] = i }
+        let forcedSafe = Set(opened.compactMap { local[$0] })
+        guard forcedSafe.count == opened.count,  // all in one component, as constructed
+            let safeTally = enumerate(component: pos.components[j], forcedSafe: forcedSafe)
+        else { return nil }
+
+        var safeSolutions = logSolutions
+        safeSolutions[j] = safeTally.solutions.mapValues { log($0) }
+        var logSafe = -Double.infinity
+        for (s, w) in convolve(safeSolutions) {
+            logSafe = logAdd(logSafe, w + logBinomial(pos.interiorCount, pos.mines - s))
+        }
+        let survival = logSafe > -.infinity ? exp(logSafe - logTotal) : 0
+        return Verdict(forced: forced, survival: max(0, min(1, survival)))
     }
 
     /// Convolve log-space mine-count distributions: result[s] = log Σ Π counts.
