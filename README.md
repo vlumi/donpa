@@ -255,7 +255,10 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
   had at that moment** — 86% on a loss means genuinely robbed, 25% on a win is
   one for the memoirs. A guess-death with no stamp means a safe move still
   existed somewhere: the board had more to say. Tracked on every board (the
-  million-cell XXXL scores its sealed pockets).
+  million-cell XXXL scores its sealed pockets). The bookkeeping is **exact but
+  conservative**: a recorded guess always carries its true odds — never an
+  estimate — but a rare position too tangled to analyze (and, on XXXL, anything
+  other than a sealed pocket) goes unrecorded rather than mis-scored.
 - **New:** a sixth difficulty, **Lunatic** (20% mines; Hive 22%) — the tier
   where the board fights back.
 - **Changed:** times **truncate** instead of rounding up (a 49.95s clear is

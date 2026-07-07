@@ -162,6 +162,9 @@ than prose for chording, and light on JA/FI translation. Sibling to practice mod
 - [ ] Explain the **forced-guess stamp** (the % is the survival odds the click
       had at that moment; silence on a guess-death = a safe move still existed)
       — the pill's one-word label can't carry this alone (user call)
+- [ ] …and that the luck stats are **exact but conservative** (best effort, user
+      call): recorded guesses always carry true odds, but positions too tangled
+      to analyze — and on XXXL anything but a sealed pocket — go unrecorded
 - [ ] Comic-styled frames (reuse the manga asset-slot pattern), not screenshots
       (authored art reads clearer + ages better than cropped board captures)
 - [ ] Interactive teach deferred — let **practice mode** be the "now try it" half
