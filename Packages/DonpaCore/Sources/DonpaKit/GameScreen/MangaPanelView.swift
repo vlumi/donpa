@@ -112,6 +112,11 @@ struct MangaPanelView: View {
 
     let kind: Kind
     let reduceMotion: Bool
+    /// The odds of the guess that ENDED this game, when its final action was a
+    /// genuine forced guess (nil otherwise) — the "was that luck or my mistake?"
+    /// answer, straight on the result. Arrives async (it's computed off-thread),
+    /// so the host passes it reactively.
+    var guessOdds: String?
     /// Dismiss to inspect the finished board (X / tap / Esc).
     let onContinue: () -> Void
 
@@ -171,6 +176,7 @@ struct MangaPanelView: View {
             // area outside its border is transparent, so the corners show through.
             .overlay(alignment: .topLeading) { recordBadge }
             .overlay(alignment: .topLeading) { bestLossPill }
+            .overlay(alignment: .bottomLeading) { guessPill }
             .overlay(alignment: .topTrailing) { closeButton }
             // Subtle accent glow over the mono art (frames rather than tints).
             .shadow(color: kind.accent.opacity(0.7), radius: 28)
@@ -179,8 +185,42 @@ struct MangaPanelView: View {
             .contentShape(Rectangle())
             .onTapGesture { onContinue() }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(kind.a11yLabel)
+            .accessibilityLabel(kind.a11yLabel + guessA11ySuffix)
             .accessibilityAddTraits(.isImage)
+    }
+
+    /// The guess pill folded into the spoken label (overlays are ignored children).
+    private var guessA11ySuffix: String {
+        guard let odds = guessOdds else { return "" }
+        return " "
+            + (kind.isWin
+                ? String(localized: "Won on a forced guess (\(odds)).", bundle: .module)
+                : String(localized: "That was a forced guess (\(odds)).", bundle: .module))
+    }
+
+    /// The ending action was a genuine forced guess: its odds, corner-stamped on
+    /// the result. On a loss this is the consolation ("fate, not error"); on a win,
+    /// the brag. Bottom corner — the top corners belong to the record/best pills.
+    @ViewBuilder private var guessPill: some View {
+        if let odds = guessOdds {
+            VStack(spacing: 0) {
+                Text(verbatim: odds)
+                    .font(.system(size: 17, weight: .black, design: .rounded))
+                Text(kind.isWin ? "lucky guess" : "forced guess", bundle: .module)
+                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .textCase(.uppercase)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(kind.accent.opacity(0.95)))
+            .overlay(Capsule().stroke(.white, lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+            .rotationEffect(.degrees(6))
+            .padding(.bottom, 12)
+            .padding(.leading, 10)
+            .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomLeading)
+        }
     }
 
     /// Top-right X to dismiss the panel (also tap-anywhere or Esc).

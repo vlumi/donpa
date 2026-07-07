@@ -85,6 +85,7 @@ extension GameContent {
         .overlay { mangaPanel }
         .overlay { pauseOverlay }
         .overlay { processingOverlay }
+        .overlay(alignment: .top) { guessToastOverlay }
         .animation(.easeInOut(duration: 0.2), value: viewModel.isPaused)
         .animation(.easeInOut(duration: 0.15), value: showProcessing)
         .clipped()  // keep the dimmed backdrop within the board's bounds

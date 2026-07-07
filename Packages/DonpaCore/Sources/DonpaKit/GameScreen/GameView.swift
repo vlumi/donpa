@@ -23,6 +23,9 @@ struct GameContent: View {
     // extension file.
     @State var panel: MangaPanelView.Kind?
     @State var panelTask: Task<Void, Never>?
+    /// The transient survived-guess toast (see GameContent+GuessFeedback.swift).
+    @State var guessToast: ForcedGuessEvent?
+    @State var guessToastTask: Task<Void, Never>?
     /// Coalesces the per-move autosave: snapshotting a huge board is expensive, so
     /// saving on every reveal stalls the main thread. Save once activity settles;
     /// the periodic/pause/Home/quit saves are the durability backstops.
@@ -109,6 +112,7 @@ struct GameContent: View {
         )
         .onAppear { onLaunch() }
         .onChangeCompat(of: viewModel.lastResult?.id) { _ in handleResult() }
+        .onChangeCompat(of: viewModel.lastForcedGuess) { handleGuessEvent($0) }
         // Any new game (New Game / Retry / ⌘R) clears a lingering panel.
         .onChangeCompat(of: viewModel.gameID) { _ in dismissPanel() }
         // Debounced save (see `autosaveSoon`); a per-move snapshot would stall a
