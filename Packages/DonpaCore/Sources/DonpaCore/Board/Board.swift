@@ -233,4 +233,17 @@ public struct Board: Sendable {
             minePositions.insert(new)
         }
     }
+
+    /// Generator seam: move ONE mine to a chosen destination, fixing adjacency
+    /// locally — the no-guess repair loop relocates stuck mines in O(neighbours)
+    /// without rebuilding the board. The destination must be mine-free.
+    mutating func moveMine(from old: Coord, to new: Coord) {
+        guard cells[old].isMine, !cells[new].isMine, old != new else { return }
+        cells[old].isMine = false
+        for n in topology.neighbors(of: old) { cells[n].adjacentMines -= 1 }
+        minePositions.remove(old)
+        cells[new].isMine = true
+        for n in topology.neighbors(of: new) { cells[n].adjacentMines += 1 }
+        minePositions.insert(new)
+    }
 }
