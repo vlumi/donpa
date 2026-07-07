@@ -21,6 +21,14 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Toasts only for real luck.** Surviving better-than-even odds is Tuesday,
+  not luck: the survived-guess toast now fires only at coin-flip odds or worse
+  (an 85% tap into the open field stays tracked in the Record, without
+  fanfare), and a better-than-even guess that happens to win the game stamps
+  the neutral "forced guess" instead of claiming "lucky guess".
+- **Sharing remembers the career toggle.** "Include career stats" on the
+  share card no longer resets to off every time you open the Mess hall.
+
 ### build 16 — 2026-07-07
 
 - **The Record now tracks your luck.** Sometimes the board corners you — no safe
@@ -39,17 +47,13 @@ under Unreleased as they merge.
   XXXL scores its sealed pockets. The bookkeeping is exact but conservative:
   a recorded guess always carries its true odds, and a position too tangled
   to analyze goes unrecorded rather than mis-scored.
-- **Luck shows itself in the moment.** Survive a forced guess at coin-flip
-  odds or worse and a small toast says so, escalating with the odds beaten: a
-  coin flip, a long shot, a MIRACLE. Better-than-even gambles are tracked
-  without fanfare — surviving an 85% tap into the open field is Tuesday, not
-  luck. When a forced guess ends the game, the result screen stamps the same
-  words in the corner — the brag on a win, "forced guess" as the consolation
-  on a loss (fate, not error). And silence teaches too: no message on a
-  guess-death means playing on could still have resolved those cells — the
-  board had more to say.
-- **Sharing remembers the career toggle.** "Include career stats" on the
-  share card no longer resets to off every time you open the Mess hall.
+- **Luck shows itself in the moment.** Survive a forced guess mid-game and a
+  small toast says so, with the odds — and the wording escalates with the odds
+  beaten: a lucky guess, a coin flip, a long shot, a MIRACLE. When a forced
+  guess ends the game, the result screen stamps the same words in the corner —
+  the brag on a win, "forced guess" as the consolation on a loss (fate, not
+  error). And silence teaches too: no message on a guess-death means playing
+  on could still have resolved those cells — the board had more to say.
 - **A sixth difficulty: Lunatic.** Past Legend lies 20% mines (Hive: 22%) —
   classic Expert's density on Donpa's boards, where essentially every game
   forces real gambles and the new luck tracking earns its keep. The crescent
