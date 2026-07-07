@@ -52,6 +52,7 @@ func mines(width: Int, height: Int, density: Double) -> Int {
 // metric that caught it. SWEEP=1 replaces the tiers with a fine density ramp.
 var densities: [(String, Double)] = [
     ("Easy", 0.10), ("Normal", 0.12), ("Hard", 0.14), ("Brutal", 0.16), ("Insane", 0.18),
+    ("Lunatic", 0.20),
 ]
 if ProcessInfo.processInfo.environment["SWEEP"] == "1" {
     densities = stride(from: 0.11, through: 0.30, by: 0.01).map {

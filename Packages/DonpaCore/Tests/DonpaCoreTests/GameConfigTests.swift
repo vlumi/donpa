@@ -127,6 +127,26 @@ final class GameConfigTests: XCTestCase {
         } else {
             XCTFail("insane should be .staredLaurel")
         }
+        if case .moonedLaurel = Density.lunatic.insignia {
+        } else {
+            XCTFail("lunatic should be .moonedLaurel")
+        }
+    }
+
+    /// Lunatic extends the even 2-point ladder to classic Expert's density —
+    /// and stays the last case so pickers and full-clear groups order it apex.
+    func testLunaticTier() {
+        XCTAssertEqual(Density.lunatic.fraction(hex: false), 0.20, accuracy: 1e-9)
+        XCTAssertEqual(Density.lunatic.fraction(hex: true), 0.22, accuracy: 1e-9)
+        XCTAssertEqual(Density.allCases.last, .lunatic)
+        XCTAssertEqual(Density.allCases.count, 6)
+        // Every size distinguishes Lunatic's mine count from Legend's (the counts
+        // feed the storage keys, which must never collide).
+        for size in BoardSize.allCases {
+            let legend = GameConfig.custom(.grid, size, .insane, .flat)
+            let lunatic = GameConfig.custom(.grid, size, .lunatic, .flat)
+            XCTAssertNotEqual(legend?.mineCount, lunatic?.mineCount, "\(size)")
+        }
     }
 
     func testAxisAccessors() {

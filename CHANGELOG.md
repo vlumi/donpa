@@ -21,6 +21,12 @@ under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **A sixth difficulty: Lunatic.** Past Legend lies 20% mines (Hive: 22%) —
+  classic Expert's density on Donpa's boards, where essentially every game
+  forces real gambles and the new luck tracking earns its keep. The crescent
+  moon in the laurel marks it. Heads up for full-clear chasers: size groups now
+  count six tiers, so an old "Full clear" reads 5/6 until you beat the moon.
+
 - **The Record now tracks your luck.** Sometimes the board corners you — no safe
   move exists anywhere, and you have to guess. Donpa now recognizes those
   moments exactly, computing the true odds of the cell you clicked from what

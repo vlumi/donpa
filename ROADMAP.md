@@ -261,7 +261,9 @@ hard rules, then the categories:
 - **Skill / mastery** (floored at ≥ M Normal so they can't be farmed on XS Easy) —
   no-flag win, no-chord win, both at once ("bare hands"); the classic Expert
   speed ladder (sub-100 s, sub-60, sub-40); an Insane win (≥ M — XS Insane is a
-  lottery, and Insane itself must be unlocked first); a Round win at L+.
+  lottery, and Insane itself must be unlocked first); a Round win at L+; a
+  **Lunatic win** (any size — at 20% the tier itself is the feat, and the luck
+  stats will show what it cost).
 - **Guess-odds feats** — survive a *forced* guess, tiered by the odds: **Coin
   flip** (~1/2), **Long shot** (≤ 1/3), **Miracle** (≤ 1/4). Reads the v0.4.0
   forced-guess tracking (the `luckiestGuess` record makes these retroactive).
