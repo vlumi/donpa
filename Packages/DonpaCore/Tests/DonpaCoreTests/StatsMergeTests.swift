@@ -98,6 +98,35 @@ final class StatsMergeTests: XCTestCase {
         XCTAssertNil(merged[key]!.bestCentiseconds)
     }
 
+    // MARK: Forced-guess fields
+
+    private func guessRec(forced: Int, survived: Int, luckiest: Double? = nil) -> ScoreRecord {
+        ScoreRecord(
+            forcedGuesses: .init(mine: forced), guessesSurvived: .init(mine: survived),
+            luckiestGuess: luckiest.map {
+                LuckiestGuess(survival: $0, achievedAt: Date(timeIntervalSince1970: 0))
+            })
+    }
+
+    func testForcedGuessCountersSumAndLuckiestIsMin() {
+        let mine = [key: guessRec(forced: 4, survived: 2, luckiest: 0.5)]
+        let others = [
+            "b": [key: guessRec(forced: 1, survived: 1, luckiest: 0.25)],
+            "c": [key: guessRec(forced: 2, survived: 0)],
+        ]
+        let r = StatsMerge.merge(mine: mine, others: others)[key]!
+        XCTAssertEqual(r.forcedGuesses.total, 7)
+        XCTAssertEqual(r.guessesSurvived.total, 3)
+        XCTAssertEqual(r.luckiestGuess?.survival ?? 1, 0.25, accuracy: 1e-9)
+    }
+
+    func testOfflineMergeKeepsLuckiestFromCache() {
+        let own = [key: guessRec(forced: 1, survived: 1, luckiest: 0.5)]
+        let cached = [key: guessRec(forced: 0, survived: 0, luckiest: 1.0 / 3.0)]
+        let r = StatsMerge.offlineMerge(own: own, cached: cached)[key]!
+        XCTAssertEqual(r.luckiestGuess?.survival ?? 1, 1.0 / 3.0, accuracy: 1e-9)
+    }
+
     // MARK: Config keys present on only some devices
 
     func testConfigOnlyOnAnotherDeviceStillAppears() {

@@ -52,6 +52,12 @@ enum StatsMerge {
         foldCounter(\.chordsUsed)
         foldCounter(\.noFlagWins)
         foldCounter(\.noChordWins)
+        foldCounter(\.forcedGuesses)
+        foldCounter(\.guessesSurvived)
+
+        // Luckiest guess is device-owned like the best time: project the
+        // cross-device min (whole entries, so odds and date stay paired).
+        out.luckiestGuess = ([own] + others).compactMap(\.luckiestGuess).min()
 
         // Best time + top times are DEVICE-OWNED: `own` keeps this device's own best
         // untouched; the DISPLAY record projects the cross-device view. Because each
@@ -104,6 +110,10 @@ enum StatsMerge {
             foldCounter(\.chordsUsed)
             foldCounter(\.noFlagWins)
             foldCounter(\.noChordWins)
+            foldCounter(\.forcedGuesses)
+            foldCounter(\.guessesSurvived)
+            out.luckiestGuess =
+                [own[key]?.luckiestGuess, last?.luckiestGuess].compactMap { $0 }.min()
             // The cached top list already contains own entries — the (time, date)
             // dedup collapses them, so fresh own bests appear without doubling.
             out.topTimes = (own[key]?.topTimes ?? []).mergedTop(

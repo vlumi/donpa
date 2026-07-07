@@ -29,6 +29,11 @@ public struct ScoreRecord: Equatable, Sendable {
     public var noFlagWins: DeviceCounter
     /// Wins in which chord was never used. Needs the game-end `usedChordEver` signal.
     public var noChordWins: DeviceCounter
+    /// Reveals made with no certainly-safe cell anywhere (see `GuessOdds`) — the
+    /// board imposed the risk; volunteered risks don't count.
+    public var forcedGuesses: DeviceCounter
+    /// Forced guesses that did NOT hit a mine.
+    public var guessesSurvived: DeviceCounter
 
     /// This DEVICE's fastest winning time (+ when), or nil if none yet. Device-owned:
     /// the merge projects the cross-device min for display but never overwrites this.
@@ -39,6 +44,9 @@ public struct ScoreRecord: Equatable, Sendable {
     /// Best fraction (0...1) of safe cells revealed in a *losing* game; a win is
     /// implicitly 100% (`wins.total > 0`). Optional so old records decode.
     public var bestLossProgress: Double?
+    /// The longest-odds forced guess this device survived. Device-owned like
+    /// `best`: the merge projects the cross-device min for display.
+    public var luckiestGuess: LuckiestGuess?
     /// First and most-recent time this config was played (min / max merge).
     public var firstPlayed: Date?
     public var lastPlayed: Date?
@@ -56,7 +64,9 @@ public struct ScoreRecord: Equatable, Sendable {
         minesDisarmed: DeviceCounter = .init(), playtimeCentiseconds: DeviceCounter = .init(),
         chordsUsed: DeviceCounter = .init(), noFlagWins: DeviceCounter = .init(),
         noChordWins: DeviceCounter = .init(),
+        forcedGuesses: DeviceCounter = .init(), guessesSurvived: DeviceCounter = .init(),
         best: BestTime? = nil, topTimes: [BestTime] = [], bestLossProgress: Double? = nil,
+        luckiestGuess: LuckiestGuess? = nil,
         firstPlayed: Date? = nil, lastPlayed: Date? = nil
     ) {
         self.wins = wins
@@ -70,9 +80,12 @@ public struct ScoreRecord: Equatable, Sendable {
         self.chordsUsed = chordsUsed
         self.noFlagWins = noFlagWins
         self.noChordWins = noChordWins
+        self.forcedGuesses = forcedGuesses
+        self.guessesSurvived = guessesSurvived
         self.best = best
         self.topTimes = topTimes
         self.bestLossProgress = bestLossProgress
+        self.luckiestGuess = luckiestGuess
         self.firstPlayed = firstPlayed
         self.lastPlayed = lastPlayed
     }
@@ -82,6 +95,7 @@ extension ScoreRecord: Codable {
     enum CodingKeys: String, CodingKey {
         case wins, gamesPlayed, losses, tilesOpened, flagsPlaced, minesHit, minesDisarmed
         case playtimeCentiseconds, chordsUsed, noFlagWins, noChordWins
+        case forcedGuesses, guessesSurvived, luckiestGuess
         case best, topTimes, bestLossProgress, firstPlayed, lastPlayed
         // Legacy: a pre-`best` record stored the scalar `bestCentiseconds`.
         case legacyBestCentiseconds = "bestCentiseconds"
@@ -107,9 +121,12 @@ extension ScoreRecord: Codable {
         chordsUsed = counter(.chordsUsed)
         noFlagWins = counter(.noFlagWins)
         noChordWins = counter(.noChordWins)
+        forcedGuesses = counter(.forcedGuesses)
+        guessesSurvived = counter(.guessesSurvived)
         // `try?` on `decode` yields nil for a missing/mistyped key (no `?? nil`).
         topTimes = (try? c.decode([BestTime].self, forKey: .topTimes)) ?? []
         bestLossProgress = try? c.decode(Double.self, forKey: .bestLossProgress)
+        luckiestGuess = try? c.decode(LuckiestGuess.self, forKey: .luckiestGuess)
         firstPlayed = try? c.decode(Date.self, forKey: .firstPlayed)
         lastPlayed = try? c.decode(Date.self, forKey: .lastPlayed)
         // `best`: prefer the new pair; else lift a legacy scalar into a `BestTime`
@@ -141,9 +158,12 @@ extension ScoreRecord: Codable {
         try c.encode(chordsUsed, forKey: .chordsUsed)
         try c.encode(noFlagWins, forKey: .noFlagWins)
         try c.encode(noChordWins, forKey: .noChordWins)
+        try c.encode(forcedGuesses, forKey: .forcedGuesses)
+        try c.encode(guessesSurvived, forKey: .guessesSurvived)
         try c.encodeIfPresent(best, forKey: .best)
         try c.encode(topTimes, forKey: .topTimes)
         try c.encodeIfPresent(bestLossProgress, forKey: .bestLossProgress)
+        try c.encodeIfPresent(luckiestGuess, forKey: .luckiestGuess)
         try c.encodeIfPresent(firstPlayed, forKey: .firstPlayed)
         try c.encodeIfPresent(lastPlayed, forKey: .lastPlayed)
     }
