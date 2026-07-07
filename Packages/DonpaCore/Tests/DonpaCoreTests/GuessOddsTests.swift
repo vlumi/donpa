@@ -146,6 +146,71 @@ final class GuessOddsTests: XCTestCase {
         XCTAssertEqual(v!.survival, 0.5, accuracy: 1e-9)
     }
 
+    // MARK: Chords gamble on the whole opened set
+
+    /// The long-shot pocket, played chord-style: flag the four sealed mines and
+    /// two of the three pocket cells — the chord at the "6" then opens exactly
+    /// the remaining pocket cell, which is safe only in the layout where the two
+    /// flagged cells hold both mines: survive 1 in 3.
+    func testChordOnLongShotPocket() {
+        var game = position(
+            width: 5, height: 4,
+            mines: [
+                Coord(0, 1), Coord(1, 1), Coord(2, 2), Coord(2, 3),
+                Coord(0, 2), Coord(1, 3),
+            ],
+            pocket: [Coord(0, 2), Coord(0, 3), Coord(1, 3)])
+        for f in [Coord(0, 1), Coord(1, 1), Coord(2, 2), Coord(2, 3), Coord(0, 2), Coord(0, 3)] {
+            game.toggleFlag(f)
+        }
+        XCTAssertTrue(game.canChord(Coord(1, 2)), "six flags around the 6")
+
+        let v = GuessOdds.analyzeChord(game, at: Coord(1, 2))
+        XCTAssertEqual(v?.forced, true)
+        XCTAssertEqual(v!.survival, 1.0 / 3.0, accuracy: 1e-9)
+    }
+
+    /// A chord whose opened set spans several uncertain cells: flag one of the
+    /// "1"-frontier's five cells and chord — all four remaining open at once, all
+    /// safe only when the flagged cell is the mine: survive 1 in 5.
+    func testChordSetProbability() {
+        let topo = BoundedSquareTopology(width: 4, height: 4)
+        var game = Game(topology: topo, mines: [Coord(0, 0), Coord(3, 3)])
+        game.reveal(Coord(1, 0))  // the "1"
+        game.toggleFlag(Coord(0, 0))
+        XCTAssertTrue(game.canChord(Coord(1, 0)))
+
+        let v = GuessOdds.analyzeChord(game, at: Coord(1, 0))
+        XCTAssertEqual(v?.forced, true)
+        XCTAssertEqual(v!.survival, 1.0 / 5.0, accuracy: 1e-9)
+    }
+
+    /// An impossible opened set (it must contain a mine) reads survival 0 — and
+    /// flags never create certainty: even with every ACTUAL mine correctly
+    /// flagged, the opened pocket cell still reads its honest layout odds (a
+    /// flag is a mark, not a fact).
+    func testChordImpossibleSetAndFlagsCreateNoCertainty() {
+        var game = position(
+            width: 5, height: 4,
+            mines: [
+                Coord(0, 1), Coord(1, 1), Coord(2, 2), Coord(2, 3),
+                Coord(0, 2), Coord(1, 3),
+            ],
+            pocket: [Coord(0, 2), Coord(0, 3), Coord(1, 3)])
+        // No flags at all: the chord at the 6 would open the four PINNED seal
+        // mines along with the pocket — survival exactly 0.
+        let doomed = GuessOdds.analyzeChord(game, at: Coord(1, 2))
+        XCTAssertEqual(doomed!.survival, 0, accuracy: 1e-12)
+
+        // Flag all six actual mines (a perfect player): the chord opens just the
+        // safe pocket cell — but the flags prove nothing, so it reads the
+        // pocket's honest 1-in-3, not 1.0.
+        for f in game.board.mineCoords { game.toggleFlag(f) }
+        let flagged = GuessOdds.analyzeChord(game, at: Coord(1, 2))
+        XCTAssertEqual(flagged?.forced, true)
+        XCTAssertEqual(flagged!.survival, 1.0 / 3.0, accuracy: 1e-9)
+    }
+
     // MARK: Bail-outs
 
     /// Boards past the analysis ceiling get no verdict at all.

@@ -226,11 +226,8 @@ public final class GameViewModel: ObservableObject {
         let wasNotStarted = game.status == .notStarted
         // Capture the PRE-reveal state for the guess analysis (O(1) COW copy) —
         // only when analysis is even possible, so the huge boards never retain a
-        // second board copy. Chord reveals are deliberately NOT analyzed: a chord
-        // is a deduction claim, and dying to a wrong flag is an error, not a guess.
-        let pre =
-            (game.status == .playing && game.board.cellCount <= GuessOdds.maxCells)
-            ? game : nil
+        // second board copy.
+        let pre = preGuessState()
         computeOffMain({ game in game.reveal(c) }) { [weak self] in
             guard let self else { return }
             // The first reveal places mines and starts the clock.
@@ -239,19 +236,26 @@ public final class GameViewModel: ObservableObject {
             // A single reveal only ever loses on the clicked cell, so
             // post-state loss ⟺ died to it.
             if let pre {
-                self.analyzeGuess(pre: pre, clicked: c, survived: self.game.status != .lost)
+                self.reportGuess(survived: self.game.status != .lost) {
+                    GuessOdds.analyze(pre, clicked: c)
+                }
             }
         }
     }
 
-    /// Score a completed reveal against its pre-reveal state, off the main thread;
-    /// report it via `onForcedGuess` when it was a genuine forced guess.
+    /// The pre-action state for guess analysis, or nil when analysis can't apply
+    /// (so the huge boards never retain a second board copy).
+    private func preGuessState() -> Game? {
+        (game.status == .playing && game.board.cellCount <= GuessOdds.maxCells) ? game : nil
+    }
+
+    /// Compute a completed reveal/chord's verdict off the main thread and report
+    /// it via `onForcedGuess` when it was a genuine forced guess.
     /// Internal (not private) for the wiring test.
-    func analyzeGuess(pre: Game, clicked: Coord, survived: Bool) {
+    func reportGuess(survived: Bool, verdict: @escaping @Sendable () -> GuessOdds.Verdict?) {
         let config = self.config
         Task.detached(priority: .utility) { [weak self] in
-            guard let verdict = GuessOdds.analyze(pre, clicked: clicked), verdict.forced
-            else { return }
+            guard let verdict = verdict(), verdict.forced else { return }
             // Recaptured immutably — referencing the outer `self` var from this
             // second concurrent closure is a Swift 6 error.
             await MainActor.run { [weak self] in
@@ -291,8 +295,19 @@ public final class GameViewModel: ObservableObject {
         guard game.canChord(c) else { return }
         chordsThisGame += 1
         usedChordEver = true
+        // A chord is analyzed as a guess too (the SET of cells it opens at once):
+        // a throwaway flag placed just to avoid switching input modes makes the
+        // chord itself the guess being executed. Provably-safe chords report
+        // nothing, exactly like certain single reveals.
+        let pre = preGuessState()
         computeOffMain({ game in game.chord(c) }) { [weak self] in
-            self?.finishIfEnded()
+            guard let self else { return }
+            self.finishIfEnded()
+            if let pre {
+                self.reportGuess(survived: self.game.status != .lost) {
+                    GuessOdds.analyzeChord(pre, at: c)
+                }
+            }
         }
     }
 

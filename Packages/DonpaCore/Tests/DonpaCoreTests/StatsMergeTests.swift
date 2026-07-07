@@ -127,6 +127,15 @@ final class StatsMergeTests: XCTestCase {
         XCTAssertEqual(r.luckiestGuess?.survival ?? 1, 1.0 / 3.0, accuracy: 1e-9)
     }
 
+    /// Equal odds tie-break to the EARLIER achievement, so the projection is
+    /// deterministic regardless of device order.
+    func testLuckiestGuessTieBreaksToEarlierDate() {
+        let early = LuckiestGuess(survival: 0.5, achievedAt: Date(timeIntervalSince1970: 100))
+        let late = LuckiestGuess(survival: 0.5, achievedAt: Date(timeIntervalSince1970: 999))
+        XCTAssertEqual([late, early].min(), early)
+        XCTAssertTrue(early < late)
+    }
+
     // MARK: Config keys present on only some devices
 
     func testConfigOnlyOnAnotherDeviceStillAppears() {

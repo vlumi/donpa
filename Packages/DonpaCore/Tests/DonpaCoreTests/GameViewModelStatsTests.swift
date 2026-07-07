@@ -133,7 +133,18 @@ final class GameViewModelStatsTests: XCTestCase {
             XCTAssertTrue(survived)
             reported.fulfill()
         }
-        vm.analyzeGuess(pre: pre, clicked: Coord(1, 2), survived: true)
+        vm.reportGuess(survived: true) { GuessOdds.analyze(pre, clicked: Coord(1, 2)) }
         await fulfillment(of: [reported], timeout: 5)
+    }
+
+    /// The clock's 0.1s tick publisher drives the displayed time — pump the run
+    /// loop long enough for at least one tick to land after the opening reveal.
+    func testClockTicksWhileRunning() {
+        let vm = GameViewModel(config: .beginner)
+        vm.reveal(Coord(0, 0))
+        let beat = expectation(description: "run loop pumped")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { beat.fulfill() }
+        wait(for: [beat], timeout: 3)  // pumps the main run loop → the timer fires
+        XCTAssertGreaterThan(vm.clock.elapsedCentiseconds, 0)
     }
 }

@@ -28,8 +28,10 @@ under Unreleased as they merge.
   you've faced, how many you survived, and your luckiest escape — down to the
   odds, like walking away from a one-in-four. Only genuine predicaments count:
   if a safe move existed and you gambled anyway, that's on you, not on luck.
-  Shown in the Tour of Duty and each board's expanded stats once a board has
-  forced your hand (tracked on boards up to L).
+  Chords count too — a chord's gamble is every cell it opens at once, so a
+  throwaway flag placed just to skip switching modes still gets its guess
+  scored honestly. Shown in the Tour of Duty and each board's expanded stats
+  once a board has forced your hand (tracked on boards up to L).
 
 ### build 15 — 2026-07-06
 
