@@ -1728,28 +1728,6 @@
         }
       }
     },
-    "Lunatic" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lunatic"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mielipuoli"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ルナティック"
-          }
-        }
-      }
-    },
     "Manage groups" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3178,28 +3156,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "避けられない賭けだった（%@）— 安全な手はなかった。"
-          }
-        }
-      }
-    },
-    "The board fights back" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The board fights back"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kenttä panee vastaan"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "盤面が牙をむく"
           }
         }
       }
