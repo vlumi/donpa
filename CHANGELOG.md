@@ -34,7 +34,9 @@ under Unreleased as they merge.
   throwaway flag placed just to skip switching modes still gets its guess
   scored honestly. Shown in the Tour of Duty and each board's expanded stats
   once a board has forced your hand — on every board; the million-cell
-  XXXL scores its sealed pockets.
+  XXXL scores its sealed pockets. The bookkeeping is exact but conservative:
+  a recorded guess always carries its true odds, and a position too tangled
+  to analyze goes unrecorded rather than mis-scored.
 - **Luck shows itself in the moment.** Survive a forced guess mid-game and a
   small toast says so, with the odds; when a forced guess ends the game, the
   result screen stamps it in the corner — the brag on a win, the consolation
