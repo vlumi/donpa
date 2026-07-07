@@ -19,7 +19,7 @@ import Foundation
 /// so the check errs toward "resolvable" (records nothing), never the reverse.
 extension GuessOdds {
     /// Per-cell certainty and component membership, off the aggregates.
-    private struct Census {
+    fileprivate struct Census {
         var certainMine = Set<Int>()
         var certainSafe = Set<Int>()
         var membership: [Int: (comp: Int, local: Int)] = [:]
@@ -74,9 +74,19 @@ extension GuessOdds {
     private static func frontierUnresolvable(
         seeds: [Int], census: Census, pos: Position, game: Game
     ) -> Bool {
+        unresolvablePocket(seeds: seeds, census: census, pos: pos, game: game) != nil
+    }
+
+    /// The sealed, rigid pocket around frontier seeds — with its residual
+    /// enumeration, because rigidity makes the global weighting flat across the
+    /// pocket's layouts, so this tally alone yields EXACT odds (the huge-board
+    /// path leans on that). nil when the pocket is resolvable.
+    fileprivate static func unresolvablePocket(
+        seeds: [Int], census: Census, pos: Position, game: Game
+    ) -> (component: Component, tally: ComponentTally)? {
         guard let comp = census.membership[seeds[0]]?.comp,
             seeds.allSatisfy({ census.membership[$0]?.comp == comp })
-        else { return false }
+        else { return nil }
         let component = pos.components[comp]
         let certainLocal = Set(
             component.cells.indices.filter { census.certainMine.contains(component.cells[$0]) })
@@ -95,27 +105,21 @@ extension GuessOdds {
 
         let pocketGlobal = Set(pocket.map { component.cells[$0] })
         guard sealed(pocket: pocketGlobal, certainMine: census.certainMine, pos: pos, game: game)
-        else { return false }
-        return rigid(pocket: pocket, component: component, certainLocal: certainLocal)
-    }
+        else { return nil }
 
-    /// Re-enumerate just the pocket under its residual constraints (certain mines
-    /// already subtracted): one mine count across all layouts?
-    private static func rigid(pocket: Set<Int>, component: Component, certainLocal: Set<Int>)
-        -> Bool
-    {
+        // Rigid: re-enumerate just the pocket under its residual constraints
+        // (certain mines already subtracted) — one mine count across all layouts?
         var local: [Int: Int] = [:]
         let pocketCells = Array(pocket)
         for (i, cell) in pocketCells.enumerated() { local[cell] = i }
         let residual = component.constraints.compactMap {
             residualConstraint($0, local: local, certainLocal: certainLocal)
         }
-        guard
-            let tally = enumerate(
-                component: Component(
-                    cells: pocketCells.map { component.cells[$0] }, constraints: residual))
-        else { return false }
-        return tally.solutions.count == 1
+        let pocketComponent = Component(
+            cells: pocketCells.map { component.cells[$0] }, constraints: residual)
+        guard let tally = enumerate(component: pocketComponent), tally.solutions.count == 1
+        else { return nil }
+        return (pocketComponent, tally)
     }
 
     /// A constraint restricted to the pocket: its pocket cells (pocket-local
@@ -133,15 +137,115 @@ extension GuessOdds {
     /// neighbours are revealed, in the pocket, or provably mines (a provable mine
     /// never becomes a number). Any other unknown neighbour — including a merely
     /// player-flagged one — could one day carry a constraint into the pocket.
+    /// Reads revealed-ness off the BOARD, not the index: a local (huge-board)
+    /// position only indexes its own component, and an unindexed wilderness
+    /// neighbour must read as unknown, not revealed.
     private static func sealed(
         pocket: Set<Int>, certainMine: Set<Int>, pos: Position, game: Game
     ) -> Bool {
         for cell in pocket {
             for nbr in game.board.topology.neighbors(of: pos.unknownCoords[cell]) {
-                guard let idx = pos.unknownIndex[nbr] else { continue }  // revealed
-                if !pocket.contains(idx) && !certainMine.contains(idx) { return false }
+                guard game.board[nbr].state != .revealed else { continue }
+                guard let idx = pos.unknownIndex[nbr],
+                    pocket.contains(idx) || certainMine.contains(idx)
+                else { return false }
             }
         }
         return true
+    }
+}
+
+// MARK: - The huge-board path
+
+/// Above the full-analysis ceiling there is no whole-board scan — just the
+/// seeds' constraint component, walked outward from the click. Verdicts come
+/// ONLY from the relaxed rule: a sealed+rigid pocket is forced regardless of
+/// the rest of the board, and rigidity makes its odds exact without global
+/// knowledge. Everything else returns nil, honestly — "no safe cell anywhere"
+/// and open-field odds are global questions, and the forced guesses a
+/// million-cell board realistically has ARE sealed pockets.
+extension GuessOdds {
+    static func hugeVerdict(_ game: Game, seeds: [Coord], chordOpened: Bool) -> Verdict? {
+        guard let pos = localPosition(for: game, around: seeds) else { return nil }
+        let seedIndices = seeds.compactMap { pos.unknownIndex[$0] }
+        guard seedIndices.count == seeds.count else { return nil }
+
+        let census = Census(pos)
+        guard !seedIndices.contains(where: { census.certainMine.contains($0) }) else {
+            return nil  // suicide, not a gamble (matches the full path's not-forced)
+        }
+        let uncertain = seedIndices.filter { !census.certainSafe.contains($0) }
+        guard !uncertain.isEmpty,
+            uncertain.allSatisfy({ census.membership[$0] != nil }),
+            let (pocket, tally) = unresolvablePocket(
+                seeds: uncertain, census: census, pos: pos, game: game)
+        else { return nil }
+
+        let total = tally.solutions.values.reduce(0, +)
+        guard total > 0 else { return nil }
+        let survival: Double
+        if chordOpened {
+            // P(every opened cell safe): re-enumerate with them pinned safe.
+            // (Certain-safe opened cells contribute a factor of 1 — pinning the
+            // uncertain ones is equivalent.)
+            var local: [Int: Int] = [:]
+            for (i, cell) in pocket.cells.enumerated() { local[cell] = i }
+            let forcedSafe = Set(uncertain.compactMap { local[$0] })
+            guard let safeTally = enumerate(component: pocket, forcedSafe: forcedSafe)
+            else { return nil }
+            survival = safeTally.solutions.values.reduce(0, +) / total
+        } else {
+            guard let local = pocket.cells.firstIndex(of: seedIndices[0]) else { return nil }
+            survival = 1 - tally.mineSolutions[local].values.reduce(0, +) / total
+        }
+        return Verdict(forced: true, survival: max(0, min(1, survival)))
+    }
+
+    /// Build just the seeds' constraint component by walking outward: unknowns →
+    /// their revealed neighbours' constraints → those constraints' unknowns → …
+    /// Bails (nil) past the component cap, so an easy-density board's sprawling
+    /// frontier costs a bounded walk, never a scan.
+    private static func localPosition(for game: Game, around seeds: [Coord]) -> Position? {
+        let board = game.board
+        var unknownIndex: [Coord: Int] = [:]
+        var unknownCoords: [Coord] = []
+        var queue: [Coord] = []
+        func register(_ c: Coord) -> Bool {
+            guard unknownIndex[c] == nil else { return true }
+            guard unknownCoords.count < maxComponentCells else { return false }
+            unknownIndex[c] = unknownCoords.count
+            unknownCoords.append(c)
+            queue.append(c)
+            return true
+        }
+        for s in seeds where board[s].state != .revealed {
+            guard register(s) else { return nil }
+        }
+        var constraints: [(cells: [Int], count: Int)] = []
+        var seen = Set<Coord>()
+        while let unknown = queue.popLast() {
+            for r in board.topology.neighbors(of: unknown)
+            where board[r].state == .revealed && seen.insert(r).inserted {
+                var cells: [Int] = []
+                for n in board.topology.neighbors(of: r) where board[n].state != .revealed {
+                    guard register(n) else { return nil }
+                    cells.append(unknownIndex[n]!)
+                }
+                constraints.append((cells: cells, count: board[r].adjacentMines))
+            }
+        }
+        let comps = components(unknownCount: unknownCoords.count, constraints: constraints)
+        var tallies: [ComponentTally] = []
+        for component in comps {
+            guard component.cells.count <= maxComponentCells,
+                let tally = enumerate(component: component), !tally.solutions.isEmpty
+            else { return nil }
+            tallies.append(tally)
+        }
+        // interiorCount 0: the local path never takes the interior branch (seeds
+        // without a constraint never reach a pocket), and no verdict() runs here.
+        return Position(
+            unknownIndex: unknownIndex, unknownCoords: unknownCoords, tallies: tallies,
+            components: comps, interiorCount: 0, mines: game.mineCount)
     }
 }

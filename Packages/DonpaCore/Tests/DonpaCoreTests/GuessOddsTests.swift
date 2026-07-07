@@ -286,6 +286,40 @@ final class GuessOddsTests: XCTestCase {
         XCTAssertFalse(GuessOdds.isUnresolvable(seeds: [interior], pos: pos, game: game))
     }
 
+    // MARK: The huge-board path (past the full-analysis ceiling)
+
+    /// Above `maxCells` the local path still scores sealed pockets: the corner
+    /// pair fixture embedded in a board past the ceiling reads forced at 50%,
+    /// for a single reveal and for a chord alike.
+    func testHugeBoardScoresSealedPocket() {
+        let pocket: Set<Coord> = [Coord(0, 0), Coord(0, 1)]
+        var game = position(
+            width: 260, height: 260,  // 67,600 > maxCells
+            mines: [Coord(0, 0), Coord(0, 2), Coord(1, 2)],
+            pocket: pocket)
+        XCTAssertGreaterThan(game.board.cellCount, GuessOdds.maxCells)
+
+        let single = GuessOdds.analyze(game, clicked: Coord(0, 1))
+        XCTAssertEqual(single?.forced, true)
+        XCTAssertEqual(single!.survival, 0.5, accuracy: 1e-9)
+
+        for f in [Coord(0, 0), Coord(0, 2), Coord(1, 2)] { game.toggleFlag(f) }
+        let chord = GuessOdds.analyzeChord(game, at: Coord(1, 1))
+        XCTAssertEqual(chord?.forced, true)
+        XCTAssertEqual(chord!.survival, 0.5, accuracy: 1e-9)
+    }
+
+    /// The local path never guesses about what it can't see: an unsealed pocket
+    /// (open frontier into the wilderness) and a wilderness click both yield no
+    /// verdict on a huge board.
+    func testHugeBoardStaysSilentWhenUnsure() {
+        let topo = BoundedSquareTopology(width: 260, height: 260)
+        var game = Game(topology: topo, mines: [Coord(0, 0)])
+        game.reveal(Coord(1, 0))  // a lone "1"; everything else stays hidden
+        XCTAssertNil(GuessOdds.analyze(game, clicked: Coord(0, 1)), "unsealed pocket")
+        XCTAssertNil(GuessOdds.analyze(game, clicked: Coord(100, 100)), "wilderness click")
+    }
+
     // MARK: Bail-outs
 
     /// Boards past the analysis ceiling get no verdict at all.

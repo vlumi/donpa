@@ -28,12 +28,11 @@ public enum GuessOdds {
         public let survival: Double
     }
 
-    /// Analysis ceiling: boards up to XXL (256² cells). The per-reveal setup
-    /// scans the whole board and indexes every unknown — ~5–10 ms off-main at
-    /// XXL, harmless; on XXXL it would be 100 ms+ per click plus a second
-    /// million-cell board copy held during analysis (the XXXL-CPU lesson), so
-    /// the million-cell board alone sits out. (A locality-bounded sealed-pocket
-    /// check could cover it later — the relaxed unresolvable rule is local.)
+    /// FULL-analysis ceiling: boards up to XXL (256² cells) get the whole-board
+    /// scan (strict "no safe cell anywhere" + exact odds everywhere). Above it —
+    /// the million-cell XXXL — the local sealed-pocket path runs instead (see
+    /// GuessOdds+Unresolvable): a bounded walk from the click, no scan, verdicts
+    /// only for unresolvable pockets, whose odds are exact by rigidity.
     public static let maxCells = 65_536
     /// A frontier component bigger than this is not enumerated (bail, nil).
     public static let maxComponentCells = 25
@@ -43,9 +42,14 @@ public enum GuessOdds {
     /// Analyze a reveal of `clicked` against the PRE-reveal `game` state.
     public static func analyze(_ game: Game, clicked: Coord) -> Verdict? {
         guard let clicked = game.board.topology.normalize(clicked),
-            game.board[clicked].state == .hidden,
-            let pos = position(for: game)
+            game.board[clicked].state == .hidden
         else { return nil }
+        guard game.status == .playing else { return nil }
+        if game.board.cellCount > maxCells {
+            // Past the full-analysis ceiling: the local sealed-pocket path.
+            return hugeVerdict(game, seeds: [clicked], chordOpened: false)
+        }
+        guard let pos = position(for: game) else { return nil }
         let idx = pos.unknownIndex[clicked]!
         guard
             let v = verdict(
@@ -75,7 +79,12 @@ public enum GuessOdds {
         let opened = game.board.topology.neighbors(of: c).filter {
             game.board[$0].state == .hidden
         }
-        guard !opened.isEmpty, let pos = position(for: game) else { return nil }
+        guard !opened.isEmpty else { return nil }
+        guard game.status == .playing else { return nil }
+        if game.board.cellCount > maxCells {
+            return hugeVerdict(game, seeds: opened, chordOpened: true)
+        }
+        guard let pos = position(for: game) else { return nil }
         // Every opened cell neighbours `c`, whose constraint links them all into
         // one component.
         let openedIndices = Set(opened.map { pos.unknownIndex[$0]! })
