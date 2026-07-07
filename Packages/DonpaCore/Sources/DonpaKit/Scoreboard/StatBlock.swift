@@ -149,7 +149,7 @@ struct StatBlock: View {
             let ratio = Double(figures.guessesSurvived) / Double(figures.forcedGuesses)
             pairs.append(
                 (
-                    "Guesses survived",
+                    "Lucky guesses",
                     "\(grouped(figures.guessesSurvived))/\(grouped(figures.forcedGuesses))"
                         + " (\(Self.percent(ratio)))"
                 ))

@@ -38,9 +38,11 @@ under Unreleased as they merge.
   a recorded guess always carries its true odds, and a position too tangled
   to analyze goes unrecorded rather than mis-scored.
 - **Luck shows itself in the moment.** Survive a forced guess mid-game and a
-  small toast says so, with the odds; when a forced guess ends the game, the
-  result screen stamps it in the corner — the brag on a win, the consolation
-  on a loss (fate, not error). And silence teaches too: no message on a
+  small toast says so, with the odds — and the wording escalates with the odds
+  beaten: a lucky guess, a coin flip, a long shot, a MIRACLE. When a forced
+  guess ends the game, the result screen stamps the same words in the corner —
+  the brag on a win, "forced guess" as the consolation on a loss (fate, not
+  error). And silence teaches too: no message on a
   guess-death means playing on could still have resolved those cells — the
   board had more to say.
 - **A sixth difficulty: Lunatic.** Past Legend lies 20% mines (Hive: 22%) —
