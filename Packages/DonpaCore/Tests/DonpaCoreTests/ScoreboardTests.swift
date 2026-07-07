@@ -353,4 +353,38 @@ final class ScoreboardTests: XCTestCase {
         XCTAssertEqual(second.best(for: .beginner), 50)
         XCTAssertEqual(second.bestProgress(for: .expert) ?? 0, 0.6, accuracy: 1e-9)
     }
+
+    // MARK: Forced-guess recording
+
+    /// Counters accrue per guess; the luckiest record only ever improves, and only
+    /// on SURVIVED guesses (dying at long odds is not lucky).
+    func testRecordForcedGuess() {
+        let board = Scoreboard(defaults: defaults)
+        board.recordForcedGuess(for: .beginner, survival: 0.5, survived: true)
+        board.recordForcedGuess(for: .beginner, survival: 0.25, survived: false)
+        board.recordForcedGuess(for: .beginner, survival: 1.0 / 3.0, survived: true)
+
+        let r = board.record(for: .beginner)!
+        XCTAssertEqual(r.forcedGuesses.total, 3)
+        XCTAssertEqual(r.guessesSurvived.total, 2)
+        XCTAssertEqual(
+            r.luckiestGuess?.survival ?? 1, 1.0 / 3.0, accuracy: 1e-9,
+            "the unsurvived 1/4 must not set the record")
+
+        // A later, worse-odds survival doesn't regress the record.
+        board.recordForcedGuess(for: .beginner, survival: 0.9, survived: true)
+        XCTAssertEqual(
+            board.record(for: .beginner)!.luckiestGuess?.survival ?? 1, 1.0 / 3.0,
+            accuracy: 1e-9)
+
+        // And it round-trips through the persisted envelope (4 guesses by now).
+        let second = Scoreboard(defaults: defaults)
+        XCTAssertEqual(second.record(for: .beginner)?.forcedGuesses.total, 4)
+        XCTAssertEqual(
+            second.record(for: .beginner)?.luckiestGuess?.survival ?? 1, 1.0 / 3.0,
+            accuracy: 1e-9)
+        XCTAssertEqual(second.totalForcedGuesses, 4)
+        XCTAssertEqual(second.totalGuessesSurvived, 3)
+        XCTAssertEqual(second.luckiestGuess?.survival ?? 1, 1.0 / 3.0, accuracy: 1e-9)
+    }
 }

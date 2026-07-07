@@ -306,6 +306,26 @@ public final class Scoreboard: ObservableObject {
         persist()
     }
 
+    /// Record a FORCED guess (see `GuessOdds`): the board offered no certainly-safe
+    /// cell, the player revealed one anyway, and either survived it or didn't. A
+    /// survived guess can also set this device's luckiest-guess record (lowest
+    /// survival odds, min-projected across devices at merge).
+    public func recordForcedGuess(
+        for config: GameConfig, survival: Double, survived: Bool, at date: Date = Date()
+    ) {
+        var record = records[config.storageKey] ?? ScoreRecord()
+        record.forcedGuesses.add(1)
+        if survived {
+            record.guessesSurvived.add(1)
+            let guess = LuckiestGuess(survival: survival, achievedAt: date)
+            if record.luckiestGuess.map({ guess < $0 }) ?? true {
+                record.luckiestGuess = guess
+            }
+        }
+        records[config.storageKey] = record
+        persist()
+    }
+
     /// Global cumulative totals (summed across every config). These are the
     /// player-facing lifetime stats — never a ratio (no win%, which only
     /// discourages); the raw counts stay neutral.
@@ -325,6 +345,16 @@ public final class Scoreboard: ObservableObject {
     }
     public var totalPlaytimeCentiseconds: Int {
         displayRecords.values.reduce(0) { $0 + $1.playtimeCentiseconds.total }
+    }
+    public var totalForcedGuesses: Int {
+        displayRecords.values.reduce(0) { $0 + $1.forcedGuesses.total }
+    }
+    public var totalGuessesSurvived: Int {
+        displayRecords.values.reduce(0) { $0 + $1.guessesSurvived.total }
+    }
+    /// The longest-odds forced guess survived on any board, across devices.
+    public var luckiestGuess: LuckiestGuess? {
+        displayRecords.values.compactMap(\.luckiestGuess).min()
     }
 
     /// Clear the just-set-record highlight. Called when the next game ends.
