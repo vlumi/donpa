@@ -159,6 +159,9 @@ than prose for chording, and light on JA/FI translation. Sibling to practice mod
 (the *reference*; practice is the *interactive teach*), which is why it lands here.
 
 - [ ] Static illustrated page + a `?` opener (title + About), no game logic
+- [ ] Explain the **forced-guess stamp** (the % is the survival odds the click
+      had at that moment; silence on a guess-death = a safe move still existed)
+      — the pill's one-word label can't carry this alone (user call)
 - [ ] Comic-styled frames (reuse the manga asset-slot pattern), not screenshots
       (authored art reads clearer + ages better than cropped board captures)
 - [ ] Interactive teach deferred — let **practice mode** be the "now try it" half

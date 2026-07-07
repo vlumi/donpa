@@ -33,8 +33,8 @@ under Unreleased as they merge.
   Chords count too — a chord's gamble is every cell it opens at once, so a
   throwaway flag placed just to skip switching modes still gets its guess
   scored honestly. Shown in the Tour of Duty and each board's expanded stats
-  once a board has forced your hand (tracked on all boards but the
-  million-cell XXXL).
+  once a board has forced your hand — on every board; the million-cell
+  XXXL scores its sealed pockets.
 - **Luck shows itself in the moment.** Survive a forced guess mid-game and a
   small toast says so, with the odds; when a forced guess ends the game, the
   result screen stamps it in the corner — the brag on a win, the consolation
