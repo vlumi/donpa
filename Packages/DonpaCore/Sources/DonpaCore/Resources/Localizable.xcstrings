@@ -575,6 +575,23 @@
         }
       }
     },
+    "The Range" : {
+      "comment" : "Board family: no-guess practice boards (name provisional)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sotaharjoitus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "演習"
+          }
+        }
+      }
+    },
     "Things get spicy" : {
       "comment" : "Classic Intermediate tagline (playful)",
       "localizations" : {

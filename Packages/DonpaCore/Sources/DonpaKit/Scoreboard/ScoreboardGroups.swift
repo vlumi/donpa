@@ -21,6 +21,11 @@ extension ScoreboardView {
         switch family {
         case .basic:
             return [ConfigGroup(label: nil, configs: GameConfig.configs(family: .basic))]
+        case .practice:
+            // One row per size, one flat group: The Range has no density axis, so
+            // there is nothing to sum within a size (cross-size totals are a
+            // deliberate non-goal — it's a practice mode, not a ladder).
+            return [ConfigGroup(label: nil, configs: GameConfig.configs(family: .practice))]
         case .grid, .hive:
             return BoardSize.allCases.map { size in
                 ConfigGroup(

@@ -10,6 +10,7 @@ struct BoardGlyph: View {
         case basic  // retro window with a mini grid (the original presets)
         case grid  // square lattice
         case hive  // hexagon with a honeycomb junction
+        case practice  // shooting-range target — The Range
         case flat  // framed flat map — edges you can fall off
         case round  // globe with wrap bands — the world curves back
 
@@ -18,6 +19,7 @@ struct BoardGlyph: View {
             case .basic: return .basic
             case .grid: return .grid
             case .hive: return .hive
+            case .practice: return .practice
             }
         }
 
@@ -68,6 +70,7 @@ struct BoardGlyph: View {
         case .basic: drawBasic(pen)
         case .grid: drawGrid(pen)
         case .hive: drawHive(pen)
+        case .practice: drawPractice(pen)
         case .flat: drawFlat(pen)
         case .round: drawRound(pen)
         }
@@ -132,6 +135,28 @@ struct BoardGlyph: View {
             }
         }
         pen.stroke(comb)
+    }
+
+    private static func drawPractice(_ pen: Pen) {
+        let s = pen.s
+        // A shooting-range target: two rings + a filled bull. Practice is aiming
+        // deliberately — every shot called, no luck involved.
+        let c = CGPoint(x: s / 2, y: s / 2)
+        let outer = s * 0.38
+        pen.stroke(
+            Path(
+                ellipseIn: CGRect(
+                    x: c.x - outer, y: c.y - outer, width: outer * 2, height: outer * 2)))
+        let mid = s * 0.23
+        pen.stroke(
+            Path(ellipseIn: CGRect(x: c.x - mid, y: c.y - mid, width: mid * 2, height: mid * 2)),
+            thin: true)
+        let bull = s * 0.07
+        pen.ctx.fill(
+            Path(
+                ellipseIn: CGRect(
+                    x: c.x - bull, y: c.y - bull, width: bull * 2, height: bull * 2)),
+            with: pen.ink)
     }
 
     private static func drawFlat(_ pen: Pen) {

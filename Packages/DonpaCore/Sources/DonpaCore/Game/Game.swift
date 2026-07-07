@@ -45,6 +45,14 @@ public struct Game: Sendable {
     private let topology: any RectangularTopology
     private var minesPlaced = false
 
+    /// How the first click arms the board: standard random placement, or The
+    /// Range's verified no-guess generation (up to ~1 s on XL — it runs inside
+    /// the same off-main compute as any first reveal, behind the processing
+    /// overlay). Falls back to a standard layout if the generator gives up
+    /// (astronomically rare at practice density).
+    public enum MinePlacement: Sendable { case standard, noGuess }
+    public private(set) var placement: MinePlacement = .standard
+
     public init(difficulty: Difficulty) {
         let topology = BoundedSquareTopology(width: difficulty.width, height: difficulty.height)
         self.topology = topology
@@ -52,11 +60,13 @@ public struct Game: Sendable {
         self.mineCount = difficulty.mineCount
     }
 
-    /// Start a game from a `GameConfig` (supplies topology and mine count).
+    /// Start a game from a `GameConfig` (supplies topology, mine count, and —
+    /// for The Range — the no-guess placement strategy).
     public init(config: GameConfig) {
         self.topology = config.topology
         self.board = Board(topology: config.topology)
         self.mineCount = config.mineCount
+        self.placement = config.family == .practice ? .noGuess : .standard
     }
 
     /// Inject any topology directly (variants / tests).
@@ -108,16 +118,29 @@ public struct Game: Sendable {
         reveal(c, using: &rng)
     }
 
-    /// Arm the board off-thread before the first click is known: place all mines
-    /// with NO safe zone; the first reveal relocates any under it. Only acts on a
-    /// fresh board.
     /// Generator seam (see `PracticeBoard`): relocate one mine mid-deduction.
     mutating func moveMineForGeneration(from old: Coord, to new: Coord) {
         board.moveMine(from: old, to: new)
     }
 
+    /// The `.noGuess` first-click layout: a verified no-guess board, or a plain
+    /// safe-zone layout when the generator gives up (astronomically rare at The
+    /// Range's density — internal so the fallback stays testable).
+    static func noGuessMines<R: RandomNumberGenerator>(
+        topology: any RectangularTopology, mineCount: Int, firstClick: Coord, using rng: inout R
+    ) -> Set<Coord> {
+        PracticeBoard.mines(
+            topology: topology, mineCount: mineCount, firstClick: firstClick, using: &rng)
+            ?? MinePlacer.placeMines(
+                topology: topology, mineCount: mineCount, firstClick: firstClick, using: &rng)
+    }
+
+    /// Arm the board off-thread before the first click is known: place all mines
+    /// with NO safe zone; the first reveal relocates any under it. Only acts on a
+    /// fresh board — and never on a no-guess board, whose layout can only be
+    /// generated once the first click is known.
     public mutating func placeMinesEagerly<R: RandomNumberGenerator>(using rng: inout R) {
-        guard !minesPlaced else { return }
+        guard !minesPlaced, placement == .standard else { return }
         let mines = MinePlacer.randomMines(topology: topology, mineCount: mineCount, using: &rng)
         board.placeMines(at: mines)
         minesPlaced = true
@@ -134,8 +157,17 @@ public struct Game: Sendable {
 
         if !minesPlaced {
             // Not pre-armed: place now, excluding the first-click safe zone.
-            let mines = MinePlacer.placeMines(
-                topology: topology, mineCount: mineCount, firstClick: c, using: &rng)
+            // The Range generates a verified no-guess layout instead (with a
+            // plain layout as the give-up fallback — see MinePlacement).
+            let mines: Set<Coord>
+            switch placement {
+            case .standard:
+                mines = MinePlacer.placeMines(
+                    topology: topology, mineCount: mineCount, firstClick: c, using: &rng)
+            case .noGuess:
+                mines = Self.noGuessMines(
+                    topology: topology, mineCount: mineCount, firstClick: c, using: &rng)
+            }
             board.placeMines(at: mines)
             minesPlaced = true
             status = .playing
