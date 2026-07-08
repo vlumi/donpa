@@ -12,6 +12,9 @@ import AppKit
 struct ScoreboardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    /// The earned-feat store behind the Decorations grid. Optional so title-
+    /// screen previews and tests don't have to build the sync stack.
+    var achievements: AchievementStore?
     /// Presenting window size, so the sheet grows with it. `.zero` → use the screen.
     var available: CGSize = .zero
     /// Progressive gating — hides the per-row play button on locked configs
@@ -140,6 +143,9 @@ struct ScoreboardView: View {
         anchoredScroll {
             VStack(alignment: .leading, spacing: 24) {
                 careerSection
+                if let achievements {
+                    DecorationsSection(achievements: achievements, rowInset: Self.rowInset)
+                }
                 scoresSection
             }
             .frame(maxWidth: .infinity, alignment: .leading)

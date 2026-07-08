@@ -138,6 +138,8 @@ struct MangaPanelView: View {
     var hexCells = false
     /// What this win just opened (progressive gating) — the corner sticker.
     var unlockedLabels: [String] = []
+    /// Feat titles this game earned — the decoration sticker, same corner.
+    var earnedFeatTitles: [String] = []
     let reduceMotion: Bool
     /// The guess that ENDED this game, when its final action was a genuine
     /// forced guess (nil otherwise) — the "was that luck or my mistake?" answer,
@@ -205,7 +207,14 @@ struct MangaPanelView: View {
             .overlay(alignment: .topLeading) { recordBadge }
             .overlay(alignment: .topLeading) { bestLossPill }
             .overlay(alignment: .bottomLeading) { guessPill }
-            .overlay(alignment: .bottomTrailing) { unlockSticker }
+            .overlay(alignment: .bottomTrailing) {
+                // Both progression stickers share the corner, stacked — a game
+                // can unlock a board AND pin a decoration.
+                VStack(alignment: .trailing, spacing: 6) {
+                    unlockSticker
+                    featSticker
+                }
+            }
             .overlay(alignment: .topTrailing) { closeButton }
             // Subtle accent glow over the mono art (frames rather than tints).
             .shadow(color: kind.accent.opacity(0.7), radius: 28)
@@ -267,6 +276,33 @@ struct MangaPanelView: View {
             .padding(.bottom, 12)
             .padding(.trailing, 10)
             .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomTrailing)
+        }
+    }
+
+    /// A decoration earned this game — the same sticker dress, gold border.
+    @ViewBuilder private var featSticker: some View {
+        if let headline = Self.featHeadline(earnedFeatTitles) {
+            VStack(spacing: 0) {
+                Text("Decoration", bundle: .module)
+                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                    .textCase(.uppercase)
+                Text(verbatim: headline)
+                    .font(.system(.body, design: .rounded).weight(.black))
+            }
+            .modifier(PillStamp(accent: MedalView.metal(for: 3)))
+            .rotationEffect(.degrees(-6))
+            .padding(.bottom, 12)
+            .padding(.trailing, 10)
+            .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomTrailing)
+        }
+    }
+
+    /// One feat reads verbatim; several collapse to the generic line.
+    static func featHeadline(_ titles: [String]) -> String? {
+        switch titles.count {
+        case 0: return nil
+        case 1: return titles[0]
+        default: return String(localized: "New decorations", bundle: .module)
         }
     }
 

@@ -390,8 +390,11 @@ freely; IDs lock at build.
 - `speed.expert` (tiers 100/60/40) — **Expert Sweep** · *Ekspertin partio* ·
   *エキスパート速攻* — "Clear Basic Expert in under 100 / 60 / 40 seconds."
   Derivable from the Expert best time.
-- `insane.win` — **Certifiably Insane** · *Hullun paperit* · *狂気の沙汰* —
-  "Win an Insane board, M or larger." (XS Insane is a lottery.)
+- `insane.win` — **Stuff of Legends** · *Legendojen ainesta* · *生ける伝説* —
+  "Win a Legend board, M or larger." (XS Legend is a lottery.) Renamed from
+  the draft "Certifiably Insane": the spec predated checking the SHIPPED tier
+  vocabulary — `.insane`'s in-app label is **Legend** (Trainee/Sapper/Veteran/
+  Ace/Legend/Lunatic), so every feat description says Legend, not Insane.
 - `lunatic.win` — **Full Moon** · *Täysikuu* · *満月* — "Win a Lunatic board —
   any size. At 20 %, the tier is the feat." (Name = the crescent-moon insignia.)
 
@@ -457,7 +460,7 @@ a civilian precisely so the first win "makes you a soldier"):
 2. **Private** · *Sotamies* · *二等兵* — Boots On.
 3. **Corporal** · *Korpraali* · *伍長* — The Classics + Campaigner I (10 wins).
 4. **Sergeant** · *Kersantti* · *軍曹* — Into the Hive + Bare Hands.
-5. **Lieutenant** · *Luutnantti* · *中尉* — Certifiably Insane + Expert Sweep
+5. **Lieutenant** · *Luutnantti* · *中尉* — Stuff of Legends + Expert Sweep
    bronze (sub-100 s).
 6. **Major** · *Majuri* · *少佐* — Sector Secure + Full Circle.
 7. **General** · *Kenraali* · *大将* — Full Moon + Hornet's Nest + Expert Sweep

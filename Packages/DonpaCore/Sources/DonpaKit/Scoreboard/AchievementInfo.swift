@@ -13,7 +13,7 @@ extension AchievementID {
         case .hiveInsane: return String(localized: "Hornet's Nest", bundle: .module)
         case .purityNoFlag: return String(localized: "Bare Hands", bundle: .module)
         case .speedExpert: return String(localized: "Expert Sweep", bundle: .module)
-        case .insaneWin: return String(localized: "Certifiably Insane", bundle: .module)
+        case .insaneWin: return String(localized: "Stuff of Legends", bundle: .module)
         case .lunaticWin: return String(localized: "Full Moon", bundle: .module)
         case .luckCoinFlip: return String(localized: "Coin Flip", bundle: .module)
         case .luckLongShot: return String(localized: "Long Shot", bundle: .module)

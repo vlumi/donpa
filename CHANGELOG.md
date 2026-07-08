@@ -21,6 +21,13 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Decorations: 22 achievements land in the Service Record.** A medal grid
+  with a distinct hand-drawn emblem per feat — starters, skill feats with
+  real floors, luck feats that read your recorded forced guesses
+  retroactively, tiered milestones with bronze/silver/gold, and four hidden
+  gags shown as "?" until you stumble into them. Earning one stamps a gold
+  sticker on the result panel; feats sync across your devices and survive a
+  stats reset (they're history, not statistics).
 - **Progression: the board matrix unlocks as you play.** A fresh install
   starts with XS/S/M at Trainee/Sapper on the square families; each win
   opens the next rung (sizes, ranks, the Hive after your first win, Round

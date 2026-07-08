@@ -34,6 +34,8 @@ struct GameContent: View {
     @State var panelTask: Task<Void, Never>?
     /// What the finished game just unlocked (result-panel sticker; wins only).
     @State var panelUnlocks: [String] = []
+    /// Feat titles this game just earned (the decoration sticker).
+    @State var panelFeats: [String] = []
     /// The transient survived-guess toast (see GameContent+GuessFeedback.swift).
     @State var guessToast: ForcedGuessEvent?
     @State var guessToastTask: Task<Void, Never>?
@@ -165,7 +167,8 @@ struct GameContent: View {
             // From the title (browsing) there's no current board → no "you are here"
             // marker. In-game, mark the row for the config being played.
             ScoreboardView(
-                scoreboard: scoreboard, settings: settings, available: windowSize,
+                scoreboard: scoreboard, settings: settings,
+                achievements: achievements, available: windowSize,
                 gates: gates,
                 currentConfig: navigator.showingTitle ? nil : viewModel.config,
                 onPlay: { navigator.playConfigRequested = $0 },

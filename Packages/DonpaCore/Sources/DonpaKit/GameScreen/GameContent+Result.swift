@@ -28,6 +28,7 @@ extension GameContent {
                     kind: panel,
                     hexCells: viewModel.config.isHex,
                     unlockedLabels: panelUnlocks,
+                    earnedFeatTitles: panelFeats,
                     reduceMotion: reduceMotion,
                     guess: panelGuess,
                     onContinue: { dismissPanel() }
@@ -51,6 +52,7 @@ extension GameContent {
         }
         fresh += achievements.reconcile(
             derivable: AchievementEngine.derivable(records: scoreboard.displayRecords))
+        panelFeats = fresh.map(\.id.title)
         guard !fresh.isEmpty else { return }
         let titles = fresh.map(\.id.title).joined(separator: ", ")
         A11yAnnounce.post(
