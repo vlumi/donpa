@@ -311,8 +311,10 @@ private struct FriendRow: View {
                 )
                 .font(.caption2).foregroundStyle(.secondary)
                 if !groupNames.isEmpty {
+                    // .secondary, not .tertiary: squad membership is real info,
+                    // and tertiary caption2 sat near-invisible for low vision.
                     Text(groupNames.joined(separator: " · "))
-                        .font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
+                        .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             Spacer(minLength: 8)

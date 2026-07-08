@@ -111,7 +111,7 @@ extension BoardSelectionPicker {
                 .scaledToFit()
                 .frame(width: 36, height: 22)
                 .padding(.horizontal, 8)
-                .padding(.vertical, 8)
+                .padding(.vertical, 11)  // 22pt content + 2×11 = the 44pt tap target
                 .foregroundStyle(selected ? Color.white : Color.primary)
                 .background(
                     Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
@@ -170,7 +170,7 @@ extension BoardSelectionPicker {
                 // 8pt padding), so the size row never reads as bigger than it.
                 .frame(height: 22)
                 .padding(.horizontal, 10)
-                .padding(.vertical, 8)
+                .padding(.vertical, 11)  // 22pt content + 2×11 = the 44pt tap target
                 .foregroundStyle(selected ? Color.white : Color.primary)
                 .background(
                     Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))

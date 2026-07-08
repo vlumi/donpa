@@ -232,10 +232,10 @@ struct ScoreRow: View {
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor.opacity(0.5)))
         } else if currentConfigKey == config.storageKey {
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.primary.opacity(0.06))
+                .fill(Color.primary.opacity(0.10))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.primary.opacity(0.18), lineWidth: 1))
+                        .stroke(Color.primary.opacity(0.30), lineWidth: 1))
         }
     }
 }
