@@ -33,7 +33,8 @@ these slot into whichever release they're ready for.
   of a forced guess is part of classic Minesweeper's character, so the standard
   modes keep it. The solver-gated no-guess machinery (cheap; `Solver` +
   `TierAnalysis` already exist, generation just resamples until solvable) instead
-  finds its purpose as a **practice mode** — see the progression milestone.
+  found its purpose as the **Drills practice family** (shipped in v0.5.0 —
+  repair-based generation, far beyond resampling; see CHANGELOG).
 - [ ] Safe-reveal / question-mark flag cycle (classic third flag state).
 
 **Navigation / UX:**
@@ -135,22 +136,16 @@ XXXL requirement).
       achievement list, same permanence care)
 - [ ] Rank in the share payload + rival rows (a coarse, comparable public face)
 
-**Practice mode (no-guess boards)** — a deduction-only **onboarding** mode, framed
-as *practice*, NOT as a "fairer" alternative to the real game (the standard modes
-keep the classic forced-guess risk). Solver-gated generation resamples until the
-board is fully deducible. When designing it, also settle the **Basic → "Boot
-camp"** reframe (deferred to ride this design): either practice claims the name,
-or Boot camp becomes the whole training wing — the classic presets plus practice
-under one banner.
+**Practice mode — SHIPPED as the Drills family** (FI Soha, JA 演習; see
+CHANGELOG): verified no-guess boards, XS–XL at 12 %, leftmost New Game page,
+per-size best times (Drills times are only comparable to Drills times, so its
+own scoreboard rows are honest). The Basic → "Boot camp" reframe resolved
+itself: practice took its own family and name, Basic stays Basic. What remains
+here rides the achievements build-out:
 
-- [ ] Generate guaranteed-solvable boards (reuse `Solver` / `TierAnalysis`)
-- [ ] Frame it clearly as **practice** in the New Game UI — its own thing, not a
-      difficulty or a default
-- [ ] **No hi-scores**: practice never writes a per-board best time (incomparable
-      to real boards + an easier guarantee). **Career totals DO count** (you still
-      played — tiles/flags/playtime accrue). Achievements: gentle/onboarding ones
-      may count; skill feats (speed, no-flag, Insane) excluded. Its own
-      geometry-bearing `GameConfig.storageKey` keeps it cleanly separated.
+- [ ] Achievements × Drills: gentle/onboarding achievements may count there;
+      skill feats (speed, no-flag, Insane) exclude Drills boards (the no-guess
+      guarantee makes them easier than their size suggests)
 
 **How to play (static reference)** — a `?` on the title screen (and reachable from
 About) opens a **static** "how to play" page: reveal/flag, what the numbers mean,

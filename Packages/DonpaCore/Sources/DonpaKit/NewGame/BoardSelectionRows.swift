@@ -125,7 +125,7 @@ extension BoardSelectionPicker {
 
     func sizeChips(for family: BoardFamily) -> some View {
         let sizePath = Settings.sizePath(family)
-        // The Range stops at XL by design (see `GameConfig.practiceSizes`).
+        // Drills stops at XL by design (see `GameConfig.practiceSizes`).
         let sizes = family == .practice ? GameConfig.practiceSizes : BoardSize.allCases
         let mid = (sizes.count + 1) / 2
         return VStack(spacing: 6) {
@@ -225,9 +225,9 @@ extension BoardSelectionPicker {
     /// changes the row's height.
     private static let captionLineHeight: CGFloat = 22
 
-    // MARK: The Range's creed line
+    // MARK: Drills' creed line
 
-    /// The Range's standing caption: the mode's promise and its honest density,
+    /// Drills' standing caption: the mode's promise and its honest density,
     /// in the familiar facts-plus-tagline dress. It reads as the page's second
     /// row where Grid/Hive show the density row — the axis this mode fixed.
     var practiceCreed: some View {
@@ -236,7 +236,7 @@ extension BoardSelectionPicker {
                 localized:
                     "Always solvable · \(Int((PracticeBoard.mineFraction * 100).rounded()))% mines",
                 bundle: .module,
-                comment: "The Range detail: the no-guess promise · N% mines"),
+                comment: "Drills detail: the no-guess promise · N% mines"),
             tagline: String(localized: "No coin flips — logic wins", bundle: .module))
     }
 

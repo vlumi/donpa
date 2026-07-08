@@ -61,7 +61,7 @@ public struct Game: Sendable {
     }
 
     /// Start a game from a `GameConfig` (supplies topology, mine count, and —
-    /// for The Range — the no-guess placement strategy).
+    /// for Drills — the no-guess placement strategy).
     public init(config: GameConfig) {
         self.topology = config.topology
         self.board = Board(topology: config.topology)
@@ -157,7 +157,7 @@ public struct Game: Sendable {
 
         if !minesPlaced {
             // Not pre-armed: place now, excluding the first-click safe zone.
-            // The Range generates a verified no-guess layout instead (with a
+            // Drills generates a verified no-guess layout instead (with a
             // plain layout as the give-up fallback — see MinePlacement).
             let mines: Set<Coord>
             switch placement {

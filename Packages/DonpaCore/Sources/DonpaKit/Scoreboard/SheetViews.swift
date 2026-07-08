@@ -265,7 +265,7 @@ struct ScoreboardView: View {
             stacked: stacked)
     }
 
-    /// Gone for Basic and The Range (neither has an edges axis; a ghosted control
+    /// Gone for Basic and Drills (neither has an edges axis; a ghosted control
     /// begs "why can't I press this?") — but on the same-line layout the SLOT is
     /// preserved invisibly, so hiding it doesn't reflow the family picker.
     @ViewBuilder private func edgesPicker(placeholderWhenBasic: Bool) -> some View {
@@ -312,7 +312,7 @@ struct ScoreboardView: View {
                     .id(config.storageKey)  // scroll anchor for the current-config jump
                     if config != group.configs.last { Divider() }
                 }
-                // Basic only: The Range's group is also label-less, but a
+                // Basic only: Drills' group is also label-less, but a
                 // cross-size Total is a deliberate non-goal there (practice,
                 // not a ladder).
                 if filterFamily == .basic, group.label == nil {

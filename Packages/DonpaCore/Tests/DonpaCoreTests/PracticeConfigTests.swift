@@ -2,7 +2,7 @@ import XCTest
 
 @testable import DonpaCore
 
-/// The Range as a `GameConfig` family: its axes, keys, and the no-guess
+/// Drills as a `GameConfig` family: its axes, keys, and the no-guess
 /// placement wiring in `Game`. Generator internals live in `PracticeBoardTests`.
 final class PracticeConfigTests: XCTestCase {
 
@@ -12,7 +12,7 @@ final class PracticeConfigTests: XCTestCase {
         let config = GameConfig.practice(.m)
         XCTAssertEqual(config.family, .practice)
         XCTAssertEqual(config.size, .m)
-        XCTAssertNil(config.density, "The Range has no density axis")
+        XCTAssertNil(config.density, "Drills has no density axis")
         XCTAssertEqual(config.edges, .flat)
         XCTAssertFalse(config.isHex)
     }
@@ -44,7 +44,7 @@ final class PracticeConfigTests: XCTestCase {
 
     func testLabels() {
         XCTAssertEqual(GameConfig.practice(.m).label, "M")
-        XCTAssertEqual(GameConfig.practice(.m).fullLabel, "The Range · M")
+        XCTAssertEqual(GameConfig.practice(.m).fullLabel, "Drills · M")
     }
 
     func testConfigsEnumeratesTheSizeLadder() {
@@ -57,7 +57,7 @@ final class PracticeConfigTests: XCTestCase {
     }
 
     func testCustomDoesNotBuildPracticeConfigs() {
-        // `custom` is the density×edges factory; The Range has neither axis.
+        // `custom` is the density×edges factory; Drills has neither axis.
         XCTAssertNil(GameConfig.custom(.practice, .m, .normal, .flat))
     }
 
@@ -69,10 +69,10 @@ final class PracticeConfigTests: XCTestCase {
     }
 
     func testFamilyOrderPutsTheRangeFirst() {
-        // allCases IS the order of every family-enumerating surface; The Range
+        // allCases IS the order of every family-enumerating surface; Drills
         // leads as the warm-up page left of Basic.
         XCTAssertEqual(BoardFamily.allCases, [.practice, .basic, .grid, .hive])
-        XCTAssertEqual(BoardFamily.practice.label, "The Range")
+        XCTAssertEqual(BoardFamily.practice.label, "Drills")
     }
 
     // MARK: Game wiring

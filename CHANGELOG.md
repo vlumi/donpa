@@ -21,11 +21,14 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- **The Range: practice without the dice.** A new leftmost board family in
-  New Game: every board is verified fully solvable by pure deduction — no
-  forced guesses, ever. Five sizes (XS–XL) at a Sapper-grade 12 % mines,
-  with its own hi-scores per size: learn the patterns, then speedrun them.
-  (The name is provisional.)
+- **Drills: practice without the dice.** A new leftmost board family in
+  New Game (FI *Soha*, JA *演習*): every board is verified fully solvable by
+  pure deduction — no forced guesses, ever. Five sizes (XS–XL) at a
+  Sapper-grade 12 % mines, with its own hi-scores per size: learn the
+  patterns, then speedrun them.
+- **The cell word follows the board's shape.** Square boards count tiles,
+  hive boards count cells (FI *ruudut*/*kennot* — and FI's Grid family is now
+  **Ruutu**, one square, pairing with Kenno, one honeycomb cell).
 
 ## [0.4.0] — Friendly rivalry
 

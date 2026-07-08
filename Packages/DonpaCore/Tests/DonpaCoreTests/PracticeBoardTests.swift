@@ -2,7 +2,7 @@ import XCTest
 
 @testable import DonpaCore
 
-/// The Range's repair-based no-guess generator: every layout it returns must be
+/// Drills' repair-based no-guess generator: every layout it returns must be
 /// fully deduction-solvable, first-click-safe, and the right size.
 final class PracticeBoardTests: XCTestCase {
     private struct SeededRNG: RandomNumberGenerator {

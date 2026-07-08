@@ -1,6 +1,6 @@
 import Foundation
 
-/// Fully deduction-solvable ("no-guess") mine layouts for The Range — by REPAIR,
+/// Fully deduction-solvable ("no-guess") mine layouts for Drills — by REPAIR,
 /// not resampling: place mines, run the solver, and whenever it gets stuck,
 /// relocate the mines hiding in the stuck frontier (the hidden cells the numbers
 /// can see) out of sight, then RESUME solving from exactly the numbers those
@@ -9,18 +9,18 @@ import Foundation
 /// instead of re-solving keeps the total work linear. Two rarer stalls are also
 /// handled: flag-sealed regions get a doorway opened through their wall, and a
 /// drained interior falls back to frontier refuges (with the extra reseeding
-/// that implies). Measured at The Range's 12% across its XS–XL ladder: zero
+/// that implies). Measured at Drills' 12% across its XS–XL ladder: zero
 /// failures in 960 boards, worst case ~1 s (XL); the huge boards stay out of the
 /// mode by design — their endgames defeat repair-by-relocation.
 public enum PracticeBoard {
     /// Repair rounds per seed (a round is cheap: O(stuck front) plus a resume,
     /// never a board scan or re-solve), and fresh reseeds before giving up: at
-    /// The Range's sizes a fresh seed succeeds most of the time in ≤ ~80 ms, so
+    /// Drills' sizes a fresh seed succeeds most of the time in ≤ ~80 ms, so
     /// a deep reseed budget drives failure to effectively zero.
     static let maxRounds = 400
     static let maxSeeds = 10
 
-    /// The Range's mine density: Sapper-tier boards (Normal is 12%) with the
+    /// Drills' mine density: Sapper-tier boards (Normal is 12%) with the
     /// luck surgically removed — real patterns, zero dice. Chosen over a
     /// below-Easy tier deliberately: the no-guess guarantee is the mode's
     /// point, not sparseness (Easy is already nearly guess-free).

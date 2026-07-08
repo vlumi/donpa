@@ -357,7 +357,7 @@ struct BoardSelectionPicker: View {
         case .basic:
             basicCards
         case .practice:
-            // Size is The Range's only axis (density fixed, edges Flat); the creed
+            // Size is Drills' only axis (density fixed, edges Flat); the creed
             // line stands where Grid/Hive show their density row.
             VStack(spacing: distribute ? 0 : gridHiveSpacing) {
                 sizeChips(for: family)

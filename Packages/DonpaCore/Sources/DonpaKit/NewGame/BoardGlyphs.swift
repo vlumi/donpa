@@ -10,7 +10,7 @@ struct BoardGlyph: View {
         case basic  // retro window with a mini grid (the original presets)
         case grid  // square lattice
         case hive  // hexagon with a honeycomb junction
-        case practice  // shooting-range target — The Range
+        case practice  // shooting-range target — Drills
         case flat  // framed flat map — edges you can fall off
         case round  // globe with wrap bands — the world curves back
 
