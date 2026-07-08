@@ -12,4 +12,20 @@ final class AchievementInfoTests: XCTestCase {
             XCTAssertFalse(id.title.contains("."), "\(id.rawValue) title looks like a raw key")
         }
     }
+
+    func testEveryAchievementHasADescription() {
+        for id in AchievementID.allCases {
+            XCTAssertFalse(id.featDescription.isEmpty, "\(id.rawValue) needs a description")
+        }
+    }
+
+    /// Descriptions must speak the SHIPPED tier vocabulary — the spec's early
+    /// drafts said "Insane", whose in-app label is Legend.
+    func testDescriptionsUseShippedTierNames() {
+        for id in AchievementID.allCases {
+            XCTAssertFalse(
+                id.featDescription.contains("Insane"),
+                "\(id.rawValue): 'Insane' is not a shipped tier name")
+        }
+    }
 }
