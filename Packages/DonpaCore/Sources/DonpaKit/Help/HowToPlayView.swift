@@ -119,8 +119,8 @@ public struct HowToPlayView: View {
         section(
             title: Text("Chording", bundle: .module),
             diagram: TileDiagram(rows: [
-                [.flagged, .revealed(1), .revealed(0)],
                 [.hidden, .revealed(1), .revealed(0)],
+                [.flagged, .revealed(1), .revealed(0)],
                 [.hidden, .revealed(1), .revealed(0)],
             ]),
             text: Text(
@@ -163,7 +163,8 @@ public struct HowToPlayView: View {
         section(
             title: Text("Forced guesses and luck", bundle: .module),
             diagram: TileDiagram(rows: [
-                [.revealed(1), .hidden, .hidden, .revealed(1)]
+                [.revealed(0), .revealed(1), .hidden],
+                [.revealed(0), .revealed(1), .hidden],
             ]),
             text: Text(
                 """
