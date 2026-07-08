@@ -94,16 +94,17 @@ section below; this block is the build order. Note the sequencing freedom: the
 UnlockEngine derives from win RECORDS (not events), so **gating can ship first,
 standalone**; only achievements need the game-end event.
 
-**Gating (G1–G3) and achievements (A1–A4) are SHIPPED** (see CHANGELOG and
+**Gating and achievements are SHIPPED** (see CHANGELOG and
 the code: `UnlockEngine`/`UnlockGates` + the New Game teasers, and
 `AchievementEngine`/`AchievementStore` + the Decorations grid). The shipped
 behavior follows the Progression spec below, which stays as the reference for
 the remaining steps and any value tuning. Still ahead:
 
-- [ ] **A5 — Feat rank** (TENTATIVE — user go/no-go first; nothing else
+- [ ] **Feat rank** (TENTATIVE — user go/no-go first; nothing else
       depends on it): derived rank from the earned set (ladder in the spec),
       rank in the share payload + Mess hall/H2H rows.
-- [ ] **A6 (later) — Game Center**: ASC achievement definitions per the
+- [ ] **Game Center reporter** (later; deferrable to the 1.0 runway — GC only
+      goes live at the store release): ASC achievement definitions per the
       tier-flattening mapping in the spec (sandbox from day one; they only go
       LIVE — and permanent — with the first App Store release), a
       GKAchievement reporter behind the store, graceful degradation when auth
@@ -291,7 +292,8 @@ Center achievements yes, leaderboards no** (scores are user-editable by design;
 feats only cheat yourself); GC bolts on later as a reporter behind the store,
 degrading gracefully when auth is declined. IDs are permanent.
 
-**GC mapping (A6):** Game Center has no tier concept — a flat list where each
+**GC mapping (for the Game Center reporter step):** Game Center has no tier
+concept — a flat list where each
 achievement has a point value (≤ 100 each, 1 000 budget per game), a
 `percentComplete` bar, and an optional hidden flag (the four gags use it). So
 the reporter FLATTENS our tiers: one-shot feats map 1:1
@@ -299,7 +301,8 @@ the reporter FLATTENS our tiers: one-shot feats map 1:1
 (`fi.misaki.donpa.miles.wins.10` / `.100` / `.1000`), and the reporter feeds
 `percentComplete` on the next unearned tier so GC shows live progress
 ("470/1000 wins = 47 %"). 22 internal IDs = 18 one-shots + 11 tier steps →
-**29 ASC definitions**; assign the point budget across them at A6.
+**29 ASC definitions**; assign the point budget across them when building the
+reporter.
 
 **Two evaluation modes, one engine:**
 
@@ -421,10 +424,10 @@ Deliberately ABSENT: streaks (luck-heavy — rewards variance, not nerve),
 anything above size L or multi-session (one-sitting cap; the Service Record is
 the trophy for those), per-size/per-rank attrition filler.
 
-### Feat rank (the public face) — TENTATIVE: go/no-go before A5
+### Feat rank (the public face) — TENTATIVE: go/no-go before building
 
 Whether the public rank is wanted AT ALL is still open (user, 2026-07-09) —
-confirm before building A5; everything else in this spec stands without it.
+confirm before building it; everything else in this spec stands without it.
 If built: derived from the earned set — named feats, not points, so a rank
 *says something* and faking it means faking the feat. Cumulative: each rank
 also requires the one below. Luck feats deliberately count toward NO rank
