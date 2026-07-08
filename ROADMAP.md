@@ -251,6 +251,12 @@ boards, and gates are access, not goals.
 - **Never gated**: Drills, Basic, Grid, Flat edges, the XS/S/M · Trainee/Sapper
   starting matrix.
 
+**Reset semantics (decided 2026-07-09):** the stats reset RE-LOCKS gated
+content — pure derive-don't-store, reset means a truly fresh start, and every
+gate re-opens in one sitting for a returning player. The reset confirmation
+copy must say so ("also re-locks boards"). Achievements are the opposite:
+permanent, exempt from the wipe (see the store note below).
+
 **Escape hatches (decided):** a board arriving from OUTSIDE the picker is always
 playable — head-to-head "play this board", a share/deep link, and resuming any
 in-progress save all bypass gates (an invitation from a rival IS the discovery
@@ -313,9 +319,13 @@ the reporter FLATTENS our tiers: one-shot feats map 1:1
   event no longer carries them). New data required: a per-game **reveal-action
   counter** (reveals + chords, for "second reveal") — everything else ships.
 - `AchievementStore`: earned map id → firstEarnedDate; UserDefaults + the KVS
-  sync blob (union merge, earliest date wins; obeys the stats wipe's
-  reset-epoch). Derivable feats are stamped into the store when first observed
-  (stable dates + a single GC report each).
+  sync blob (union merge, earliest date wins). **EXEMPT from the stats wipe's
+  reset-epoch (decided 2026-07-09): achievements are permanent**, per platform
+  convention — the hidden feats are momentary (un-re-derivable) and Game
+  Center can't un-report, so a wiping store would desync from GC forever. A
+  feat may outlive the stats that earned it; that's history, not a bug.
+  Derivable feats are stamped into the store when first observed (stable
+  dates + a single GC report each).
 
 **Drills rules (pinned):** gentle/starter feats and career milestones count on
 Drills; skill feats never do — enforced structurally, since every skill feat
