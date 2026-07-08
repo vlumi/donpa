@@ -26,6 +26,7 @@ extension GameContent {
             if let panel {
                 MangaPanelView(
                     kind: panel,
+                    hexCells: viewModel.config.isHex,
                     reduceMotion: reduceMotion,
                     guess: panelGuess,
                     onContinue: { dismissPanel() }

@@ -101,7 +101,9 @@ struct ScoreRow: View {
     @ViewBuilder private var expansion: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let record = scoreboard.record(for: config) {
-                StatBlock(figures: StatFigures(record: record), rowInset: rowInset, compact: true)
+                StatBlock(
+                    figures: StatFigures(record: record), hexCells: config.isHex,
+                    rowInset: rowInset, compact: true)
             } else {
                 Text("No games on this board yet.", bundle: .module)
                     .font(.callout).foregroundStyle(.secondary)

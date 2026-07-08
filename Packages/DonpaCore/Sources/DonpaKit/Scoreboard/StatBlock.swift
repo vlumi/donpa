@@ -74,6 +74,9 @@ struct StatFigures {
 /// alike. Lays out in one column when narrow, two when there's room.
 struct StatBlock: View {
     let figures: StatFigures
+    /// One hex config's stats use "cells" (FI kennot); false for square configs
+    /// AND for the cross-family career, whose totals mix both shapes.
+    var hexCells = false
     /// Two columns of stat pairs above this width, one below it.
     var twoColumnWidth: CGFloat = 360
     /// Horizontal inset matching the surrounding rows.
@@ -136,7 +139,7 @@ struct StatBlock: View {
             ("No-chord wins", grouped(figures.noChordWins)),
             // Opening actions grouped (tiles + chords, which clear tiles), then the
             // flag/mine cluster, then playtime.
-            ("Tiles cleared", grouped(figures.tilesOpened)),
+            (hexCells ? "Cells cleared" : "Tiles cleared", grouped(figures.tilesOpened)),
             ("Chords used", grouped(figures.chordsUsed)),
             ("Flags placed", grouped(figures.flagsPlaced)),
             ("Mines disarmed", grouped(figures.minesDisarmed)),

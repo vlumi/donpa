@@ -240,12 +240,12 @@
       }
     },
     "Grid" : {
-      "comment" : "Board family: square cells",
+      "comment" : "Board family: square cells. FI Ruutu = one square, pairing with Kenno (one honeycomb cell)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ruudukko"
+            "value" : "Ruutu"
           }
         },
         "ja" : {
