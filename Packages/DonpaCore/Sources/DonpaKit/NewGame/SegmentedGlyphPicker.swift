@@ -65,6 +65,10 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
                         .font(.caption.weight(selected ? .bold : .regular))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
+                        // Fixed line box: a shrunk-to-fit label otherwise has a
+                        // shorter line, shifting its whole segment stack — the
+                        // glyph row read as misaligned across segments.
+                        .frame(height: 16)
                 }
             }
         } else {
