@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 18 — 2026-07-08
+
 - **Drills: practice without the dice.** A new leftmost board family in
   New Game (FI *Soha*, JA *演習*): every board is verified fully solvable by
   pure deduction — no forced guesses, ever. Five sizes (XS–XL) at a
