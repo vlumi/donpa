@@ -21,6 +21,12 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The Range: practice without the dice.** A new leftmost board family in
+  New Game: every board is verified fully solvable by pure deduction — no
+  forced guesses, ever. Five sizes (XS–XL) at a Sapper-grade 12 % mines,
+  with its own hi-scores per size: learn the patterns, then speedrun them.
+  (The name is provisional.)
+
 ## [0.4.0] — Friendly rivalry
 
 **Peer-to-peer score sharing: rivals, squads, the home screen — and the

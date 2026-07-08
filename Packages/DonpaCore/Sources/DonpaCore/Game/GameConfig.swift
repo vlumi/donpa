@@ -30,11 +30,10 @@ public enum BoardFamily: String, CaseIterable, Sendable, Codable, Identifiable {
     /// boards at 12%, XS–XL — see `PracticeBoard`.
     case practice
 
-    /// GATED: practice is fully wired but not yet surfaced — its New Game page
-    /// ships in the follow-up UI PR, which flips this back to every case (and
-    /// puts The Range leftmost). Everything that enumerates families (pickers,
-    /// scoreboard filters, head-to-head, breakdowns) keys off this list.
-    public static var allCases: [BoardFamily] { [.basic, .grid, .hive] }
+    /// Explicit order = every family-enumerating surface's order (New Game
+    /// pager, scoreboard filters, head-to-head, breakdowns): The Range sits
+    /// leftmost as the warm-up before the real families.
+    public static var allCases: [BoardFamily] { [.practice, .basic, .grid, .hive] }
 
     public var id: String { rawValue }
 

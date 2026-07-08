@@ -357,11 +357,15 @@ struct BoardSelectionPicker: View {
         case .basic:
             basicCards
         case .practice:
-            // Size is The Range's only axis (density fixed, edges Flat). The page
-            // proper — XS–XL-only chips, caption, no-guess messaging — lands with
-            // the UI PR that un-gates the family.
-            sizeChips(for: family)
-                .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
+            // Size is The Range's only axis (density fixed, edges Flat); the creed
+            // line stands where Grid/Hive show their density row.
+            VStack(spacing: distribute ? 0 : gridHiveSpacing) {
+                sizeChips(for: family)
+                    .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
+                if distribute { Spacer(minLength: gridHiveSpacing) }
+                practiceCreed
+            }
+            .frame(maxHeight: distribute ? .infinity : nil)
         case .grid, .hive:
             // Hierarchy order (matches the in-progress drill-down + keyboard rows):
             // size → density → edges. Size is the fundamental scale; density tunes it.
@@ -384,52 +388,6 @@ struct BoardSelectionPicker: View {
             .frame(maxHeight: distribute ? .infinity : nil)
         }
     }
-
-    // MARK: Shared rows
-
-    /// The caption under a chip row: board facts (bold) then tagline (italic). Each
-    /// line is fixed-height and shrinks to fit its width, so a long value scales
-    /// down instead of wrapping and the block's height never changes.
-    @ViewBuilder func detailLine(detail: String, tagline: String) -> some View {
-        Group {
-            if compact {
-                // Short windows keep the tagline — it's the game's voice — but merge
-                // it onto the facts line, shrink-to-fit, to reclaim the second row.
-                (Text(verbatim: detail).font(.body.weight(.bold))
-                    + Text(verbatim: "  ")
-                    + Text(verbatim: tagline).font(.body).italic()
-                    .foregroundColor(.secondary))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .frame(height: Self.captionLineHeight)
-                    .frame(maxWidth: .infinity)
-            } else {
-                VStack(spacing: 2) {
-                    captionText(detail, weight: .bold, opacity: 1)
-                    captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .animation(.snappy, value: detail)
-    }
-
-    /// One caption line: single line, fixed height, shrinks to fit width only.
-    private func captionText(
-        _ text: String, weight: Font.Weight, opacity: Double, italic: Bool = false
-    ) -> some View {
-        Text(verbatim: text)
-            .font(.body.weight(weight))
-            .italic(italic)
-            .foregroundStyle(.primary.opacity(opacity))
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .frame(height: Self.captionLineHeight)
-    }
-
-    /// Fixed height for one `.body` caption line, so shrinking a long value never
-    /// changes the row's height.
-    private static let captionLineHeight: CGFloat = 22
 }
 
 /// Layout feedback for the sliding pager: the slot width and each page's height.
