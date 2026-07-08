@@ -255,7 +255,8 @@ struct ScoreboardView: View {
         SegmentedGlyphPicker(
             values: BoardFamily.allCases, selection: $filterFamily,
             glyph: { .family($0) }, label: { $0.label },
-            onChange: { expandedKey = nil })
+            onChange: { expandedKey = nil },
+            stacked: true)
     }
 
     /// Gone for Basic and The Range (neither has an edges axis; a ghosted control
