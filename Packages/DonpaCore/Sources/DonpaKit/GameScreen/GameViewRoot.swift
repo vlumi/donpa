@@ -20,6 +20,7 @@ final class SceneHolder: ObservableObject {
 public struct GameView: View {
     @StateObject private var viewModel: GameViewModel
     @StateObject private var scoreboard: Scoreboard
+    @StateObject private var achievements: AchievementStore
     @StateObject private var settings: Settings
     @ObservedObject private var navigator: Navigator
     @StateObject private var friends: FriendsStore
@@ -77,6 +78,11 @@ public struct GameView: View {
         // Friend list + groups sync under the SAME `syncScores` gate as the scoreboard
         // (one social picture), over their own KVS blob namespace + the shared deviceID.
         let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false
+        // Earned feats: local always, synced under the same gate. PERMANENT —
+        // the stats wipe never touches this store (decided semantics).
+        _achievements = StateObject(
+            wrappedValue: AchievementStore(
+                cloud: UbiquitousAchievementsStore(), syncEnabled: syncOn))
         _friends = StateObject(
             wrappedValue: FriendsStore(
                 cloud: UbiquitousFriendsStore(),
@@ -98,8 +104,8 @@ public struct GameView: View {
         ZStack {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
-                navigator: navigator, friends: friends, scene: scene,
-                winsBaseline: winsBaseline, saveStore: saveStore)
+                navigator: navigator, friends: friends, achievements: achievements,
+                scene: scene, winsBaseline: winsBaseline, saveStore: saveStore)
             // Home fade scoped to this overlay via `.animation(_:value:)` — an
             // imperative `withAnimation` would also animate the chrome's first
             // layout, making the status bar visibly settle.
@@ -180,11 +186,19 @@ public struct GameView: View {
         .onChangeCompat(of: settings.syncScores) {
             scoreboard.syncEnabled = $0
             friends.syncEnabled = $0
+            achievements.setSyncEnabled($0)
         }
         // Refresh the in-progress summaries whenever a surface that shows them
         // opens (cheap: sidecar summaries, not full saves)…
         .onChangeCompat(of: navigator.showingTitle) { showing in
             if showing { saveSummaries = resumeStore.summaries() }
+        }
+        // The retroactive pass: stamp whatever the records already prove
+        // (veterans on first launch, cloud restores) — SILENT by design, no
+        // 15-sticker backlog parade; live celebrations only for new earns.
+        .task {
+            _ = achievements.reconcile(
+                derivable: AchievementEngine.derivable(records: scoreboard.displayRecords))
         }
         .onChangeCompat(of: navigator.showingNewGame) { showing in
             if showing { saveSummaries = resumeStore.summaries() }

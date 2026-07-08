@@ -1,0 +1,33 @@
+import DonpaCore
+import Foundation
+
+/// The feats' user-facing names (spec: ROADMAP "Progression spec" — titles
+/// locked there with the IDs). Descriptions join with the Decorations grid.
+extension AchievementID {
+    var title: String {
+        switch self {
+        case .winFirst: return String(localized: "Boots On", bundle: .module)
+        case .drillsL: return String(localized: "Graduation Exercise", bundle: .module)
+        case .hiveFirst: return String(localized: "Into the Hive", bundle: .module)
+        case .roundFirst: return String(localized: "Full Circle", bundle: .module)
+        case .hiveInsane: return String(localized: "Hornet's Nest", bundle: .module)
+        case .purityNoFlag: return String(localized: "Bare Hands", bundle: .module)
+        case .speedExpert: return String(localized: "Expert Sweep", bundle: .module)
+        case .insaneWin: return String(localized: "Certifiably Insane", bundle: .module)
+        case .lunaticWin: return String(localized: "Full Moon", bundle: .module)
+        case .luckCoinFlip: return String(localized: "Coin Flip", bundle: .module)
+        case .luckLongShot: return String(localized: "Long Shot", bundle: .module)
+        case .luckMiracle: return String(localized: "A MIRACLE", bundle: .module)
+        case .fullClearSize: return String(localized: "Sector Secure", bundle: .module)
+        case .trifecta: return String(localized: "The Classics", bundle: .module)
+        case .trifectaTime: return String(localized: "Hat Trick", bundle: .module)
+        case .milesWins: return String(localized: "Campaigner", bundle: .module)
+        case .milesTiles: return String(localized: "Ground Covered", bundle: .module)
+        case .milesDisarmed: return String(localized: "Bomb Squad", bundle: .module)
+        case .hiddenSecond: return String(localized: "Beginner's Unluck", bundle: .module)
+        case .hiddenThirteen: return String(localized: "Cursed Time", bundle: .module)
+        case .hiddenSoClose: return String(localized: "So Close", bundle: .module)
+        case .hiddenOvertime: return String(localized: "Overtime", bundle: .module)
+        }
+    }
+}

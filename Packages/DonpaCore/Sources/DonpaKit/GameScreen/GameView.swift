@@ -17,6 +17,7 @@ struct GameContent: View {
     @ObservedObject var settings: Settings
     @ObservedObject var navigator: Navigator
     @ObservedObject var friends: FriendsStore
+    @ObservedObject var achievements: AchievementStore
     let scene: BoardScene
     /// The `-donpa.gates.fresh` launch baseline (empty in normal runs) — win
     /// counts at launch, subtracted so gates/celebrations see session wins only.
@@ -79,14 +80,15 @@ struct GameContent: View {
 
     init(
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
-        navigator: Navigator, friends: FriendsStore, scene: BoardScene,
-        winsBaseline: [String: Int] = [:], saveStore: SaveStore
+        navigator: Navigator, friends: FriendsStore, achievements: AchievementStore,
+        scene: BoardScene, winsBaseline: [String: Int] = [:], saveStore: SaveStore
     ) {
         self.viewModel = viewModel
         self.scoreboard = scoreboard
         self.settings = settings
         self.navigator = navigator
         self.friends = friends
+        self.achievements = achievements
         self.scene = scene
         self.winsBaseline = winsBaseline
         // The store is owned by GameViewRoot and shared in, so the New Game popup's
