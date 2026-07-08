@@ -767,11 +767,12 @@
       }
     },
     "Chording" : {
+      "comment" : "Help section title; FI matches the stats vocabulary (Alueavaukset \/ ilman alueavausta)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sointuavaus"
+            "value" : "Alueavaus"
           }
         },
         "ja" : {
