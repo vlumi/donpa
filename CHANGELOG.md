@@ -26,6 +26,13 @@ development — entries land under Unreleased as they merge.
   pure deduction — no forced guesses, ever. Five sizes (XS–XL) at a
   Sapper-grade 12 % mines, with its own hi-scores per size: learn the
   patterns, then speedrun them.
+- **Readability & VoiceOver pass.** The result pills are restyled as
+  ink-on-paper stickers (the old white-on-green sat at 2.2:1 contrast) and
+  now scale with your text size; the dark-mode mine counter and leaderboard
+  medals gain proper contrast; the lucky-guess toast is announced to
+  VoiceOver and respects Reduce Motion; picker chips speak their parked-game
+  dot; rival and head-to-head rows read as single, sided utterances; size and
+  difficulty chips grow to full tap-target height.
 - **The cell word follows the board's shape.** Square boards count tiles,
   hive boards count cells (FI *ruudut*/*kennot* — and FI's Grid family is now
   **Ruutu**, one square, pairing with Kenno, one honeycomb cell).

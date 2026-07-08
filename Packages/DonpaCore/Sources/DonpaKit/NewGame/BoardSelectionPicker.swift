@@ -261,7 +261,11 @@ struct BoardSelectionPicker: View {
                         value: [family: geo.size.height])
                 }
             )
-            .frame(maxHeight: .infinity, alignment: .top)
+            // Centre, not top: the slot is sized to the TALLEST family, so a
+            // short page (Drills' two rows) top-aligned left a dead area below;
+            // centred it reads as composed. (Measured before this stretch, so
+            // the centring can't feed back into the slot height.)
+            .frame(maxHeight: .infinity, alignment: .center)
             .background(
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color.primary.opacity(0.03))

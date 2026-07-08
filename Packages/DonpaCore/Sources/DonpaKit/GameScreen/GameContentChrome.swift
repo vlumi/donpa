@@ -43,7 +43,7 @@ extension GameContent {
     var toggleControl: some View {
         modeToggle
             .disabled(!gameInProgress)
-            .opacity(gameInProgress ? 1 : 0.4)
+            .opacity(gameInProgress ? 1 : 0.55)
     }
 
     /// Bottom strip: flag toggle pinned to the handed end (under the thumb), actions
