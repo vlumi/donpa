@@ -356,7 +356,7 @@
       }
     },
     "Always solvable · %lld%% mines" : {
-      "comment" : "The Range detail line: the no-guess promise · N% mines",
+      "comment" : "Drills detail line: the no-guess promise · N% mines",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -2114,7 +2114,7 @@
       }
     },
     "No coin flips — logic wins" : {
-      "comment" : "The Range tagline (playful)",
+      "comment" : "Drills tagline (playful)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {

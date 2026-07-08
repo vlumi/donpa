@@ -135,7 +135,7 @@ public final class Settings: ObservableObject {
     @Published public var basicPreset: BasicPreset {
         didSet { defaults.set(basicPreset.rawValue, forKey: presetKey) }
     }
-    /// The Range's own remembered size (its only axis — density is fixed).
+    /// Drills' own remembered size (its only axis — density is fixed).
     @Published public var practiceSize: BoardSize {
         didSet { defaults.set(practiceSize.rawValue, forKey: "donpa.practice.size") }
     }
@@ -277,7 +277,7 @@ public final class Settings: ObservableObject {
         hiveSize = axis("donpa.hive.size", BoardSize.init(rawValue:), else: sharedSize)
         hiveDensity = axis("donpa.hive.density", Density.init(rawValue:), else: sharedDensity)
         hiveEdges = axis("donpa.hive.edges", Self.edgesValue(from:), else: sharedEdges)
-        // The Range is post-legacy, so no shared-key seeding — default S, like the
+        // Drills is post-legacy, so no shared-key seeding — default S, like the
         // other families' size axes. Clamped to ITS ladder: a stored huge size
         // (tampered or from a future build) must not smuggle an un-generatable
         // board into the no-guess mode.

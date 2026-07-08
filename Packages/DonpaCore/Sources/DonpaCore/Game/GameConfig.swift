@@ -26,12 +26,12 @@ public struct BoardDimensions: Equatable, Sendable {
 /// first axis of every storage key.
 public enum BoardFamily: String, CaseIterable, Sendable, Codable, Identifiable {
     case basic, grid, hive
-    /// The Range (FI Sotaharjoitus, JA 演習): guaranteed no-guess practice
+    /// Drills (FI Soha, JA 演習): guaranteed no-guess practice
     /// boards at 12%, XS–XL — see `PracticeBoard`.
     case practice
 
     /// Explicit order = every family-enumerating surface's order (New Game
-    /// pager, scoreboard filters, head-to-head, breakdowns): The Range sits
+    /// pager, scoreboard filters, head-to-head, breakdowns): Drills sits
     /// leftmost as the warm-up before the real families.
     public static var allCases: [BoardFamily] { [.practice, .basic, .grid, .hive] }
 
@@ -42,7 +42,7 @@ public enum BoardFamily: String, CaseIterable, Sendable, Codable, Identifiable {
         case .basic: return String(localized: "Basic", bundle: .module)
         case .grid: return String(localized: "Grid", bundle: .module)
         case .hive: return String(localized: "Hive", bundle: .module)
-        case .practice: return String(localized: "The Range", bundle: .module)
+        case .practice: return String(localized: "Drills", bundle: .module)
         }
     }
 }
@@ -249,7 +249,7 @@ public enum GameConfig: Hashable, Sendable {
     case basic(BasicPreset)
     case grid(BoardSize, Density, BoardEdges)
     case hive(BoardSize, Density, BoardEdges)
-    /// The Range: a square no-guess board (see `PracticeBoard`) — size is the
+    /// Drills: a square no-guess board (see `PracticeBoard`) — size is the
     /// only axis; density is fixed at `PracticeBoard.mineFraction`, edges Flat.
     case practice(BoardSize)
 
@@ -263,7 +263,7 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// Flat for Basic and The Range; the chosen edges for Grid/Hive.
+    /// Flat for Basic and Drills; the chosen edges for Grid/Hive.
     public var edges: BoardEdges {
         switch self {
         case .basic, .practice: return .flat
@@ -283,7 +283,7 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// The Grid/Hive difficulty tier, or nil for Basic and The Range.
+    /// The Grid/Hive difficulty tier, or nil for Basic and Drills.
     public var density: Density? {
         switch self {
         case .basic, .practice: return nil
@@ -291,7 +291,7 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// The Range's size ladder: XS–XL. The huge boards stay out — their
+    /// Drills' size ladder: XS–XL. The huge boards stay out — their
     /// endgames defeat the no-guess generator, and the mode's audience doesn't
     /// need a million cells to learn or speedrun on.
     public static let practiceSizes: [BoardSize] = [.xs, .s, .m, .l, .xl]

@@ -126,7 +126,7 @@ struct NewGamePopup: View {
     }
 
     /// Arrow-navigable rows in the current family (family excluded — it's ⌘1–4):
-    /// Basic and The Range have one (preset / size); Grid/Hive have three
+    /// Basic and Drills have one (preset / size); Grid/Hive have three
     /// (size, density, edges).
     private var rowCount: Int {
         switch settings.family {
@@ -206,7 +206,7 @@ struct NewGamePopup: View {
         switch (settings.family, row) {
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
-        case (.practice, _):  // size is The Range's only row — clamped to ITS ladder
+        case (.practice, _):  // size is Drills' only row — clamped to ITS ladder
             settings.practiceSize = Self.stepped(
                 settings.practiceSize, by: step, within: GameConfig.practiceSizes)
         case (.grid, 0), (.hive, 0):
@@ -228,7 +228,7 @@ struct NewGamePopup: View {
     }
 
     /// The same, over an explicit ladder — for a family whose chips show only a
-    /// slice of the enum (The Range's XS–XL).
+    /// slice of the enum (Drills' XS–XL).
     private static func stepped<T: Equatable>(_ value: T, by step: Int, within all: [T]) -> T {
         guard let i = all.firstIndex(of: value), !all.isEmpty else { return all.first ?? value }
         let next = min(max(i + step, 0), all.count - 1)

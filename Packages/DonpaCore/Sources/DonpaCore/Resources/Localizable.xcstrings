@@ -188,6 +188,23 @@
         }
       }
     },
+    "Drills" : {
+      "comment" : "Board family: no-guess practice boards. FI Soha = inttislangi-style contraction of sotaharjoitus (cf. Sotku)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soha"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "演習"
+          }
+        }
+      }
+    },
     "Easy does it" : {
       "comment" : "Density Trainee tagline (playful, gentle)",
       "localizations" : {
@@ -571,23 +588,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "盤面が牙をむく"
-          }
-        }
-      }
-    },
-    "The Range" : {
-      "comment" : "Board family: no-guess practice boards. FI Soha = inttislangi-style contraction of sotaharjoitus (cf. Sotku)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Soha"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "演習"
           }
         }
       }

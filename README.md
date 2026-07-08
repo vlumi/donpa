@@ -34,10 +34,14 @@ decisions.
 
 ## Board families
 
-A **Basic / Grid / Hive** switch in the **New Game popup** chooses the board
-family (open it from the home screen's **New game** button, the in-game
+A **Drills / Basic / Grid / Hive** switch in the **New Game popup** chooses the
+board family (open it from the home screen's **New game** button, the in-game
 **config badge**, the result screen, or `⌘N`):
 
+- **Drills** — the practice family: every board is **verified fully solvable
+  by pure deduction** (no forced guesses, ever) at a fixed 12 % mine density,
+  in five sizes (XS–XL) with their own best times — learn the patterns, then
+  speedrun them.
 - **Basic** — the original Beginner / Intermediate / Expert presets.
 - **Grid** — square cells (eight neighbours); pick a **Difficulty** and a
   **Size**, plus the board's **Edges**: **Flat** (a map with edges) or **Round**
@@ -61,10 +65,10 @@ tagline. A small dot on a chip marks a selection path with a game in progress
 you can find a parked game by following the lit chips down — and the **Start**
 button becomes **Continue** when the exact selection has one.
 
-On macOS the popup is keyboard-drivable: **⌘1/2/3** pick the board family (Basic /
-Grid / Hive), **↑/↓** move between the remaining rows (Difficulty / Size / Edges),
-**←/→** cycle the selection within the highlighted row, **Return** starts, **Esc**
-closes.
+On macOS the popup is keyboard-drivable: **⌘1–4** pick the board family (Drills /
+Basic / Grid / Hive), **↑/↓** move between the remaining rows (Difficulty / Size /
+Edges), **←/→** cycle the selection within the highlighted row, **Return** starts,
+**Esc** closes.
 
 ## Controls
 
@@ -225,6 +229,12 @@ later, this note will credit it.
 
 High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
 in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
+
+### 0.5.0 — progression (in development)
+
+- **New:** the **Drills** board family — verified no-guess practice boards
+  (XS–XL, 12 % mines) with per-size best times, on its own leftmost New Game
+  page.
 
 ### 0.4.0 — friendly rivalry & the home screen
 
