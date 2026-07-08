@@ -78,6 +78,9 @@ public final class GameViewModel: ObservableObject {
     /// A finished game's momentary facts, for the achievement layer. Fired once
     /// per game end, after the final activity flush.
     public var onGameEnd: ((GameEndEvent) -> Void)?
+    /// The same event, kept for hosts that react to `lastResult` (whose handler
+    /// runs AFTER the score submits — the right moment to evaluate feats).
+    public private(set) var lastEndEvent: GameEndEvent?
 
     /// Sticky "purity" bits for no-flag / no-chord feats: latch true the moment the
     /// feat is broken and never reset within a game. On RESTORE they default to
@@ -424,11 +427,16 @@ public final class GameViewModel: ObservableObject {
         }
         resultCounter += 1
         lastResult = GameResultEvent(id: resultCounter, result: result)
-        onGameEnd?(
-            GameEndEvent(
-                config: config, won: game.status == .won,
-                timeCentiseconds: finalCentiseconds, progress: game.progress,
-                revealActions: revealActionsThisGame, date: Date()))
+        let endEvent = event(finalCentiseconds: finalCentiseconds)
+        lastEndEvent = endEvent
+        onGameEnd?(endEvent)
+    }
+
+    private func event(finalCentiseconds: Int) -> GameEndEvent {
+        GameEndEvent(
+            config: config, won: game.status == .won,
+            timeCentiseconds: finalCentiseconds, progress: game.progress,
+            revealActions: revealActionsThisGame, date: Date())
     }
 
     private func bump() { revision &+= 1 }

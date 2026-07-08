@@ -38,6 +38,25 @@ extension GameContent {
         .allowsHitTesting(panel != nil)
     }
 
+    /// The feats pass, AFTER the submits so the records include this game: the
+    /// momentary gags off the end event, then the derivable reconcile picks up
+    /// whatever this game's records now prove. Fresh earns announce to
+    /// VoiceOver (the Decorations grid + earn sticker arrive with A4's UI).
+    private func recordFeats() {
+        var fresh: [(id: AchievementID, tier: Int)] = []
+        if let event = viewModel.lastEndEvent {
+            fresh = AchievementEngine.momentary(event)
+                .filter { achievements.record($0, at: event.date) }
+                .map { (id: $0, tier: 1) }
+        }
+        fresh += achievements.reconcile(
+            derivable: AchievementEngine.derivable(records: scoreboard.displayRecords))
+        guard !fresh.isEmpty else { return }
+        let titles = fresh.map(\.id.title).joined(separator: ", ")
+        A11yAnnounce.post(
+            String(localized: "Decoration earned: \(titles)", bundle: .module))
+    }
+
     /// Gates only open on wins: diff the records around the submits, stamp the
     /// result panel's sticker, and tell VoiceOver (the sticker is transient).
     private func celebrateUnlocks(isWin: Bool, before: [String: ScoreRecord]) {
@@ -116,6 +135,7 @@ extension GameContent {
             minesDisarmed: viewModel.game.board.disarmedMineCount,
             chordsUsed: viewModel.chordsThisGame)
         celebrateUnlocks(isWin: isWin, before: recordsBefore)
+        recordFeats()
         showPanel(kind)
 
         // The game is over → discard its in-progress save now (a game is kept only
