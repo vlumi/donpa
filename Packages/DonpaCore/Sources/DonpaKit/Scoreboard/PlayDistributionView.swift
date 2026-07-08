@@ -47,12 +47,15 @@ struct PlayDistributionView: View {
     /// Every config's games + playtime off its record (unplayed configs contribute
     /// nothing and are dropped by the aggregation).
     static func entries(from scoreboard: Scoreboard) -> [PlayDistribution.Entry] {
-        var configs = GameConfig.configs(family: .basic)
-        for family in [BoardFamily.grid, .hive] {
-            for edges in BoardEdges.allCases {
-                configs += GameConfig.configs(family: family, edges: edges)
+        // The FULL family sweep, deduped by key (Basic and Drills ignore edges,
+        // so the edges loop yields them twice) — a hardcoded family list here is
+        // exactly how Drills went missing from the bars when it shipped.
+        var seen = Set<String>()
+        let configs = BoardFamily.allCases.flatMap { family in
+            BoardEdges.allCases.flatMap { edges in
+                GameConfig.configs(family: family, edges: edges)
             }
-        }
+        }.filter { seen.insert($0.storageKey).inserted }
         return configs.compactMap { config in
             guard let record = scoreboard.record(for: config) else { return nil }
             return PlayDistribution.Entry(

@@ -21,6 +21,10 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Drills shows up in the breakdown bars.** The Service Record's
+  family/size distribution silently skipped Drills games (the sweep
+  predated the family).
+
 ### build 18 — 2026-07-08
 
 - **Drills: practice without the dice.** A new leftmost board family in
