@@ -8,23 +8,60 @@ import SwiftUI
 struct UnlockGates {
     /// nil = everything unlocked (no gating on this surface).
     var records: [String: ScoreRecord]?
+    /// Launch-time win counts to subtract — the `-donpa.gates.fresh` debug run:
+    /// only wins EARNED THIS SESSION count, so a veteran tester experiences the
+    /// gates (and the unlock moments) without touching their real records.
+    var winsBaseline: [String: Int] = [:]
 
     static let open = UnlockGates(records: nil)
 
+    /// The launch flag: gates pretend the install is fresh (session wins only).
+    static var freshRun: Bool {
+        ProcessInfo.processInfo.arguments.contains("-donpa.gates.fresh")
+    }
+
+    /// The records the predicates actually see (baseline-adjusted).
+    private var effective: [String: ScoreRecord]? {
+        guard let records, !winsBaseline.isEmpty else { return records }
+        return records.filter { key, record in
+            record.wins.total - (winsBaseline[key] ?? 0) > 0
+        }
+    }
+
     func size(_ size: BoardSize) -> Bool {
-        records.map { UnlockEngine.sizeUnlocked(size, records: $0) } ?? true
+        effective.map { UnlockEngine.sizeUnlocked(size, records: $0) } ?? true
     }
     func rank(_ rank: Density) -> Bool {
-        records.map { UnlockEngine.rankUnlocked(rank, records: $0) } ?? true
+        effective.map { UnlockEngine.rankUnlocked(rank, records: $0) } ?? true
     }
     func family(_ family: BoardFamily) -> Bool {
-        records.map { UnlockEngine.familyUnlocked(family, records: $0) } ?? true
+        effective.map { UnlockEngine.familyUnlocked(family, records: $0) } ?? true
     }
     func edges(_ edges: BoardEdges) -> Bool {
-        records.map { UnlockEngine.edgesUnlocked(edges, records: $0) } ?? true
+        effective.map { UnlockEngine.edgesUnlocked(edges, records: $0) } ?? true
     }
     func config(_ config: GameConfig) -> Bool {
-        records.map { UnlockEngine.unlocked(config, records: $0) } ?? true
+        effective.map { UnlockEngine.unlocked(config, records: $0) } ?? true
+    }
+
+    /// What a win just opened: the display names of every gate whose predicate
+    /// flipped between the two record snapshots — the result panel's sticker.
+    static func newlyUnlocked(
+        before: [String: ScoreRecord], after: [String: ScoreRecord],
+        winsBaseline: [String: Int] = [:]
+    ) -> [String] {
+        let old = UnlockGates(records: before, winsBaseline: winsBaseline)
+        let new = UnlockGates(records: after, winsBaseline: winsBaseline)
+        var opened: [String] = []
+        for size in BoardSize.allCases where !old.size(size) && new.size(size) {
+            opened.append(size.label)
+        }
+        for rank in Density.allCases where !old.rank(rank) && new.rank(rank) {
+            opened.append(rank.label)
+        }
+        if !old.family(.hive), new.family(.hive) { opened.append(BoardFamily.hive.label) }
+        if !old.edges(.round), new.edges(.round) { opened.append(BoardEdges.round.label) }
+        return opened
     }
 
     /// The teaser line for a locked option.

@@ -53,12 +53,15 @@ struct SettingsView: View {
                     Text(
                         """
                         This erases your high scores and career stats on every device \
-                        signed in to your iCloud. It can't be undone.
+                        signed in to your iCloud. Boards unlocked through play lock \
+                        again. It can't be undone.
                         """, bundle: .module)
                 } else {
                     Text(
-                        "This clears your high scores and career stats on this device.",
-                        bundle: .module)
+                        """
+                        This clears your high scores and career stats on this device. \
+                        Boards unlocked through play lock again.
+                        """, bundle: .module)
                 }
             }
     }

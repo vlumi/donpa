@@ -21,6 +21,13 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Progression: the board matrix unlocks as you play.** A fresh install
+  starts with XS/S/M at Trainee/Sapper on the square families; each win
+  opens the next rung (sizes, ranks, the Hive after your first win, Round
+  edges after an M win). Locked options stay visible as teasers with their
+  requirement, wins stamp an UNLOCKED sticker on the result panel, and a
+  stats reset locks the ladder again. Veterans' existing records already
+  open everything — nothing changes on an established install.
 - **Drills shows up in the breakdown bars.** The Service Record's
   family/size distribution silently skipped Drills games (the sweep
   predated the family).
