@@ -22,6 +22,10 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
     /// this for the in-progress-save dot). Defaults to none, so other callers (the
     /// scoreboard filters) render unbadged.
     var badge: (Value) -> Bool = { _ in false }
+    /// Stack the glyph ABOVE a caption-size label instead of beside it. Four
+    /// family segments on a phone leave ~36pt beside the glyph — every locale
+    /// truncated there; stacked, the label gets the segment's full width.
+    var stacked = false
 
     /// Outer corner radius; inner segment splits are square so the row reads as one
     /// connected control.
@@ -48,6 +52,36 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
                 .stroke(Color.primary.opacity(0.12), lineWidth: 1))
     }
 
+    /// Glyph beside the label (roomy rows like the edges toggle), or above it
+    /// (`stacked`) so a long family name spans the whole segment.
+    @ViewBuilder private func segmentLabel(
+        text: String, selected: Bool, kind: BoardGlyph.Kind
+    ) -> some View {
+        if stacked {
+            VStack(spacing: 2) {
+                BoardGlyph(kind: kind, size: 20)
+                if !text.isEmpty {
+                    Text(verbatim: text)
+                        .font(.caption.weight(selected ? .bold : .regular))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+            }
+        } else {
+            HStack(spacing: 6) {
+                BoardGlyph(kind: kind, size: 20)
+                if !text.isEmpty {
+                    Text(verbatim: text)
+                        .font(.subheadline.weight(selected ? .semibold : .regular))
+                        // Shrink to fit rather than truncate/wrap: a longer localized
+                        // label (e.g. FI "Ruudukko") stays whole on a narrow segment.
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                }
+            }
+        }
+    }
+
     private func segment(_ value: Value) -> some View {
         let selected = selection == value
         let text = label(value)
@@ -56,25 +90,15 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
             selection = value
             onChange?()
         } label: {
-            HStack(spacing: 6) {
-                BoardGlyph(kind: glyph(value), size: 20)
-                if !text.isEmpty {
-                    Text(verbatim: text)
-                        .font(.subheadline.weight(selected ? .semibold : .regular))
-                        // Shrink to fit rather than truncate/wrap: a longer localized
-                        // label (e.g. FI "Ruudukko") stays whole on a narrow segment.
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 10)
-            .foregroundStyle(selected ? Color.white : Color.primary)
-            // Selected segment: an inset accent fill that keeps the outer corner
-            // rounding (the container clips it) but reads flat against its neighbours.
-            .background(selected ? Color.accentColor : Color.clear)
-            .contentShape(Rectangle())
+            segmentLabel(text: text, selected: selected, kind: glyph(value))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .padding(.horizontal, stacked ? 4 : 10)
+                .foregroundStyle(selected ? Color.white : Color.primary)
+                // Selected segment: an inset accent fill that keeps the outer corner
+                // rounding (the container clips it) but reads flat against its neighbours.
+                .background(selected ? Color.accentColor : Color.clear)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         // The control clips to its rounded container, so the dot insets into the

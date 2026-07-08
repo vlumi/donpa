@@ -316,7 +316,7 @@ struct BoardSelectionPicker: View {
                 Text(verbatim: family.label)
                     .font(.caption.weight(selected ? .bold : .regular))
                     .lineLimit(1)  // keep e.g. "グリッド" on one line (don't wrap → taller tab)
-                    .minimumScaleFactor(0.8)  // a long label shrinks rather than widening its tab
+                    .minimumScaleFactor(0.6)  // a long label shrinks rather than widening its tab
             }
             // Equal-width tabs: every tab fills the same share of the row, so neither
             // the differing label lengths nor the regular↔bold selection swap can
