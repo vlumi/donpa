@@ -118,7 +118,8 @@ public struct GameView: View {
                 onScores: { navigator.showingScores = true },
                 onMessHall: { navigator.showingMessHall = true },
                 onSettings: { navigator.showingSettings = true },
-                onAbout: { navigator.showingAbout = true }
+                onAbout: { navigator.showingAbout = true },
+                onHowTo: { navigator.showingHowTo = true }
             )
             .opacity(navigator.showingTitle ? 1 : 0)
             .allowsHitTesting(navigator.showingTitle)

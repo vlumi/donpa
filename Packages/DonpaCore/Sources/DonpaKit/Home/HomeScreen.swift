@@ -28,6 +28,7 @@ struct HomeScreen: View {
     let onMessHall: () -> Void
     let onSettings: () -> Void
     let onAbout: () -> Void
+    let onHowTo: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -51,6 +52,11 @@ struct HomeScreen: View {
             // Secondary utilities in the screen's top-right corner, as before.
             .overlay(alignment: .topTrailing) {
                 HStack(spacing: 8) {
+                    roundButton(label: "How to play", id: "title.howto", action: onHowTo) {
+                        Image(systemName: "questionmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
                     roundButton(label: "Settings", id: "title.settings", action: onSettings) {
                         Image(systemName: "gearshape.fill")
                             .font(.system(size: 16, weight: .semibold))
