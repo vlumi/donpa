@@ -307,6 +307,31 @@ guaranteed complete. Verdicts flow through `GameViewModel.onForcedGuess`
 `GuessTier`), landing in per-config `ScoreRecord` counters plus a min-merged
 `luckiestGuess` record.
 
+## Progression: derive gates, store feats — never the reverse
+
+Two engines, deliberately opposite persistence models:
+
+- **`UnlockEngine` derives, never stores.** Which sizes/ranks/families are
+  open is a pure function over the merged score records — no unlock flags, no
+  migration, and sync comes free with the records. Veterans pass every gate
+  automatically, a stats reset re-locks the ladder, and the
+  `-donpa.gates.fresh` launch flag can subtract launch-time win counts to
+  show a veteran the fresh experience (plus live unlock moments) without
+  touching data. Ladders are monotone on "win at or above the rung", so an
+  escape-hatch win (a rival's bigger board via head-to-head or a share link —
+  always playable by design) can never wedge a rung.
+- **`AchievementStore` stores, never re-derives away.** Earned feats are
+  id × tier → first-earned date, union-merged across devices (earliest date
+  wins) under their own KVS namespace, and **exempt from the stats
+  reset-epoch**: the hidden feats are momentary (unprovable from records) and
+  Game Center can't un-report, so feats are permanent — history, not
+  statistics. Derivable feats are stamped once when first observed
+  (retroactively at launch), keeping dates stable and the future GC reporter
+  single-shot.
+
+The split matters: gates must follow the data wherever it goes (wipes, syncs,
+restores), while feats must survive it.
+
 ## Score sharing: signed, serverless, peer-to-peer
 
 Sharing scores with other people (v0.4.0, "friendly rivalry") is **serverless and

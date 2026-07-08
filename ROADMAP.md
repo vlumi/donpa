@@ -94,51 +94,23 @@ section below; this block is the build order. Note the sequencing freedom: the
 UnlockEngine derives from win RECORDS (not events), so **gating can ship first,
 standalone**; only achievements need the game-end event.
 
-**Build order** (each step = roughly one PR; spec section has the details):
+**Gating (G1–G3) and achievements (A1–A4) are SHIPPED** (see CHANGELOG and
+the code: `UnlockEngine`/`UnlockGates` + the New Game teasers, and
+`AchievementEngine`/`AchievementStore` + the Decorations grid). The shipped
+behavior follows the Progression spec below, which stays as the reference for
+the remaining steps and any value tuning. Still ahead:
 
-- [ ] **G1 — UnlockEngine (DonpaCore)**: the pure predicate + requirement model +
-      the win-mapping table, unit-tested (ladder walk, Basic mapping, Drills
-      credit, veteran auto-pass on synthetic full records).
-- [ ] **G2 — Teaser UI**: locked chips/segments/family page in New Game per the
-      spec (dim + padlock + requirement caption), keyboard skip, a11y values.
-- [ ] **G3 — Unlock moments + edges**: result-panel "UNLOCKED" sticker +
-      VoiceOver announcement; scoreboard play-button rule; the rival/share
-      escape hatch; `-donpa.gates.fresh` launch flag + UI test.
-- [ ] **A1 — GameEndEvent**: one struct emitted at game end (config, outcome,
-      time, progress, action count, purity bits, best survived odds) — the
-      purity bits and luck plumbing already exist.
-- [ ] **A2 — AchievementEngine (DonpaCore)**: `AchievementID` enum (IDs locked
-      per the spec list), derivable predicates over records + momentary matchers
-      over the event, per-achievement unit tests.
-- [ ] **A3 — AchievementStore**: earned map (id → date), local persistence +
-      KVS-blob union merge (earliest date wins; follows the same reset-epoch as
-      the stats wipe), retroactive stamping of derivable feats on first launch.
-- [ ] **A4 — Decorations UI**: medal grid in the Service Record (earned inked /
-      unearned silhouette / hidden as "?"), tier laurels, result-panel earn
-      sticker + announcement (shared slot with G3's, queued if both).
-- [ ] **A5 — Feat rank** (TENTATIVE — user go/no-go first; the rest of the
-      milestone doesn't depend on it): derived rank from the earned set
-      (ladder in the spec), rank in the share payload + Mess hall/H2H rows.
+- [ ] **A5 — Feat rank** (TENTATIVE — user go/no-go first; nothing else
+      depends on it): derived rank from the earned set (ladder in the spec),
+      rank in the share payload + Mess hall/H2H rows.
 - [ ] **A6 (later) — Game Center**: ASC achievement definitions per the
-      tier-flattening mapping in the spec, GKAchievement reporter behind the
-      store, graceful degradation when auth is declined. **Every ASC
-      definition needs its own 1024×1024 image (29 of them, circular-cropped
-      by GC)** — generate them procedurally from the same medal renderer the
-      Decorations grid uses (the `make-icon.swift` precedent), one source for
-      in-app and store art. **Shared chassis, DISTINCT emblem per feat** (user
-      call — one repeated medal reads as wallpaper): a ring+ribbon template,
-      metal tinted bronze/silver/gold on the tiered feats, with a unique
-      centre emblem drawn from the app's procedural glyph vocabulary —
-      boot-print (Boots On), bullseye+ribbon (Graduation Exercise), honeycomb
-      trio (Into the Hive), globe wrap-bands (Full Circle), honeycomb over
-      star-laurel (Hornet's Nest), slashed flag (Bare Hands), stopwatch
-      (Expert Sweep), the existing star-laurel / crescent-laurel insignia
-      (Insane / Full Moon), coin faces stamped ½ ⅓ ¼ (the luck ladder), a
-      cleared-grid shield (Sector Secure), retro window ×3 (+stopwatch for
-      Hat Trick), swallowtail flag / boot-print trail / defused burst-mine
-      (the milestones), and the gags: a "2" mine, a 13 clock face, a 99 %
-      gauge, a rolled-over timer. Emblems land with A4's grid for per-glyph
-      veto.
+      tier-flattening mapping in the spec (sandbox from day one; they only go
+      LIVE — and permanent — with the first App Store release), a
+      GKAchievement reporter behind the store, graceful degradation when auth
+      is declined. **Every ASC definition needs its own 1024×1024 image (29
+      after tier-flattening)** — export them from `MedalView`, the same
+      renderer the Decorations grid draws with (per-feat emblems already in
+      place there).
 
 **Practice mode — SHIPPED as the Drills family** (FI Soha, JA 演習; see
 CHANGELOG): verified no-guess boards, XS–XL at 12 %, leftmost New Game page,

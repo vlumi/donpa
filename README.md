@@ -25,6 +25,7 @@ decisions.
 - [Controls](#controls)
 - [Start and end of a game](#start-and-end-of-a-game)
 - [Scores](#scores)
+- [Progression](#progression)
 - [Rivals — the Mess hall](#rivals--the-mess-hall)
 - [Settings](#settings)
 - [AI assistance](#ai-assistance)
@@ -155,8 +156,9 @@ live:
 The 🎖️ button (in the top strip in-game, or on the home screen) opens the
 **Service Record**: per-board records — best time, games cleared, and best
 cleared-% from losses — plus lifetime career totals (games, tiles, flags, mines,
-playtime) and a **Breakdown** of where your play goes (proportion bars across
-family, size, and difficulty, by playtime or game count). The board list groups
+playtime), a **Breakdown** of where your play goes (proportion bars across
+family, size, and difficulty, by playtime or game count), and the
+**Decorations** grid (see [Progression](#progression)). The board list groups
 by size, and once you've won every difficulty at a size the group shows your
 combined best — the **full-clear time** for that tier (Basic gets a Total for
 the classic trifecta). The row for the board you're playing is highlighted, and
@@ -173,6 +175,28 @@ reconnects). With sync off, everything stays on-device.
 Stats are keyed by board geometry, not by tier name, so the format stays stable
 across variants: every family × edges combination — and any re-tuned tier — gets
 its own scoreboard entries rather than reinterpreting existing scores.
+
+## Progression
+
+The board matrix **unlocks as you play**. A fresh install starts with sizes
+XS/S/M at the two lightest ranks on the square families; each win opens the
+next rung — sizes climb one at a time, ranks climb on wins at S or larger, the
+**Hive** opens on your first win anywhere, and **Round** edges open after a win
+at M or larger. Locked options stay visible with a padlock and tell you exactly
+what opens them; a win that opens something stamps an **UNLOCKED** sticker on
+the result panel. Boards arriving from a rival (head-to-head, a share link) are
+always playable — an invitation is the discovery moment. Established players
+pass every gate automatically: the gates read your existing records, nothing is
+stored, and a stats reset locks the ladder again.
+
+**Decorations** — 22 achievements in the Service Record, each with its own
+hand-drawn medal: starters, skill feats with real floors (no farming Bare Hands
+on a tiny board), luck feats that read your recorded forced guesses
+retroactively, tiered milestones (bronze/silver/gold), and four hidden gags
+shown as **?** until you stumble into them. Earning one stamps a gold
+**DECORATION** sticker on the result panel. Decorations sync across your
+devices under the same iCloud toggle as scores — and unlike scores, they
+survive a stats reset: they're history, not statistics.
 
 ## Rivals — the Mess hall
 
@@ -232,9 +256,18 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 
 ### 0.5.0 — progression (in development)
 
+- **New:** **Decorations** — 22 achievements with hand-drawn medals in the
+  Service Record: skill feats, retroactive luck feats, tiered milestones,
+  hidden gags; synced, permanent, celebrated on the result panel.
+- **New:** **progressive unlocks** — the size/rank/family/edges matrix opens
+  as you win, with visible teasers and UNLOCKED stickers; veterans pass
+  automatically via their existing records.
 - **New:** the **Drills** board family — verified no-guess practice boards
   (XS–XL, 12 % mines) with per-size best times, on its own leftmost New Game
   page.
+- **Improved:** result pills restyled for contrast + Dynamic Type; a
+  readability/VoiceOver pass across the app (spoken toasts and save-dots,
+  44 pt chips, combined rival rows).
 
 ### 0.4.0 — friendly rivalry & the home screen
 
