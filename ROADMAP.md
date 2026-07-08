@@ -125,7 +125,20 @@ standalone**; only achievements need the game-end event.
       definition needs its own 1024×1024 image (29 of them, circular-cropped
       by GC)** — generate them procedurally from the same medal renderer the
       Decorations grid uses (the `make-icon.swift` precedent), one source for
-      in-app and store art.
+      in-app and store art. **Shared chassis, DISTINCT emblem per feat** (user
+      call — one repeated medal reads as wallpaper): a ring+ribbon template,
+      metal tinted bronze/silver/gold on the tiered feats, with a unique
+      centre emblem drawn from the app's procedural glyph vocabulary —
+      boot-print (Boots On), bullseye+ribbon (Graduation Exercise), honeycomb
+      trio (Into the Hive), globe wrap-bands (Full Circle), honeycomb over
+      star-laurel (Hornet's Nest), slashed flag (Bare Hands), stopwatch
+      (Expert Sweep), the existing star-laurel / crescent-laurel insignia
+      (Insane / Full Moon), coin faces stamped ½ ⅓ ¼ (the luck ladder), a
+      cleared-grid shield (Sector Secure), retro window ×3 (+stopwatch for
+      Hat Trick), swallowtail flag / boot-print trail / defused burst-mine
+      (the milestones), and the gags: a "2" mine, a 13 clock face, a 99 %
+      gauge, a rolled-over timer. Emblems land with A4's grid for per-glyph
+      veto.
 
 **Practice mode — SHIPPED as the Drills family** (FI Soha, JA 演習; see
 CHANGELOG): verified no-guess boards, XS–XL at 12 %, leftmost New Game page,
