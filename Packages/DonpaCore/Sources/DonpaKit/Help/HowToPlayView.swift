@@ -95,14 +95,16 @@ public struct HowToPlayView: View {
         section(
             title: Text("Dig and flag", bundle: .module),
             diagram: HStack(alignment: .top, spacing: 14) {
-                // Captioned: the boot-print reads as "dig" in the toggle's
-                // context, but not floating alone in a help diagram.
+                // The glyphs as the TOGGLE renders them (white on the mode
+                // colour) — bare on the sheet the bootprint read as inkblots
+                // (user report), but this is the exact thing the player will
+                // recognize in the corner of the board.
                 captioned(Text("Dig", bundle: .module)) {
-                    MangaIconView(symbol: .reveal, size: 30)
+                    modeChip(.reveal, fill: palette.digColor)
                 }
                 TileDiagram(rows: [[.hidden, .flagged]])
                 captioned(Text("Flag", bundle: .module)) {
-                    MangaIconView(symbol: .flag, size: 30)
+                    modeChip(.flag, fill: palette.flagColor)
                 }
             },
             text: Text(
@@ -203,6 +205,14 @@ public struct HowToPlayView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 4)
+    }
+
+    /// A miniature of the in-game mode toggle's segment: white glyph on the
+    /// mode colour, so the icon arrives with the context that makes it read.
+    private func modeChip(_ symbol: MangaIcon.Symbol, fill: Color) -> some View {
+        MangaIconView(symbol: symbol, size: 26, tint: .white)
+            .frame(width: 38, height: 42)
+            .background(RoundedRectangle(cornerRadius: 8).fill(fill))
     }
 
     /// A tiny mode-name caption under a glyph, so an icon can't float unexplained.
@@ -314,11 +324,12 @@ private struct CounterDiagram: View {
 private struct MangaIconView: View {
     let symbol: MangaIcon.Symbol
     var size: CGFloat = 30
+    var tint: Color = .primary
 
     var body: some View {
         Canvas { ctx, area in
             ctx.translateBy(x: (area.width - size) / 2, y: (area.height - size) / 2)
-            MangaIcon.draw(symbol, in: ctx, side: size, color: .primary)
+            MangaIcon.draw(symbol, in: ctx, side: size, color: tint)
         }
         .frame(width: size, height: size)
     }
