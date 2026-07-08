@@ -207,12 +207,21 @@ public struct HowToPlayView: View {
         .padding(.top, 4)
     }
 
-    /// A miniature of the in-game mode toggle's segment: white glyph on the
-    /// mode colour, so the icon arrives with the context that makes it read.
+    /// The in-game mode toggle's segment, EXACTLY as the board renders it —
+    /// same glyph size, frame, fill, and screentone. A scaled-down imitation
+    /// lost what legibility the bootprint has (user report ×2); a pixel-true
+    /// replica at least matches what the corner control really shows.
     private func modeChip(_ symbol: MangaIcon.Symbol, fill: Color) -> some View {
-        MangaIconView(symbol: symbol, size: 26, tint: .white)
-            .frame(width: 38, height: 42)
-            .background(RoundedRectangle(cornerRadius: 8).fill(fill))
+        MangaIcon(symbol: symbol, size: 34, tint: .white)
+            .frame(width: 50, height: 60)
+            .background {
+                ZStack {
+                    fill
+                    ScreentonePattern(
+                        dots: symbol == .reveal, color: .white.opacity(0.35))
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     /// A tiny mode-name caption under a glyph, so an icon can't float unexplained.
