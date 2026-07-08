@@ -576,12 +576,12 @@
       }
     },
     "The Range" : {
-      "comment" : "Board family: no-guess practice boards (name provisional)",
+      "comment" : "Board family: no-guess practice boards. FI Soha = inttislangi-style contraction of sotaharjoitus (cf. Sotku)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sotaharjoitus"
+            "value" : "Soha"
           }
         },
         "ja" : {
