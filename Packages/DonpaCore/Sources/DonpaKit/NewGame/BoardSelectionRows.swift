@@ -130,8 +130,12 @@ extension BoardSelectionPicker {
         }
         .buttonStyle(.plain)
         .modifier(SaveDot(show: hasSave, onAccent: selected))
+        .modifier(LockBadge(locked: locked))
         .accessibilityLabel(Text(verbatim: density.label))
         .modifier(SaveValue(hasSave: hasSave))
+        .modifier(
+            LockValue(locked: locked, requirement: UnlockEngine.requirement(rank: density))
+        )
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
