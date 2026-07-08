@@ -139,6 +139,12 @@ than prose for chording, and light on JA/FI translation. Sibling to practice mod
       (authored art reads clearer + ages better than cropped board captures)
 - [ ] Interactive teach deferred — let **practice mode** be the "now try it" half
       rather than building a separate tutorial engine
+- [ ] **donpa-site gets the expanded English version** (user call): the same
+      illustrations exported for the web, support.md growing into a proper
+      how-to-play page — linkable (store description, rival onboarding) and
+      long-form where the in-app page stays a quick reference. The in-app page
+      remains canonical: it's offline (the audience is a first-session player)
+      and localized via the catalogs, which the EN-only site isn't.
 
 ## v1.0.0 — The store release
 
