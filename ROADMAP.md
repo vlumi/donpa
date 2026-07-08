@@ -116,8 +116,9 @@ standalone**; only achievements need the game-end event.
 - [ ] **A4 — Decorations UI**: medal grid in the Service Record (earned inked /
       unearned silhouette / hidden as "?"), tier laurels, result-panel earn
       sticker + announcement (shared slot with G3's, queued if both).
-- [ ] **A5 — Feat rank**: derived rank from the earned set (ladder in the spec),
-      rank in the share payload + Mess hall/H2H rows.
+- [ ] **A5 — Feat rank** (TENTATIVE — user go/no-go first; the rest of the
+      milestone doesn't depend on it): derived rank from the earned set
+      (ladder in the spec), rank in the share payload + Mess hall/H2H rows.
 - [ ] **A6 (later) — Game Center**: ASC achievement definitions
       (`fi.misaki.donpa.<id>` 1:1), GKAchievement reporter behind the store,
       graceful degradation when auth is declined.
@@ -334,9 +335,11 @@ freely; IDs lock at build.
 - `round.first` — **Full Circle** · *Täysi kierros* · *世界一周* — "Win a board
   with Round edges." Any size — the first-torus identity moment (the L+ skill
   variant was cut as redundant).
-- `hex.insane` — **Hornet's Nest** · *Herhiläispesä* · *スズメバチの巣* — "Win a
-  Hive board at Insane, M or larger." Donpa-only feat; generic minesweeper
-  can't offer it.
+- `hive.insane` — **Hornet's Nest** · *Herhiläispesä* · *スズメバチの巣* — "Win
+  a Hive board at Insane, M or larger." Donpa-only feat; generic minesweeper
+  can't offer it. (No Grid twin on purpose: `win.first` is effectively
+  grid-first, and Grid mastery already lives in `insane.win` + the speed
+  ladder + the trifecta.)
 
 **Skill & mastery** (all ≥ M Sapper unless stated)
 
@@ -401,15 +404,20 @@ Deliberately ABSENT: streaks (luck-heavy — rewards variance, not nerve),
 anything above size L or multi-session (one-sitting cap; the Service Record is
 the trophy for those), per-size/per-rank attrition filler.
 
-### Feat rank (the public face)
+### Feat rank (the public face) — TENTATIVE: go/no-go before A5
 
-Derived from the earned set — named feats, not points, so a rank *says
-something* and faking it means faking the feat. Cumulative: each rank also
-requires the one below. Luck feats deliberately count toward NO rank (variance
-again). Surfaces in the share payload, Mess hall rows, and head-to-head; raw
-times stay trusted-circle.
+Whether the public rank is wanted AT ALL is still open (user, 2026-07-09) —
+confirm before building A5; everything else in this spec stands without it.
+If built: derived from the earned set — named feats, not points, so a rank
+*says something* and faking it means faking the feat. Cumulative: each rank
+also requires the one below. Luck feats deliberately count toward NO rank
+(variance again). Surfaces in the share payload, Mess hall rows, and
+head-to-head; raw times stay trusted-circle. The ladder deliberately shares no
+word with the difficulty tiers in any locale (the tiers read as soldier
+archetypes a board demands; the rank is the player's own grade — and rung 1 is
+a civilian precisely so the first win "makes you a soldier"):
 
-1. **Recruit** · *Alokas* · *新兵* — everyone starts here.
+1. **Civilian** · *Siviili* · *民間人* — everyone starts here.
 2. **Private** · *Sotamies* · *二等兵* — Boots On.
 3. **Corporal** · *Korpraali* · *伍長* — The Classics + Campaigner I (10 wins).
 4. **Sergeant** · *Kersantti* · *軍曹* — Into the Hive + a purity feat
