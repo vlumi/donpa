@@ -13,6 +13,7 @@ public final class Navigator: ObservableObject {
     @Published public var showingSettings = false
     /// Whether the About sheet is presented.
     @Published public var showingAbout = false
+    @Published public var showingHowTo = false
     /// Whether the New Game config popup is presented.
     @Published public var showingNewGame = false
 
@@ -44,7 +45,8 @@ public final class Navigator: ObservableObject {
     /// Whether any modal is presented. Gameplay commands are disabled while one is
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {
-        showingScores || showingSettings || showingAbout || showingNewGame
+        showingScores || showingSettings || showingAbout || showingHowTo
+            || showingNewGame
             || incomingShare != nil || showingMessHall
     }
 

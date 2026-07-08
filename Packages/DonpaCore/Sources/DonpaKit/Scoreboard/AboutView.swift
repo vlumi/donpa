@@ -6,7 +6,12 @@ public struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 
-    public init() {}
+    /// Open the how-to-play reference (the host swaps sheets); nil hides the row.
+    var onHowTo: (() -> Void)?
+
+    public init(onHowTo: (() -> Void)? = nil) {
+        self.onHowTo = onHowTo
+    }
 
     private var palette: Palette { Palette.resolved(for: colorScheme) }
 
@@ -85,6 +90,20 @@ public struct AboutView: View {
             }
 
             Divider().frame(maxWidth: 220)
+
+            if let onHowTo {
+                Button(action: onHowTo) {
+                    Label {
+                        Text("How to play", bundle: .module)
+                    } icon: {
+                        Image(systemName: "questionmark.circle")
+                    }
+                    .font(.footnote.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .tint(palette.counter)
+                .foregroundStyle(palette.counter)
+            }
 
             VStack(spacing: 6) {
                 Text(verbatim: "© 2026 \(authorName)").font(.footnote)

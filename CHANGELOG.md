@@ -21,6 +21,10 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **How to play.** A `?` on the home screen (and in About) opens a static
+  reference: every mechanic as a small true-to-the-board diagram — the goal,
+  dig/flag, chording, the mine counter, endings, forced guesses and the luck
+  line, and where Drills fits — with a link to the longer read on donpa.app.
 - **Decorations: 22 achievements land in the Service Record.** A medal grid
   with a distinct hand-drawn emblem per feat — starters, skill feats with
   real floors, luck feats that read your recorded forced guesses

@@ -213,7 +213,14 @@ struct GameContent: View {
             SettingsView(settings: settings, scoreboard: scoreboard)
         }
         .sheet(isPresented: $navigator.showingAbout) {
-            AboutView()
+            // Sheet swap deferred a tick, like the scoreboard→Mess hall jump.
+            AboutView(onHowTo: {
+                navigator.showingAbout = false
+                Task { @MainActor in navigator.showingHowTo = true }
+            })
+        }
+        .sheet(isPresented: $navigator.showingHowTo) {
+            HowToPlayView()
         }
         .onChangeCompat(of: navigator.playConfigRequested) { config in
             if let config { playFromScoreboard(config) }
