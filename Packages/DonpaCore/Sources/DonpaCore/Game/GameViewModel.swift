@@ -66,6 +66,19 @@ public final class GameViewModel: ObservableObject {
     /// Reset on new game / restore.
     public private(set) var chordsThisGame = 0
 
+    /// Reveal-type actions this game (reveals of a hidden cell + real chords) —
+    /// the achievement layer's "which action was fatal" clock. POISONED on
+    /// restore (a huge count): the pre-save actions are unknowable, so a
+    /// momentary feat like "lose on your second reveal" must never fire on a
+    /// resumed game (deny over false-award, like the purity bits).
+    public private(set) var revealActionsThisGame = 0
+    /// The restore poison — far above any real per-game action count.
+    static let restoredActionsPoison = 1 << 20
+
+    /// A finished game's momentary facts, for the achievement layer. Fired once
+    /// per game end, after the final activity flush.
+    public var onGameEnd: ((GameEndEvent) -> Void)?
+
     /// Sticky "purity" bits for no-flag / no-chord feats: latch true the moment the
     /// feat is broken and never reset within a game. On RESTORE they default to
     /// "violated" (true) — a resumed game can't earn these (board state can't prove a
@@ -233,6 +246,10 @@ public final class GameViewModel: ObservableObject {
             "reveal \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         let wasNotStarted = game.status == .notStarted
+        // Count only reveals that can DO something (a tap on a revealed cell is
+        // routed to chord by the UI; off-board taps no-op) — the action clock
+        // must not tick on strays.
+        if game.board[c].state == .hidden { revealActionsThisGame += 1 }
         lastForcedGuess = nil  // the feedback event tracks the LATEST action
         // Capture the PRE-reveal state for the guess analysis (O(1) COW copy) —
         // only when analysis is even possible, so the huge boards never retain a
@@ -283,6 +300,7 @@ public final class GameViewModel: ObservableObject {
         // no-ops is a bonus.
         guard game.canChord(c) else { return }
         chordsThisGame += 1
+        revealActionsThisGame += 1
         usedChordEver = true
         lastForcedGuess = nil  // the feedback event tracks the LATEST action
         // A chord is analyzed as a guess too (the SET of cells it opens at once):
@@ -317,6 +335,7 @@ public final class GameViewModel: ObservableObject {
         isComputing = false  // gameID bumps below → any in-flight compute is dropped
         flagsPlacedThisGame = 0
         chordsThisGame = 0
+        revealActionsThisGame = 0
         usedFlagEver = false
         usedChordEver = false
         flushedTiles = 0
@@ -347,34 +366,6 @@ public final class GameViewModel: ObservableObject {
         })
     }
 
-    /// A snapshot of the current game (live timer span folded in for an exact
-    /// elapsed), or nil if there's nothing worth saving.
-    public func snapshot() -> GameSnapshot? {
-        GameSnapshot(
-            game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
-            camera: cameraView, inputMode: inputMode)
-    }
-
-    /// The `Sendable` inputs a snapshot needs, captured cheaply on the main actor so
-    /// the actual snapshot BUILD (which scans the whole board to derive the
-    /// revealed/flagged coord sets — heavy on a 1M-cell board) can run OFF the main
-    /// thread (see `GameSnapshot(inputs:)`).
-    public struct SnapshotInputs: Sendable {
-        public let game: Game
-        public let config: GameConfig
-        public let elapsedCentiseconds: Int
-        public let camera: CameraView?
-        public let inputMode: InputMode
-    }
-
-    /// Capture the snapshot inputs, or nil unless a save is worthwhile (in progress).
-    public func snapshotInputs() -> SnapshotInputs? {
-        guard game.status == .playing else { return nil }
-        return SnapshotInputs(
-            game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
-            camera: cameraView, inputMode: inputMode)
-    }
-
     /// Restore a persisted game and resume its clock from the saved elapsed.
     public func restore(from snapshot: GameSnapshot) {
         config = snapshot.config
@@ -394,6 +385,7 @@ public final class GameViewModel: ObservableObject {
         // after resume (a minor under-count, not worth a snapshot field).
         flagsPlacedThisGame = 0
         chordsThisGame = 0
+        revealActionsThisGame = Self.restoredActionsPoison
         // Purity bits default to VIOLATED on restore: board state can't prove a clean
         // no-flag/no-chord run, so a resumed game can't earn those feats (deny over
         // false-award). A non-empty restored flag set makes usedFlag definitely true;
@@ -432,6 +424,11 @@ public final class GameViewModel: ObservableObject {
         }
         resultCounter += 1
         lastResult = GameResultEvent(id: resultCounter, result: result)
+        onGameEnd?(
+            GameEndEvent(
+                config: config, won: game.status == .won,
+                timeCentiseconds: finalCentiseconds, progress: game.progress,
+                revealActions: revealActionsThisGame, date: Date()))
     }
 
     private func bump() { revision &+= 1 }
