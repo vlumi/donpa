@@ -288,8 +288,17 @@ player who's simply good, and veterans derive-pass anyway.
 Unchanged decisions: internal layer first, in-app display, offline; **Game
 Center achievements yes, leaderboards no** (scores are user-editable by design;
 feats only cheat yourself); GC bolts on later as a reporter behind the store,
-degrading gracefully when auth is declined. IDs are permanent; ASC IDs =
-`fi.misaki.donpa.<id>` 1:1.
+degrading gracefully when auth is declined. IDs are permanent.
+
+**GC mapping (A6):** Game Center has no tier concept — a flat list where each
+achievement has a point value (≤ 100 each, 1 000 budget per game), a
+`percentComplete` bar, and an optional hidden flag (the four gags use it). So
+the reporter FLATTENS our tiers: one-shot feats map 1:1
+(`fi.misaki.donpa.<id>`), each tier of a tiered feat becomes its own ASC entry
+(`fi.misaki.donpa.miles.wins.10` / `.100` / `.1000`), and the reporter feeds
+`percentComplete` on the next unearned tier so GC shows live progress
+("470/1000 wins = 47 %"). 22 internal IDs = 18 one-shots + 11 tier steps →
+**29 ASC definitions**; assign the point budget across them at A6.
 
 **Two evaluation modes, one engine:**
 
