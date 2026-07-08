@@ -9,6 +9,7 @@ extension BoardSelectionPicker {
         let selected = settings.family == family
         return Button {
             withAnimation(.snappy) { settings.family = family }
+            lockedHint = nil  // don't carry a stale teaser onto the new page
             onFocusRow?(0)
         } label: {
             HStack(spacing: 10) {
@@ -39,6 +40,7 @@ extension BoardSelectionPicker {
         let selected = settings.family == family
         return Button {
             withAnimation(.snappy) { settings.family = family }
+            lockedHint = nil  // don't carry a stale teaser onto the new page
             onFocusRow?(0)
         } label: {
             VStack(spacing: 3) {
