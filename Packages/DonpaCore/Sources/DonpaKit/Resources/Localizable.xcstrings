@@ -1481,6 +1481,23 @@
         }
       }
     },
+    "Game in progress" : {
+      "comment" : "A11y value on picker chips whose path holds a parked game (the save dot's message)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peli kesken"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ゲーム進行中"
+          }
+        }
+      }
+    },
     "Games" : {
       "comment" : "Breakdown metric toggle: distribute by games played",
       "localizations" : {
@@ -2041,6 +2058,23 @@
         }
       }
     },
+    "New best clear (%@)." : {
+      "comment" : "Spoken on a loss that beat the prior best progress; %@ = +N%",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uusi paras avaus (%@)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自己ベスト更新（%@）。"
+          }
+        }
+      }
+    },
     "New game" : {
       "comment" : "Tooltip\/label for the new-game button",
       "localizations" : {
@@ -2333,6 +2367,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "旗なし勝利"
+          }
+        }
+      }
+    },
+    "not won" : {
+      "comment" : "A11y reading of the dash in a head-to-head time column",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ei voitettu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未クリア"
           }
         }
       }
@@ -2721,6 +2772,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "右"
+          }
+        }
+      }
+    },
+    "Rival: %@" : {
+      "comment" : "A11y prefix for the rival's value in head-to-head rows",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haastaja: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライバル：%@"
           }
         }
       }
@@ -3758,6 +3826,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "このライバルはすでに追加済みです。スコアを更新します。"
+          }
+        }
+      }
+    },
+    "You: %@" : {
+      "comment" : "A11y prefix for your own value in head-to-head rows",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinä: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分：%@"
+          }
+        }
+      }
+    },
+    "Your best clear on this board." : {
+      "comment" : "Spoken on a first-ever loss (no prior best to compare)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kenttäsi paras avaus."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この盤面の自己ベスト。"
           }
         }
       }

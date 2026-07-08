@@ -325,5 +325,8 @@ private struct FriendRow: View {
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
+        // One row, one utterance — six separate texts read as disjointed
+        // fragments under VoiceOver.
+        .accessibilityElement(children: .combine)
     }
 }
