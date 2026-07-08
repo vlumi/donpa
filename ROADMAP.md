@@ -297,10 +297,11 @@ degrading gracefully when auth is declined. IDs are permanent; ASC IDs =
   best times, full-clear standings, `luckiestGuess`, no-flag/no-chord win
   counters) — so they're **retroactive**: veterans get them stamped on first
   launch, and a cloud restore recovers them.
-- **Momentary** feats need the game-end instant (`GameEndEvent`: config,
-  won, timeCentiseconds, progress, revealActions, usedFlagEver, usedChordEver,
-  bestSurvivedOddsThisGame) and are stored when earned. Only four hidden feats
-  + Bare Hands need this. New data required: a per-game **reveal-action
+- **Momentary** feats need the game-end instant (`GameEndEvent`: config, won,
+  timeCentiseconds, progress, revealActions) and are stored when earned. Only
+  the FOUR HIDDEN feats need this (the purity collapse removed the last
+  non-hidden momentary one — the bits keep feeding the stats counters, but the
+  event no longer carries them). New data required: a per-game **reveal-action
   counter** (reveals + chords, for "second reveal") — everything else ships.
 - `AchievementStore`: earned map id → firstEarnedDate; UserDefaults + the KVS
   sync blob (union merge, earliest date wins; obeys the stats wipe's
@@ -318,7 +319,7 @@ unearned = silhouette + requirement, hidden = "?" until earned, tiers as
 bronze/silver/gold laurels. Earn moment = result-panel sticker + VoiceOver
 announcement (same slot as the unlock sticker; queue if both fire).
 
-### The achievement list (24 IDs; tiers noted)
+### The achievement list (22 IDs; tiers noted)
 
 Floors write as "≥ M Sapper" = size M or larger AND rank Sapper or denser
 (rank floor structurally excludes Drills/Basic). Titles EN · FI · JA — tune
@@ -343,14 +344,13 @@ freely; IDs lock at build.
 
 **Skill & mastery** (all ≥ M Sapper unless stated)
 
-- `purity.noflag` — **No Flags** · *Ilman lippuja* · *旗なし* — "Win without
-  placing a single flag." Derivable (per-config no-flag counter + floor).
-- `purity.nochord` — **One Tile at a Time** · *Ruutu kerrallaan* · *一マスずつ*
-  — "Win without a single chord." Derivable.
-- `purity.barehands` — **Bare Hands** · *Paljain käsin* · *素手で* — "Win with
-  no flags AND no chords — the same game." Momentary (the two counters can't
-  prove same-game). Resumed games can't earn purity feats (bits default to
-  violated on restore — decided).
+- `purity.noflag` — **Bare Hands** · *Paljain käsin* · *素手で* — "Win without
+  placing a single flag — every mine held in your head." Derivable (per-config
+  no-flag counter + floor). ONE purity feat, not three (collapsed 2026-07-09):
+  a chord can only fire on matching flags, so no-flag strictly IMPLIES
+  no-chord — "bare hands" was the same feat twice — and no-chord alone (flag
+  freely, click one by one) is slower play, not harder play. Resumed games
+  can't earn it (the purity bit defaults to violated on restore — decided).
 - `speed.expert` (tiers 100/60/40) — **Expert Sweep** · *Ekspertin partio* ·
   *エキスパート速攻* — "Clear Basic Expert in under 100 / 60 / 40 seconds."
   Derivable from the Expert best time.
@@ -420,11 +420,10 @@ a civilian precisely so the first win "makes you a soldier"):
 1. **Civilian** · *Siviili* · *民間人* — everyone starts here.
 2. **Private** · *Sotamies* · *二等兵* — Boots On.
 3. **Corporal** · *Korpraali* · *伍長* — The Classics + Campaigner I (10 wins).
-4. **Sergeant** · *Kersantti* · *軍曹* — Into the Hive + a purity feat
-   (No Flags or One Tile at a Time).
+4. **Sergeant** · *Kersantti* · *軍曹* — Into the Hive + Bare Hands.
 5. **Lieutenant** · *Luutnantti* · *中尉* — Certifiably Insane + Expert Sweep
    bronze (sub-100 s).
-6. **Major** · *Majuri* · *少佐* — Sector Secure + Bare Hands.
+6. **Major** · *Majuri* · *少佐* — Sector Secure + Full Circle.
 7. **General** · *Kenraali* · *大将* — Full Moon + Hornet's Nest + Expert Sweep
    silver (sub-60 s).
 
