@@ -40,7 +40,9 @@ public struct Palette: Equatable {
     public static let dark = Palette(
         pageBackground: Color(white: 0.08),
         statusBar: Color(white: 0.14),
-        counter: Color(red: 1, green: 0.45, blue: 0.3),
+        // Deep enough for white pill text (4.8:1 — the old (1, 0.45, 0.3) sat
+        // at 2.7:1); still reads as the warm counter accent on the dark bar.
+        counter: Color(red: 0.78, green: 0.28, blue: 0.16),
         sceneBackground: SKColor(white: 0.12, alpha: 1),
         hiddenTile: SKColor(white: 0.32, alpha: 1),
         revealedTile: SKColor(white: 0.2, alpha: 1),
