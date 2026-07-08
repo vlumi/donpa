@@ -186,24 +186,18 @@
     "⋯" : {
 
     },
-    "⌘1–3 family · arrows to choose · Return to start" : {
+    "⌘1–4 family · arrows to choose · Return to start" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌘1–3 family · arrows to choose · Return to start"
-          }
-        },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "⌘1–3 tyyppi · nuolet valitsevat · Return aloittaa"
+            "value" : "⌘1–4 tyyppi · nuolet valitsevat · Return aloittaa"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "⌘1〜3で種類 · 矢印で選択 · Returnで開始"
+            "value" : "⌘1〜4で種類 · 矢印で選択 · Returnで開始"
           }
         }
       }
@@ -357,6 +351,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "すべてのライバル"
+          }
+        }
+      }
+    },
+    "Always solvable · %lld%% mines" : {
+      "comment" : "The Range detail line: the no-guess promise · N% mines",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ratkeaa aina · %lld %% miinoja"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "必ず解ける · 地雷%lld%%"
           }
         }
       }
@@ -2081,6 +2092,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新しい分隊"
+          }
+        }
+      }
+    },
+    "No coin flips — logic wins" : {
+      "comment" : "The Range tagline (playful)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei kolikonheittoja — logiikka riittää"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "運任せなし、論理で勝つ"
           }
         }
       }

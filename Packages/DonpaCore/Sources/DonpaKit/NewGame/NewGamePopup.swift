@@ -125,9 +125,15 @@ struct NewGamePopup: View {
         }
     }
 
-    /// Arrow-navigable rows in the current family (family excluded — it's ⌘1/2/3):
-    /// Basic has one (preset); Grid/Hive have three (density, size, edges).
-    private var rowCount: Int { settings.family == .basic ? 1 : 3 }
+    /// Arrow-navigable rows in the current family (family excluded — it's ⌘1–4):
+    /// Basic and The Range have one (preset / size); Grid/Hive have three
+    /// (size, density, edges).
+    private var rowCount: Int {
+        switch settings.family {
+        case .basic, .practice: return 1
+        case .grid, .hive: return 3
+        }
+    }
     #endif
 
     /// A card that hugs its content; the outer frame centres it. Both layouts are
@@ -146,7 +152,7 @@ struct NewGamePopup: View {
             Text("New game", bundle: .module).font(short ? .headline : .title2.bold())
             picker(layout: layout, compact: short)
             #if os(macOS)
-            Text("⌘1–3 family · arrows to choose · Return to start", bundle: .module)
+            Text("⌘1–4 family · arrows to choose · Return to start", bundle: .module)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             #endif
@@ -200,8 +206,9 @@ struct NewGamePopup: View {
         switch (settings.family, row) {
         case (.basic, _):
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
-        case (.practice, _):  // size is The Range's only row
-            settings.practiceSize = Self.stepped(settings.practiceSize, by: step)
+        case (.practice, _):  // size is The Range's only row — clamped to ITS ladder
+            settings.practiceSize = Self.stepped(
+                settings.practiceSize, by: step, within: GameConfig.practiceSizes)
         case (.grid, 0), (.hive, 0):
             let path = Settings.sizePath(settings.family)
             settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
@@ -217,8 +224,13 @@ struct NewGamePopup: View {
     /// Next/previous case of a `CaseIterable` enum, clamped at the ends (no
     /// wrap), matching the chip rows.
     private static func stepped<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
-        let all = Array(T.allCases)
-        guard let i = all.firstIndex(of: value), !all.isEmpty else { return value }
+        stepped(value, by: step, within: Array(T.allCases))
+    }
+
+    /// The same, over an explicit ladder — for a family whose chips show only a
+    /// slice of the enum (The Range's XS–XL).
+    private static func stepped<T: Equatable>(_ value: T, by step: Int, within all: [T]) -> T {
+        guard let i = all.firstIndex(of: value), !all.isEmpty else { return all.first ?? value }
         let next = min(max(i + step, 0), all.count - 1)
         return all[next]
     }

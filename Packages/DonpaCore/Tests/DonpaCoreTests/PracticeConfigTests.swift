@@ -68,11 +68,10 @@ final class PracticeConfigTests: XCTestCase {
         }
     }
 
-    func testFamilyIsGatedOutOfAllCases() {
-        // The UI PR flips this: until The Range's page ships, every
-        // family-enumerating surface (pickers, filters, breakdowns) skips it.
-        XCTAssertFalse(BoardFamily.allCases.contains(.practice))
-        XCTAssertEqual(BoardFamily.allCases, [.basic, .grid, .hive])
+    func testFamilyOrderPutsTheRangeFirst() {
+        // allCases IS the order of every family-enumerating surface; The Range
+        // leads as the warm-up page left of Basic.
+        XCTAssertEqual(BoardFamily.allCases, [.practice, .basic, .grid, .hive])
         XCTAssertEqual(BoardFamily.practice.label, "The Range")
     }
 

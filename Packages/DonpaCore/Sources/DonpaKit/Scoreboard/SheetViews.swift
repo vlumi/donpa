@@ -258,11 +258,11 @@ struct ScoreboardView: View {
             onChange: { expandedKey = nil })
     }
 
-    /// Gone for Basic (the family has no edges axis; a ghosted control begs "why
-    /// can't I press this?") — but on the same-line layout the SLOT is preserved
-    /// invisibly, so hiding it doesn't reflow the family picker.
+    /// Gone for Basic and The Range (neither has an edges axis; a ghosted control
+    /// begs "why can't I press this?") — but on the same-line layout the SLOT is
+    /// preserved invisibly, so hiding it doesn't reflow the family picker.
     @ViewBuilder private func edgesPicker(placeholderWhenBasic: Bool) -> some View {
-        if filterFamily != .basic {
+        if filterFamily == .grid || filterFamily == .hive {
             edgesPickerControl
         } else if placeholderWhenBasic {
             edgesPickerControl.hidden()
@@ -282,7 +282,9 @@ struct ScoreboardView: View {
     /// Pinned to full width so the sheet never resizes when switching between a
     /// family with long labels (Basic's "Intermediate") and short ones (Grid "XS").
     @ViewBuilder private var leafRows: some View {
-        let edges: BoardEdges = filterFamily == .basic ? .flat : filterEdges
+        let edges: BoardEdges =
+            filterFamily == .grid || filterFamily == .hive
+            ? filterEdges : .flat
         let groups = Self.groups(family: filterFamily, edges: edges)
         let rivals = RivalRanking.rivals(from: friends, group: rivalGroupID)
         VStack(spacing: 0) {
@@ -303,7 +305,10 @@ struct ScoreboardView: View {
                     .id(config.storageKey)  // scroll anchor for the current-config jump
                     if config != group.configs.last { Divider() }
                 }
-                if group.label == nil {
+                // Basic only: The Range's group is also label-less, but a
+                // cross-size Total is a deliberate non-goal there (practice,
+                // not a ladder).
+                if filterFamily == .basic, group.label == nil {
                     trifectaFooter(standing: standing(for: group))
                 }
             }

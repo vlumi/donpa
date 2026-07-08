@@ -125,13 +125,16 @@ extension BoardSelectionPicker {
 
     func sizeChips(for family: BoardFamily) -> some View {
         let sizePath = Settings.sizePath(family)
+        // The Range stops at XL by design (see `GameConfig.practiceSizes`).
+        let sizes = family == .practice ? GameConfig.practiceSizes : BoardSize.allCases
+        let mid = (sizes.count + 1) / 2
         return VStack(spacing: 6) {
-            // All seven chips in one row when there's room; two rows when not.
+            // All chips in one row when there's room; two rows when not.
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) { chips(BoardSize.allCases, sizePath) }
+                HStack(spacing: 6) { chips(sizes, sizePath) }
                 VStack(spacing: 6) {
-                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.prefix(4)), sizePath) }
-                    HStack(spacing: 6) { chips(Array(BoardSize.allCases.dropFirst(4)), sizePath) }
+                    HStack(spacing: 6) { chips(Array(sizes.prefix(mid)), sizePath) }
+                    HStack(spacing: 6) { chips(Array(sizes.dropFirst(mid)), sizePath) }
                 }
             }
             detailLine(
@@ -174,6 +177,67 @@ extension BoardSelectionPicker {
         .modifier(SaveDot(show: hasSave, onAccent: selected))
         .accessibilityLabel(Text(verbatim: "\(size.label) — \(size.detail)"))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
+    }
+
+    // MARK: Shared rows
+
+    /// The caption under a chip row: board facts (bold) then tagline (italic). Each
+    /// line is fixed-height and shrinks to fit its width, so a long value scales
+    /// down instead of wrapping and the block's height never changes.
+    @ViewBuilder func detailLine(detail: String, tagline: String) -> some View {
+        Group {
+            if compact {
+                // Short windows keep the tagline — it's the game's voice — but merge
+                // it onto the facts line, shrink-to-fit, to reclaim the second row.
+                (Text(verbatim: detail).font(.body.weight(.bold))
+                    + Text(verbatim: "  ")
+                    + Text(verbatim: tagline).font(.body).italic()
+                    .foregroundColor(.secondary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(height: Self.captionLineHeight)
+                    .frame(maxWidth: .infinity)
+            } else {
+                VStack(spacing: 2) {
+                    captionText(detail, weight: .bold, opacity: 1)
+                    captionText(tagline, weight: .regular, opacity: 0.75, italic: true)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .animation(.snappy, value: detail)
+    }
+
+    /// One caption line: single line, fixed height, shrinks to fit width only.
+    private func captionText(
+        _ text: String, weight: Font.Weight, opacity: Double, italic: Bool = false
+    ) -> some View {
+        Text(verbatim: text)
+            .font(.body.weight(weight))
+            .italic(italic)
+            .foregroundStyle(.primary.opacity(opacity))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .frame(height: Self.captionLineHeight)
+    }
+
+    /// Fixed height for one `.body` caption line, so shrinking a long value never
+    /// changes the row's height.
+    private static let captionLineHeight: CGFloat = 22
+
+    // MARK: The Range's creed line
+
+    /// The Range's standing caption: the mode's promise and its honest density,
+    /// in the familiar facts-plus-tagline dress. It reads as the page's second
+    /// row where Grid/Hive show the density row — the axis this mode fixed.
+    var practiceCreed: some View {
+        detailLine(
+            detail: String(
+                localized:
+                    "Always solvable · \(Int((PracticeBoard.mineFraction * 100).rounded()))% mines",
+                bundle: .module,
+                comment: "The Range detail: the no-guess promise · N% mines"),
+            tagline: String(localized: "No coin flips — logic wins", bundle: .module))
     }
 
     // MARK: Edges glyph toggle (row 3)

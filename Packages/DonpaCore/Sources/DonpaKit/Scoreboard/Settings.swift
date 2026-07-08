@@ -278,8 +278,11 @@ public final class Settings: ObservableObject {
         hiveDensity = axis("donpa.hive.density", Density.init(rawValue:), else: sharedDensity)
         hiveEdges = axis("donpa.hive.edges", Self.edgesValue(from:), else: sharedEdges)
         // The Range is post-legacy, so no shared-key seeding — default S, like the
-        // other families' size axes.
-        practiceSize = axis("donpa.practice.size", BoardSize.init(rawValue:), else: .s)
+        // other families' size axes. Clamped to ITS ladder: a stored huge size
+        // (tampered or from a future build) must not smuggle an un-generatable
+        // board into the no-guess mode.
+        let storedPractice = axis("donpa.practice.size", BoardSize.init(rawValue:), else: .s)
+        practiceSize = GameConfig.practiceSizes.contains(storedPractice) ? storedPractice : .s
         basicPreset =
             defaults.string(forKey: presetKey).flatMap(BasicPreset.init(rawValue:)) ?? .beginner
         shareName = defaults.string(forKey: shareNameKey) ?? ""
