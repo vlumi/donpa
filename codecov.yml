@@ -35,4 +35,5 @@ ignore:
   - "Packages/DonpaCore/Sources/DonpaKit/**"
   - "Packages/DonpaCore/Sources/DonpaCore/Stats/CloudStatsStore.swift"
   - "Packages/DonpaCore/Sources/DonpaCore/Sharing/CloudFriendsStore.swift"
+  - "Packages/DonpaCore/Sources/DonpaCore/Progression/CloudAchievementsStore.swift"
   - "Packages/DonpaCore/Tests/**"
