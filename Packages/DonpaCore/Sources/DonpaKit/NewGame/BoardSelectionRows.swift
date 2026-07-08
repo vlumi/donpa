@@ -80,9 +80,13 @@ extension BoardSelectionPicker {
                     }
                 }
             }
-            detailLine(
-                detail: "\(selected.label) · \(selected.detail(hex: family == .hive))",
-                tagline: selected.tagline)
+            if let hint = lockedHint, hint.slot == 1 {
+                detailLine(detail: String(localized: "Locked", bundle: .module), tagline: hint.text)
+            } else {
+                detailLine(
+                    detail: "\(selected.label) · \(selected.detail(hex: family == .hive))",
+                    tagline: selected.tagline)
+            }
         }
     }
 
@@ -98,11 +102,18 @@ extension BoardSelectionPicker {
         _ density: Density, _ densityPath: ReferenceWritableKeyPath<Settings, Density>
     ) -> some View {
         let selected = settings[keyPath: densityPath] == density
+        let locked = !gates.rank(density)
         // Filtered by the choices ABOVE it (family + current size), so the dot only
         // lights when a save exists reachable down THIS path.
         let size = settings[keyPath: Settings.sizePath(settings.family)]
         let hasSave = index.densityHasSave(density, family: settings.family, size: size)
         return Button {
+            if locked {
+                if let req = UnlockEngine.requirement(rank: density) {
+                    lockedHint = LockedHint(slot: 1, text: UnlockGates.requirementText(req))
+                }
+                return
+            }
             settings[keyPath: densityPath] = density
             onFocusRow?(1)
         } label: {
@@ -139,9 +150,13 @@ extension BoardSelectionPicker {
                     HStack(spacing: 6) { chips(Array(sizes.dropFirst(mid)), sizePath) }
                 }
             }
-            detailLine(
-                detail: settings[keyPath: sizePath].detail,
-                tagline: settings[keyPath: sizePath].tagline)
+            if let hint = lockedHint, hint.slot == 0 {
+                detailLine(detail: String(localized: "Locked", bundle: .module), tagline: hint.text)
+            } else {
+                detailLine(
+                    detail: settings[keyPath: sizePath].detail,
+                    tagline: settings[keyPath: sizePath].tagline)
+            }
         }
     }
 
@@ -157,9 +172,17 @@ extension BoardSelectionPicker {
         _ size: BoardSize, _ sizePath: ReferenceWritableKeyPath<Settings, BoardSize>
     ) -> some View {
         let selected = settings[keyPath: sizePath] == size
+        let locked = !gates.size(size)
         // Size sits just under family in the hierarchy, so it's filtered by family only.
         let hasSave = index.sizeHasSave(size, family: settings.family)
         return Button {
+            if locked {
+                // Teaser, not selection: the requirement takes the caption slot.
+                if let req = UnlockEngine.requirement(size: size) {
+                    lockedHint = LockedHint(slot: 0, text: UnlockGates.requirementText(req))
+                }
+                return
+            }
             settings[keyPath: sizePath] = size
             onFocusRow?(0)  // size is row 0 (family stopped being a row long ago)
         } label: {
@@ -177,8 +200,10 @@ extension BoardSelectionPicker {
         }
         .buttonStyle(.plain)
         .modifier(SaveDot(show: hasSave, onAccent: selected))
+        .modifier(LockBadge(locked: locked))
         .accessibilityLabel(Text(verbatim: "\(size.label) — \(size.detail)"))
         .modifier(SaveValue(hasSave: hasSave))
+        .modifier(LockValue(locked: locked, requirement: UnlockEngine.requirement(size: size)))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -259,7 +284,13 @@ extension BoardSelectionPicker {
             glyph: { .edges($0) }, label: { $0.label },
             onChange: { onFocusRow?(2) },  // edges is row 2 — 3 left the ring dark
             // Edges is the leaf: filtered by the full path above (family + size + density).
-            badge: { index.edgesHasSave($0, family: family, size: size, density: density) })
+            badge: { index.edgesHasSave($0, family: family, size: size, density: density) },
+            locked: { !gates.edges($0) },
+            onLockedTap: { _ in
+                // No caption of its own — the teaser borrows the density slot above.
+                lockedHint = LockedHint(
+                    slot: 1, text: UnlockGates.requirementText(.winAtLeastM))
+            })
     }
 }
 
@@ -318,6 +349,23 @@ struct SaveValue: ViewModifier {
     func body(content: Content) -> some View {
         content.accessibilityValue(
             hasSave ? Text("Game in progress", bundle: .module) : Text(verbatim: ""))
+    }
+}
+
+/// Speaks a locked option's state + requirement as the control's a11y value
+/// (the padlock badge itself is decorative and hidden).
+struct LockValue: ViewModifier {
+    let locked: Bool
+    let requirement: UnlockEngine.Requirement?
+    func body(content: Content) -> some View {
+        if locked, let requirement {
+            content.accessibilityValue(
+                Text(
+                    "Locked — \(UnlockGates.requirementText(requirement))",
+                    bundle: .module))
+        } else {
+            content
+        }
     }
 }
 

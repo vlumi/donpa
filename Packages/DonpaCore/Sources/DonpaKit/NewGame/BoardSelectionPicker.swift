@@ -9,6 +9,16 @@ import SwiftUI
 /// directly to `Settings`; the host decides when to start. macOS is keyboard-
 /// drivable: up/down move rows, left/right cycle the focused row (row 0 = family).
 struct BoardSelectionPicker: View {
+    /// A tapped locked option's teaser, shown briefly in a fixed caption slot
+    /// (0 = the size row's, 1 = the density row's — edges borrows the density
+    /// slot) so the page's height never changes.
+    struct LockedHint: Equatable {
+        let slot: Int
+        let text: String
+        let id = UUID()
+        static func == (a: Self, b: Self) -> Bool { a.id == b.id }
+    }
+
     @ObservedObject var settings: Settings
     /// Keyboard-focused row, or nil when not keyboard-driven (iOS, or before the
     /// first arrow press).
@@ -20,6 +30,7 @@ struct BoardSelectionPicker: View {
     /// phone → pager; anything wider → sidebar). Not a platform/size-class split.
     enum Layout { case pager, sidebar }
     var layout: Layout = .pager
+    @State var lockedHint: LockedHint?
     /// Start the game with the current selection. The picker owns the Start button
     /// so each layout can place it (sidebar: below its column; pager: the host pins
     /// it full-width below).
@@ -27,6 +38,8 @@ struct BoardSelectionPicker: View {
     /// Which configs have an in-progress save — drives the Start→Continue button swap
     /// and the drill-down dots on the selector chips.
     var index = InProgressIndex(savedConfigs: [])
+    /// Progressive gating (see `UnlockEngine`); `.open` = no gating (previews).
+    var gates = UnlockGates.open
     /// Resume the saved game for a config (when the current selection has one). nil →
     /// the button is always Start.
     var onResume: ((GameConfig) -> Void)?
@@ -86,7 +99,9 @@ struct BoardSelectionPicker: View {
     /// Becomes **Continue** (and resumes) when the current selection has an in-progress
     /// save, so you pick the board up where you left it instead of restarting it.
     var startButton: some View {
-        Button {
+        let locked = !gates.config(settings.currentConfig)
+        return Button {
+            guard !locked else { return }
             if canContinue {
                 onResume?(settings.currentConfig)
             } else {
@@ -101,12 +116,19 @@ struct BoardSelectionPicker: View {
             .font(.title3.weight(.bold))
             .frame(maxWidth: .infinity)
             .padding(.vertical, compact ? 8 : 12)
-            .background(Color.accentColor, in: Capsule())
+            .background(Color.accentColor.opacity(locked ? 0.45 : 1), in: Capsule())
             .foregroundStyle(.white)
         }
         .buttonStyle(.plain)
+        .disabled(locked)  // a locked selection (the Hive teaser page) can't start
         .keyboardShortcut(.defaultAction)
         .accessibilityIdentifier("newgame.start")
+        .task(id: lockedHint) {
+            // The teaser lines are transient — clear after a beat.
+            guard lockedHint != nil else { return }
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            lockedHint = nil
+        }
     }
 
     /// All families' panes stacked, only the selected one shown — so the pane is
@@ -128,34 +150,6 @@ struct BoardSelectionPicker: View {
                 familySidebarItem(family)
             }
         }
-    }
-
-    private func familySidebarItem(_ family: BoardFamily) -> some View {
-        let selected = settings.family == family
-        return Button {
-            withAnimation(.snappy) { settings.family = family }
-            onFocusRow?(0)
-        } label: {
-            HStack(spacing: 10) {
-                BoardGlyph(kind: .family(family), size: 24)
-                Text(verbatim: family.label)
-                    .font(.body.weight(selected ? .semibold : .regular))
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.75))
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.accentColor.opacity(selected ? 0.14 : 0.04))
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .modifier(SaveDot(show: index.familyHasSave(family)))
-        .accessibilityLabel(Text(verbatim: family.label))
-        .modifier(SaveValue(hasSave: index.familyHasSave(family)))
-        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     /// The detail pane: the chosen family's options, filling the width. Same content
@@ -310,38 +304,6 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    private func familyTab(_ family: BoardFamily) -> some View {
-        let selected = settings.family == family
-        return Button {
-            withAnimation(.snappy) { settings.family = family }
-            onFocusRow?(0)
-        } label: {
-            VStack(spacing: 3) {
-                BoardGlyph(kind: .family(family), size: 26)
-                Text(verbatim: family.label)
-                    .font(.caption.weight(selected ? .bold : .regular))
-                    .lineLimit(1)  // keep e.g. "グリッド" on one line (don't wrap → taller tab)
-                    .minimumScaleFactor(0.6)  // a long label shrinks rather than widening its tab
-            }
-            // Equal-width tabs: every tab fills the same share of the row, so neither
-            // the differing label lengths nor the regular↔bold selection swap can
-            // change a tab's width — that width change was the row "wobble".
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 7)
-            .foregroundStyle(selected ? Color.accentColor : Color.primary.opacity(0.65))
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.accentColor.opacity(selected ? 0.14 : 0))
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .modifier(SaveDot(show: index.familyHasSave(family)))
-        .accessibilityLabel(Text(verbatim: family.label))
-        .modifier(SaveValue(hasSave: index.familyHasSave(family)))
-        .accessibilityAddTraits(selected ? [.isSelected] : [])
-    }
-
     // MARK: Pages
 
     private func page(for family: BoardFamily) -> some View {
@@ -360,6 +322,19 @@ struct BoardSelectionPicker: View {
         for family: BoardFamily, gridHiveSpacing: CGFloat, distribute: Bool
     ) -> some View {
         switch family {
+        case _ where !gates.family(family):
+            // The teaser page: the family stays visible — seeing the next rung
+            // is the point — but its rows wait behind the requirement.
+            VStack(spacing: 10) {
+                BoardGlyph(kind: .family(family), size: 52)
+                    .opacity(0.5)
+                detailLine(
+                    detail: String(localized: "Locked", bundle: .module),
+                    tagline: UnlockGates.requirementText(.winAnySquare))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+            .accessibilityElement(children: .combine)
         case .basic:
             basicCards
         case .practice:
