@@ -117,7 +117,8 @@ public struct GameView: View {
                     onStart: { startSelectedGame() },
                     onClose: { navigator.showingNewGame = false },
                     index: InProgressIndex(savedConfigs: saveSummaries.map(\.config)),
-                    onResume: { resume($0) }
+                    onResume: { resume($0) },
+                    gates: UnlockGates(records: scoreboard.displayRecords)
                 )
                 .transition(.opacity)
                 .zIndex(2)

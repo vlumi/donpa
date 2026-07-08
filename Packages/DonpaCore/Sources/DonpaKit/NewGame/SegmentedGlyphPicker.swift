@@ -26,6 +26,10 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
     /// family segments on a phone leave ~36pt beside the glyph — every locale
     /// truncated there; stacked, the label gets the segment's full width.
     var stacked = false
+    /// Progressive gating: a locked segment renders dimmed with a padlock and
+    /// taps route to `onLockedTap` (the teaser) instead of selecting.
+    var locked: (Value) -> Bool = { _ in false }
+    var onLockedTap: ((Value) -> Void)?
 
     /// Outer corner radius; inner segment splits are square so the row reads as one
     /// connected control.
@@ -88,8 +92,13 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
 
     private func segment(_ value: Value) -> some View {
         let selected = selection == value
+        let isLocked = locked(value)
         let text = label(value)
         return Button {
+            if isLocked {
+                onLockedTap?(value)
+                return
+            }
             guard !selected else { return }
             selection = value
             onChange?()
@@ -108,6 +117,7 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
         // The control clips to its rounded container, so the dot insets into the
         // corner rather than overhanging (which would get sliced off).
         .modifier(SaveDot(show: badge(value), onAccent: selected, inset: true))
+        .modifier(LockBadge(locked: isLocked))
         .accessibilityLabel(Text(verbatim: text.isEmpty ? "\(value)" : text))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }

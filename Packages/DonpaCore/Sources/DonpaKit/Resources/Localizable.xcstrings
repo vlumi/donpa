@@ -1759,6 +1759,40 @@
         }
       }
     },
+    "Locked" : {
+      "comment" : "Teaser detail line lead + a11y state for gated options",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lukittu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ロック中"
+          }
+        }
+      }
+    },
+    "Locked — %@" : {
+      "comment" : "A11y value on a locked chip; %@ = the requirement",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lukittu — %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ロック中 — %@"
+          }
+        }
+      }
+    },
     "long shot" : {
       "comment" : "Win pill stamp, long-shot tier (uppercased in UI)",
       "localizations" : {
@@ -3705,6 +3739,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "表示"
+          }
+        }
+      }
+    },
+    "Win a %@ board (S or larger) to unlock" : {
+      "comment" : "Teaser under a locked rank chip; %@ = the rank below it",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avautuu voittamalla %@-kentän (S tai isompi)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（S以上）で勝利すると解放"
+          }
+        }
+      }
+    },
+    "Win a board at %@ to unlock" : {
+      "comment" : "Teaser under a locked size chip; %@ = the size below it",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avautuu voittamalla %@-kentän"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@盤面で勝利すると解放"
+          }
+        }
+      }
+    },
+    "Win a board at M or larger to unlock Round edges" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avautuu voittamalla M-kentän tai isomman"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "M以上の盤面で勝利すると解放"
+          }
+        }
+      }
+    },
+    "Win any board to unlock the Hive" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avautuu voittamalla minkä tahansa kentän"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "どれかの盤面で勝利すると解放"
           }
         }
       }

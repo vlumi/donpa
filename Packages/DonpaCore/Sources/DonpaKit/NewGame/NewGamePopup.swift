@@ -16,6 +16,8 @@ struct NewGamePopup: View {
     var index = InProgressIndex(savedConfigs: [])
     /// Resume the saved game for a config. nil → the button is always Start.
     var onResume: ((GameConfig) -> Void)?
+    /// Progressive gating; `.open` = no gating (previews/tests).
+    var gates = UnlockGates.open
 
     #if os(macOS)
     /// Keyboard-focused picker row (0 = Mode). nil until the first arrow press.
@@ -79,6 +81,37 @@ struct NewGamePopup: View {
         // the SpriteKit board, especially after a game ends.
         .background(KeyCatcher { handleKey($0) })
         #endif
+        .onAppear { sanitizeSelection() }
+    }
+
+    /// A persisted selection can point at a locked option (a fresh-gates debug
+    /// run, or a future stats reset): step each locked axis down to its best
+    /// unlocked value so the picker never opens onto a dead selection. The
+    /// family stays put — a locked family shows its teaser page, which is the
+    /// desired landing.
+    private func sanitizeSelection() {
+        for path in [\Settings.gridSize, \Settings.hiveSize]
+        where
+            !gates.size(settings[keyPath: path])
+        {
+            settings[keyPath: path] = BoardSize.allCases.filter(gates.size).last ?? .s
+        }
+        if !gates.size(settings.practiceSize) {
+            settings.practiceSize =
+                GameConfig.practiceSizes.filter(gates.size).last ?? .s
+        }
+        for path in [\Settings.gridDensity, \Settings.hiveDensity]
+        where
+            !gates.rank(settings[keyPath: path])
+        {
+            settings[keyPath: path] = Density.allCases.filter(gates.rank).last ?? .normal
+        }
+        for path in [\Settings.gridEdges, \Settings.hiveEdges]
+        where
+            !gates.edges(settings[keyPath: path])
+        {
+            settings[keyPath: path] = .flat
+        }
     }
 
     #if os(macOS)
@@ -175,11 +208,11 @@ struct NewGamePopup: View {
         BoardSelectionPicker(
             settings: settings, focusedRow: focusedRow,
             onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart,
-            index: index, onResume: onResume, compact: compact)
+            index: index, gates: gates, onResume: onResume, compact: compact)
         #else
         BoardSelectionPicker(
             settings: settings, layout: layout, onStart: onStart,
-            index: index, onResume: onResume, compact: compact)
+            index: index, gates: gates, onResume: onResume, compact: compact)
         #endif
     }
 
@@ -208,16 +241,23 @@ struct NewGamePopup: View {
             settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
         case (.practice, _):  // size is Drills' only row — clamped to ITS ladder
             settings.practiceSize = Self.stepped(
-                settings.practiceSize, by: step, within: GameConfig.practiceSizes)
+                settings.practiceSize, by: step,
+                within: GameConfig.practiceSizes.filter(gates.size))
         case (.grid, 0), (.hive, 0):
             let path = Settings.sizePath(settings.family)
-            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
+            settings[keyPath: path] = Self.stepped(
+                settings[keyPath: path], by: step,
+                within: BoardSize.allCases.filter(gates.size))
         case (.grid, 1), (.hive, 1):
             let path = Settings.densityPath(settings.family)
-            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
+            settings[keyPath: path] = Self.stepped(
+                settings[keyPath: path], by: step,
+                within: Density.allCases.filter(gates.rank))
         case (.grid, _), (.hive, _):  // row 2: edges
             let path = Settings.edgesPath(settings.family)
-            settings[keyPath: path] = Self.stepped(settings[keyPath: path], by: step)
+            settings[keyPath: path] = Self.stepped(
+                settings[keyPath: path], by: step,
+                within: BoardEdges.allCases.filter(gates.edges))
         }
     }
 
