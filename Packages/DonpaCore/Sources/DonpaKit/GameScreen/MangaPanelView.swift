@@ -32,7 +32,8 @@ struct MangaPanelView: View {
         var imageName: String { isWin ? "PanelWin" : "PanelLoss" }
         var accent: Color { isWin ? .green : .red }
         /// Spoken description for VoiceOver (the art conveys nothing to it).
-        var a11yLabel: String {
+        /// `hexCells` picks the board's cell word for the loss line (tiles/cells).
+        func a11yLabel(hexCells: Bool = false) -> String {
             switch self {
             case .win:
                 return String(localized: "Minefield cleared", bundle: .module)
@@ -42,7 +43,8 @@ struct MangaPanelView: View {
                         "New record! Minefield cleared in \(TimeFormat.mmsst(centiseconds: cs))",
                     bundle: .module)
             case .loss(let progress, let safeRemaining, _):
-                let cleared = Self.clearedDisplay(progress, safeRemaining: safeRemaining)
+                let cleared = Self.clearedDisplay(
+                    progress, safeRemaining: safeRemaining, hexCells: hexCells)
                 return String(
                     localized: "Boom — you stepped on a mine. \(cleared).", bundle: .module)
             }
@@ -90,10 +92,16 @@ struct MangaPanelView: View {
             return percent(fraction)
         }
 
-        /// Sentence fragment for the consolation/a11y line.
-        static func clearedDisplay(_ fraction: Double, safeRemaining: Int) -> String {
+        /// Sentence fragment for the consolation/a11y line. The cell word follows
+        /// the board's shape — tiles on square boards, cells on hive boards (FI
+        /// ruudut/kennot, matching the family names Ruutu/Kenno).
+        static func clearedDisplay(
+            _ fraction: Double, safeRemaining: Int, hexCells: Bool = false
+        ) -> String {
             if Int((fraction * 100).rounded()) >= 100 && safeRemaining > 0 {
-                return String(localized: "So close — \(safeRemaining) tiles left", bundle: .module)
+                return hexCells
+                    ? String(localized: "So close — \(safeRemaining) cells left", bundle: .module)
+                    : String(localized: "So close — \(safeRemaining) tiles left", bundle: .module)
             }
             return String(localized: "Cleared \(percent(fraction))", bundle: .module)
         }
@@ -111,6 +119,8 @@ struct MangaPanelView: View {
     }
 
     let kind: Kind
+    /// The board uses hex cells — picks the loss line's cell word (tiles/cells).
+    var hexCells = false
     let reduceMotion: Bool
     /// The guess that ENDED this game, when its final action was a genuine
     /// forced guess (nil otherwise) — the "was that luck or my mistake?" answer,
@@ -186,7 +196,7 @@ struct MangaPanelView: View {
             .contentShape(Rectangle())
             .onTapGesture { onContinue() }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(kind.a11yLabel + guessA11ySuffix)
+            .accessibilityLabel(kind.a11yLabel(hexCells: hexCells) + guessA11ySuffix)
             .accessibilityAddTraits(.isImage)
     }
 

@@ -94,14 +94,24 @@ final class MangaPanelKindTests: XCTestCase {
         XCTAssertEqual(MangaPanelView.Kind.progressImprovement(0.0), "+0%")
     }
 
+    func testLossLineCellWordFollowsBoardShape() {
+        // Square boards lose "tiles"; hive boards lose "cells" (FI ruudut/kennot,
+        // matching the family names). Near-100% so the "so close" branch fires.
+        XCTAssertTrue(
+            MangaPanelView.Kind.clearedDisplay(0.999, safeRemaining: 2).contains("tiles"))
+        XCTAssertTrue(
+            MangaPanelView.Kind.clearedDisplay(0.999, safeRemaining: 2, hexCells: true)
+                .contains("cells"))
+    }
+
     func testAccessibilityLabels() {
-        XCTAssertEqual(MangaPanelView.Kind.win.a11yLabel, "Minefield cleared")
+        XCTAssertEqual(MangaPanelView.Kind.win.a11yLabel(), "Minefield cleared")
         XCTAssertTrue(
             MangaPanelView.Kind.loss(progress: 0.5, safeRemaining: 10, best: .notBest)
-                .a11yLabel.contains("Boom"))
+                .a11yLabel().contains("Boom"))
         // The record label embeds the formatted time (12.34s = 1234 cs).
         XCTAssertTrue(
-            MangaPanelView.Kind.record(centiseconds: 1234, improvedBy: 10).a11yLabel.contains(
+            MangaPanelView.Kind.record(centiseconds: 1234, improvedBy: 10).a11yLabel().contains(
                 TimeFormat.mmsst(centiseconds: 1234)))
     }
 }
