@@ -94,10 +94,16 @@ public struct HowToPlayView: View {
     private var modes: some View {
         section(
             title: Text("Dig and flag", bundle: .module),
-            diagram: HStack(spacing: 18) {
-                MangaIconView(symbol: .reveal, size: 34)
+            diagram: HStack(alignment: .top, spacing: 14) {
+                // Captioned: the boot-print reads as "dig" in the toggle's
+                // context, but not floating alone in a help diagram.
+                captioned(Text("Dig", bundle: .module)) {
+                    MangaIconView(symbol: .reveal, size: 30)
+                }
                 TileDiagram(rows: [[.hidden, .flagged]])
-                MangaIconView(symbol: .flag, size: 34)
+                captioned(Text("Flag", bundle: .module)) {
+                    MangaIconView(symbol: .flag, size: 30)
+                }
             },
             text: Text(
                 """
@@ -113,8 +119,8 @@ public struct HowToPlayView: View {
         section(
             title: Text("Chording", bundle: .module),
             diagram: TileDiagram(rows: [
-                [.flagged, .revealed(1), .revealed(0)],
                 [.hidden, .revealed(1), .revealed(0)],
+                [.flagged, .revealed(1), .revealed(0)],
                 [.hidden, .revealed(1), .revealed(0)],
             ]),
             text: Text(
@@ -157,7 +163,8 @@ public struct HowToPlayView: View {
         section(
             title: Text("Forced guesses and luck", bundle: .module),
             diagram: TileDiagram(rows: [
-                [.revealed(1), .hidden, .hidden, .revealed(1)]
+                [.revealed(0), .revealed(1), .hidden],
+                [.revealed(0), .revealed(1), .hidden],
             ]),
             text: Text(
                 """
@@ -196,6 +203,14 @@ public struct HowToPlayView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 4)
+    }
+
+    /// A tiny mode-name caption under a glyph, so an icon can't float unexplained.
+    private func captioned(_ caption: Text, @ViewBuilder icon: () -> some View) -> some View {
+        VStack(spacing: 2) {
+            icon()
+            caption.font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+        }
     }
 
     // MARK: Layout
