@@ -216,17 +216,12 @@ struct MangaPanelView: View {
         if let guess {
             VStack(spacing: 0) {
                 Text(verbatim: guess.odds)
-                    .font(.system(size: 17, weight: .black, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.black))
                 Text(guess.label, bundle: .module)
-                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .font(.system(.caption2, design: .rounded).weight(.heavy))
                     .textCase(.uppercase)
             }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(Capsule().fill(kind.accent.opacity(0.95)))
-            .overlay(Capsule().stroke(.white, lineWidth: 1.5))
-            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+            .modifier(PillStamp(accent: kind.accent))
             .rotationEffect(.degrees(6))
             .padding(.bottom, 12)
             .padding(.leading, 10)
@@ -255,22 +250,17 @@ struct MangaPanelView: View {
             VStack(spacing: 0) {
                 // Kana headline verbatim in all languages — a manga flourish.
                 Text(verbatim: "新記録")
-                    .font(.system(size: 16, weight: .black, design: .rounded))
+                    .font(.system(.callout, design: .rounded).weight(.black))
                 if let improved = kind.recordImprovedBy {
                     Text(verbatim: Kind.timeImprovement(improved))
-                        .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                        .font(.system(.caption, design: .monospaced).weight(.heavy))
                 } else {
                     Text("first clear", bundle: .module)
-                        .font(.system(size: 10, weight: .heavy, design: .rounded))
+                        .font(.system(.caption2, design: .rounded).weight(.heavy))
                         .textCase(.uppercase)
                 }
             }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(Capsule().fill(kind.accent.opacity(0.95)))
-            .overlay(Capsule().stroke(.white, lineWidth: 1.5))
-            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+            .modifier(PillStamp(accent: kind.accent))
             .rotationEffect(.degrees(-8))
             .padding(.top, 10)
             .padding(.leading, 8)
@@ -287,23 +277,18 @@ struct MangaPanelView: View {
             VStack(spacing: 0) {
                 if let improved = kind.lossImprovedBy {
                     Text(verbatim: Kind.progressImprovement(improved))
-                        .font(.system(size: 17, weight: .black, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.black))
                     Text(verbatim: headline)
-                        .font(.system(size: 10, weight: .heavy, design: .monospaced))
+                        .font(.system(.caption, design: .monospaced).weight(.heavy))
                 } else {
                     Text(verbatim: headline)
-                        .font(.system(size: 17, weight: .black, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.black))
                     Text("best", bundle: .module)
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .font(.system(.caption2, design: .rounded).weight(.heavy))
                         .textCase(.uppercase)
                 }
             }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(Capsule().fill(Color.red.opacity(0.95)))
-            .overlay(Capsule().stroke(.white, lineWidth: 1.5))
-            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+            .modifier(PillStamp(accent: Color.red))
             .rotationEffect(.degrees(-8))
             .padding(.top, 10)
             .padding(.leading, 8)
@@ -323,5 +308,22 @@ struct MangaPanelView: View {
         } else {
             withAnimation(.spring(response: 0.32, dampingFraction: 0.6)) { appeared = true }
         }
+    }
+}
+
+/// The corner pills' shared dress: a manga sticker — paper fill, ink text, a
+/// thick accent border. Ink-on-paper is ~21:1 in either appearance (the old
+/// white-on-accent fills measured 2.2:1 on the win green); the accent moves to
+/// the border, where it flags win/loss without carrying the text.
+private struct PillStamp: ViewModifier {
+    let accent: Color
+    func body(content: Content) -> some View {
+        content
+            .foregroundStyle(.black)
+            .padding(.horizontal, 11)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(.white))
+            .overlay(Capsule().stroke(accent, lineWidth: 2.5))
+            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
     }
 }

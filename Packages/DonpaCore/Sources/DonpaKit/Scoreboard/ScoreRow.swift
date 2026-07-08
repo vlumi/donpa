@@ -172,7 +172,12 @@ struct ScoreRow: View {
     }
 
     private func badgeGlyph(_ systemName: String, _ tint: Color) -> some View {
-        Image(systemName: systemName).font(.caption).foregroundStyle(tint)
+        // Palette mode: black numeral ON the tint circle (yellow/gray/brown carry
+        // ink at 5–14:1) — the plain tinted glyph knocked the numeral out to the
+        // background and the pale circle itself sat near 1.5:1 on light rows.
+        Image(systemName: systemName).font(.caption)
+            .symbolRenderingMode(.palette)
+            .foregroundStyle(.black, tint)
             .accessibilityLabel(Text("rank \(String(systemName.prefix(1)))", bundle: .module))
     }
 
