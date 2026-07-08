@@ -14,6 +14,9 @@ struct ScoreboardView: View {
     @ObservedObject var settings: Settings
     /// Presenting window size, so the sheet grows with it. `.zero` → use the screen.
     var available: CGSize = .zero
+    /// Progressive gating — hides the per-row play button on locked configs
+    /// (the row itself stays: locked is visible, never hidden).
+    var gates = UnlockGates.open
     /// The config the player is currently on, so its row gets a persistent "you are
     /// here" marker and the filter seeds to its family/edges. nil when opened from
     /// the title (browsing).
@@ -306,7 +309,8 @@ struct ScoreboardView: View {
                         currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
                         isExpanded: expandedKey == config.storageKey,
                         onToggle: { toggleExpanded(config.storageKey) },
-                        onPlay: onPlay.map { play in { play(config) } },
+                        onPlay: gates.config(config)
+                            ? onPlay.map { play in { play(config) } } : nil,
                         rivals: rivals, yourName: settings.shareName
                     )
                     .id(config.storageKey)  // scroll anchor for the current-config jump

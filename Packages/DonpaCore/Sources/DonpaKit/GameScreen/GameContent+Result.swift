@@ -27,6 +27,7 @@ extension GameContent {
                 MangaPanelView(
                     kind: panel,
                     hexCells: viewModel.config.isHex,
+                    unlockedLabels: panelUnlocks,
                     reduceMotion: reduceMotion,
                     guess: panelGuess,
                     onContinue: { dismissPanel() }
@@ -37,11 +38,28 @@ extension GameContent {
         .allowsHitTesting(panel != nil)
     }
 
+    /// Gates only open on wins: diff the records around the submits, stamp the
+    /// result panel's sticker, and tell VoiceOver (the sticker is transient).
+    private func celebrateUnlocks(isWin: Bool, before: [String: ScoreRecord]) {
+        panelUnlocks =
+            isWin
+            ? UnlockGates.newlyUnlocked(
+                before: before, after: scoreboard.displayRecords,
+                winsBaseline: winsBaseline)
+            : []
+        if let spoken = MangaPanelView.unlockSpoken(panelUnlocks) {
+            A11yAnnounce.post(spoken)
+        }
+    }
+
     /// The single end-of-game hook: haptic, score submission, the manga result
     /// screen, and a restart-button pop.
     func handleResult() {
         guard let result = viewModel.lastResult?.result else { return }
         fireHaptic(for: result)
+
+        // Snapshot BEFORE the submits below, so a win can diff what it opened.
+        let recordsBefore = scoreboard.displayRecords
 
         // Clear the prior record highlight; submit() below re-sets it if THIS game
         // was a record.
@@ -97,6 +115,7 @@ extension GameContent {
             minesHit: isWin ? 0 : 1,
             minesDisarmed: viewModel.game.board.disarmedMineCount,
             chordsUsed: viewModel.chordsThisGame)
+        celebrateUnlocks(isWin: isWin, before: recordsBefore)
         showPanel(kind)
 
         // The game is over → discard its in-progress save now (a game is kept only

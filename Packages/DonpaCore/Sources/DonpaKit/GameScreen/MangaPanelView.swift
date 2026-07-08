@@ -136,6 +136,8 @@ struct MangaPanelView: View {
     let kind: Kind
     /// The board uses hex cells — picks the loss line's cell word (tiles/cells).
     var hexCells = false
+    /// What this win just opened (progressive gating) — the corner sticker.
+    var unlockedLabels: [String] = []
     let reduceMotion: Bool
     /// The guess that ENDED this game, when its final action was a genuine
     /// forced guess (nil otherwise) — the "was that luck or my mistake?" answer,
@@ -203,6 +205,7 @@ struct MangaPanelView: View {
             .overlay(alignment: .topLeading) { recordBadge }
             .overlay(alignment: .topLeading) { bestLossPill }
             .overlay(alignment: .bottomLeading) { guessPill }
+            .overlay(alignment: .bottomTrailing) { unlockSticker }
             .overlay(alignment: .topTrailing) { closeButton }
             // Subtle accent glow over the mono art (frames rather than tints).
             .shadow(color: kind.accent.opacity(0.7), radius: 28)
@@ -211,7 +214,10 @@ struct MangaPanelView: View {
             .contentShape(Rectangle())
             .onTapGesture { onContinue() }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(kind.a11yLabel(hexCells: hexCells) + guessA11ySuffix)
+            .accessibilityLabel(
+                kind.a11yLabel(hexCells: hexCells) + guessA11ySuffix
+                    + (Self.unlockSpoken(unlockedLabels).map { " " + $0 + "." } ?? "")
+            )
             .accessibilityAddTraits(.isImage)
     }
 
@@ -242,6 +248,42 @@ struct MangaPanelView: View {
             .padding(.leading, 10)
             .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomLeading)
         }
+    }
+
+    /// A win that opened new content: the gating celebration, corner-stamped in
+    /// the same sticker dress as the other pills. One name reads verbatim;
+    /// several collapse to the generic line.
+    @ViewBuilder private var unlockSticker: some View {
+        if let headline = Self.unlockHeadline(unlockedLabels) {
+            VStack(spacing: 0) {
+                Text("UNLOCKED", bundle: .module)
+                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                    .textCase(.uppercase)
+                Text(verbatim: headline)
+                    .font(.system(.body, design: .rounded).weight(.black))
+            }
+            .modifier(PillStamp(accent: Color.accentColor))
+            .rotationEffect(.degrees(-6))
+            .padding(.bottom, 12)
+            .padding(.trailing, 10)
+            .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomTrailing)
+        }
+    }
+
+    /// The sticker's second line: the one opened name, or the generic plural.
+    static func unlockHeadline(_ labels: [String]) -> String? {
+        switch labels.count {
+        case 0: return nil
+        case 1: return labels[0]
+        default: return String(localized: "New boards", bundle: .module)
+        }
+    }
+
+    /// The VoiceOver announcement for an unlock (nil when nothing opened).
+    static func unlockSpoken(_ labels: [String]) -> String? {
+        guard !labels.isEmpty else { return nil }
+        return String(
+            localized: "Unlocked: \(labels.joined(separator: ", "))", bundle: .module)
     }
 
     /// Top-right X to dismiss the panel (also tap-anywhere or Esc).

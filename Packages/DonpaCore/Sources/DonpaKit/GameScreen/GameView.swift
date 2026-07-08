@@ -18,11 +18,21 @@ struct GameContent: View {
     @ObservedObject var navigator: Navigator
     @ObservedObject var friends: FriendsStore
     let scene: BoardScene
+    /// The `-donpa.gates.fresh` launch baseline (empty in normal runs) — win
+    /// counts at launch, subtracted so gates/celebrations see session wins only.
+    var winsBaseline: [String: Int] = [:]
+
+    /// Live gating view over the merged records (baseline-adjusted).
+    var gates: UnlockGates {
+        UnlockGates(records: scoreboard.displayRecords, winsBaseline: winsBaseline)
+    }
 
     // Non-private (like restartPop/showProcessing): used by the GameContent+Result
     // extension file.
     @State var panel: MangaPanelView.Kind?
     @State var panelTask: Task<Void, Never>?
+    /// What the finished game just unlocked (result-panel sticker; wins only).
+    @State var panelUnlocks: [String] = []
     /// The transient survived-guess toast (see GameContent+GuessFeedback.swift).
     @State var guessToast: ForcedGuessEvent?
     @State var guessToastTask: Task<Void, Never>?
@@ -69,7 +79,8 @@ struct GameContent: View {
 
     init(
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
-        navigator: Navigator, friends: FriendsStore, scene: BoardScene, saveStore: SaveStore
+        navigator: Navigator, friends: FriendsStore, scene: BoardScene,
+        winsBaseline: [String: Int] = [:], saveStore: SaveStore
     ) {
         self.viewModel = viewModel
         self.scoreboard = scoreboard
@@ -77,6 +88,7 @@ struct GameContent: View {
         self.navigator = navigator
         self.friends = friends
         self.scene = scene
+        self.winsBaseline = winsBaseline
         // The store is owned by GameViewRoot and shared in, so the New Game popup's
         // resume list / dots read the SAME files this view writes. The background
         // writer wraps the same instance.
@@ -152,6 +164,7 @@ struct GameContent: View {
             // marker. In-game, mark the row for the config being played.
             ScoreboardView(
                 scoreboard: scoreboard, settings: settings, available: windowSize,
+                gates: gates,
                 currentConfig: navigator.showingTitle ? nil : viewModel.config,
                 onPlay: { navigator.playConfigRequested = $0 },
                 // "Manage rivals": swap to the Mess hall at root (deferred a tick —

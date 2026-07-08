@@ -83,13 +83,23 @@ public struct GameView: View {
                 deviceID: DeviceID.current(), syncEnabled: syncOn))
         // Autoclosure → BoardScene is built once, not on every re-init (see SceneHolder).
         _sceneHolder = StateObject(wrappedValue: SceneHolder(viewModel: viewModel))
+        // The `-donpa.gates.fresh` debug run: remember launch-time win counts so
+        // gates (and unlock celebrations) see only wins earned this session — a
+        // veteran tester experiences the fresh ladder without touching records.
+        winsBaseline =
+            UnlockGates.freshRun
+            ? scoreboard.displayRecords.mapValues(\.wins.total) : [:]
     }
+
+    /// See init: non-empty only under `-donpa.gates.fresh`.
+    private let winsBaseline: [String: Int]
 
     public var body: some View {
         ZStack {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
-                navigator: navigator, friends: friends, scene: scene, saveStore: saveStore)
+                navigator: navigator, friends: friends, scene: scene,
+                winsBaseline: winsBaseline, saveStore: saveStore)
             // Home fade scoped to this overlay via `.animation(_:value:)` — an
             // imperative `withAnimation` would also animate the chrome's first
             // layout, making the status bar visibly settle.
@@ -118,7 +128,8 @@ public struct GameView: View {
                     onClose: { navigator.showingNewGame = false },
                     index: InProgressIndex(savedConfigs: saveSummaries.map(\.config)),
                     onResume: { resume($0) },
-                    gates: UnlockGates(records: scoreboard.displayRecords)
+                    gates: UnlockGates(
+                        records: scoreboard.displayRecords, winsBaseline: winsBaseline)
                 )
                 .transition(.opacity)
                 .zIndex(2)
