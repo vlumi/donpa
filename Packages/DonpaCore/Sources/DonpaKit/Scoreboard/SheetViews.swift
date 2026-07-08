@@ -234,14 +234,20 @@ struct ScoreboardView: View {
     @ViewBuilder private var filterControls: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .bottom, spacing: 20) {
-                familyPicker
+                // Four families vs two edges: the family picker keeps its roomy
+                // glyph-beside-label segments and takes ALL the width the hugged
+                // edges toggle leaves (well over half the row).
+                familyPicker(stacked: false)
                 // Same-line layout: Basic keeps the edges SLOT (invisible) so the
                 // family picker doesn't jump between half- and full-width.
                 edgesPicker(placeholderWhenBasic: true)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .frame(minWidth: Self.twoColumnMinWidth)
             VStack(alignment: .leading, spacing: 10) {
-                familyPicker
+                // Narrow (phone) rows: even alone on its row, four side-by-side
+                // labels truncate — stack each segment's glyph above its label.
+                familyPicker(stacked: true)
                 // Stacked layout: drop the row outright — a blank reserved line
                 // would just read as a layout bug.
                 edgesPicker(placeholderWhenBasic: false)
@@ -251,12 +257,12 @@ struct ScoreboardView: View {
         .padding(.horizontal, Self.rowInset)
     }
 
-    private var familyPicker: some View {
+    private func familyPicker(stacked: Bool) -> some View {
         SegmentedGlyphPicker(
             values: BoardFamily.allCases, selection: $filterFamily,
             glyph: { .family($0) }, label: { $0.label },
             onChange: { expandedKey = nil },
-            stacked: true)
+            stacked: stacked)
     }
 
     /// Gone for Basic and The Range (neither has an edges axis; a ghosted control

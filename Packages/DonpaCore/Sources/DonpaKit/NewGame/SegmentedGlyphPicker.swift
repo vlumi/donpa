@@ -76,7 +76,7 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
                         // Shrink to fit rather than truncate/wrap: a longer localized
                         // label (e.g. FI "Ruudukko") stays whole on a narrow segment.
                         .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.6)
                 }
             }
         }
