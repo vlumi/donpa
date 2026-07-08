@@ -119,9 +119,13 @@ standalone**; only achievements need the game-end event.
 - [ ] **A5 — Feat rank** (TENTATIVE — user go/no-go first; the rest of the
       milestone doesn't depend on it): derived rank from the earned set
       (ladder in the spec), rank in the share payload + Mess hall/H2H rows.
-- [ ] **A6 (later) — Game Center**: ASC achievement definitions
-      (`fi.misaki.donpa.<id>` 1:1), GKAchievement reporter behind the store,
-      graceful degradation when auth is declined.
+- [ ] **A6 (later) — Game Center**: ASC achievement definitions per the
+      tier-flattening mapping in the spec, GKAchievement reporter behind the
+      store, graceful degradation when auth is declined. **Every ASC
+      definition needs its own 1024×1024 image (29 of them, circular-cropped
+      by GC)** — generate them procedurally from the same medal renderer the
+      Decorations grid uses (the `make-icon.swift` precedent), one source for
+      in-app and store art.
 
 **Practice mode — SHIPPED as the Drills family** (FI Soha, JA 演習; see
 CHANGELOG): verified no-guess boards, XS–XL at 12 %, leftmost New Game page,
