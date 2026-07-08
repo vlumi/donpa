@@ -85,67 +85,51 @@ these slot into whichever release they're ready for.
 
 ## v0.5.0 — Progression: achievements, gating & practice
 
-Engagement features grouped because they all ride one **game-end event layer** and
-turn on the same "what counts toward stats" question. Held **last on purpose**:
-achievement IDs are permanent (like the scoreboard keys), so they're designed once
-the full variant matrix exists and can be referenced without churn.
+Engagement features grouped because they turn on the same "what counts toward
+stats" question. Held **last on purpose**: achievement IDs are permanent (like the
+scoreboard keys), so they're designed once the full variant matrix exists. The
+full implementation-ready spec — exact unlock rules, the complete achievement
+list with IDs/titles/rules, the rank ladder — lives in the **Progression spec**
+section below; this block is the build order. Note the sequencing freedom: the
+UnlockEngine derives from win RECORDS (not events), so **gating can ship first,
+standalone**; only achievements need the game-end event.
 
-**Achievements** — see the **Achievements** section below for the architecture,
-the no-leaderboards decision, and the design principles. Build-out:
+**Build order** (each step = roughly one PR; spec section has the details):
 
-- [ ] Internal achievement layer (events on game-end → local store) + in-app UI
-- [ ] Local + iCloud-KVS sync of the earned set (reuses the cross-device sync blob)
-- [ ] Game Center reporter bolted on behind the layer (achievements only)
-- [ ] The curated achievement list defined (IDs locked) in App Store Connect
-
-**Progressive gating** — content unlocks so a new player isn't hit with the full
-size × rank × family matrix at once. A second consumer (`UnlockEngine`) of the same
-game-end events — an unlock can trigger on the same signals without being a visible
-badge. Content design settled (2026-07):
-
-- **Locked options show as teasers**, not hidden — progression works because you
-  can see the next rung. A locked family is a whole page with a teaser, not a
-  greyed-out control.
-- **Gate on wins, not games played** — fast for the skilled, never grindy; every
-  gate openable in one sitting by someone who's simply good.
-- **Derive, don't store**: `UnlockEngine` is a pure function over the existing
-  per-config win records — veterans auto-pass everything (no migration), and
-  sync is free (derived from the already-synced blobs).
-- **The ladder**: Basic never gates (the classics are the anchor). Sizes start
-  XS/S/M; winning a size unlocks the next (M→L→XL→XXL→XXXL). Ranks start
-  Easy/Normal; winning a rank at ≥S unlocks the next (global, not per-family —
-  hex's denser table makes per-family fiddly). Hive unlocks on the first Grid
-  win (a first-session discovery moment). Round edges unlock on the first win
-  at ≥M. Gates are *access, not goals* — the XXL-win→XXXL gate is fine even
-  though no achievement demands XXXL.
-
-- [ ] UnlockEngine beside the achievement layer (shared events, separate concept)
-- [ ] Locked-page presentation in New Game (ships ungated with the redesign)
-
-**Feat-based public rank** — the hack-resistant face of progression, deferred here
-from the friendly-rivalry milestone (it needs this milestone's feat/event layer):
-a rank derived from achievements/feats rather than raw times, so faking it means
-faking the feat — "you only cheat yourself". Surfaces in the Mess hall; raw scores
-stay trusted-circle only. Each rank should require **specific named feats, not
-points** — a rank then *says something* ("a Major has beaten Insane") and stays
-comparable; sketch ~7 army ranks (Recruit → … → General), with the top ranks built
-from full-clears, purity feats and Insane (respecting the one-sitting cap — no
-XXXL requirement).
-
-- [ ] Rank derivation from the earned feat set (design the tiers with the
-      achievement list, same permanence care)
-- [ ] Rank in the share payload + rival rows (a coarse, comparable public face)
+- [ ] **G1 — UnlockEngine (DonpaCore)**: the pure predicate + requirement model +
+      the win-mapping table, unit-tested (ladder walk, Basic mapping, Drills
+      credit, veteran auto-pass on synthetic full records).
+- [ ] **G2 — Teaser UI**: locked chips/segments/family page in New Game per the
+      spec (dim + padlock + requirement caption), keyboard skip, a11y values.
+- [ ] **G3 — Unlock moments + edges**: result-panel "UNLOCKED" sticker +
+      VoiceOver announcement; scoreboard play-button rule; the rival/share
+      escape hatch; `-donpa.gates.fresh` launch flag + UI test.
+- [ ] **A1 — GameEndEvent**: one struct emitted at game end (config, outcome,
+      time, progress, action count, purity bits, best survived odds) — the
+      purity bits and luck plumbing already exist.
+- [ ] **A2 — AchievementEngine (DonpaCore)**: `AchievementID` enum (IDs locked
+      per the spec list), derivable predicates over records + momentary matchers
+      over the event, per-achievement unit tests.
+- [ ] **A3 — AchievementStore**: earned map (id → date), local persistence +
+      KVS-blob union merge (earliest date wins; follows the same reset-epoch as
+      the stats wipe), retroactive stamping of derivable feats on first launch.
+- [ ] **A4 — Decorations UI**: medal grid in the Service Record (earned inked /
+      unearned silhouette / hidden as "?"), tier laurels, result-panel earn
+      sticker + announcement (shared slot with G3's, queued if both).
+- [ ] **A5 — Feat rank**: derived rank from the earned set (ladder in the spec),
+      rank in the share payload + Mess hall/H2H rows.
+- [ ] **A6 (later) — Game Center**: ASC achievement definitions
+      (`fi.misaki.donpa.<id>` 1:1), GKAchievement reporter behind the store,
+      graceful degradation when auth is declined.
 
 **Practice mode — SHIPPED as the Drills family** (FI Soha, JA 演習; see
 CHANGELOG): verified no-guess boards, XS–XL at 12 %, leftmost New Game page,
 per-size best times (Drills times are only comparable to Drills times, so its
 own scoreboard rows are honest). The Basic → "Boot camp" reframe resolved
-itself: practice took its own family and name, Basic stays Basic. What remains
-here rides the achievements build-out:
-
-- [ ] Achievements × Drills: gentle/onboarding achievements may count there;
-      skill feats (speed, no-flag, Insane) exclude Drills boards (the no-guess
-      guarantee makes them easier than their size suggests)
+itself: practice took its own family and name, Basic stays Basic. The Drills ×
+achievements/gating rules are pinned in the Progression spec (gentle feats and
+milestones count, skill feats exclude Drills, Drills wins climb the size
+ladder).
 
 **How to play (static reference)** — a `?` on the title screen (and reachable from
 About) opens a **static** "how to play" page: reveal/flag, what the numbers mean,
@@ -224,73 +208,221 @@ public stores from here:
 (The **two-native-targets, no-Catalyst** decision — with the shared bundle id /
 Universal Purchase — is recorded in [ARCHITECTURE.md](ARCHITECTURE.md).)
 
-## Achievements (the progression milestone — detail)
+## Progression spec — gating, achievements, rank (implementation-ready)
 
-Mostly an event-plumbing job, but with real permanence to design around.
+The v0.5.0 progression pillars, specified to build-from. Fine-tune values here
+BEFORE implementation; IDs and requirement rules are permanent once shipped.
 
-**No leaderboards — deliberate.** Scores are local and **user-editable by design**
-(see Design principles), so a global leaderboard would fill with impossible times
-and there's no honest way to police it without server-side validation we've chosen
-not to build. Achievements don't have this problem: they're personal, so tampering
-only cheats yourself. So: Game Center **achievements yes, leaderboards no.**
+### Progressive gating (`UnlockEngine`)
 
-**Prerequisites:**
+**Shape:** a pure, stateless DonpaCore type — no stored unlock set, no event
+feed. `unlocked(_ config: GameConfig, records: [String: ScoreRecord]) -> Bool`
+plus `requirement(for:) -> UnlockRequirement?` (nil = never locked; otherwise
+the teaser's copy key + progress). Inputs are the scoreboard's merged display
+records; recompute whenever they change (already `@Published`). Veterans
+auto-pass everything; sync is free; **no migration and no event layer needed —
+gating can ship before achievements.**
 
-- App registered in **App Store Connect** with the **Game Center** capability
-  (the paid account exists; this is just the ASC setup).
-- Each achievement defined in ASC. **IDs are permanent once shipped** — add but
-  not cleanly rename/remove — so design the scheme up front (e.g.
-  `clear.modern.large.insane`, `streak.10`, `time.sub60`).
+**Win-credit table** (what a win counts FOR — the previously fuzzy part):
 
-**Design — keep it decoupled:** the game emits to an **internal achievement layer**
-(an `AchievementEvent` per game-end carrying `GameConfig` + time + the purity bits —
-`usedFlagEver`/`usedChordEver`, defaulting to violated on a restored save — plus the
-guess-odds data) with a local store and in-app display; Game Center bolts on later
-as one backend behind it, no rework. Achievements can thus be tracked and shown **offline now**. It crosses a
-line the app hasn't yet — **online + account-bound** — so the GC auth flow must
-degrade gracefully to the local layer when declined/failed.
+| Win on | Size ladder | Rank ladder | Hive gate | Round gate |
+|---|---|---|---|---|
+| Grid / Hive | ✓ its size | ✓ its rank, if size ≥ S | ✓ | ✓ if size ≥ M |
+| Drills | ✓ its size | — (no rank axis) | ✓ | ✓ if size ≥ M |
+| Basic | ✓ mapped size | — (no rank axis) | ✓ | ✓ if mapped ≥ M |
 
-**Design principles** (content design settled 2026-07; lock IDs when building).
-Avoid filler: plain "clear each size/difficulty" is *inevitable, not earned*. Two
-hard rules, then the categories:
+Basic preset → ladder-size mapping (declared, geometry-spirited): Beginner = XS,
+Intermediate = S (exact geometry), Expert = M. Drills wins climbing the size
+ladder is deliberate: the practice range literally trains you up to bigger
+boards, and gates are access, not goals.
 
-- **The one-sitting cap**: no achievement may demand more than a single session —
-  beyond that, the Service Record itself is the trophy (the full-clear sums
-  already celebrate XL+). Achievement ceiling = size **L**; no "win XXXL", no
-  "full-clear every size".
-- **No win streaks** — luck-heavy on the dense ranks; rewards variance, not nerve.
+**The gates** (everything not listed is open from install):
 
-- **Skill / mastery** (floored at ≥ M Normal so they can't be farmed on XS Easy) —
-  no-flag win, no-chord win, both at once ("bare hands"); the classic Expert
-  speed ladder (sub-100 s, sub-60, sub-40); an Insane win (≥ M — XS Insane is a
-  lottery, and Insane itself must be unlocked first); a Round win at L+; a
-  **Lunatic win** (any size — at 20% the tier itself is the feat, and the luck
-  stats will show what it cost).
-- **Guess-odds feats** — survive a *forced* guess, tiered by the odds: **Coin
-  flip** (~1/2), **Long shot** (≤ 1/3), **Miracle** (≤ 1/4). Reads the v0.4.0
-  forced-guess tracking (the `luckiestGuess` record makes these retroactive).
-  Worse than 1/4 exists but is rare even on Insane — the tiers stop at Miracle.
-  Farming bad odds self-punishes: you mostly die.
-- **Full-clear tie-ins** — full-clear a size (≤ L), the Basic trifecta, the
-  trifecta under a total time (the Record already computes the sums).
-- **Tiered milestones** (deliberately few — texture, not the game) — wins
-  10/100/1000, tiles opened 100k/1M, mines disarmed 1k/10k/100k.
-- **Hidden / playful** — quirky surprises players stumble into and screenshot:
-  losing on the *second* click (a wink — the first is safe), the 13-second
-  cursed clear, a loss at ≥ 99% progress ("so close"), a win past 999 seconds
-  ("Overtime" — the old timer-cap joke).
-- **Identity / epic-tied** — feats unique to Donpa's variants: first torus
-  clear, hex Insane. Generic Minesweeper can't offer these — the strongest
-  long-term hook.
+- **Sizes**: XS/S/M open. Any credited win at M → L; L → XL; XL → XXL;
+  XXL → XXXL. Applies uniformly in every sized family — including Drills
+  (Drills L needs an M win somewhere, same predicate, no special case).
+- **Ranks** (global, not per-family): Trainee/Sapper open. A credited Sapper win
+  (≥ S) → Veteran; Veteran → Ace; Ace → Legend; Legend → Lunatic.
+- **Hive**: first credited win in any square family (Drills/Basic/Grid) — the
+  "you've cleared a board, here's a new shape" discovery moment.
+- **Round edges**: first credited win at ≥ M (any family). One gate covers Grid
+  and Hive.
+- **Never gated**: Drills, Basic, Grid, Flat edges, the XS/S/M · Trainee/Sapper
+  starting matrix.
 
-Lean toward a curated set where each entry is interesting; a couple of gentle
-starters (first clear) are fine as an on-ramp, but the bulk should be earned.
+**Escape hatches (decided):** a board arriving from OUTSIDE the picker is always
+playable — head-to-head "play this board", a share/deep link, and resuming any
+in-progress save all bypass gates (an invitation from a rival IS the discovery
+moment; blocking it would punish the social loop). Such play earns unlock credit
+normally. There is NO unlock-all setting: every gate opens in one sitting for a
+player who's simply good, and veterans derive-pass anyway.
 
-**Steps when ready:** internal achievement layer + local UI → GameKit auth on
-launch → report progress on events → GC achievements UI → define achievements in
-App Store Connect.
+**Teaser UI** (locked = visible, never hidden):
 
----
+- Locked **size/rank chip**: rendered at 0.45 opacity with a small `lock.fill`
+  badge (SaveDot's corner idiom, bottom-trailing). Tapping does NOT select; it
+  swaps the row's caption to the requirement line for a few seconds. A11y: the
+  chip keeps its label, gains value "Locked — <requirement>".
+- Locked **Hive page**: the pager page shows the family glyph large + the
+  requirement as its caption (detail "Locked" / tagline "Win any board to
+  unlock"); its tab renders dimmed with the padlock badge. The pager still
+  swipes to it (teaser = seeing the next rung).
+- Locked **Round segment**: dimmed + padlock in the segmented toggle; tap shows
+  the requirement caption. Keyboard ←/→ skips locked entries (`stepped(within:)`
+  over the unlocked slice — the Drills-ladder helper generalizes).
+- Requirement copy (localize EN/FI/JA at build): "Win an M board to unlock" /
+  "Win any board to unlock the Hive" / "Win an M board to unlock Round edges" /
+  "Win a Sapper board (S or larger) to unlock".
+- **Unlock moment**: when a win flips any predicate (diff before/after), the
+  result panel adds an "UNLOCKED: <thing>" corner sticker (PillStamp dress,
+  bottom-trailing corner) + a VoiceOver announcement; several at once collapse
+  to "New boards unlocked". The scoreboard's per-row play button follows the
+  same predicate (row stays visible; button hidden while locked).
+- **Testability**: `-donpa.gates.fresh` launch argument makes the engine see
+  empty records (TestFlight veterans can experience gates); predicate unit
+  tests + one UI test ride it.
+
+### Achievements — architecture
+
+Unchanged decisions: internal layer first, in-app display, offline; **Game
+Center achievements yes, leaderboards no** (scores are user-editable by design;
+feats only cheat yourself); GC bolts on later as a reporter behind the store,
+degrading gracefully when auth is declined. IDs are permanent; ASC IDs =
+`fi.misaki.donpa.<id>` 1:1.
+
+**Two evaluation modes, one engine:**
+
+- **Derivable** feats compute from the synced records/career counters (wins,
+  best times, full-clear standings, `luckiestGuess`, no-flag/no-chord win
+  counters) — so they're **retroactive**: veterans get them stamped on first
+  launch, and a cloud restore recovers them.
+- **Momentary** feats need the game-end instant (`GameEndEvent`: config,
+  won, timeCentiseconds, progress, revealActions, usedFlagEver, usedChordEver,
+  bestSurvivedOddsThisGame) and are stored when earned. Only four hidden feats
+  + Bare Hands need this. New data required: a per-game **reveal-action
+  counter** (reveals + chords, for "second reveal") — everything else ships.
+- `AchievementStore`: earned map id → firstEarnedDate; UserDefaults + the KVS
+  sync blob (union merge, earliest date wins; obeys the stats wipe's
+  reset-epoch). Derivable feats are stamped into the store when first observed
+  (stable dates + a single GC report each).
+
+**Drills rules (pinned):** gentle/starter feats and career milestones count on
+Drills; skill feats never do — enforced structurally, since every skill feat
+floors on a RANK and Drills has none. Luck feats can't happen there (no forced
+guesses on a no-guess board, by construction).
+
+**Presentation:** a **Decorations** section (FI *Kunniamerkit*, JA *勲章*) in
+the Service Record above Commendations: a medal grid — earned = inked with date,
+unearned = silhouette + requirement, hidden = "?" until earned, tiers as
+bronze/silver/gold laurels. Earn moment = result-panel sticker + VoiceOver
+announcement (same slot as the unlock sticker; queue if both fire).
+
+### The achievement list (24 IDs; tiers noted)
+
+Floors write as "≥ M Sapper" = size M or larger AND rank Sapper or denser
+(rank floor structurally excludes Drills/Basic). Titles EN · FI · JA — tune
+freely; IDs lock at build.
+
+**Starters & identity**
+
+- `win.first` — **Boots On** · *Saappaat jalkaan* · *初陣* — "Win your first
+  board." Any family, Drills included (the on-ramp).
+- `drills.l` — **Graduation Exercise** · *Loppukoe* · *卒業演習* — "Win a
+  Drills board at size L." The practice capstone (ceiling L per one-sitting).
+- `hive.first` — **Into the Hive** · *Kennostoon* · *ハイブ初制覇* — "Win your
+  first Hive board."
+- `round.first` — **Full Circle** · *Täysi kierros* · *世界一周* — "Win a board
+  with Round edges." Any size — the first-torus identity moment (the L+ skill
+  variant was cut as redundant).
+- `hex.insane` — **Hornet's Nest** · *Herhiläispesä* · *スズメバチの巣* — "Win a
+  Hive board at Insane, M or larger." Donpa-only feat; generic minesweeper
+  can't offer it.
+
+**Skill & mastery** (all ≥ M Sapper unless stated)
+
+- `purity.noflag` — **No Flags** · *Ilman lippuja* · *旗なし* — "Win without
+  placing a single flag." Derivable (per-config no-flag counter + floor).
+- `purity.nochord` — **One Tile at a Time** · *Ruutu kerrallaan* · *一マスずつ*
+  — "Win without a single chord." Derivable.
+- `purity.barehands` — **Bare Hands** · *Paljain käsin* · *素手で* — "Win with
+  no flags AND no chords — the same game." Momentary (the two counters can't
+  prove same-game). Resumed games can't earn purity feats (bits default to
+  violated on restore — decided).
+- `speed.expert` (tiers 100/60/40) — **Expert Sweep** · *Ekspertin partio* ·
+  *エキスパート速攻* — "Clear Basic Expert in under 100 / 60 / 40 seconds."
+  Derivable from the Expert best time.
+- `insane.win` — **Certifiably Insane** · *Hullun paperit* · *狂気の沙汰* —
+  "Win an Insane board, M or larger." (XS Insane is a lottery.)
+- `lunatic.win` — **Full Moon** · *Täysikuu* · *満月* — "Win a Lunatic board —
+  any size. At 20 %, the tier is the feat." (Name = the crescent-moon insignia.)
+
+**Luck** (derivable from `luckiestGuess` — retroactive to 0.4.0 data; names
+match the in-game toasts)
+
+- `luck.coinflip` — **Coin Flip** · *Kolikonheitto* · *コイントス* — "Survive a
+  forced guess at even odds or worse."
+- `luck.longshot` — **Long Shot** · *Kaukolaukaus* · *一か八か* — "…at 1-in-3
+  or worse."
+- `luck.miracle` — **A MIRACLE** · *IHME* · *奇跡* — "…at 1-in-4 or worse."
+  (Worse exists but is rare; the ladder stops here. Farming bad odds mostly
+  kills you — self-balancing.)
+
+**Full-clear tie-ins** (derivable from the Record's standings)
+
+- `fullclear.size` — **Sector Secure** · *Sektori varmistettu* · *区域制圧* —
+  "Full-clear every rank of one size, L or smaller (any family × edges leaf)."
+- `trifecta` — **The Classics** · *Klassikot* · *クラシック三冠* — "Win
+  Beginner, Intermediate and Expert."
+- `trifecta.time` — **Hat Trick** · *Hattutemppu* · *ハットトリック* — "The
+  classic trifecta with combined bests under 5:00." (Tune the bar here.)
+
+**Milestones** (tiered; career counters, Drills included — texture, not goals)
+
+- `miles.wins` (10/100/1000) — **Campaigner** · *Sotaretkeläinen* · *歴戦* —
+  "Win 10 / 100 / 1 000 boards."
+- `miles.tiles` (100k/1M) — **Ground Covered** · *Kilometrejä takana* ·
+  *開拓者* — "Open 100 000 / 1 000 000 tiles."
+- `miles.disarmed` (1k/10k/100k) — **Bomb Squad** · *Pommiryhmä* ·
+  *爆発物処理班* — "Disarm 1 000 / 10 000 / 100 000 mines (flagged on finished
+  boards)."
+
+**Hidden** (momentary; shown as "?" until earned)
+
+- `hidden.second` — **Beginner's Unluck** · *Aloittelijan epäonni* · *二歩目*
+  — "Lose on your second reveal." (The first is always safe — the wink.)
+- `hidden.thirteen` — **Cursed Time** · *Pahan onnen minuutti* · *呪いの13秒*
+  — "Win with a final time of 13.x seconds."
+- `hidden.soclose` — **So Close** · *Niin lähellä* · *あと一歩* — "Lose with
+  99 % or more cleared."
+- `hidden.overtime` — **Overtime** · *Jatkoaika* · *延長戦* — "Win a board
+  after more than 999 seconds." (The old timer-cap joke.)
+
+Deliberately ABSENT: streaks (luck-heavy — rewards variance, not nerve),
+anything above size L or multi-session (one-sitting cap; the Service Record is
+the trophy for those), per-size/per-rank attrition filler.
+
+### Feat rank (the public face)
+
+Derived from the earned set — named feats, not points, so a rank *says
+something* and faking it means faking the feat. Cumulative: each rank also
+requires the one below. Luck feats deliberately count toward NO rank (variance
+again). Surfaces in the share payload, Mess hall rows, and head-to-head; raw
+times stay trusted-circle.
+
+1. **Recruit** · *Alokas* · *新兵* — everyone starts here.
+2. **Private** · *Sotamies* · *二等兵* — Boots On.
+3. **Corporal** · *Korpraali* · *伍長* — The Classics + Campaigner I (10 wins).
+4. **Sergeant** · *Kersantti* · *軍曹* — Into the Hive + a purity feat
+   (No Flags or One Tile at a Time).
+5. **Lieutenant** · *Luutnantti* · *中尉* — Certifiably Insane + Expert Sweep
+   bronze (sub-100 s).
+6. **Major** · *Majuri* · *少佐* — Sector Secure + Bare Hands.
+7. **General** · *Kenraali* · *大将* — Full Moon + Hornet's Nest + Expert Sweep
+   silver (sub-60 s).
+
+Wire format: the share payload carries the rank's ID string (not the earned
+set); receivers render it as-is, so future rank additions don't break old
+readers.
 
 ## Creative identity & theme
 
