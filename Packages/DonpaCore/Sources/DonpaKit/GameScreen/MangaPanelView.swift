@@ -45,8 +45,23 @@ struct MangaPanelView: View {
             case .loss(let progress, let safeRemaining, _):
                 let cleared = Self.clearedDisplay(
                     progress, safeRemaining: safeRemaining, hexCells: hexCells)
-                return String(
+                var line = String(
                     localized: "Boom — you stepped on a mine. \(cleared).", bundle: .module)
+                // The best-loss corner pill's news, which the visual-only overlay
+                // would otherwise keep from VoiceOver.
+                if bestLossHeadline != nil {
+                    let best =
+                        if let improved = lossImprovedBy {
+                            String(
+                                localized:
+                                    "New best clear (\(Kind.progressImprovement(improved))).",
+                                bundle: .module)
+                        } else {
+                            String(localized: "Your best clear on this board.", bundle: .module)
+                        }
+                    line += " " + best
+                }
+                return line
             }
         }
         /// The new-best time, if this is a record win.

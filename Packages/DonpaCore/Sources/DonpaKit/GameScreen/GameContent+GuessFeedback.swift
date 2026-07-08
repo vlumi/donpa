@@ -56,12 +56,20 @@ extension GameContent {
         guard let event, event.survived, viewModel.status == .playing,
             GuessTier(survival: event.survival).deservesToast
         else { return }
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { guessToast = event }
+        withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.7)) {
+            guessToast = event
+        }
+        // The toast is transient — without an announcement it never reaches
+        // VoiceOver at all (the visual is allowed to vanish; the news isn't).
+        A11yAnnounce.post(
+            toastSpoken(
+                tier: GuessTier(survival: event.survival),
+                percent: StatBlock.percent(event.survival)))
         guessToastTask?.cancel()
         guessToastTask = Task {
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: 0.3)) { guessToast = nil }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.3)) { guessToast = nil }
         }
     }
 
@@ -87,6 +95,7 @@ extension GameContent {
             HStack(spacing: 7) {
                 Image(systemName: "dice")
                     .font(.caption.weight(.black))
+                    .accessibilityHidden(true)
                 toastText(
                     tier: GuessTier(survival: toast.survival),
                     percent: StatBlock.percent(toast.survival)
@@ -100,8 +109,21 @@ extension GameContent {
             .overlay(Capsule().stroke(.white.opacity(0.9), lineWidth: 1))
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
             .padding(.top, 14)
-            .transition(.move(edge: .top).combined(with: .opacity))
+            // Reduce Motion: fade in place instead of sliding in from the edge.
+            .transition(
+                reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity)
+            )
             .allowsHitTesting(false)
+        }
+    }
+
+    /// The toast's message as a plain string for the VoiceOver announcement —
+    /// same keys as `toastText`, so the two can't drift.
+    private func toastSpoken(tier: GuessTier, percent: String) -> String {
+        switch tier {
+        case .lucky, .coinFlip: return String(localized: "Coin flip! (\(percent))", bundle: .module)
+        case .longShot: return String(localized: "Long shot! (\(percent))", bundle: .module)
+        case .miracle: return String(localized: "A MIRACLE! (\(percent))", bundle: .module)
         }
     }
 

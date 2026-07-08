@@ -154,6 +154,7 @@ struct BoardSelectionPicker: View {
         .buttonStyle(.plain)
         .modifier(SaveDot(show: index.familyHasSave(family)))
         .accessibilityLabel(Text(verbatim: family.label))
+        .modifier(SaveValue(hasSave: index.familyHasSave(family)))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -333,6 +334,7 @@ struct BoardSelectionPicker: View {
         .buttonStyle(.plain)
         .modifier(SaveDot(show: index.familyHasSave(family)))
         .accessibilityLabel(Text(verbatim: family.label))
+        .modifier(SaveValue(hasSave: index.familyHasSave(family)))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 

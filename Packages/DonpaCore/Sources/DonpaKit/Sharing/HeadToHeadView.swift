@@ -95,9 +95,14 @@ struct HeadToHeadView: View {
             Text(label, bundle: .module)
             Spacer()
             careerValue(fmt(mine), lead: iLead)
+                .accessibilityLabel(Text("You: \(fmt(mine))", bundle: .module))
             careerValue(fmt(theirs), lead: theyLead)
+                .accessibilityLabel(Text("Rival: \(fmt(theirs))", bundle: .module))
         }
         .font(.callout)
+        // One utterance per stat, with each bare number owned by a side —
+        // "Games played, You: 123, Rival: 45" instead of three orphan fragments.
+        .accessibilityElement(children: .combine)
     }
 
     private func careerValue(_ text: String, lead: Bool) -> some View {
@@ -192,8 +197,13 @@ struct HeadToHeadView: View {
                 if let gap = row.gap, gap != 0 { gapLabel(gap) }
             }
             .frame(width: 76, alignment: .trailing)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(
+                Text("You: \(timeSpoken(row.yourBest))", bundle: .module))
             time(row.theirBest, winner: row.lead == .them)
                 .frame(width: 72, alignment: .trailing)
+                .accessibilityLabel(
+                    Text("Rival: \(timeSpoken(row.theirBest))", bundle: .module))
         }
         .font(.callout)
     }
@@ -225,6 +235,12 @@ struct HeadToHeadView: View {
             .font(.caption2.monospaced())
             .numericCell()
             .foregroundStyle(faster ? Color.green : Color.red)
+    }
+
+    /// A time as VoiceOver text — the formatted best, or "not won" for the dash.
+    private func timeSpoken(_ centis: Int?) -> String {
+        centis.map { TimeFormat.mmsst(centiseconds: $0) }
+            ?? String(localized: "not won", bundle: .module)
     }
 
     /// A time cell — bolded/tinted when it's the faster (winning) side, "—" if unwon.

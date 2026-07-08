@@ -23,7 +23,7 @@ extension BoardSelectionPicker {
         let selected = settings.basicPreset == preset
         return Button {
             settings.basicPreset = preset
-            onFocusRow?(1)
+            onFocusRow?(0)  // Basic's presets are its only row
         } label: {
             VStack(spacing: 2) {
                 Text(verbatim: preset.label)
@@ -53,6 +53,7 @@ extension BoardSelectionPicker {
         .buttonStyle(.plain)
         .modifier(SaveDot(show: index.presetHasSave(preset), onAccent: selected))
         .accessibilityLabel(Text(verbatim: "\(preset.label) — \(preset.detail)"))
+        .modifier(SaveValue(hasSave: index.presetHasSave(preset)))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -118,6 +119,7 @@ extension BoardSelectionPicker {
         .buttonStyle(.plain)
         .modifier(SaveDot(show: hasSave, onAccent: selected))
         .accessibilityLabel(Text(verbatim: density.label))
+        .modifier(SaveValue(hasSave: hasSave))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -159,7 +161,7 @@ extension BoardSelectionPicker {
         let hasSave = index.sizeHasSave(size, family: settings.family)
         return Button {
             settings[keyPath: sizePath] = size
-            onFocusRow?(2)
+            onFocusRow?(0)  // size is row 0 (family stopped being a row long ago)
         } label: {
             Text(verbatim: size.label)
                 .font(.subheadline.weight(.semibold))
@@ -176,6 +178,7 @@ extension BoardSelectionPicker {
         .buttonStyle(.plain)
         .modifier(SaveDot(show: hasSave, onAccent: selected))
         .accessibilityLabel(Text(verbatim: "\(size.label) — \(size.detail)"))
+        .modifier(SaveValue(hasSave: hasSave))
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -254,7 +257,7 @@ extension BoardSelectionPicker {
                 get: { settings[keyPath: edgesPath] },
                 set: { settings[keyPath: edgesPath] = $0 }),
             glyph: { .edges($0) }, label: { $0.label },
-            onChange: { onFocusRow?(3) },
+            onChange: { onFocusRow?(2) },  // edges is row 2 — 3 left the ring dark
             // Edges is the leaf: filtered by the full path above (family + size + density).
             badge: { index.edgesHasSave($0, family: family, size: size, density: density) })
     }
@@ -304,6 +307,17 @@ struct SaveDot: ViewModifier {
                 // a redundant visual cue, so it stays out of the a11y tree.
                 .accessibilityHidden(true)
         }
+    }
+}
+
+/// Speaks the save-dot's message: the dot itself is decorative (and a11y-hidden),
+/// but "this path has a parked game" must reach VoiceOver too — as the chip's
+/// VALUE, read after its label.
+struct SaveValue: ViewModifier {
+    let hasSave: Bool
+    func body(content: Content) -> some View {
+        content.accessibilityValue(
+            hasSave ? Text("Game in progress", bundle: .module) : Text(verbatim: ""))
     }
 }
 
