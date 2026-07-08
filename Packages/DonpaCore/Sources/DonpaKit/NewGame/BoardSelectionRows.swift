@@ -115,6 +115,7 @@ extension BoardSelectionPicker {
                 return
             }
             settings[keyPath: densityPath] = density
+            lockedHint = nil  // a real selection dismisses the teaser (user call)
             onFocusRow?(1)
         } label: {
             DensityInsignia.markImage(density)
@@ -184,6 +185,7 @@ extension BoardSelectionPicker {
                 return
             }
             settings[keyPath: sizePath] = size
+            lockedHint = nil  // a real selection dismisses the teaser (user call)
             onFocusRow?(0)  // size is row 0 (family stopped being a row long ago)
         } label: {
             Text(verbatim: size.label)
@@ -282,7 +284,10 @@ extension BoardSelectionPicker {
                 get: { settings[keyPath: edgesPath] },
                 set: { settings[keyPath: edgesPath] = $0 }),
             glyph: { .edges($0) }, label: { $0.label },
-            onChange: { onFocusRow?(2) },  // edges is row 2 — 3 left the ring dark
+            onChange: {
+                lockedHint = nil  // a real selection dismisses the teaser
+                onFocusRow?(2)  // edges is row 2 — 3 left the ring dark
+            },
             // Edges is the leaf: filtered by the full path above (family + size + density).
             badge: { index.edgesHasSave($0, family: family, size: size, density: density) },
             locked: { !gates.edges($0) },
