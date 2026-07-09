@@ -83,7 +83,9 @@ final class NearbyExchange: NSObject, ObservableObject {
     }
 
     private func received(_ data: Data, from peer: MCPeerID) {
-        guard receivedURL == nil, let url = URL(string: String(decoding: data, as: UTF8.self))
+        guard receivedURL == nil,
+            let text = String(bytes: data, encoding: .utf8),
+            let url = URL(string: text)
         else { return }
         receivedURL = url
         settle(with: peer)
