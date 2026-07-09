@@ -21,6 +21,10 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **New players start in Drills.** A fresh install now opens New Game on the
+  Drills family — the no-guess on-ramp — instead of Basic, so a newcomer meets
+  the fair, learnable boards first. Anyone who's played before keeps their own
+  remembered family; only a genuinely blank slate lands on Drills.
 - **Mess hall polish.** The iCloud sync switch now lives in the Mess hall too,
   not only the Service Record — it's where sharing raises the question. Sharing
   is gated on entering a name (no more nameless "?" cards going out), a

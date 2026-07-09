@@ -254,11 +254,17 @@ public final class Settings: ObservableObject {
             ?? .system
         // Family: prefer the stored value; else migrate a pre-family install's
         // mode+shape selection (classic → basic; modern → grid/hive by shape).
+        // A GENUINELY fresh install — no family key AND no legacy mode key — lands
+        // on Drills, the no-guess on-ramp (a newcomer learns the patterns before
+        // the real families). A pre-family veteran has the legacy key, so they
+        // migrate to their old pick and are never yanked to Drills.
+        let legacyMode = defaults.string(forKey: legacyModeKey)
         family =
             defaults.string(forKey: familyKey).flatMap(BoardFamily.init(rawValue:))
-            ?? Self.legacyFamily(
-                mode: defaults.string(forKey: legacyModeKey),
-                shape: defaults.string(forKey: legacyShapeKey))
+            ?? (legacyMode == nil
+                ? .practice
+                : Self.legacyFamily(
+                    mode: legacyMode, shape: defaults.string(forKey: legacyShapeKey)))
         // Per-family axes: prefer each family's own stored value; fall back to the
         // legacy SHARED keys (seeding both families with the old pick), then the
         // defaults. Legacy edges values used the bounded/wrapped vocabulary.
