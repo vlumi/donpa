@@ -264,7 +264,7 @@ later, this note will credit it.
 High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
 in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
 
-### 0.5.0 — progression (in development)
+### 0.5.0 — progression
 
 - **New:** **Decorations** — 22 achievements with hand-drawn medals in the
   Service Record: skill feats, retroactive luck feats, tiered milestones,
