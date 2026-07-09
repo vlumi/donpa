@@ -22,6 +22,9 @@ struct MessHallView: View {
 
     /// Whether the Add-rival scanner sheet is presented.
     @State private var scanning = false
+    /// Whether the Nearby exchange sheet is presented.
+    @State private var nearby = false
+    private let identityStore = ShareIdentityStore()
 
     private enum Tab: Hashable { case rivals, squads }
     @State private var tab: Tab = .rivals
@@ -53,6 +56,24 @@ struct MessHallView: View {
                     scanning = false
                     dismiss()  // close the Mess hall so the prompt shows at root
                     onScanned?(url)
+                }
+            }
+            .sheet(isPresented: $nearby) {
+                // Same payload the QR carries; same receive path a scan takes.
+                if let url = currentShareURL() {
+                    NearbyExchangeView(
+                        displayName: settings.shareName.isEmpty
+                            ? String(localized: "A rival", bundle: .module)
+                            : settings.shareName,
+                        payloadURL: url
+                    ) { received in
+                        nearby = false
+                        dismiss()  // close the Mess hall so the prompt shows at root
+                        onScanned?(received)
+                    }
+                } else {
+                    Text("Couldn't build your share card.", bundle: .module)
+                        .padding(40)
                 }
             }
             .sheet(item: $editingRival) { FriendDetailView(friend: $0, friends: friends) }
@@ -95,18 +116,44 @@ struct MessHallView: View {
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             ShareCardView(scoreboard: scoreboard, settings: settings)
-            Button {
-                scanning = true
-            } label: {
-                Label {
-                    Text("Add rival", bundle: .module)
-                } icon: {
-                    Image(systemName: "qrcode.viewfinder")
+            HStack(spacing: 10) {
+                Button {
+                    scanning = true
+                } label: {
+                    Label {
+                        Text("Add rival", bundle: .module)
+                    } icon: {
+                        Image(systemName: "qrcode.viewfinder")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.bordered)
+                Button {
+                    nearby = true
+                } label: {
+                    Label {
+                        Text("Nearby", bundle: .module)
+                    } icon: {
+                        Image(systemName: "person.line.dotted.person.fill")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
         }
+    }
+
+    /// The signed share link, exactly as the share card builds it.
+    private func currentShareURL() -> URL? {
+        if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
+        let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let identity = identityStore.identity(),
+            let payload = SharePayloadBuilder.build(
+                from: scoreboard, identity: identity,
+                name: trimmed.isEmpty ? "?" : trimmed,
+                includeCareer: settings.shareIncludeCareer, now: Date())
+        else { return nil }
+        return try? ShareLink.url(for: payload)
     }
 
     // MARK: Tabs

@@ -100,9 +100,6 @@ the code: `UnlockEngine`/`UnlockGates` + the New Game teasers, and
 behavior follows the Progression spec below, which stays as the reference for
 the remaining steps and any value tuning. Still ahead:
 
-- [ ] **Feat rank** (TENTATIVE — user go/no-go first; nothing else
-      depends on it): derived rank from the earned set (ladder in the spec),
-      rank in the share payload + Mess hall/H2H rows.
 - [ ] **Game Center reporter** (later; deferrable to the 1.0 runway — GC only
       goes live at the store release): ASC achievement definitions per the
       tier-flattening mapping in the spec (sandbox from day one; they only go
@@ -424,32 +421,15 @@ Deliberately ABSENT: streaks (luck-heavy — rewards variance, not nerve),
 anything above size L or multi-session (one-sitting cap; the Service Record is
 the trophy for those), per-size/per-rank attrition filler.
 
-### Feat rank (the public face) — TENTATIVE: go/no-go before building
+### Feat rank — SCRAPPED (2026-07-09)
 
-Whether the public rank is wanted AT ALL is still open (user, 2026-07-09) —
-confirm before building it; everything else in this spec stands without it.
-If built: derived from the earned set — named feats, not points, so a rank
-*says something* and faking it means faking the feat. Cumulative: each rank
-also requires the one below. Luck feats deliberately count toward NO rank
-(variance again). Surfaces in the share payload, Mess hall rows, and
-head-to-head; raw times stay trusted-circle. The ladder deliberately shares no
-word with the difficulty tiers in any locale (the tiers read as soldier
-archetypes a board demands; the rank is the player's own grade — and rung 1 is
-a civilian precisely so the first win "makes you a soldier"):
-
-1. **Civilian** · *Siviili* · *民間人* — everyone starts here.
-2. **Private** · *Sotamies* · *二等兵* — Boots On.
-3. **Corporal** · *Korpraali* · *伍長* — The Classics + Campaigner I (10 wins).
-4. **Sergeant** · *Kersantti* · *軍曹* — Into the Hive + Bare Hands.
-5. **Lieutenant** · *Luutnantti* · *中尉* — Stuff of Legends + Expert Sweep
-   bronze (sub-100 s).
-6. **Major** · *Majuri* · *少佐* — Sector Secure + Full Circle.
-7. **General** · *Kenraali* · *大将* — Full Moon + Hornet's Nest + Expert Sweep
-   silver (sub-60 s).
-
-Wire format: the share payload carries the rank's ID string (not the earned
-set); receivers render it as-is, so future rank additions don't break old
-readers.
+Decided against, not parked: in Donpa's trusted-circle model every rival
+already sees your real times and Decorations, so a one-word rank compresses
+information friends already have; cumulative gates park nearly everyone at
+the bottom ranks; and it would have been a third status system in the release
+that added the other two. If a one-glance comparator proves wanted later, the
+idea returns on its own merits (an earlier ladder sketch lives in git
+history).
 
 ## Creative identity & theme
 
