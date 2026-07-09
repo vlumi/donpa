@@ -144,7 +144,9 @@ struct ScoreboardView: View {
             VStack(alignment: .leading, spacing: 24) {
                 careerSection
                 if let achievements {
-                    DecorationsSection(achievements: achievements, rowInset: Self.rowInset)
+                    DecorationsSection(
+                        achievements: achievements, records: scoreboard.displayRecords,
+                        rowInset: Self.rowInset)
                 }
                 scoresSection
             }

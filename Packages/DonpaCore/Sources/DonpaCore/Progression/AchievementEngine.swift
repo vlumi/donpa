@@ -38,7 +38,10 @@ public enum AchievementID: String, CaseIterable, Sendable {
     /// Decorations grid; one Game Center definition per tier). nil = one-shot.
     public var tierThresholds: [Int]? {
         switch self {
-        case .speedExpert: return [100, 60, 40]  // seconds, descending bars
+        // Seconds, descending bars. Tuned to sit with the rest of the set ("skilled
+        // but attainable"), not world-record: <3 min = you can win Expert, <90 s =
+        // genuinely fast — no world-class speedrun tier that towered over the others.
+        case .speedExpert: return [180, 120, 90]
         case .milesWins: return [10, 100, 1000]
         case .milesTiles: return [10_000, 100_000, 1_000_000]
         case .milesDisarmed: return [1000, 10_000, 100_000]
@@ -53,6 +56,23 @@ public enum AchievementID: String, CaseIterable, Sendable {
         default: return false
         }
     }
+}
+
+/// The running value behind a tracked feat, for the detail view. `metric` tells
+/// the UI how to phrase `current` (e.g. "472 wins", "1:23 best", "25% luck");
+/// `thresholds` (from the id) lets it show the next rung if it wants.
+public struct AchievementProgress: Equatable, Sendable {
+    public enum Metric: Sendable {
+        case wins
+        case tiles
+        case mines
+        /// A best time in centiseconds (speed feats).
+        case bestSeconds
+        /// Luckiest survival as a whole percent (lower is luckier).
+        case luckPercent
+    }
+    public let metric: Metric
+    public let current: Int
 }
 
 /// Pure feat evaluation (A2 of the progression spec) — two modes, one engine:
@@ -120,6 +140,37 @@ public enum AchievementEngine {
         if !event.won, event.progress >= 0.99 { earned.append(.hiddenSoClose) }
         if event.won, event.timeCentiseconds > 99_900 { earned.append(.hiddenOvertime) }
         return earned
+    }
+
+    /// The live value behind a TRACKED feat, for the detail view — so a tiered
+    /// milestone shows "472 wins" (and thus which tier you're at) rather than
+    /// leaving the medal colour as the only cue. nil for feats with no meaningful
+    /// running number (one-shots, the hidden gags). The UI formats by `metric`.
+    public static func progress(for id: AchievementID, records: [String: ScoreRecord])
+        -> AchievementProgress?
+    {
+        let facts = Facts(records: records)
+        switch id {
+        case .milesWins:
+            return AchievementProgress(metric: .wins, current: facts.totalWins)
+        case .milesTiles:
+            return AchievementProgress(metric: .tiles, current: facts.totalTiles)
+        case .milesDisarmed:
+            return AchievementProgress(metric: .mines, current: facts.totalDisarmed)
+        case .speedExpert:
+            // The Expert best (nil until you've won one) — the value the tier bars
+            // race against.
+            return facts.expertBestCentiseconds.map {
+                AchievementProgress(metric: .bestSeconds, current: $0)
+            }
+        case .luckCoinFlip, .luckLongShot, .luckMiracle:
+            // Your luckiest survival so far, as a whole-percent (lower = luckier).
+            return facts.luckiestSurvival.map {
+                AchievementProgress(metric: .luckPercent, current: Int(($0 * 100).rounded()))
+            }
+        default:
+            return nil
+        }
     }
 
     // MARK: The record sweep

@@ -21,6 +21,12 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Decoration details show your progress.** Tapping a tracked achievement now
+  shows the live number behind it — "472 won", "1,234 tiles opened", your best
+  Expert time, luckiest guess — with the next tier's target, so which medal
+  you're at (and how close the next is) is legible without decoding the colour.
+  The Expert speed tiers were retuned to sit with the rest of the set (under
+  180 / 120 / 90 s) rather than demanding world-record pace.
 - **Sound effects.** A soft tick when you open a tile (a chord sounds the
   same — it's just opening several), a subtly fuller version whenever a whole
   area floods open (however it was opened), an up-tick for placing a flag and a

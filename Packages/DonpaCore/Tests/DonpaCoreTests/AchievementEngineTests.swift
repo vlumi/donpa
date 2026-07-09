@@ -95,14 +95,14 @@ final class AchievementEngineTests: XCTestCase {
     }
 
     func testExpertSpeedLadderTiers() {
-        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 9_900, achievedAt: .init()) }
-        XCTAssertEqual(earned()[.speedExpert], 1)  // < 100 s
-        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 5_900, achievedAt: .init()) }
-        XCTAssertEqual(earned()[.speedExpert], 2)  // < 60 s
-        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 3_999, achievedAt: .init()) }
-        XCTAssertEqual(earned()[.speedExpert], 3)  // < 40 s
-        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 10_000, achievedAt: .init()) }
-        XCTAssertNil(earned()[.speedExpert])  // exactly 100 s misses "under"
+        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 17_900, achievedAt: .init()) }
+        XCTAssertEqual(earned()[.speedExpert], 1)  // < 180 s
+        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 11_900, achievedAt: .init()) }
+        XCTAssertEqual(earned()[.speedExpert], 2)  // < 120 s
+        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 8_999, achievedAt: .init()) }
+        XCTAssertEqual(earned()[.speedExpert], 3)  // < 90 s
+        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 18_000, achievedAt: .init()) }
+        XCTAssertNil(earned()[.speedExpert])  // exactly 180 s misses "under"
     }
 
     // MARK: Luck (exact-boundary tiers, matching the in-game toast cuts)
@@ -175,6 +175,43 @@ final class AchievementEngineTests: XCTestCase {
         XCTAssertEqual(earned()[.milesWins], 3)
     }
 
+    // MARK: Progress (the detail view's live "current value")
+
+    func testProgressReportsTrackedValues() {
+        win(.grid(.s, .normal, .flat), times: 42)
+        mutate(.grid(.m, .normal, .flat)) {
+            $0.tilesOpened.add(1234)
+            $0.minesDisarmed.add(56)
+            $0.luckiestGuess = LuckiestGuess(survival: 0.2, achievedAt: .init())
+        }
+        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 11_900, achievedAt: .init()) }
+
+        func progress(_ id: AchievementID) -> AchievementProgress? {
+            AchievementEngine.progress(for: id, records: records)
+        }
+        XCTAssertEqual(progress(.milesWins), AchievementProgress(metric: .wins, current: 42))
+        XCTAssertEqual(progress(.milesTiles), AchievementProgress(metric: .tiles, current: 1234))
+        XCTAssertEqual(progress(.milesDisarmed), AchievementProgress(metric: .mines, current: 56))
+        XCTAssertEqual(
+            progress(.speedExpert), AchievementProgress(metric: .bestSeconds, current: 11_900))
+        // Luckiest survival rounded to a whole percent (0.2 → 20).
+        XCTAssertEqual(
+            progress(.luckCoinFlip), AchievementProgress(metric: .luckPercent, current: 20))
+        // One-shots and hidden gags have no running number.
+        XCTAssertNil(progress(.winFirst))
+        XCTAssertNil(progress(.hiddenSecond))
+    }
+
+    func testProgressIsNilBeforeAnyData() {
+        // No Expert best / no luck record yet → nothing to show.
+        XCTAssertNil(AchievementEngine.progress(for: .speedExpert, records: records))
+        XCTAssertNil(AchievementEngine.progress(for: .luckCoinFlip, records: records))
+        // Counts start at zero (a valid running value, shown as "0 won").
+        XCTAssertEqual(
+            AchievementEngine.progress(for: .milesWins, records: records),
+            AchievementProgress(metric: .wins, current: 0))
+    }
+
     // MARK: Momentary (hidden)
 
     private func event(
@@ -229,7 +266,7 @@ final class AchievementEngineTests: XCTestCase {
         // The wire values the ASC definitions will be built from — locked.
         XCTAssertEqual(AchievementID.winFirst.rawValue, "win.first")
         XCTAssertEqual(AchievementID.hiveInsane.rawValue, "hive.insane")
-        XCTAssertEqual(AchievementID.speedExpert.tierThresholds, [100, 60, 40])
+        XCTAssertEqual(AchievementID.speedExpert.tierThresholds, [180, 120, 90])
     }
 
     func testFreshRecordsEarnNothing() {
