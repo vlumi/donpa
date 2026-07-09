@@ -90,9 +90,11 @@ public final class GameViewModel: ObservableObject {
     public private(set) var usedChordEver = false
 
     /// Activity already flushed for THIS game, so a flush only sends the new delta.
-    private var flushedTiles = 0
-    private var flushedFlags = 0
-    private var flushedCentiseconds = 0
+    /// Internal (not private): the flush logic lives in GameViewModel+Activity.swift,
+    /// split out for the file-length budget.
+    var flushedTiles = 0
+    var flushedFlags = 0
+    var flushedCentiseconds = 0
 
     /// Pushes the unflushed activity DELTA (tiles/flags/time) to the lifetime
     /// totals — called on pause (also when the scoreboard opens), background, and
@@ -124,21 +126,6 @@ public final class GameViewModel: ObservableObject {
     @Published public internal(set) var lastForcedGuess: ForcedGuessEvent?
     /// Monotonic id for `lastForcedGuess` events (see `ForcedGuessEvent.id`).
     var guessEventCounter = 0
-
-    /// Flush this game's activity delta via `onActivityFlush`. Idempotent.
-    public func flushActivity() {
-        let tiles = game.revealedSafeCount
-        let flags = flagsPlacedThisGame
-        let centi = currentCentiseconds()
-        let dt = tiles - flushedTiles
-        let df = flags - flushedFlags
-        let dc = centi - flushedCentiseconds
-        guard dt != 0 || df != 0 || dc != 0 else { return }
-        flushedTiles = tiles
-        flushedFlags = flags
-        flushedCentiseconds = centi
-        onActivityFlush?(dt, df, dc)
-    }
 
     /// Whether the board extends beyond the viewport; published by `BoardScene`
     /// each frame so the chrome can enable/disable the minimap toggle.
