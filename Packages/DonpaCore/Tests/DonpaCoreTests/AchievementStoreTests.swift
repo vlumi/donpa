@@ -102,6 +102,25 @@ final class AchievementStoreTests: XCTestCase {
         XCTAssertEqual(store.earnedTier(.winFirst), 1, "permanence: local earnings stay")
     }
 
+    func testEnablingSyncLaterPublishesAndMerges() {
+        let shared = FakeAchievementsCloud.Shared()
+        let cloudA = FakeAchievementsCloud(shared: shared)
+        let cloudB = FakeAchievementsCloud(shared: shared)
+        let storeA = AchievementStore(
+            defaults: freshDefaults("ach.late.a"), cloud: cloudA, syncEnabled: true)
+        storeA.record(.hiveFirst, at: Date(timeIntervalSince1970: 10))
+        // B lived offline-by-choice, earning locally…
+        let storeB = AchievementStore(
+            defaults: freshDefaults("ach.late.b"), cloud: cloudB, syncEnabled: false)
+        storeB.record(.winFirst, at: Date(timeIntervalSince1970: 20))
+        XCTAssertEqual(shared.blobs.count, 1, "sync-off never publishes")
+        // …then flips the toggle: its earnings publish AND the cloud's merge in.
+        storeB.setSyncEnabled(true)
+        XCTAssertEqual(shared.blobs.count, 2)
+        XCTAssertEqual(storeB.earnedTier(.hiveFirst), 1)
+        XCTAssertEqual(storeA.earnedTier(.winFirst), 1)
+    }
+
     func testUnavailableCloudIsALocalStore() {
         let cloud = FakeAchievementsCloud()
         cloud.available = false
