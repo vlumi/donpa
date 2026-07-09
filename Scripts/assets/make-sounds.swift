@@ -74,25 +74,35 @@ try write("tick.caf", seconds: 0.05) { _, t in
         + 0.2 * noise.next() * env(t, 0.003)
 }
 
-// thud — a low, punchy knock when a chord fires (soft-clipped for body).
-noise = SeededNoise(state: 0x2222_3333)
-try write("thud.caf", seconds: 0.2) { _, t in
-    let f = 110 * (1 + 0.6 * env(t, 0.02))  // slight downward pitch bend = punch
-    let body = 0.9 * sin(2 * .pi * f * t) * env(t, 0.045)
-    let knock = 0.2 * noise.next() * env(t, 0.006)
-    return tanh(1.5 * (body + knock))
+// reveal — the base "open a tile" tick: a single very short, quiet high blip.
+// A chord uses this SAME sound (a chord is just opening several tiles at once),
+// so opening always sounds like opening.
+try write("reveal.caf", seconds: 0.03) { _, t in
+    0.18 * sin(2 * .pi * 1_200 * t) * env(t, 0.006)
 }
 
-// reveal — a soft, unobtrusive blip per dig action (fires once, not per cell).
-try write("reveal.caf", seconds: 0.06) { _, t in
-    0.35 * sin(2 * .pi * 760 * t) * env(t, 0.018)
+// flood — the reveal tick with a soft, brief low undertone: the SAME opening
+// sound, subtly fuller, for when a whole area cascades open. Special, but not a
+// different instrument.
+try write("flood.caf", seconds: 0.09) { _, t in
+    let tick = 0.18 * sin(2 * .pi * 1_200 * t) * env(t, 0.006)
+    let body = 0.16 * sin(2 * .pi * 320 * t) * env(t, 0.055)  // the "area" swell
+    return tick + body
 }
 
-// don — the ドーン sting: a taiko-ish boom with a skin-slap attack and a deep
-// downward pitch sweep. Phase-integrated so the sweep has no discontinuity.
+// win — a bright ASCENDING two-note chime (A5 → E6): success, unmistakably up.
+try write("win.caf", seconds: 0.5) { _, t in
+    let n1 = 0.5 * sin(2 * .pi * 880 * t) * env(t, 0.18)  // A5
+    let n2 = t > 0.09 ? 0.5 * sin(2 * .pi * 1_318.5 * (t - 0.09)) * env(t - 0.09, 0.22) : 0  // E6
+    return tanh(1.2 * (n1 + n2))
+}
+
+// lose — the ドーン sting: a dark, DESCENDING taiko boom with a skin-slap attack
+// and a deep downward pitch sweep. Phase-integrated so the sweep is smooth. The
+// falling pitch + low register is the opposite gesture to the win chime.
 noise = SeededNoise(state: 0x4444_5555)
 var phase = 0.0
-try write("don.caf", seconds: 0.8) { _, t in
+try write("lose.caf", seconds: 0.8) { _, t in
     let f = 42 + 38 * env(t, 0.06)  // ~80 Hz → 42 Hz
     phase += 2 * .pi * f / sampleRate
     let boom = 1.1 * sin(phase) * env(t, 0.22)

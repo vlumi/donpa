@@ -13,9 +13,12 @@ import Foundation
 final class SoundPlayer {
     enum Effect: String, CaseIterable {
         case flag = "tick"
-        case chord = "thud"
+        /// Opening a tile — also used for a chord (a chord just opens several).
         case reveal
-        case result = "don"
+        /// A whole area cascading open: the reveal tick, subtly fuller.
+        case flood
+        case win
+        case lose
     }
 
     /// The in-app toggle. When false, `play` is a no-op (the ringer switch is the

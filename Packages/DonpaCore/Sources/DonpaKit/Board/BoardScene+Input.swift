@@ -103,21 +103,20 @@ extension BoardScene {
         }
     }
 
-    /// Reveal and play the dig blip once for the action (not per flooded cell) —
-    /// only when the tap actually opens something (a hidden/"?" cell).
+    /// Reveal; the OPEN sound (reveal vs the fuller flood) is played from the VM's
+    /// onReveal, once the opened-cell count is final — see `handleReveal` wiring.
+    /// Only the haptic fires here, synchronously.
     private func revealWithSound(_ c: Coord) {
-        let s = viewModel.game.board[c].state
         viewModel.reveal(c)
-        if s == .hidden || s == .questioned { soundPlayer?.play(.reveal) }
     }
 
-    /// Chord and play the knock only when it will act (satisfied number with a
-    /// hidden neighbour left), so a stray tap on a 0-cell stays silent.
+    /// Chord and play the OPEN sound only when it acts — a chord is just opening
+    /// several tiles, so it uses the same tick as a single reveal.
     private func chordWithSound(_ c: Coord) {
         let acts = viewModel.game.canChord(c)
         viewModel.chord(c)
         if acts {
-            soundPlayer?.play(.chord)
+            soundPlayer?.play(.reveal)
             hapticPlayer?.chord()
         }
     }
