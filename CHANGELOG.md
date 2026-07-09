@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 20 — 2026-07-09
+
 - **Decoration details show your progress.** Tapping a tracked achievement now
   shows the live number behind it — "472 won", "1,234 tiles opened", your best
   Expert time, luckiest guess — with the next tier's target, so which medal
