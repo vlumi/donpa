@@ -88,9 +88,12 @@ struct ScoreRow: View {
             }
             .frame(width: ScoreColumns.bestTime, alignment: .trailing)
         }
-        .contentShape(Rectangle())
         .padding(.vertical, 10)
         .padding(.horizontal, rowInset)
+        // Shape AFTER the padding so the whole padded row is tappable — the gaps
+        // above/below the content toggle expand/collapse too, which feels natural
+        // (and is the difference between a 20pt and a 44pt tap target here).
+        .contentShape(Rectangle())
         .onTapGesture { onToggle?() }
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text(isExpanded ? "Hide details" : "Show details", bundle: .module))
