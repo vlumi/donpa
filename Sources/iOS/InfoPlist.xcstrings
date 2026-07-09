@@ -60,6 +60,18 @@
           }
         }
       }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Find a nearby player to swap score cards directly."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

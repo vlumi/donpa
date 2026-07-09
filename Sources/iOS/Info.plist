@@ -24,8 +24,15 @@
 	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.puzzle</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_donpa-swap._tcp</string>
+		<string>_donpa-swap._udp</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Scan a friend's QR code to add their scores.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Find a nearby player to swap score cards directly.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

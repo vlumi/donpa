@@ -22,8 +22,16 @@ struct MessHallView: View {
 
     /// Whether the Add-rival scanner sheet is presented.
     @State private var scanning = false
-    /// Whether the Nearby exchange sheet is presented.
-    @State private var nearby = false
+    /// `sheet(item:)` needs Identifiable; identity = the link itself.
+    private struct NearbyPayload: Identifiable {
+        let url: URL
+        var id: String { url.absoluteString }
+    }
+
+    /// The Nearby sheet's payload, built ONCE when the button is tapped —
+    /// building it in the sheet's ViewBuilder published from within a view
+    /// update (refreshFromCloud mutates the scoreboard) and looped forever.
+    @State private var nearbyURL: NearbyPayload?
     private let identityStore = ShareIdentityStore()
 
     private enum Tab: Hashable { case rivals, squads }
@@ -58,22 +66,17 @@ struct MessHallView: View {
                     onScanned?(url)
                 }
             }
-            .sheet(isPresented: $nearby) {
+            .sheet(item: $nearbyURL) { payload in
                 // Same payload the QR carries; same receive path a scan takes.
-                if let url = currentShareURL() {
-                    NearbyExchangeView(
-                        displayName: settings.shareName.isEmpty
-                            ? String(localized: "A rival", bundle: .module)
-                            : settings.shareName,
-                        payloadURL: url
-                    ) { received in
-                        nearby = false
-                        dismiss()  // close the Mess hall so the prompt shows at root
-                        onScanned?(received)
-                    }
-                } else {
-                    Text("Couldn't build your share card.", bundle: .module)
-                        .padding(40)
+                NearbyExchangeView(
+                    displayName: settings.shareName.isEmpty
+                        ? String(localized: "A rival", bundle: .module)
+                        : settings.shareName,
+                    payloadURL: payload.url
+                ) { received in
+                    nearbyURL = nil
+                    dismiss()  // close the Mess hall so the prompt shows at root
+                    onScanned?(received)
                 }
             }
             .sheet(item: $editingRival) { FriendDetailView(friend: $0, friends: friends) }
@@ -129,7 +132,7 @@ struct MessHallView: View {
                 }
                 .buttonStyle(.bordered)
                 Button {
-                    nearby = true
+                    nearbyURL = currentShareURL().map(NearbyPayload.init)
                 } label: {
                     Label {
                         Text("Nearby", bundle: .module)

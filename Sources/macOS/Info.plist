@@ -26,7 +26,14 @@
 	<string>public.app-category.puzzle-games</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_donpa-swap._tcp</string>
+		<string>_donpa-swap._udp</string>
+	</array>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Find a nearby player to swap score cards directly.</string>
 </dict>
 </plist>
