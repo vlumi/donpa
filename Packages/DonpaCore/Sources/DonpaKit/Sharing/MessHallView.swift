@@ -72,7 +72,8 @@ struct MessHallView: View {
                     displayName: settings.shareName.isEmpty
                         ? String(localized: "A rival", bundle: .module)
                         : settings.shareName,
-                    payloadURL: payload.url
+                    payloadURL: payload.url,
+                    identityKey: identityStore.identity()?.publicKey
                 ) { received in
                     nearbyURL = nil
                     dismiss()  // close the Mess hall so the prompt shows at root

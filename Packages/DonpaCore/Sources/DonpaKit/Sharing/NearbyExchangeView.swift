@@ -10,9 +10,13 @@ struct NearbyExchangeView: View {
     let onReceived: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
 
-    init(displayName: String, payloadURL: URL, onReceived: @escaping (URL) -> Void) {
+    init(
+        displayName: String, payloadURL: URL, identityKey: Data?,
+        onReceived: @escaping (URL) -> Void
+    ) {
         _exchange = StateObject(
-            wrappedValue: NearbyExchange(displayName: displayName, payloadURL: payloadURL))
+            wrappedValue: NearbyExchange(
+                displayName: displayName, payloadURL: payloadURL, identityKey: identityKey))
         self.onReceived = onReceived
     }
 

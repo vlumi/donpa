@@ -266,9 +266,15 @@ public struct GameView: View {
     /// `ShareLink.payload` (signature) — a throw here means the share is invalid, so
     /// we surface a loud `.failed`; a valid share becomes `.accepted` or `.collision`.
     /// Shared by `onOpenURL` (tapped link) and the scanner (decoded QR).
-    static func classify(_ url: URL, existing: [Friend]) -> IncomingShare {
+    static func classify(
+        _ url: URL, existing: [Friend], ownKey: Data? = nil
+    ) -> IncomingShare {
         do {
             let payload = try ShareLink.payload(from: url)
+            // Your own card — your own QR, or Nearby finding your other device
+            // (both carry the same synchronizable Keychain identity). Importing
+            // yourself as a rival is never right.
+            if let ownKey, payload.publicKey == ownKey { return .own }
             switch FriendMerge.outcome(for: payload, existing: existing) {
             case .nameCollision(let key):
                 return .collision(payload, existingKey: key)
@@ -283,7 +289,8 @@ public struct GameView: View {
     }
 
     private func receive(_ url: URL) {
-        navigator.incomingShare = Self.classify(url, existing: friends.friends)
+        navigator.incomingShare = Self.classify(
+            url, existing: friends.friends, ownKey: ShareIdentityStore().identity()?.publicKey)
     }
 }
 
@@ -296,6 +303,12 @@ private struct ReceivePrompt: ViewModifier {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+
+    /// True for `.own` — the gentle "that's you" alert.
+    private var isOwn: Bool {
+        if case .own = navigator.incomingShare { return true }
+        return false
+    }
 
     /// True only for `.failed`, which routes to the alert rather than the sheet.
     private var failure: ShareCodec.DecodeError? {
@@ -324,7 +337,9 @@ private struct ReceivePrompt: ViewModifier {
                     // view dismissed itself; classify and prompt at root (deferred
                     // a tick for the same sheet-swap reason).
                     onScanned: { url in
-                        let incoming = GameView.classify(url, existing: friends.friends)
+                        let incoming = GameView.classify(
+                            url, existing: friends.friends,
+                            ownKey: ShareIdentityStore().identity()?.publicKey)
                         Task { @MainActor in navigator.incomingShare = incoming }
                     },
                     // A head-to-head rematch: same rail as the Service Record's
@@ -343,6 +358,21 @@ private struct ReceivePrompt: ViewModifier {
                 }
             } message: { error in
                 Text(error.receiveMessage, bundle: .module)
+            }
+            .alert(
+                Text("That's your own card", bundle: .module),
+                isPresented: Binding(
+                    get: { isOwn }, set: { if !$0 { navigator.incomingShare = nil } })
+            ) {
+                Button {
+                    navigator.incomingShare = nil
+                } label: {
+                    Text("OK", bundle: .module)
+                }
+            } message: {
+                Text(
+                    "This share was made with your own identity — a rival card from your other device is still you.",
+                    bundle: .module)
             }
     }
 
