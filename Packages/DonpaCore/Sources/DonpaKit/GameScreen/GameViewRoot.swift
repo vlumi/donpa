@@ -12,9 +12,16 @@ import SwiftUI
 /// the app churned out ~one throwaway scene per tick and could leave one leaked,
 /// still rendering. `@StateObject`'s autoclosure is evaluated once, so the scene is
 /// constructed a single time regardless of how often the view re-inits.
+@MainActor
 final class SceneHolder: ObservableObject {
     let scene: BoardScene
-    init(viewModel: GameViewModel) { scene = BoardScene(viewModel: viewModel) }
+    /// App-lifetime sound player, preloaded once. The scene fires input effects
+    /// through it; GameContent keeps `isEnabled` in step with Settings.
+    let soundPlayer = SoundPlayer()
+    init(viewModel: GameViewModel) {
+        scene = BoardScene(viewModel: viewModel)
+        scene.soundPlayer = soundPlayer
+    }
 }
 
 public struct GameView: View {

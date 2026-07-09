@@ -21,6 +21,10 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Sound effects.** Flag, chord, and dig each get a short procedural sound,
+  and the result panel lands with a manga "ドーン!" sting. On by default and
+  mutable from Settings, the home screen, or the pause screen; on iPhone the
+  Ring/Silent switch mutes it too (and it never interrupts your music).
 - **Question marks (opt-in).** A new Settings toggle adds a "?" step to the
   flag cycle — flag, then ?, then clear — for marking a maybe. Off by default.
   A "?" is only a note: it never counts toward the mine counter or satisfies a

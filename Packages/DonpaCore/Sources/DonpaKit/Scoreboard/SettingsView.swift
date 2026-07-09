@@ -107,6 +107,18 @@ struct SettingsView: View {
                 .font(.caption).foregroundStyle(.secondary)
             }
 
+            settingRow("Sound") {
+                Toggle(isOn: $settings.sound) {
+                    Text("Play sound effects", bundle: .module)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(
+                    "Flag, chord, dig, and the result sting. On iPhone the Ring/Silent switch mutes it too.",
+                    bundle: .module
+                )
+                .font(.caption).foregroundStyle(.secondary)
+            }
+
             settingRow("Language") {
                 Picker(selection: $settings.language) {
                     ForEach(LanguagePreference.allCases) { lang in

@@ -26,6 +26,7 @@ let package = Package(
             dependencies: ["DonpaCore"],
             resources: [
                 .process("Resources/Panels.xcassets"),
+                .process("Resources/Sounds"),
                 .process("Resources/Localizable.xcstrings"),
             ]
         ),
