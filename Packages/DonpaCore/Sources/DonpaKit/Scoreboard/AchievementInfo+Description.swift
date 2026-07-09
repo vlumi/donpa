@@ -23,7 +23,7 @@ extension AchievementID {
                 bundle: .module)
         case .speedExpert:
             return String(
-                localized: "Clear Expert in under 100 / 60 / 40 seconds.", bundle: .module)
+                localized: "Clear Expert in under 180 / 120 / 90 seconds.", bundle: .module)
         case .insaneWin:
             return String(localized: "Win a Legend board, M or larger.", bundle: .module)
         case .lunaticWin:

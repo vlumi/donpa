@@ -8,6 +8,8 @@ import SwiftUI
 /// grid never reflows).
 struct DecorationsSection: View {
     @ObservedObject var achievements: AchievementStore
+    /// Merged score records, for the detail line's live stat value (e.g. "472 wins").
+    let records: [String: ScoreRecord]
     let rowInset: CGFloat
 
     @State private var selected: AchievementID?
@@ -79,6 +81,11 @@ struct DecorationsSection: View {
                 Text(verbatim: id.featDescription)
                     .font(.caption).foregroundStyle(.secondary)
             }
+            if !secret, let progress = AchievementEngine.progress(for: id, records: records) {
+                // The running value behind a tracked feat, so the tier you're at
+                // (and how close the next is) is legible, not just a medal colour.
+                progressLine(id: id, progress: progress)
+            }
             if let date = achievements.firstEarned(id, tier: max(tier, 1)), tier > 0 {
                 Text(
                     "Earned \(date.formatted(date: .abbreviated, time: .omitted))",
@@ -90,5 +97,48 @@ struct DecorationsSection: View {
         .padding(.horizontal, rowInset)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+
+    /// A "current value" line for a tracked feat — "472 wins", "1:23.4 best",
+    /// "25% luck" — plus the next rung for a tiered feat you haven't maxed.
+    @ViewBuilder private func progressLine(id: AchievementID, progress: AchievementProgress)
+        -> some View
+    {
+        let value = progressValueText(progress)
+        let next = nextThresholdText(id: id, progress: progress)
+        HStack(spacing: 4) {
+            value.font(.caption.weight(.semibold))
+            if let next {
+                next.font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func progressValueText(_ progress: AchievementProgress) -> Text {
+        // Counts use the locale's grouping separator (they reach into the millions).
+        let grouped = ScoreboardView.grouped(progress.current)
+        switch progress.metric {
+        case .wins:
+            return Text("\(grouped) won", bundle: .module)
+        case .tiles:
+            return Text("\(grouped) tiles opened", bundle: .module)
+        case .mines:
+            return Text("\(grouped) disarmed", bundle: .module)
+        case .bestSeconds:
+            return Text(
+                "Best \(TimeFormat.mmsst(centiseconds: progress.current))", bundle: .module)
+        case .luckPercent:
+            return Text("\(progress.current)% luckiest", bundle: .module)
+        }
+    }
+
+    /// The next unearned rung, if any — "next: 1,000" for a count feat. Speed/luck
+    /// bars go the other way (lower is better), so we don't tease a number there.
+    private func nextThresholdText(id: AchievementID, progress: AchievementProgress) -> Text? {
+        guard progress.metric == .wins || progress.metric == .tiles || progress.metric == .mines,
+            let thresholds = id.tierThresholds,
+            let next = thresholds.first(where: { $0 > progress.current })
+        else { return nil }
+        return Text("(next: \(ScoreboardView.grouped(next)))", bundle: .module)
     }
 }
