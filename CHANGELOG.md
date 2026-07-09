@@ -45,12 +45,20 @@ development — entries land under Unreleased as they merge.
   Drills family — the no-guess on-ramp — instead of Basic, so a newcomer meets
   the fair, learnable boards first. Anyone who's played before keeps their own
   remembered family; only a genuinely blank slate lands on Drills.
+- **Two-button mouse (macOS).** The dig/flag toggle now assigns the mouse
+  buttons: Dig mode gives left-to-dig, right-to-flag (the classic layout), Flag
+  mode swaps them — so both buttons always work and you never flip the toggle
+  mid-game. Right-click, Control-click, and long-press are one thing now (the
+  other action). One-button and touch are unchanged.
 - **Mess hall polish.** The iCloud sync switch now lives in the Mess hall too,
   not only the Service Record — it's where sharing raises the question. Sharing
   is gated on entering a name (no more nameless "?" cards going out), a
   signed-out iOS device points you to Settings instead of a dead end, and
   closing a finished Nearby exchange no longer drops the card you just
   received.
+- **Scoreboard tidy-ups.** A board's rival leaderboard no longer lists rivals
+  who have no time there (just a "—"), and the whole padded row is now tappable
+  to expand or collapse it, not only its text.
 
 ### build 19 — 2026-07-09
 
