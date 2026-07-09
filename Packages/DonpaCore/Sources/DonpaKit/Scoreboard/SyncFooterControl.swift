@@ -106,7 +106,9 @@ struct SyncFooterControl: View {
         .buttonStyle(.plain)
         .foregroundStyle(Color.accentColor)
         #else
-        Text("iCloud sign-in required", bundle: .module)
+        // iOS has no public deep link to iCloud sign-in (the only settings URL
+        // opens THIS app's pane), so point the way in words instead of a dead button.
+        Text("Sign into iCloud in Settings to sync.", bundle: .module)
             .font(.caption)
             .foregroundStyle(.secondary)
         #endif

@@ -21,6 +21,13 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Mess hall polish.** The iCloud sync switch now lives in the Mess hall too,
+  not only the Service Record — it's where sharing raises the question. Sharing
+  is gated on entering a name (no more nameless "?" cards going out), a
+  signed-out iOS device points you to Settings instead of a dead end, and
+  closing a finished Nearby exchange no longer drops the card you just
+  received.
+
 ### build 19 — 2026-07-09
 
 - **Nearby exchange.** A new button in the Mess hall swaps score cards with

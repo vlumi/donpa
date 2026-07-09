@@ -143,21 +143,44 @@ struct MessHallView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+                // No name → no card to swap (same gate the share card applies).
+                .disabled(!hasShareName)
             }
         }
     }
 
-    /// The signed share link, exactly as the share card builds it.
+    /// Whether a shareable name has been entered — gates Nearby, so a nameless "?"
+    /// card never crosses to a rival.
+    private var hasShareName: Bool {
+        !settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// The signed share link, exactly as the share card builds it. Nil when there's
+    /// no name yet (the card gates its own actions the same way) — a "?" card is a
+    /// bad first handshake.
     private func currentShareURL() -> URL? {
         if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
         let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let identity = identityStore.identity(),
+        guard !trimmed.isEmpty,
+            let identity = identityStore.identity(),
             let payload = SharePayloadBuilder.build(
-                from: scoreboard, identity: identity,
-                name: trimmed.isEmpty ? "?" : trimmed,
+                from: scoreboard, identity: identity, name: trimmed,
                 includeCareer: settings.shareIncludeCareer, now: Date())
         else { return nil }
         return try? ShareLink.url(for: payload)
+    }
+
+    /// Sync lives here too, not only in the Service Record: the Mess hall is where
+    /// sync questions arise (the share card's footer already talks about it), and the
+    /// same self-contained control reads shared state, so mounting it twice is free.
+    private var syncFooter: some View {
+        VStack(spacing: 0) {
+            Divider()
+            SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+        }
     }
 
     // MARK: Tabs
@@ -303,6 +326,7 @@ struct MessHallView: View {
                 tabPicker.padding([.horizontal, .top], 12)
                 tabContent
             }
+            .safeAreaInset(edge: .bottom) { syncFooter.background(.bar) }
             .navigationTitle(Text("Mess hall", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -321,12 +345,16 @@ struct MessHallView: View {
             shareHeader
             tabPicker
             tabContent.frame(minHeight: 260)
-            Button {
-                dismiss()
-            } label: {
-                Text("Done", bundle: .module)
+            HStack(spacing: 12) {
+                SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Done", bundle: .module)
+                }
+                .keyboardShortcut(.defaultAction)
             }
-            .keyboardShortcut(.defaultAction)
         }
         .padding(20)
         // Wide enough that the share card crosses its directly-scannable QR
