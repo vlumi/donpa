@@ -245,6 +245,13 @@ The ⚙️ button opens settings (⌘, on macOS):
   one palette that follows the choice (System tracks the OS).
 - **Toggle side** — which corner the dig/flag toggle hugs (left/right), for your
   grip.
+- **Question marks** — add a **?** step to the flag cycle (flag → ? → clear) for
+  marking a maybe; off by default. A **?** is only a note — it never counts as a
+  flag for the counter or chording.
+- **Sound** — procedural effects for opening, flagging, and the win/loss stings;
+  on by default. On iPhone the Ring/Silent switch mutes them too, and they never
+  interrupt your music.
+- **Haptics** (iOS) — a light tap on flags, chords, and digs; on by default.
 - **Language** — follow the system, or force English / Finnish / Japanese.
 
 All selections are saved between launches.
@@ -282,6 +289,15 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
   illustrated in-app guide (dig/flag, chording, the mine counter, forced
   guesses), with the long version at
   [donpa.app/how-to-play](https://donpa.app/how-to-play/).
+- **New:** **sound and haptics** — procedural sound effects (an open tick, a
+  fuller cue when an area floods, flag/clear, and win/lose stings) and per-move
+  haptics on iOS, both on by default and separately toggleable; the iPhone
+  Ring/Silent switch mutes the sound too.
+- **New:** an opt-in **question-mark flag cycle** (flag → ? → clear) for
+  marking a maybe, off by default.
+- **Changed:** new players start on **Drills** (the no-guess on-ramp); the
+  iCloud sync switch also lives in the **Mess hall**, and sharing now asks for
+  a name first.
 - **Improved:** result pills restyled for contrast + Dynamic Type; a
   readability/VoiceOver pass across the app (spoken toasts and save-dots,
   44 pt chips, combined rival rows).
