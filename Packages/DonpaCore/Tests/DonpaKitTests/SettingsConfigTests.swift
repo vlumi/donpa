@@ -12,12 +12,34 @@ final class SettingsConfigTests: XCTestCase {
         UserDefaults(suiteName: "test.\(UUID().uuidString)")!
     }
 
-    func testDefaultsAreBasicFlat() {
+    func testFreshInstallDefaultsToDrills() {
+        // A genuine newcomer (no family key, no legacy keys) lands on Drills — the
+        // no-guess on-ramp — not Basic. The per-family axes keep their own defaults.
         let settings = Settings(defaults: freshDefaults())
-        XCTAssertEqual(settings.family, .basic)
+        XCTAssertEqual(settings.family, .practice)
         XCTAssertEqual(settings.gridEdges, .flat, "Round is opt-in")
         XCTAssertEqual(settings.hiveEdges, .flat)
-        XCTAssertEqual(settings.currentConfig, .basic(.beginner))
+        XCTAssertEqual(settings.currentConfig, .practice(settings.practiceSize))
+    }
+
+    func testLegacyVeteranIsNotYankedToDrills() {
+        // A pre-family install predates Drills; the legacy mode key means "has
+        // played", so migration wins and the newcomer default never applies.
+        let classic = freshDefaults()
+        classic.set("classic", forKey: "donpa.mode")
+        XCTAssertEqual(Settings(defaults: classic).family, .basic)
+
+        let modern = freshDefaults()
+        modern.set("modern", forKey: "donpa.mode")
+        XCTAssertEqual(Settings(defaults: modern).family, .grid)
+    }
+
+    func testAnExplicitBasicPickIsRemembered() {
+        // Once the player chooses a family, that sticks — the Drills default only
+        // fills the void on a fresh store.
+        let defaults = freshDefaults()
+        Settings(defaults: defaults).family = .basic
+        XCTAssertEqual(Settings(defaults: defaults).family, .basic)
     }
 
     func testCurrentConfigCarriesTheFamilysOwnAxes() {
