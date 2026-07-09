@@ -25,8 +25,8 @@ struct ReceiveShareView: View {
             ResolveCollisionView(
                 payload: payload, existingKey: existingKey, friends: friends, onDone: onDone,
                 onAdded: onAdded)
-        case .failed:
-            // A failed share is shown as an alert by the presenter, never as a sheet.
+        case .failed, .own:
+            // Failed and own-card shares are alerts at the presenter, never sheets.
             EmptyView()
         }
     }

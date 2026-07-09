@@ -77,6 +77,10 @@ public enum IncomingShare: Identifiable {
     case collision(SharePayload, existingKey: Data)
     /// Failed to verify or decode — show the loud alert with a reason.
     case failed(ShareCodec.DecodeError)
+    /// The player's OWN card (same signing key) — a gentle alert, no import.
+    /// Happens by scanning your own QR, or Nearby finding your other device
+    /// (same synchronizable Keychain identity on both).
+    case own
 
     /// Stable identity for `.sheet(item:)` — one live prompt at a time, so a constant
     /// per-case tag is enough (and avoids hashing the payload).
@@ -85,6 +89,7 @@ public enum IncomingShare: Identifiable {
         case .accepted: return "accepted"
         case .collision: return "collision"
         case .failed: return "failed"
+        case .own: return "own"
         }
     }
 }

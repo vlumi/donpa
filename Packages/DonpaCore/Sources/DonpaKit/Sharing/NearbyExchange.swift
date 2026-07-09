@@ -36,14 +36,22 @@ final class NearbyExchange: NSObject, ObservableObject {
     private let payload: Data
     private var sent = false
 
-    init(displayName: String, payloadURL: URL) {
+    /// A short tag of the local signing key, advertised so the browser can hide
+    /// the player's OWN other devices (same synchronizable identity) from the
+    /// list — swapping with yourself is never right. A prefix suffices: this is
+    /// self-recognition, not authentication (the receive path re-checks the
+    /// full key anyway).
+    private let selfTag: String
+
+    init(displayName: String, payloadURL: URL, identityKey: Data?) {
         let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         // MCPeerID rejects empty/oversized names; the share name is user text.
         myPeer = MCPeerID(displayName: trimmed.isEmpty ? "Donpa" : String(trimmed.prefix(60)))
+        selfTag = (identityKey ?? Data()).prefix(9).base64EncodedString()
         session = MCSession(
             peer: myPeer, securityIdentity: nil, encryptionPreference: .required)
         advertiser = MCNearbyServiceAdvertiser(
-            peer: myPeer, discoveryInfo: nil, serviceType: Self.service)
+            peer: myPeer, discoveryInfo: ["k": selfTag], serviceType: Self.service)
         browser = MCNearbyServiceBrowser(peer: myPeer, serviceType: Self.service)
         payload = Data(payloadURL.absoluteString.utf8)
         super.init()
@@ -155,6 +163,8 @@ extension NearbyExchange: MCNearbyServiceBrowserDelegate {
         withDiscoveryInfo info: [String: String]?
     ) {
         Task { @MainActor in
+            // Hide the player's own other devices — same identity tag.
+            guard info?["k"] != self.selfTag else { return }
             if !self.peers.contains(peerID) { self.peers.append(peerID) }
         }
     }
