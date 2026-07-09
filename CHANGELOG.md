@@ -21,6 +21,10 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Nearby exchange.** A new button in the Mess hall swaps score cards with
+  a player in the same room, both directions in one handshake — over local
+  Wi-Fi/Bluetooth, no server, works between iPhone, iPad and Mac. Each side
+  still confirms the import, exactly like a scanned code.
 - **How to play.** A `?` on the home screen (and in About) opens a static
   reference: every mechanic as a small true-to-the-board diagram — the goal,
   dig/flag, chording, the mine counter, endings, forced guesses and the luck

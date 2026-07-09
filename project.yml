@@ -34,6 +34,12 @@ targets:
         # screen). Never records or stores anything — the frame is discarded after
         # a code is read.
         NSCameraUsageDescription: Scan a friend's QR code to add their scores.
+        # Nearby exchange (MultipeerConnectivity): finds the other player's open
+        # Nearby sheet on the local network. Nothing is sent anywhere else.
+        NSLocalNetworkUsageDescription: Find a nearby player to swap score cards directly.
+        NSBonjourServices:
+          - _donpa-swap._tcp
+          - _donpa-swap._udp
         LSApplicationCategoryType: public.app-category.puzzle
         # Launch screen: the mono burst-mine centered on a charcoal ground (both
         # asset-catalog entries), matching the app's "interior-page" B&W look.
@@ -124,6 +130,11 @@ targets:
         # moved to 14).
         LSMinimumSystemVersion: "14.0"
         NSHighResolutionCapable: true
+        # Nearby exchange — see the iOS target's note.
+        NSLocalNetworkUsageDescription: Find a nearby player to swap score cards directly.
+        NSBonjourServices:
+          - _donpa-swap._tcp
+          - _donpa-swap._udp
     settings:
       base:
         # Shares the iOS bundle ID for Universal Purchase: one App Store record
