@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 19 — 2026-07-09
+
 - **Nearby exchange.** A new button in the Mess hall swaps score cards with
   a player in the same room, both directions in one handshake — over local
   Wi-Fi/Bluetooth, no server, works between iPhone, iPad and Mac. Each side
