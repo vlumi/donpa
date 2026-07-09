@@ -21,6 +21,9 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Haptics on every move (iOS).** A light tap when you place a flag, a firmer
+  one when a chord fires, and a soft bump on a dig that swells with the size of
+  the region it opens. On by default, toggleable in Settings.
 - **Sound effects.** Flag, chord, and dig each get a short procedural sound,
   and the result panel lands with a manga "ドーン!" sting. On by default and
   mutable from Settings, the home screen, or the pause screen; on iPhone the

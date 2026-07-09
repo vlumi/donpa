@@ -81,6 +81,25 @@ final class GameViewModelStatsTests: XCTestCase {
     /// Flagging a revealed cell is a no-op all the way down: no latch, and no
     /// revision bump (a bump would schedule a full-board autosave + redraw for
     /// every stray right-click on opened ground).
+    /// onReveal reports the opened-cell delta (drives the cascade-scaled dig
+    /// haptic): the opening reveal floods a region (>1), a later single-cell dig
+    /// reports its own delta, and a no-op tap reports nothing.
+    func testOnRevealReportsOpenedCellDelta() async {
+        let vm = GameViewModel(config: .beginner)
+        var deltas: [Int] = []
+        vm.onReveal = { deltas.append($0) }
+        vm.reveal(Coord(0, 0))
+        await vm.awaitPendingWork()
+        XCTAssertEqual(deltas.count, 1)
+        XCTAssertGreaterThan(deltas[0], 1, "the first reveal opens a region")
+
+        // A tap on an already-revealed cell opens nothing → no onReveal.
+        let revealed = vm.game.board.allCoords.first { vm.game.board[$0].state == .revealed }!
+        vm.reveal(revealed)
+        await vm.awaitPendingWork()
+        XCTAssertEqual(deltas.count, 1, "a no-op reveal doesn't report")
+    }
+
     /// A "?" mark is external memory too, so placing one violates Bare Hands
     /// exactly like a flag — even though it never counts as a flag elsewhere.
     func testQuestionMarkViolatesBareHands() async {

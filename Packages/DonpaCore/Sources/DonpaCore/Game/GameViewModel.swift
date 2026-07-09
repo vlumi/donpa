@@ -90,9 +90,11 @@ public final class GameViewModel: ObservableObject {
     public private(set) var usedChordEver = false
 
     /// Activity already flushed for THIS game, so a flush only sends the new delta.
-    private var flushedTiles = 0
-    private var flushedFlags = 0
-    private var flushedCentiseconds = 0
+    /// Internal (not private): the flush logic lives in GameViewModel+Activity.swift,
+    /// split out for the file-length budget.
+    var flushedTiles = 0
+    var flushedFlags = 0
+    var flushedCentiseconds = 0
 
     /// Pushes the unflushed activity DELTA (tiles/flags/time) to the lifetime
     /// totals — called on pause (also when the scoreboard opens), background, and
@@ -101,6 +103,12 @@ public final class GameViewModel: ObservableObject {
     /// Core never references it.
     public var onActivityFlush:
         ((_ tilesDelta: Int, _ flagsDelta: Int, _ centisecondsDelta: Int) -> Void)?
+
+    /// A reveal opened `openedCells` non-mine cells — fires only when that's > 0
+    /// (a mine hit or a no-op tap stays silent), AFTER the off-main reveal settles
+    /// so the count is final. Used to scale the dig haptic by cascade size. Set by
+    /// the host (a UI feedback concern); Core never references it.
+    public var onReveal: ((_ openedCells: Int) -> Void)?
 
     /// A reveal was a FORCED guess (no certainly-safe cell existed — see
     /// `GuessOdds`): reports its survival odds and whether the player survived it.
@@ -118,21 +126,6 @@ public final class GameViewModel: ObservableObject {
     @Published public internal(set) var lastForcedGuess: ForcedGuessEvent?
     /// Monotonic id for `lastForcedGuess` events (see `ForcedGuessEvent.id`).
     var guessEventCounter = 0
-
-    /// Flush this game's activity delta via `onActivityFlush`. Idempotent.
-    public func flushActivity() {
-        let tiles = game.revealedSafeCount
-        let flags = flagsPlacedThisGame
-        let centi = currentCentiseconds()
-        let dt = tiles - flushedTiles
-        let df = flags - flushedFlags
-        let dc = centi - flushedCentiseconds
-        guard dt != 0 || df != 0 || dc != 0 else { return }
-        flushedTiles = tiles
-        flushedFlags = flags
-        flushedCentiseconds = centi
-        onActivityFlush?(dt, df, dc)
-    }
 
     /// Whether the board extends beyond the viewport; published by `BoardScene`
     /// each frame so the chrome can enable/disable the minimap toggle.
@@ -258,10 +251,13 @@ public final class GameViewModel: ObservableObject {
         // only when analysis is even possible, so the huge boards never retain a
         // second board copy.
         let pre = preGuessState()
+        let safeBefore = game.revealedSafeCount
         computeOffMain({ game in game.reveal(c) }) { [weak self] in
             guard let self else { return }
             // The first reveal places mines and starts the clock.
             if wasNotStarted, self.game.status == .playing { self.startTimer() }
+            let opened = self.game.revealedSafeCount - safeBefore
+            if opened > 0 { self.onReveal?(opened) }
             self.finishIfEnded()
             // A single reveal only ever loses on the clicked cell, so
             // post-state loss ⟺ died to it.

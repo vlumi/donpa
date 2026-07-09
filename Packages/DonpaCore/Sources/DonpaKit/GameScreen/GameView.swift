@@ -230,6 +230,7 @@ struct GameContent: View {
         .onChangeCompat(of: navigator.zoomOutRequested) { _ in scene.zoom(by: 0.8) }
         .onChangeCompat(of: navigator.toggleMinimapRequested) { _ in scene.toggleMinimapSize() }
         .onChangeCompat(of: settings.sound) { scene.soundPlayer?.isEnabled = $0 }
+        .onChangeCompat(of: settings.haptics) { scene.hapticPlayer?.isEnabled = $0 }
     }
 
     // MARK: Save / restore lifecycle
@@ -241,9 +242,15 @@ struct GameContent: View {
         // Persist a minimap resize back to Settings (survives new game / restart /
         // save-restore). The scene drives the gesture; Settings is the store.
         scene.onMinimapScaleChange = { settings.minimapScale = Double($0) }
-        // Seed the sound player's mute from Settings; kept in step by the modifier
+        // Seed the sound / haptic mutes from Settings; kept in step by the modifiers
         // on the body (below).
         scene.soundPlayer?.isEnabled = settings.sound
+        scene.hapticPlayer?.isEnabled = settings.haptics
+        // The dig haptic scales with cascade size, so it fires from the VM's reveal
+        // completion (the opened-cell count is final only then).
+        viewModel.onReveal = { [weak scene] opened in
+            scene?.hapticPlayer?.reveal(openedCells: opened)
+        }
         // Fold each live activity-flush delta (tiles/flags/time) into the lifetime
         // totals WITHOUT counting a game played — the outcome is recorded at end.
         // Wired before any newGame below so the first flush is caught.
