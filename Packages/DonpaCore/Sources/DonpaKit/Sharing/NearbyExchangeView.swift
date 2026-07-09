@@ -36,6 +36,28 @@ struct NearbyExchangeView: View {
                 status(Text("The connection dropped — try again.", bundle: .module), spinner: false)
             }
             Spacer(minLength: 0)
+            dismissButton
+        }
+        .padding(20)
+        .frame(minWidth: 300, idealWidth: 340, minHeight: 360)
+        .onAppear { exchange.start() }
+        .onDisappear { exchange.stop() }
+    }
+
+    /// The bottom button. Once a card has arrived, closing must NOT drop it —
+    /// dismissing routes the received URL into the confirm flow (the same as
+    /// "Add their card"), so the whole handshake needn't be redone. Otherwise it's
+    /// a plain cancel.
+    @ViewBuilder private var dismissButton: some View {
+        if let url = exchange.receivedURL {
+            Button {
+                dismiss()
+                onReceived(url)
+            } label: {
+                Text("Close", bundle: .module).frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+        } else {
             Button {
                 dismiss()
             } label: {
@@ -43,10 +65,6 @@ struct NearbyExchangeView: View {
             }
             .buttonStyle(.bordered)
         }
-        .padding(20)
-        .frame(minWidth: 300, idealWidth: 340, minHeight: 360)
-        .onAppear { exchange.start() }
-        .onDisappear { exchange.stop() }
     }
 
     private var header: some View {

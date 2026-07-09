@@ -383,6 +383,23 @@
         }
       }
     },
+    "Add your name to share." : {
+      "comment" : "Share card: nudge shown when no name is entered yet",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisää nimesi jakaaksesi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共有するには名前を入力してください。"
+          }
+        }
+      }
+    },
     "All rivals" : {
       "localizations" : {
         "en" : {
@@ -2178,23 +2195,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "遊び方"
-          }
-        }
-      }
-    },
-    "iCloud sign-in required" : {
-      "comment" : "Sync status (iOS): on-device-only because signed out — plain guidance, not tappable (iOS can't deep-link to iCloud sign-in)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vaatii iCloud-kirjautumisen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloudへのサインインが必要です"
           }
         }
       }
@@ -4039,6 +4039,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iCloudにサインイン"
+          }
+        }
+      }
+    },
+    "Sign into iCloud in Settings to sync." : {
+      "comment" : "Sync status (iOS): signed out — points to Settings (iOS can't deep-link to iCloud sign-in)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kirjaudu iCloudiin Asetuksissa synkronoidaksesi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期するには設定でiCloudにサインインしてください。"
           }
         }
       }

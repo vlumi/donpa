@@ -51,6 +51,11 @@ struct ShareCardView: View {
                     .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
                     if let link {
                         shareButtons(for: link)
+                    } else if trimmedName.isEmpty {
+                        // A nameless card would go out stamped "?" — a poor first
+                        // handshake in a name-is-identity model. Nudge, don't ship it.
+                        Text("Add your name to share.", bundle: .module)
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -115,6 +120,17 @@ struct ShareCardView: View {
             Text("Couldn't prepare your share.", bundle: .module)
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(width: 148, height: 148)
+        } else if trimmedName.isEmpty {
+            // Awaiting a name — the nudge under the field carries the message;
+            // a placeholder plate keeps the card's shape steady.
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.primary.opacity(0.05))
+                .frame(width: qrSize, height: qrSize)
+                .overlay {
+                    Image(systemName: "qrcode")
+                        .font(.largeTitle).foregroundStyle(.tertiary)
+                }
+                .accessibilityHidden(true)
         } else {
             ProgressView().frame(width: 148, height: 148)
         }
@@ -137,17 +153,18 @@ struct ShareCardView: View {
         if let qr {
             // `link` keys the render: it changes whenever the QR does (name /
             // career edit), so the card image rebuilds to match.
-            ShareImageButton(qr: qr, name: currentName, linkID: link)
+            ShareImageButton(qr: qr, name: trimmedName, linkID: link)
             #if os(macOS)
             // macOS's share picker has NO save-to-disk service (iOS's sheet offers
             // "Save to Files"), so saving the card is its own button + save panel.
-            SaveImageButton(qr: qr, name: currentName, linkID: link)
+            SaveImageButton(qr: qr, name: trimmedName, linkID: link)
             #endif
         }
     }
 
-    /// The name to stamp on the shared card — same trimmed input the payload used.
-    private var currentName: String {
+    /// The trimmed name: stamped on the card, and (when empty) the gate that
+    /// suppresses sharing so no "?" card ever goes out.
+    private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -163,14 +180,20 @@ struct ShareCardView: View {
     /// so the shared blob reflects the current cross-device best.
     private func rebuild() {
         failed = false
+        // No name → no card. The QR/buttons stay hidden and the field shows a nudge;
+        // a "?" card is a bad first handshake when the name IS the shared identity.
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            qr = nil
+            link = nil
+            return
+        }
         if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
         // The name is the sharer's own input; the RECEIVER sanitizes on decode
-        // (where it matters for safety). Just trim whitespace for a tidy payload.
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // (where it matters for safety). The trim above is just for a tidy payload.
         guard let identity = identityStore.identity(),
             let payload = SharePayloadBuilder.build(
-                from: scoreboard, identity: identity,
-                name: trimmed.isEmpty ? "?" : trimmed,
+                from: scoreboard, identity: identity, name: trimmed,
                 includeCareer: settings.shareIncludeCareer, now: Date()),
             let url = try? ShareLink.url(for: payload)
         else {
