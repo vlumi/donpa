@@ -174,6 +174,7 @@ extension GameContent {
 
     private func fireHaptic(for result: GameResult) {
         #if os(iOS)
+        guard settings.haptics else { return }  // the toggle means ALL haptics off
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(result.isWin ? .success : .error)
         #endif
