@@ -100,14 +100,17 @@ extension MedalView {
     static func fullMoon(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
         let inset = s * 0.10
         let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
+        // A soft ink-tint fill makes the moon LUMINOUS in dark mode (white glow
+        // behind the white outline — user call); in light mode it's a faint
+        // wash and the outline carries the shape.
+        ctx.fill(Path(ellipseIn: rect), with: .color(ink.opacity(0.25)))
         ctx.stroke(
             Path(ellipseIn: rect), with: .color(ink), style: StrokeStyle(lineWidth: s * 0.08))
+        // Craters as FILLED light circles (user call) — maria, not ring outlines.
         for (x, y, r) in [(0.38, 0.36, 0.09), (0.60, 0.52, 0.12), (0.42, 0.66, 0.07)] {
             let crater = CGRect(
                 x: s * x - s * r, y: s * y - s * r, width: s * r * 2, height: s * r * 2)
-            ctx.stroke(
-                Path(ellipseIn: crater), with: .color(ink),
-                style: StrokeStyle(lineWidth: s * 0.05))
+            ctx.fill(Path(ellipseIn: crater), with: .color(ink.opacity(0.4)))
         }
     }
 
