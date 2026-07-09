@@ -73,6 +73,11 @@ Edges), **←/→** cycle the selection within the highlighted row, **Return** s
 
 ## Controls
 
+New to Minesweeper? The **`?` on the home screen** (also in About) opens a
+short illustrated **How to play** guide — the goal, dig/flag, chording, the
+mine counter, and forced guesses, each with a mini board. The long version
+lives at [donpa.app/how-to-play](https://donpa.app/how-to-play/).
+
 A **toggle** in a thumb-reachable corner of the board switches a tap/click
 between **Dig mode** and **Flag mode**, so you can place flags without risking an
 accidental reveal. Its corner follows the **Toggle side** setting (left/right)
@@ -220,6 +225,11 @@ with **no server and no accounts**:
   and sort them into **squads** (work, family, …), and compare **head-to-head**
   against one rival or a whole squad's best, board by board with a running
   tally.
+- **Swap in the same room.** **Nearby exchange** trades score cards with a
+  player next to you over local Wi-Fi/Bluetooth — open the sheet on both
+  devices, tap their name, and the cards cross both ways in one handshake
+  (each side still confirms through the normal add flow). Your own other
+  devices are hidden from the list.
 - **See where you stand.** In the Service Record, expand any board for a
   leaderboard — your best slotted in among your rivals', fastest first, with a
   standing medal on the row — and narrow the comparison to a single squad with
@@ -254,7 +264,7 @@ later, this note will credit it.
 High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
 in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
 
-### 0.5.0 — progression (in development)
+### 0.5.0 — progression
 
 - **New:** **Decorations** — 22 achievements with hand-drawn medals in the
   Service Record: skill feats, retroactive luck feats, tiered milestones,
@@ -265,6 +275,13 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 - **New:** the **Drills** board family — verified no-guess practice boards
   (XS–XL, 12 % mines) with per-size best times, on its own leftmost New Game
   page.
+- **New:** **Nearby exchange** — swap score cards with a player in the same
+  room, both directions in one handshake, over local Wi-Fi/Bluetooth; no
+  server, nothing leaves the room.
+- **New:** **How to play** — a `?` on the home screen opens a short
+  illustrated in-app guide (dig/flag, chording, the mine counter, forced
+  guesses), with the long version at
+  [donpa.app/how-to-play](https://donpa.app/how-to-play/).
 - **Improved:** result pills restyled for contrast + Dynamic Type; a
   readability/VoiceOver pass across the app (spoken toasts and save-dots,
   44 pt chips, combined rival rows).
