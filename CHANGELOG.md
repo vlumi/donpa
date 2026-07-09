@@ -24,8 +24,11 @@ development — entries land under Unreleased as they merge.
 - **Haptics on every move (iOS).** A light tap when you place a flag, a firmer
   one when a chord fires, and a soft bump on a dig that swells with the size of
   the region it opens. On by default, toggleable in Settings.
-- **Sound effects.** Flag, chord, and dig each get a short procedural sound,
-  and the result panel lands with a manga "ドーン!" sting. On by default and
+- **Sound effects.** A soft tick when you open a tile (a chord sounds the
+  same — it's just opening several), a subtly fuller version whenever a whole
+  area floods open (however it was opened), an up-tick for placing a flag and a
+  soft downward wipe for clearing one, and distinct result stings — a bright
+  rising chime for a win, a dark "ドーン!" boom for a loss. On by default and
   mutable from Settings, the home screen, or the pause screen; on iPhone the
   Ring/Silent switch mutes it too (and it never interrupts your music).
 - **Question marks (opt-in).** A new Settings toggle adds a "?" step to the

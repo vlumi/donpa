@@ -104,11 +104,12 @@ public final class GameViewModel: ObservableObject {
     public var onActivityFlush:
         ((_ tilesDelta: Int, _ flagsDelta: Int, _ centisecondsDelta: Int) -> Void)?
 
-    /// A reveal opened `openedCells` non-mine cells — fires only when that's > 0
-    /// (a mine hit or a no-op tap stays silent), AFTER the off-main reveal settles
-    /// so the count is final. Used to scale the dig haptic by cascade size. Set by
-    /// the host (a UI feedback concern); Core never references it.
-    public var onReveal: ((_ openedCells: Int) -> Void)?
+    /// An open finished, uncovering `openedCells` non-mine cells — fires only when
+    /// that's > 0 (a mine hit or no-op stays silent), AFTER the off-main compute
+    /// settles. `flooded` is true when a 0-cell cascade ran (hitting a 0 opens a
+    /// whole region for free) — the "area opened" the sound flags, vs the count the
+    /// haptic scales by. Set by the host (a UI feedback concern); Core never uses it.
+    public var onReveal: ((_ openedCells: Int, _ flooded: Bool) -> Void)?
 
     /// A reveal was a FORCED guess (no certainly-safe cell existed — see
     /// `GuessOdds`): reports its survival odds and whether the player survived it.
@@ -217,26 +218,6 @@ public final class GameViewModel: ObservableObject {
         }
     }
 
-    /// What a finishing off-main compute should do, decided purely so it's testable
-    /// (the async closure just applies the result, with no branching of its own).
-    /// - `finished`: the gameID the finishing task belongs to.
-    /// - `current`: the live gameID now.
-    /// - `latestStarted`: the gameID of the most recently *started* compute.
-    ///
-    /// `applyResult` — only the live task (`finished == current`) writes its board +
-    /// runs afterApply; a stale task (a newGame/restore bumped gameID past it) must
-    /// not clobber the newer game.
-    /// `releaseGate` — release `isComputing` for the live task, OR for a stale task
-    /// when no newer compute is arming the current generation (`latestStarted !=
-    /// current`); otherwise that newer compute owns the release. So the gate can
-    /// never wedge shut regardless of which entry point bumped gameID.
-    static func computeOutcome(finished: Int, current: Int, latestStarted: Int)
-        -> (applyResult: Bool, releaseGate: Bool)
-    {
-        let live = finished == current
-        return (applyResult: live, releaseGate: live || latestStarted != current)
-    }
-
     public func reveal(_ c: Coord) {
         InputTrace.log(
             "reveal \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
@@ -257,7 +238,13 @@ public final class GameViewModel: ObservableObject {
             // The first reveal places mines and starts the clock.
             if wasNotStarted, self.game.status == .playing { self.startTimer() }
             let opened = self.game.revealedSafeCount - safeBefore
-            if opened > 0 { self.onReveal?(opened) }
+            if opened > 0 {
+                // A single reveal floods iff the clicked cell was a 0 (which opens
+                // its whole region); a numbered cell opens just itself.
+                let flooded =
+                    self.game.status != .lost && self.game.board[c].adjacentMines == 0
+                self.onReveal?(opened, flooded)
+            }
             self.finishIfEnded()
             // A single reveal only ever loses on the clicked cell, so
             // post-state loss ⟺ died to it.
@@ -313,8 +300,25 @@ public final class GameViewModel: ObservableObject {
         // chord itself the guess being executed. Provably-safe chords report
         // nothing, exactly like certain single reveals.
         let pre = preGuessState()
+        let safeBefore = game.revealedSafeCount
+        // The neighbours this chord will open — used after to tell a plain
+        // multi-open (all numbered) from a flood (one of them was a 0 that
+        // cascaded), matching "flood = hit a 0".
+        let opening = game.board.topology.neighbors(of: c).filter {
+            game.board[$0].state == .hidden || game.board[$0].state == .questioned
+        }
         computeOffMain({ game in game.chord(c) }) { [weak self] in
             guard let self else { return }
+            // A chord opens cells too — feed the same onReveal so its open sound
+            // (tick vs the fuller flood) matches a single reveal.
+            let opened = self.game.revealedSafeCount - safeBefore
+            if opened > 0 {
+                // Flood iff one of the cells the chord opened was a 0.
+                let flooded =
+                    self.game.status != .lost
+                    && opening.contains { self.game.board[$0].adjacentMines == 0 }
+                self.onReveal?(opened, flooded)
+            }
             self.finishIfEnded()
             if let pre {
                 self.reportGuess(survived: self.game.status != .lost) {
@@ -432,13 +436,6 @@ public final class GameViewModel: ObservableObject {
         let endEvent = event(finalCentiseconds: finalCentiseconds)
         lastEndEvent = endEvent
         onGameEnd?(endEvent)
-    }
-
-    private func event(finalCentiseconds: Int) -> GameEndEvent {
-        GameEndEvent(
-            config: config, won: game.status == .won,
-            timeCentiseconds: finalCentiseconds, progress: game.progress,
-            revealActions: revealActionsThisGame, date: Date())
     }
 
     private func bump() { revision &+= 1 }

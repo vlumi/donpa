@@ -81,23 +81,43 @@ final class GameViewModelStatsTests: XCTestCase {
     /// Flagging a revealed cell is a no-op all the way down: no latch, and no
     /// revision bump (a bump would schedule a full-board autosave + redraw for
     /// every stray right-click on opened ground).
-    /// onReveal reports the opened-cell delta (drives the cascade-scaled dig
-    /// haptic): the opening reveal floods a region (>1), a later single-cell dig
-    /// reports its own delta, and a no-op tap reports nothing.
-    func testOnRevealReportsOpenedCellDelta() async {
+    /// onReveal reports the opened-cell delta (haptic scale) and whether a 0-cell
+    /// cascade ran (the flood sound). The safe first click always lands on a 0, so
+    /// it opens a region AND floods; a no-op tap reports nothing.
+    func testOnRevealReportsDeltaAndFlood() async {
         let vm = GameViewModel(config: .beginner)
-        var deltas: [Int] = []
-        vm.onReveal = { deltas.append($0) }
+        var events: [(opened: Int, flooded: Bool)] = []
+        vm.onReveal = { events.append(($0, $1)) }
         vm.reveal(Coord(0, 0))
         await vm.awaitPendingWork()
-        XCTAssertEqual(deltas.count, 1)
-        XCTAssertGreaterThan(deltas[0], 1, "the first reveal opens a region")
+        XCTAssertEqual(events.count, 1)
+        XCTAssertGreaterThan(events[0].opened, 1, "the first reveal opens a region")
+        XCTAssertTrue(events[0].flooded, "the safe first click is a 0 → flood")
 
         // A tap on an already-revealed cell opens nothing → no onReveal.
         let revealed = vm.game.board.allCoords.first { vm.game.board[$0].state == .revealed }!
         vm.reveal(revealed)
         await vm.awaitPendingWork()
-        XCTAssertEqual(deltas.count, 1, "a no-op reveal doesn't report")
+        XCTAssertEqual(events.count, 1, "a no-op reveal doesn't report")
+    }
+
+    /// A chord reports its opened-cell count through onReveal too, so a big
+    /// chord-open floods like a reveal cascade (not just single reveals).
+    func testChordReportsThroughOnReveal() async {
+        let vm = GameViewModel(config: .beginner)
+        vm.reveal(Coord(0, 0))
+        await vm.awaitPendingWork()
+        // Find a chordable revealed number and flag exactly its mine neighbours.
+        guard let (number, mines) = chordableNumber(vm) else {
+            return XCTFail("no chordable number on this board")
+        }
+        for m in mines { vm.toggleFlag(m) }
+        var chordOpened: Int?
+        vm.onReveal = { opened, _ in chordOpened = opened }
+        vm.chord(number)
+        await vm.awaitPendingWork()
+        XCTAssertNotNil(chordOpened, "a chord that opens cells reports through onReveal")
+        XCTAssertGreaterThan(chordOpened ?? 0, 0)
     }
 
     /// A "?" mark is external memory too, so placing one violates Bare Hands

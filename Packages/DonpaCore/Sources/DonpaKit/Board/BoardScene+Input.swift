@@ -91,35 +91,34 @@ extension BoardScene {
 
     // MARK: Input + sound
 
-    /// Toggle a flag and play the flag click only when a mark is newly PLACED
-    /// (hidden → flag, or flag → "?"), not when clearing it back to hidden.
+    /// Toggle a flag: an up-tick when a mark is PLACED (hidden → flag, or flag →
+    /// "?"), a soft downward wipe when it's CLEARED (→ hidden). Silent only on a
+    /// no-op (a tap on a revealed cell).
     private func toggleFlagWithSound(_ c: Coord) {
         let before = viewModel.game.board[c].state
         viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
         let after = viewModel.game.board[c].state
-        if after != before, after == .flagged || after == .questioned {
+        guard after != before else { return }
+        if after == .flagged || after == .questioned {
             soundPlayer?.play(.flag)
+            hapticPlayer?.flag()
+        } else if after == .hidden {
+            // Cleared a mark.
+            soundPlayer?.play(.wipe)
             hapticPlayer?.flag()
         }
     }
 
-    /// Reveal and play the dig blip once for the action (not per flooded cell) —
-    /// only when the tap actually opens something (a hidden/"?" cell).
+    /// Reveal; the OPEN feedback (sound + haptic, tick vs the fuller flood by size)
+    /// fires from the VM's onReveal once the opened-cell count is final.
     private func revealWithSound(_ c: Coord) {
-        let s = viewModel.game.board[c].state
         viewModel.reveal(c)
-        if s == .hidden || s == .questioned { soundPlayer?.play(.reveal) }
     }
 
-    /// Chord and play the knock only when it will act (satisfied number with a
-    /// hidden neighbour left), so a stray tap on a 0-cell stays silent.
+    /// Chord; like a reveal, its open feedback comes through onReveal (a chord is
+    /// just opening several tiles), so a big chord-open floods too.
     private func chordWithSound(_ c: Coord) {
-        let acts = viewModel.game.canChord(c)
         viewModel.chord(c)
-        if acts {
-            soundPlayer?.play(.chord)
-            hapticPlayer?.chord()
-        }
     }
 
     /// Map a hosting-view point to scene space via `SKView`'s own view↔scene

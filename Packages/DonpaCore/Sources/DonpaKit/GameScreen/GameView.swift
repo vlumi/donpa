@@ -246,9 +246,12 @@ struct GameContent: View {
         // on the body (below).
         scene.soundPlayer?.isEnabled = settings.sound
         scene.hapticPlayer?.isEnabled = settings.haptics
-        // The dig haptic scales with cascade size, so it fires from the VM's reveal
-        // completion (the opened-cell count is final only then).
-        viewModel.onReveal = { [weak scene] opened in
+        // The open sound + haptic fire from the VM's reveal completion. The sound
+        // floods only when a 0-cell cascade ran (hitting a 0 opens a region for
+        // free); a plain open — including a chord that just clears numbers — ticks.
+        // The haptic scales by how much opened, regardless.
+        viewModel.onReveal = { [weak scene] opened, flooded in
+            scene?.soundPlayer?.play(flooded ? .flood : .reveal)
             scene?.hapticPlayer?.reveal(openedCells: opened)
         }
         // Fold each live activity-flush delta (tiles/flags/time) into the lifetime
