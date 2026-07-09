@@ -97,11 +97,18 @@ screentone keyed to the toggle (dots for dig, hatch for flag).
 | Tap/click number  | Chord         | Chord         |
 | Long-press hidden | Flag / unflag | Reveal        |
 
-| Other           | iOS   | macOS                          |
-| --------------- | ----- | ------------------------------ |
-| Flag (any mode) | —     | Right-click or Control-click   |
-| Pan             | Drag  | Two-finger scroll / click-drag |
-| Zoom            | Pinch | Pinch (trackpad) or ⌘-scroll   |
+| Other            | iOS         | macOS                          |
+| ---------------- | ----------- | ------------------------------ |
+| Other action     | Long-press  | Right-click or Control-click   |
+| Pan              | Drag        | Two-finger scroll / click-drag |
+| Zoom             | Pinch       | Pinch (trackpad) or ⌘-scroll   |
+
+The **other action** (long-press, right-click, or Control-click) does the
+opposite of the current mode: in Dig mode it flags, in Flag mode it digs (and on
+a revealed number it chords, like a normal tap). So on a **two-button mouse** the
+toggle just assigns the buttons — Dig mode gives you left-to-dig, right-to-flag
+(the classic layout), Flag mode swaps them — and you never have to flip the
+toggle mid-game.
 
 On macOS the pointer reflects the mode while a game is in progress — a pointing
 hand to dig, a flag to flag (a plain arrow otherwise); holding **Control** shows

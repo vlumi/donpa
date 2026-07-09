@@ -43,12 +43,6 @@ extension BoardScene {
         return rect.contains(cameraLocal(p))
     }
 
-    func flag(atScenePoint p: CGPoint) {
-        guard !isOverMinimapUI(atScenePoint: p) else { return }
-        guard let c = coord(atScenePoint: p) else { return }
-        toggleFlagWithSound(c)
-    }
-
     /// A plain tap/click: a revealed number chords; a hidden cell follows the
     /// current input mode (reveal or flag), so in Flag mode a stray tap can't open.
     func tapAction(atScenePoint p: CGPoint) {
@@ -340,7 +334,12 @@ extension BoardScene {
     }
 
     public override func rightMouseUp(with event: NSEvent) {
-        flag(atScenePoint: event.location(in: self))
+        // Right-click == Control-click == long-press: the OPPOSITE of the current
+        // mode's primary action. So the dig/flag toggle assigns the two buttons —
+        // Dig mode gives left-dig / right-flag (Windows-classic), Flag mode swaps
+        // them — and both buttons always work, no toggling mid-play. On a revealed
+        // number it chords, like the left button.
+        longPressAction(atScenePoint: event.location(in: self))
     }
 
     // Key input handled directly: SwiftUI menu shortcuts for bare keys don't fire
