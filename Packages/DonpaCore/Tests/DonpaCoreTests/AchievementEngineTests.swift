@@ -165,7 +165,7 @@ final class AchievementEngineTests: XCTestCase {
         XCTAssertEqual(earned()[.milesWins], 2)  // 100 = silver; gold waits at 1000
         XCTAssertNil(earned()[.milesTiles])
         mutate(.grid(.m, .normal, .flat)) { $0.tilesOpened.add(100_000) }
-        XCTAssertEqual(earned()[.milesTiles], 1)
+        XCTAssertEqual(earned()[.milesTiles], 2)  // 10k bronze + 100k silver
         mutate(.grid(.m, .normal, .flat)) { $0.minesDisarmed.add(10_000) }
         XCTAssertEqual(earned()[.milesDisarmed], 2)
     }

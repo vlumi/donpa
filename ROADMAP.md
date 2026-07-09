@@ -400,8 +400,9 @@ match the in-game toasts)
 
 - `miles.wins` (10/100/1000) — **Campaigner** · *Sotaretkeläinen* · *歴戦* —
   "Win 10 / 100 / 1 000 boards."
-- `miles.tiles` (100k/1M) — **Ground Covered** · *Kilometrejä takana* ·
-  *開拓者* — "Open 100 000 / 1 000 000 tiles."
+- `miles.tiles` (10k/100k/1M) — **Ground Covered** · *Kilometrejä takana* ·
+  *開拓者* — "Open 10 000 / 100 000 / 1 000 000 tiles." (10k starter tier
+  added at review so the ladder reaches gold like its siblings.)
 - `miles.disarmed` (1k/10k/100k) — **Bomb Squad** · *Pommiryhmä* ·
   *爆発物処理班* — "Disarm 1 000 / 10 000 / 100 000 mines (flagged on finished
   boards)."

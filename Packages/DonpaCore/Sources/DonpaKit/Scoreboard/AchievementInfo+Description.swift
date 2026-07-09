@@ -51,7 +51,7 @@ extension AchievementID {
             return String(localized: "Win 10 / 100 / 1,000 boards.", bundle: .module)
         case .milesTiles:
             return String(
-                localized: "Open 100,000 / 1,000,000 tiles.", bundle: .module)
+                localized: "Open 10,000 / 100,000 / 1,000,000 tiles.", bundle: .module)
         case .milesDisarmed:
             return String(
                 localized: "Disarm 1,000 / 10,000 / 100,000 mines.", bundle: .module)
