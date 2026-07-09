@@ -99,6 +99,7 @@ extension BoardScene {
         let after = viewModel.game.board[c].state
         if after != before, after == .flagged || after == .questioned {
             soundPlayer?.play(.flag)
+            hapticPlayer?.flag()
         }
     }
 
@@ -115,7 +116,10 @@ extension BoardScene {
     private func chordWithSound(_ c: Coord) {
         let acts = viewModel.game.canChord(c)
         viewModel.chord(c)
-        if acts { soundPlayer?.play(.chord) }
+        if acts {
+            soundPlayer?.play(.chord)
+            hapticPlayer?.chord()
+        }
     }
 
     /// Map a hosting-view point to scene space via `SKView`'s own view↔scene

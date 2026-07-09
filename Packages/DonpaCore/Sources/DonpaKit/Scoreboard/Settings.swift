@@ -220,6 +220,11 @@ public final class Settings: ObservableObject {
     @Published public var sound: Bool {
         didSet { defaults.set(sound, forKey: soundKey) }
     }
+    /// Per-move haptics (flag tick, chord thud, dig rumble). On by default; iOS-only
+    /// in effect (no-op where there's no Taptic Engine).
+    @Published public var haptics: Bool {
+        didSet { defaults.set(haptics, forKey: hapticsKey) }
+    }
     /// Sync the scoreboard across devices via iCloud. Opt-in, off by default — our
     /// own toggle, not a system grant (KVS rides on the system sign-in).
     @Published public var syncScores: Bool {
@@ -258,6 +263,7 @@ public final class Settings: ObservableObject {
     private let minimapScaleKey = "donpa.minimapScale"
     private let questionMarksKey = "donpa.questionMarks"
     private let soundKey = "donpa.sound"
+    private let hapticsKey = "donpa.haptics"
     private let syncScoresKey = "donpa.syncScores"
 
     public init(defaults: UserDefaults = .standard) {
@@ -317,6 +323,7 @@ public final class Settings: ObservableObject {
         questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
         // On by default — the ringer switch is the quick mute on iOS.
         sound = defaults.object(forKey: soundKey) as? Bool ?? true
+        haptics = defaults.object(forKey: hapticsKey) as? Bool ?? true
         syncScores = defaults.object(forKey: syncScoresKey) as? Bool ?? false
         language =
             defaults.string(forKey: languageKey).flatMap(LanguagePreference.init(rawValue:))

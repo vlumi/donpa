@@ -18,9 +18,13 @@ final class SceneHolder: ObservableObject {
     /// App-lifetime sound player, preloaded once. The scene fires input effects
     /// through it; GameContent keeps `isEnabled` in step with Settings.
     let soundPlayer = SoundPlayer()
+    /// App-lifetime haptics, alongside sound. Same wiring: the scene fires the
+    /// per-action taps; GameContent keeps `isEnabled` in step with Settings.
+    let hapticPlayer = HapticPlayer()
     init(viewModel: GameViewModel) {
         scene = BoardScene(viewModel: viewModel)
         scene.soundPlayer = soundPlayer
+        scene.hapticPlayer = hapticPlayer
     }
 }
 

@@ -102,6 +102,12 @@ public final class GameViewModel: ObservableObject {
     public var onActivityFlush:
         ((_ tilesDelta: Int, _ flagsDelta: Int, _ centisecondsDelta: Int) -> Void)?
 
+    /// A reveal opened `openedCells` non-mine cells — fires only when that's > 0
+    /// (a mine hit or a no-op tap stays silent), AFTER the off-main reveal settles
+    /// so the count is final. Used to scale the dig haptic by cascade size. Set by
+    /// the host (a UI feedback concern); Core never references it.
+    public var onReveal: ((_ openedCells: Int) -> Void)?
+
     /// A reveal was a FORCED guess (no certainly-safe cell existed — see
     /// `GuessOdds`): reports its survival odds and whether the player survived it.
     /// Carries the config the guess was made on, since the analysis is async and
@@ -258,10 +264,13 @@ public final class GameViewModel: ObservableObject {
         // only when analysis is even possible, so the huge boards never retain a
         // second board copy.
         let pre = preGuessState()
+        let safeBefore = game.revealedSafeCount
         computeOffMain({ game in game.reveal(c) }) { [weak self] in
             guard let self else { return }
             // The first reveal places mines and starts the clock.
             if wasNotStarted, self.game.status == .playing { self.startTimer() }
+            let opened = self.game.revealedSafeCount - safeBefore
+            if opened > 0 { self.onReveal?(opened) }
             self.finishIfEnded()
             // A single reveal only ever loses on the clicked cell, so
             // post-state loss ⟺ died to it.

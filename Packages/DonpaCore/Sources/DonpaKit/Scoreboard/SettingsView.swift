@@ -119,6 +119,20 @@ struct SettingsView: View {
                 .font(.caption).foregroundStyle(.secondary)
             }
 
+            #if os(iOS)
+            settingRow("Haptics") {
+                Toggle(isOn: $settings.haptics) {
+                    Text("Vibrate on taps", bundle: .module)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(
+                    "A gentle tap for flags, chords, and digs.",
+                    bundle: .module
+                )
+                .font(.caption).foregroundStyle(.secondary)
+            }
+            #endif
+
             settingRow("Language") {
                 Picker(selection: $settings.language) {
                     ForEach(LanguagePreference.allCases) { lang in

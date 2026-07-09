@@ -68,6 +68,9 @@ public final class BoardScene: SKScene {
     /// Plays the input sound effects (flag/chord/reveal). The host owns it and keeps
     /// its `isEnabled` in step with Settings; nil until wired (tests, previews).
     weak var soundPlayer: SoundPlayer?
+    /// Fires the per-action haptics (flag/chord; reveal is driven by the VM's
+    /// onReveal so it can scale by cascade size). Host-owned, like `soundPlayer`.
+    weak var hapticPlayer: HapticPlayer?
     /// Minimap size multiplier (persisted in Settings), clamped when applied.
     var minimapScale: CGFloat = 1
     /// Whether a drag in progress began on the minimap, so the whole drag scrubs
