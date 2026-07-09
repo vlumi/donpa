@@ -95,6 +95,18 @@ struct SettingsView: View {
                 .labelsHidden()
             }
 
+            settingRow("Question marks") {
+                Toggle(isOn: $settings.questionMarks) {
+                    Text("Cycle through a ? mark", bundle: .module)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(
+                    "Adds a ? step after the flag — flag, then ?, then clear — for marking a maybe.",
+                    bundle: .module
+                )
+                .font(.caption).foregroundStyle(.secondary)
+            }
+
             settingRow("Language") {
                 Picker(selection: $settings.language) {
                     ForEach(LanguagePreference.allCases) { lang in

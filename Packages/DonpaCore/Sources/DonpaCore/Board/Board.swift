@@ -3,6 +3,12 @@ public enum CellState: Sendable {
     case hidden
     case revealed
     case flagged
+    /// A "?" mark — a maybe-mine note the player cycles to after a flag (opt-in;
+    /// see `Settings.questionMarks`). Unlike a flag it is NOT a claim: it never
+    /// counts toward the mine counter, never satisfies a number for chording, and
+    /// never trips the over-flag cue. It's held on the same 2-bit field as the
+    /// others (code 3).
+    case questioned
 }
 
 /// One cell, bit-packed into a single byte — `state` (2 bits), `isMine` (1 bit),
@@ -18,6 +24,7 @@ public struct Cell: Sendable {
             switch bits & 0b11 {
             case 1: return .revealed
             case 2: return .flagged
+            case 3: return .questioned
             default: return .hidden
             }
         }
@@ -27,6 +34,7 @@ public struct Cell: Sendable {
             case .hidden: code = 0
             case .revealed: code = 1
             case .flagged: code = 2
+            case .questioned: code = 3
             }
             bits = (bits & ~0b11) | code
         }
@@ -142,6 +150,7 @@ public struct Board: Sendable {
     public var mineCoords: Set<Coord> { minePositions }
     public var revealedCoords: Set<Coord> { coords { $0.state == .revealed } }
     public var flaggedCoords: Set<Coord> { coords { $0.state == .flagged } }
+    public var questionedCoords: Set<Coord> { coords { $0.state == .questioned } }
 
     /// Mines that are correctly flagged ("disarmed"). Iterates only the mine set.
     public var disarmedMineCount: Int {
@@ -185,11 +194,15 @@ public struct Board: Sendable {
     /// Rebuild a board from a saved layout without re-randomizing the (first-click-
     /// safe) mines. Coords are filtered to in-bounds, so a tampered save with
     /// off-board coords yields an odd-but-valid board, never a broken one.
-    public mutating func restore(mines: Set<Coord>, revealed: Set<Coord>, flagged: Set<Coord>) {
+    public mutating func restore(
+        mines: Set<Coord>, revealed: Set<Coord>, flagged: Set<Coord>,
+        questioned: Set<Coord> = []
+    ) {
         let onBoard = Set(topology.allCoords())
         placeMines(at: mines.intersection(onBoard))
         for c in revealed where onBoard.contains(c) { self[c].state = .revealed }
         for c in flagged where onBoard.contains(c) { self[c].state = .flagged }
+        for c in questioned where onBoard.contains(c) { self[c].state = .questioned }
     }
 
     /// Places mines and recomputes adjacency, iterating only the MINES (cost scales

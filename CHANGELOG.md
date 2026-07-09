@@ -21,6 +21,10 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Question marks (opt-in).** A new Settings toggle adds a "?" step to the
+  flag cycle — flag, then ?, then clear — for marking a maybe. Off by default.
+  A "?" is only a note: it never counts toward the mine counter or satisfies a
+  number for chording, though (like a flag) it does rule out a Bare Hands win.
 - **New players start in Drills.** A fresh install now opens New Game on the
   Drills family — the no-guess on-ramp — instead of Basic, so a newcomer meets
   the fair, learnable boards first. Anyone who's played before keeps their own

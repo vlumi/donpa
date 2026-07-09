@@ -209,6 +209,12 @@ public final class Settings: ObservableObject {
     @Published public var minimapScale: Double {
         didSet { defaults.set(minimapScale, forKey: minimapScaleKey) }
     }
+    /// Add a "?" step to the flag cycle (hidden → flag → "?" → clear). Opt-in, off
+    /// by default: the third state taxes the common flag→clear tap, so only players
+    /// who want the classic maybe-mark pay for it.
+    @Published public var questionMarks: Bool {
+        didSet { defaults.set(questionMarks, forKey: questionMarksKey) }
+    }
     /// Sync the scoreboard across devices via iCloud. Opt-in, off by default — our
     /// own toggle, not a system grant (KVS rides on the system sign-in).
     @Published public var syncScores: Bool {
@@ -245,6 +251,7 @@ public final class Settings: ObservableObject {
     private let languageKey = "donpa.language"
     private let showMinimapKey = "donpa.showMinimap"
     private let minimapScaleKey = "donpa.minimapScale"
+    private let questionMarksKey = "donpa.questionMarks"
     private let syncScoresKey = "donpa.syncScores"
 
     public init(defaults: UserDefaults = .standard) {
@@ -300,6 +307,8 @@ public final class Settings: ObservableObject {
         showMinimap = defaults.object(forKey: showMinimapKey) as? Bool ?? true
         // Default 1.0 (base size); a stored value restores the player's last size.
         minimapScale = defaults.object(forKey: minimapScaleKey) as? Double ?? 1.0
+        // Off by default — the "?" step is opt-in.
+        questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
         syncScores = defaults.object(forKey: syncScoresKey) as? Bool ?? false
         language =
             defaults.string(forKey: languageKey).flatMap(LanguagePreference.init(rawValue:))

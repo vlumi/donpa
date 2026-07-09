@@ -62,6 +62,9 @@ public final class BoardScene: SKScene {
     var lastMinimapBoard: CGSize = .zero
     /// Show the minimap when the board exceeds the viewport (user preference).
     var showMinimap = true
+    /// Whether the flag cycle includes the "?" step (Settings.questionMarks), pushed
+    /// from the host like `showMinimap`. Read by the flag input paths.
+    var useQuestionMarks = false
     /// Minimap size multiplier (persisted in Settings), clamped when applied.
     var minimapScale: CGFloat = 1
     /// Whether a drag in progress began on the minimap, so the whole drag scrubs

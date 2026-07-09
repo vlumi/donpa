@@ -97,7 +97,8 @@ public struct Game: Sendable {
         // (early win, or a board that can never be won).
         let mineCount = s.mines.isEmpty ? s.config.mineCount : s.mines.count
         var game = Game(topology: s.config.topology, mineCount: mineCount)
-        game.board.restore(mines: s.mines, revealed: s.revealed, flagged: s.flagged)
+        game.board.restore(
+            mines: s.mines, revealed: s.revealed, flagged: s.flagged, questioned: s.questioned)
         game.minesPlaced = !game.board.mineCoords.isEmpty
         game.status = s.status
         // Derive from the restored board, not the saved number, so a tampered
@@ -153,7 +154,9 @@ public struct Game: Sendable {
         // cells (silent no-op writes, and a first-click safe zone around the wrong
         // cell). Bounded topologies still reject off-board here.
         guard let c = topology.normalize(c) else { return }
-        guard board[c].state == .hidden else { return }
+        // A "?" cell is diggable — the player marked a maybe, then decided to open
+        // it (directly or via a chord). A flag still protects; only hidden/"?" open.
+        guard board[c].state == .hidden || board[c].state == .questioned else { return }
 
         if !minesPlaced {
             // Not pre-armed: place now, excluding the first-click safe zone.
@@ -194,7 +197,8 @@ public struct Game: Sendable {
 
     /// Reveals a 0-region: iterative flood fill (stack-based — `popLast`) that
     /// expands only out of 0-cells, so numbered cells form the border. Flagged
-    /// and mine cells are never enqueued.
+    /// and mine cells are never enqueued; a "?" is swept like a hidden cell (it
+    /// marks a maybe, and only a flag blocks the cascade).
     private mutating func floodFill(from start: Coord) {
         var queue = [start]
         var enqueued: Set<Coord> = [start]
@@ -204,7 +208,8 @@ public struct Game: Sendable {
             revealedSafeCount += 1  // flood-fill only ever reveals non-mine cells
             guard board[c].adjacentMines == 0 else { continue }
             for n in topology.neighbors(of: c) where !enqueued.contains(n) {
-                guard board[n].state == .hidden, !board[n].isMine else { continue }
+                let s = board[n].state
+                guard s == .hidden || s == .questioned, !board[n].isMine else { continue }
                 enqueued.insert(n)
                 queue.append(n)
             }
@@ -213,14 +218,19 @@ public struct Game: Sendable {
 
     // MARK: - Flagging
 
-    public mutating func toggleFlag(_ c: Coord) {
+    /// Advance a cell's mark. With `useQuestionMarks` the cycle is
+    /// hidden → flagged → "?" → hidden (the classic third state); without it, the
+    /// plain hidden ↔ flagged toggle. A "?" is a note, not a claim — it never
+    /// counts as a flag anywhere (counter, chord, over-flag).
+    public mutating func toggleFlag(_ c: Coord, useQuestionMarks: Bool = false) {
         guard status == .playing || status == .notStarted else { return }
         // Folded coord, same as `reveal`: a raw wrapped coord would pass the check
         // but write to a phantom cell.
         guard let c = topology.normalize(c) else { return }
         switch board[c].state {
         case .hidden: board[c].state = .flagged
-        case .flagged: board[c].state = .hidden
+        case .flagged: board[c].state = useQuestionMarks ? .questioned : .hidden
+        case .questioned: board[c].state = .hidden
         case .revealed: break
         }
     }
@@ -240,7 +250,9 @@ public struct Game: Sendable {
         let neighbors = topology.neighbors(of: c)
         let flagged = neighbors.filter { board[$0].state == .flagged }.count
         guard flagged == board[c].adjacentMines else { return }
-        for n in neighbors where board[n].state == .hidden {
+        // A "?" is not a flag: it doesn't protect the cell, so a chord opens it just
+        // like a hidden one (and can lose the game on it — that's the gamble).
+        for n in neighbors where board[n].state == .hidden || board[n].state == .questioned {
             reveal(n, using: &rng)
             if status == .lost { return }
         }

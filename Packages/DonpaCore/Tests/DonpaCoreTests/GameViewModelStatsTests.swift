@@ -81,6 +81,21 @@ final class GameViewModelStatsTests: XCTestCase {
     /// Flagging a revealed cell is a no-op all the way down: no latch, and no
     /// revision bump (a bump would schedule a full-board autosave + redraw for
     /// every stray right-click on opened ground).
+    /// A "?" mark is external memory too, so placing one violates Bare Hands
+    /// exactly like a flag — even though it never counts as a flag elsewhere.
+    func testQuestionMarkViolatesBareHands() async {
+        let vm = await startedGame()
+        XCTAssertFalse(vm.usedFlagEver, "clean at start")
+        let target = aHiddenCell(vm)
+        vm.toggleFlag(target, useQuestionMarks: true)  // → flagged
+        vm.toggleFlag(target, useQuestionMarks: true)  // → questioned
+        XCTAssertEqual(vm.game.board[target].state, .questioned)
+        XCTAssertTrue(vm.usedFlagEver, "a ? counts as using external memory")
+        // But it is NOT a placed flag for the flag-count stat.
+        XCTAssertEqual(
+            vm.flagsPlacedThisGame, 1, "only the flag step counted, not the ? step")
+    }
+
     func testFlaggingARevealedCellChangesNothing() async {
         let vm = await startedGame()
         let before = vm.revision

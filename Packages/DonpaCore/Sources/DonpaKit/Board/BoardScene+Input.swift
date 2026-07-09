@@ -46,7 +46,7 @@ extension BoardScene {
     func flag(atScenePoint p: CGPoint) {
         guard !isOverMinimapUI(atScenePoint: p) else { return }
         guard let c = coord(atScenePoint: p) else { return }
-        viewModel.toggleFlag(c)
+        viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
     }
 
     /// A plain tap/click: a revealed number chords; a hidden cell follows the
@@ -69,7 +69,7 @@ extension BoardScene {
                 // off-thread reveal). No-op on the safe first click.
                 if viewModel.canRevealHitMine(c) { revealHitTileInstantly(at: c) }
                 viewModel.reveal(c)
-            case .flag: viewModel.toggleFlag(c)
+            case .flag: viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
             }
         }
     }
@@ -83,7 +83,7 @@ extension BoardScene {
             viewModel.chord(c)
         } else {
             switch viewModel.inputMode {
-            case .reveal: viewModel.toggleFlag(c)
+            case .reveal: viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
             case .flag: viewModel.reveal(c)
             }
         }

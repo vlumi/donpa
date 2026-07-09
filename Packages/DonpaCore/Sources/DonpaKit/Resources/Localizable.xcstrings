@@ -400,6 +400,23 @@
         }
       }
     },
+    "Adds a ? step after the flag — flag, then ?, then clear — for marking a maybe." : {
+      "comment" : "Settings: question-marks toggle explanation",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisää lipun jälkeen ?-vaiheen — lippu, sitten ?, sitten tyhjä — epävarman ruudun merkitsemiseen."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旗の後に「？」段階を追加します（旗→？→なし）。迷ったマスの目印に。"
+          }
+        }
+      }
+    },
     "All rivals" : {
       "localizations" : {
         "en" : {
@@ -1282,6 +1299,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "呪いの13秒"
+          }
+        }
+      }
+    },
+    "Cycle through a ? mark" : {
+      "comment" : "Settings: question-marks toggle label",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Käytä ?-merkkiä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「？」マークを使う"
           }
         }
       }
@@ -3406,6 +3440,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "演習で練習"
+          }
+        }
+      }
+    },
+    "Question marks" : {
+      "comment" : "Settings: question-marks toggle section title",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kysymysmerkit"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "疑問符"
           }
         }
       }

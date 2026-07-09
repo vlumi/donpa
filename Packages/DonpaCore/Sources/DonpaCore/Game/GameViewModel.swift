@@ -273,20 +273,26 @@ public final class GameViewModel: ObservableObject {
         }
     }
 
-    public func toggleFlag(_ c: Coord) {
+    /// Cycle a cell's mark. `useQuestionMarks` (from Settings) turns the flag into
+    /// a flag → "?" → clear cycle; off, it's the plain flag toggle.
+    public func toggleFlag(_ c: Coord, useQuestionMarks: Bool = false) {
         InputTrace.log(
             "flag \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         // O(1), so synchronous — but still gated mid-compute / paused / finished.
         guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
         let before = game.board[c].state
-        game.toggleFlag(c)
+        game.toggleFlag(c, useQuestionMarks: useQuestionMarks)
         let after = game.board[c].state
         // A tap on a revealed cell (or off-board) changes nothing — skip the bump
         // too, or every stray right-click schedules a full-board autosave + redraw.
         guard after != before else { return }
         if after == .flagged {
             flagsPlacedThisGame += 1
-            usedFlagEver = true  // latches; a placed-then-removed flag still counts
+        }
+        // A "?" is external memory too: placing either mark violates Bare Hands.
+        // The latch stays set even after cycling back to hidden.
+        if after == .flagged || after == .questioned {
+            usedFlagEver = true
         }
         bump()
     }
