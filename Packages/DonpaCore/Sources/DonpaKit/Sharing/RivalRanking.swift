@@ -18,8 +18,14 @@ enum RivalRanking {
         config: GameConfig, scoreboard: Scoreboard, rivals: [Friend], yourName: String
     ) -> ScoreComparison.Ranking {
         let key = config.storageKey
-        let rivalPairs = rivals.map { friend in
-            (name: friend.displayName, best: friend.scores.first { $0.key == key }?.best)
+        // A best-time leaderboard only lists rivals who actually have a time here —
+        // a rival who never won this board adds no ranking, only "—" clutter. (You
+        // always appear, even without a time, so you can see where you stand.)
+        let rivalPairs = rivals.compactMap { friend -> (name: String, best: Int?)? in
+            guard let best = friend.scores.first(where: { $0.key == key })?.best else {
+                return nil
+            }
+            return (name: friend.displayName, best: best)
         }
         return ScoreComparison.rank(
             yourName: yourName, yourBest: scoreboard.best(for: config), rivals: rivalPairs)
