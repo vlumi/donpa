@@ -7,7 +7,8 @@ game logic.
 
 Versions are indicative, not contractual. Each minor groups related work into one
 meaty release: v0.4.0 = friendly rivalry (score sharing); v0.5.0 = progression
-(achievements, gating, practice); v1.0.0 = the store release.
+(achievements, gating, practice); v0.6.0 = finishing touches (tentative);
+v1.0.0 = the store release.
 
 **Shipped milestones live in [CHANGELOG.md](CHANGELOG.md)** (full detail) and are
 summarized in the [README](README.md) version history — this roadmap stays
@@ -35,7 +36,6 @@ these slot into whichever release they're ready for.
   `TierAnalysis` already exist, generation just resamples until solvable) instead
   found its purpose as the **Drills practice family** (shipped in v0.5.0 —
   repair-based generation, far beyond resampling; see CHANGELOG).
-- [ ] Safe-reveal / question-mark flag cycle (classic third flag state).
 
 **Navigation / UX:**
 
@@ -59,12 +59,6 @@ these slot into whichever release they're ready for.
 
 **Carry-overs (deferred, revisit when relevant):**
 
-- [ ] **A focused-cell cursor model** — unblocks two features at once: **keyboard
-      play on Mac** (arrow-key move + reveal/flag keys, so the board is playable
-      without a mouse — today the keyboard only drives app commands, not cells) and
-      **per-cell board VoiceOver** (both need the same navigable cursor, scaled to
-      huge boards — swiping/reading 10k cells one-by-one doesn't). Co-design with
-      big-board navigation; build the cursor once, serve both.
 - [ ] **KVS blob pruning** — a reinstall mints a new sync slot, orphaning the old
       blob. Deferred (a dead reinstall looks like an offline device; blobs are
       tiny). Revisit only near KVS storage limits.
@@ -143,6 +137,66 @@ than prose for chording, and light on JA/FI translation. Sibling to practice mod
       long-form where the in-app page stays a quick reference. The in-app page
       remains canonical: it's offline (the audience is a first-session player)
       and localized via the catalogs, which the EN-only site isn't.
+
+## v0.6.0 — Finishing touches (tentative)
+
+Parked here from a 2026-07-09 backlog + platform-capability review: items that
+would each land a more finished 1.0, none individually a gate. **Tentative by
+design** — evaluate each when this milestone opens and cut freely; the ones
+that survive should all be modest builds.
+
+**From the backlog / parked ideas:**
+
+- [ ] **A focused-cell cursor model** — the highest-value item here: unblocks
+      **keyboard play on Mac** (arrow-key move + reveal/flag keys — a store-front
+      Mac game shouldn't need a mouse) and **per-cell board VoiceOver** (the one
+      a11y gap left) with one navigable cursor, scaled to huge boards. Also the
+      seam that iPad hardware-keyboard play and game-controller support would
+      share. Co-design with big-board navigation.
+- [ ] **Question-mark flag cycle** (classic third flag state) — the one classic
+      feature veterans will notice missing.
+- [ ] **Minimal sound** — the melodramatic manga "ドーン!" result sting plus a
+      couple of soft interaction ticks, behind a remembered mute toggle. A fully
+      silent game reads as unfinished in store reviews; pairs with the haptics
+      item below.
+- [ ] **Drills as the newcomer default** — a fresh install's New Game lands on
+      Drills (with how-to-play a `?` away); veterans' remembered selection is
+      untouched. Completes the onboarding story.
+- [ ] **Rivals end-to-end UX pass** — walk the whole share → add → compare loop
+      once with fresh eyes; includes deciding the sync-toggle's Mess hall
+      placement (today it sits in the Record footer).
+
+**Platform capabilities (all native, all serverless):**
+
+- [ ] **Richer haptics** — flag *tick*, chord *thud*, cascade *rumble*
+      (CoreHaptics pattern scaled to flood size). Today only the end-of-game
+      notification haptic exists; in a genre played muted, haptics are the
+      sound design. iOS 16-safe, no permissions.
+- [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
+      Drills" from Spotlight and Siri; small, no UI beyond the intent
+      definitions.
+- [ ] **Widgets** (WidgetKit, home + lock screen) — a continue-your-board deep
+      link and a career-stats/luck-line widget. Needs an app group to share the
+      stores.
+- [ ] **Review prompt** (`SKStoreReviewController`) — ask after a new best
+      time, never after a loss. Small, and it matters for a small app's store
+      trajectory.
+- [ ] **App Clip** — a rival's donpa.app share link offers "play a board now"
+      without installing (an instant Drills board as the hook). Rides the
+      Universal Link infrastructure; turns the social loop into an acquisition
+      loop. The largest item here.
+- [ ] **SharePlay** (GroupActivities) — race the *same generated board* over
+      FaceTime; Apple's session infrastructure, so still no server. Real
+      multiplayer that respects the no-server principle.
+- [ ] **TipKit contextual tips** (iOS 17+, availability-gated) — one-time
+      nudges like "this number's flags match — tap it to chord". Lower value
+      now that how-to-play shipped; keep only if it earns its place.
+
+Evaluated and NOT parked (recorded so the next review doesn't redo it): Live
+Activities (the game is foreground by nature), CloudKit save-sync (KVS is too
+small for board blobs; per-device saves were a deliberate call), Spotlight
+indexing beyond App Intents, minimap drag-to-reposition/resize (the hide
+toggle covers the pain — stays in the backlog).
 
 ## v1.0.0 — The store release
 
@@ -460,8 +514,8 @@ dropped — revisit only with a genuinely different treatment).
 
 Still open:
 
-- **Sounds** — usually a mute-play genre, but a melodramatic manga "ドーン!"
-  sting could fit the result-panel gag specifically. Would need a mute toggle.
+- **Sounds** — moved to the v0.6.0 tentative list (the "ドーン!" sting + mute
+  toggle).
 - **Name native-check** — **Donpa Squad / ドンパ隊** is settled (repo + types +
   docs renamed), but worth a JP-native gut-check **before registering bundle IDs
   with Apple** (store name + bundle ID are painful to change post-registration).
