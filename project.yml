@@ -164,3 +164,11 @@ targets:
     dependencies:
       - package: DonpaCore
         product: DonpaKit
+    # Explicit scheme so XcodeGen writes a SHARED scheme file for the macOS app.
+    # Without it, only iOS (which has its own `scheme:` block) got a shared
+    # scheme — Xcode then recreated "Donpa-macOS" as a personal scheme on every
+    # open, and `xcodebuild -scheme Donpa-macOS` failed on a fresh checkout (the
+    # release lane's macOS archive). No test target, so this just pins the
+    # standard build/run/profile/archive scheme like the implicit one would.
+    scheme:
+      configVariants: []
