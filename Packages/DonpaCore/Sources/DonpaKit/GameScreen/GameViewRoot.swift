@@ -317,6 +317,12 @@ private struct ReceivePrompt: ViewModifier {
     }
 
     func body(content: Content) -> some View {
+        alerts(sheets(content))
+    }
+
+    /// The two sheets (receive prompt + Mess hall), split from `body` for the
+    /// function-length budget.
+    private func sheets(_ content: Content) -> some View {
         content
             .sheet(item: sheetBinding) { incoming in
                 ReceiveShareView(
@@ -346,6 +352,11 @@ private struct ReceivePrompt: ViewModifier {
                     // play button (GameView owns the actual start).
                     onPlay: { navigator.playConfigRequested = $0 })
             }
+    }
+
+    /// The failed-share and own-card alerts.
+    private func alerts(_ content: some View) -> some View {
+        content
             .alert(
                 Text("Couldn't verify share", bundle: .module),
                 isPresented: alertBinding,
