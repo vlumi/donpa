@@ -13,6 +13,8 @@ import Foundation
 final class SoundPlayer {
     enum Effect: String, CaseIterable {
         case flag = "tick"
+        /// Clearing a mark (flag/"?" → hidden): a soft downward swipe.
+        case wipe
         /// Opening a tile — also used for a chord (a chord just opens several).
         case reveal
         /// A whole area cascading open: the reveal tick, subtly fuller.

@@ -74,6 +74,17 @@ try write("tick.caf", seconds: 0.05) { _, t in
         + 0.2 * noise.next() * env(t, 0.003)
 }
 
+// wipe — clearing a mark (flag→hidden or ?→hidden): a soft DOWNWARD swipe, the
+// opposite gesture to the crisp up-tick of placing. Airy noise through a falling
+// filter-ish sweep (approximated by a descending tone under a noise bed).
+noise = SeededNoise(state: 0x6666_7777)
+try write("wipe.caf", seconds: 0.09) { _, t in
+    let f = 900 - 500 * (t / 0.09)  // 900 → 400 Hz glide down
+    let tone = 0.12 * sin(2 * .pi * f * t) * env(t, 0.05)
+    let air = 0.1 * noise.next() * env(t, 0.03)
+    return tone + air
+}
+
 // reveal — the base "open a tile" tick: a single very short, quiet high blip.
 // A chord uses this SAME sound (a chord is just opening several tiles at once),
 // so opening always sounds like opening.

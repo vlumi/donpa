@@ -100,6 +100,25 @@ final class GameViewModelStatsTests: XCTestCase {
         XCTAssertEqual(deltas.count, 1, "a no-op reveal doesn't report")
     }
 
+    /// A chord reports its opened-cell count through onReveal too, so a big
+    /// chord-open floods like a reveal cascade (not just single reveals).
+    func testChordReportsThroughOnReveal() async {
+        let vm = GameViewModel(config: .beginner)
+        vm.reveal(Coord(0, 0))
+        await vm.awaitPendingWork()
+        // Find a chordable revealed number and flag exactly its mine neighbours.
+        guard let (number, mines) = chordableNumber(vm) else {
+            return XCTFail("no chordable number on this board")
+        }
+        for m in mines { vm.toggleFlag(m) }
+        var chordOpened: Int?
+        vm.onReveal = { chordOpened = $0 }
+        vm.chord(number)
+        await vm.awaitPendingWork()
+        XCTAssertNotNil(chordOpened, "a chord that opens cells reports through onReveal")
+        XCTAssertGreaterThan(chordOpened ?? 0, 0)
+    }
+
     /// A "?" mark is external memory too, so placing one violates Bare Hands
     /// exactly like a flag — even though it never counts as a flag elsewhere.
     func testQuestionMarkViolatesBareHands() async {

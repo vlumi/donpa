@@ -313,8 +313,14 @@ public final class GameViewModel: ObservableObject {
         // chord itself the guess being executed. Provably-safe chords report
         // nothing, exactly like certain single reveals.
         let pre = preGuessState()
+        let safeBefore = game.revealedSafeCount
         computeOffMain({ game in game.chord(c) }) { [weak self] in
             guard let self else { return }
+            // A chord opens cells too — feed the same onReveal so its open sound
+            // (tick vs the fuller flood) is chosen by how much it opened, like a
+            // single reveal.
+            let opened = self.game.revealedSafeCount - safeBefore
+            if opened > 0 { self.onReveal?(opened) }
             self.finishIfEnded()
             if let pre {
                 self.reportGuess(survived: self.game.status != .lost) {
