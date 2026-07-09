@@ -246,11 +246,12 @@ struct GameContent: View {
         // on the body (below).
         scene.soundPlayer?.isEnabled = settings.sound
         scene.hapticPlayer?.isEnabled = settings.haptics
-        // The open sound + haptic fire from the VM's reveal completion, where the
-        // opened-cell count is final: a single-tile open ticks, a whole-area
-        // cascade gets the subtly fuller flood variant.
-        viewModel.onReveal = { [weak scene] opened in
-            scene?.soundPlayer?.play(opened > 1 ? .flood : .reveal)
+        // The open sound + haptic fire from the VM's reveal completion. The sound
+        // floods only when a 0-cell cascade ran (hitting a 0 opens a region for
+        // free); a plain open — including a chord that just clears numbers — ticks.
+        // The haptic scales by how much opened, regardless.
+        viewModel.onReveal = { [weak scene] opened, flooded in
+            scene?.soundPlayer?.play(flooded ? .flood : .reveal)
             scene?.hapticPlayer?.reveal(openedCells: opened)
         }
         // Fold each live activity-flush delta (tiles/flags/time) into the lifetime
