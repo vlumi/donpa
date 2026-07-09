@@ -33,19 +33,28 @@ struct MedalView: View {
         ink: Color
     ) {
         let earned = earnedTier > 0
-        let center = CGPoint(x: s / 2, y: s * 0.56)
-        let radius = s * 0.36
+        let center = CGPoint(x: s / 2, y: s / 2)
+        let radius = s * 0.34
         let lw = s * 0.05
 
-        // Ribbon tabs above the disc — the "hangs off a uniform" read.
-        var ribbon = Path()
-        ribbon.move(to: CGPoint(x: s * 0.34, y: s * 0.04))
-        ribbon.addLine(to: CGPoint(x: s * 0.42, y: s * 0.24))
-        ribbon.move(to: CGPoint(x: s * 0.66, y: s * 0.04))
-        ribbon.addLine(to: CGPoint(x: s * 0.58, y: s * 0.24))
+        // The chassis is an abstract naval mine (user call — the ribbon tabs
+        // read as Sputnik): eight stubby contact horns around the disc. The
+        // one shape that makes a Minesweeper decoration self-explanatory.
+        var horns = Path()
+        for i in 0..<8 {
+            // Offset half a step so no horn points straight up (less antenna).
+            let angle = (CGFloat(i) + 0.5) * .pi / 4
+            let from = CGPoint(
+                x: center.x + radius * cos(angle), y: center.y + radius * sin(angle))
+            let to = CGPoint(
+                x: center.x + (radius + s * 0.09) * cos(angle),
+                y: center.y + (radius + s * 0.09) * sin(angle))
+            horns.move(to: from)
+            horns.addLine(to: to)
+        }
         ctx.stroke(
-            ribbon, with: .color(ink),
-            style: StrokeStyle(lineWidth: lw * 1.4, lineCap: .round))
+            horns, with: .color(ink),
+            style: StrokeStyle(lineWidth: lw * 1.5, lineCap: .round))
 
         // The disc: metal fill for earned tiers, paper otherwise.
         let disc = Path(
