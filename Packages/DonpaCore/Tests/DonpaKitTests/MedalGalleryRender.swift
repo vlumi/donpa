@@ -13,6 +13,16 @@ final class MedalGalleryRender: XCTestCase {
         guard let out = ProcessInfo.processInfo.environment["DONPA_MEDAL_GALLERY"] else {
             throw XCTSkip("set DONPA_MEDAL_GALLERY=<dir> to render")
         }
+        // Headless runs can't resolve SwiftPM asset catalogs — feed the boot
+        // asset straight from its source file (repo-relative; harness-only).
+        if let root = ProcessInfo.processInfo.environment["DONPA_REPO_ROOT"],
+            let nsImage = NSImage(
+                contentsOf: URL(fileURLWithPath: root).appendingPathComponent(
+                    "Packages/DonpaCore/Sources/DonpaKit/Resources/Panels.xcassets/"
+                        + "BootPrint.imageset/boot@3x.png"))
+        {
+            MedalView.bootImageOverride = Image(nsImage: nsImage)
+        }
         let dir = URL(fileURLWithPath: out, isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 

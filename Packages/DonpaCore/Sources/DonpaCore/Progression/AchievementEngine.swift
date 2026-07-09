@@ -40,7 +40,7 @@ public enum AchievementID: String, CaseIterable, Sendable {
         switch self {
         case .speedExpert: return [100, 60, 40]  // seconds, descending bars
         case .milesWins: return [10, 100, 1000]
-        case .milesTiles: return [100_000, 1_000_000]
+        case .milesTiles: return [10_000, 100_000, 1_000_000]
         case .milesDisarmed: return [1000, 10_000, 100_000]
         default: return nil
         }

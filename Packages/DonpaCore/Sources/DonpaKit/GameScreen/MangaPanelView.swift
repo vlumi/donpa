@@ -289,7 +289,7 @@ struct MangaPanelView: View {
                 Text(verbatim: headline)
                     .font(.system(.body, design: .rounded).weight(.black))
             }
-            .modifier(PillStamp(accent: MedalView.metal(for: 3)))
+            .modifier(PillStamp(accent: MedalView.gold))
             .rotationEffect(.degrees(-6))
             .padding(.bottom, 12)
             .padding(.trailing, 10)
