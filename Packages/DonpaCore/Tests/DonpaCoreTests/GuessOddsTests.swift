@@ -347,4 +347,20 @@ final class GuessOddsTests: XCTestCase {
         let game = Game(config: .beginner)
         XCTAssertNil(GuessOdds.analyze(game, clicked: Coord(4, 4)))
     }
+
+    /// The local (huge-board) path's suicide guard: a seed the pocket census
+    /// PROVES is a mine is not a gamble — the verdict is nil, matching the
+    /// full path's not-forced semantics.
+    func testHugeVerdictBailsOnACertainMineSeed() {
+        // Lone mine at the centre, everything else revealed: every number
+        // pins (1,1) as a certain mine.
+        let topology = BoundedSquareTopology(width: 3, height: 3)
+        var game = Game(topology: topology, mines: [Coord(1, 1)])
+        var rng = SeededGenerator(seed: 1)
+        for c in game.board.allCoords where c != Coord(1, 1) {
+            game.reveal(c, using: &rng)
+        }
+        XCTAssertNil(
+            GuessOdds.hugeVerdict(game, seeds: [Coord(1, 1)], chordOpened: false))
+    }
 }

@@ -189,7 +189,7 @@ public final class GameViewModel: ObservableObject {
     /// compute at a time.
     private func computeOffMain(
         _ mutate: @Sendable @escaping (inout Game) -> Void,
-        afterApply: @escaping () -> Void = {}
+        afterApply: (() -> Void)? = nil
     ) {
         isComputing = true
         InputTrace.log("gate ON gid=\(gameID)")
@@ -216,7 +216,7 @@ public final class GameViewModel: ObservableObject {
                 // and on a huge board a stream of such no-op taps would otherwise each
                 // queue a full-board snapshot + minimap raster and back up the app.
                 if updated.changeToken != tokenBefore {
-                    afterApply()
+                    afterApply?()
                     self.bump()
                 }
             }

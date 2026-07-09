@@ -73,4 +73,14 @@ final class GameEndEventTests: XCTestCase {
         XCTAssertGreaterThan(event.revealActions, 0)
         XCTAssertLessThan(event.revealActions, GameViewModel.restoredActionsPoison)
     }
+
+    /// The eager pre-arm after newGame (computeOffMain's default afterApply):
+    /// mines are placed off-main before any tap.
+    func testNewGamePreArmsTheBoard() async {
+        let vm = GameViewModel(config: .beginner)
+        vm.newGame()
+        await vm.awaitPendingWork()
+        XCTAssertEqual(vm.status, .notStarted)
+        XCTAssertFalse(vm.game.board.mineCoords.isEmpty, "eager arming placed the mines")
+    }
 }
