@@ -405,6 +405,49 @@ flowchart LR
   FB -. "FriendSyncMerge" .-> FriendsStore
 ```
 
+## Feedback (sound + haptics) lives in DonpaKit, never Core
+
+`Game`/`GameViewModel` stay **audio- and haptics-free** — pure logic that reports
+*facts*, not effects. The feedback fires from the DonpaKit input layer
+(`BoardScene`+Input) and `GameContent`, mirroring where the result haptic already
+lived. The VM exposes plain callbacks — `onReveal(openedCells:flooded:)` — and the
+host turns those into sound/haptic side effects: **Core reports, the UI reacts.**
+Keeping it out of Core preserves the "trivially testable, platform-free rules"
+boundary (see the module split) — a feedback effect can't leak into a `swift test`
+run.
+
+- **Sounds are procedural, like the app icon.** `Scripts/assets/make-sounds.swift`
+  synthesises the `.caf` files deterministically (committed assets — no sample
+  packs, no licensing to clear), the same generate-don't-embed instinct as the icon.
+  `SoundPlayer` (a small stateful `@MainActor` class) preloads them once.
+- **The audio-session category is the load-bearing choice.** The iOS
+  `AVAudioSession` is `.ambient` + `.mixWithOthers`, so the hardware Ring/Silent
+  switch mutes the game and Donpa **never interrupts other audio** (a podcast, music)
+  — a game feedback layer should defer to whatever the phone is already playing.
+- **"flood" = a 0-cell cascade, not a cell count.** The distinction between the
+  plain open tick and the fuller flood sound keys on **whether a 0-cell auto-cascade
+  ran** (surfaced as the `flooded` flag on `onReveal`), *not* on how many cells
+  opened — because that matches the player's mental model of "it opened up," which a
+  raw count doesn't.
+
+## Question marks: a 4th CellState, opt-in, never a claim
+
+`CellState.questioned` is a real fourth state riding the existing **2-bit cell
+field** (code 3) — no new storage, it fits the byte-packed `Cell` alongside
+covered/revealed/flagged.
+
+- **A "?" is a private note, never a claim.** The load-bearing invariant: a
+  question mark is excluded **everywhere a flag counts** — the mine counter, chord
+  satisfaction, the over-flag cue, the minimap. It marks the player's own
+  uncertainty; it asserts nothing about the cell.
+- **But it still costs the Bare Hands purity bit.** A "?" is external memory, the
+  same as a flag, so placing one violates the no-marks purity condition — it's a
+  note, not a free pass.
+- **Opt-in, and Core stays pure.** A `Settings` flag is threaded through to
+  `Game.toggleFlag` as an argument; Core never *reads* the setting, it's *passed in*
+  — so the rules stay a pure function of their inputs and the toggle-cycle behaviour
+  is still exhaustively testable.
+
 ## Assets are generated, not hand-drawn-in-repo
 
 The app icon, the B&W variant, the launch image, and the in-grid detonation mark
