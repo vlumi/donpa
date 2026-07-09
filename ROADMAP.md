@@ -113,37 +113,49 @@ achievements/gating rules are pinned in the Progression spec (gentle feats and
 milestones count, skill feats exclude Drills, Drills wins climb the size
 ladder).
 
-**How to play (static reference)** — a `?` on the title screen (and reachable from
-About) opens a **static** "how to play" page: reveal/flag, what the numbers mean,
-chording, flags-remaining, win/lose. Manga/comic-styled **illustrations** (image
-assets, like the result panels) carry the explanation with minimal text — clearer
-than prose for chording, and light on JA/FI translation. Sibling to practice mode
-(the *reference*; practice is the *interactive teach*), which is why it lands here.
+**How to play — SHIPPED** (see CHANGELOG): the `?` on the home screen (and in
+About) opens the static in-app guide — true-to-board mini diagrams, the
+forced-guess stamp and the exact-but-conservative luck fine print included —
+with the expanded English version live at donpa.app/how-to-play. The in-app
+page stays canonical (offline, localized); interactive teach stays deferred to
+Drills, as planned.
 
-- [ ] Static illustrated page + a `?` opener (title + About), no game logic
-- [ ] Explain the **forced-guess stamp** (the % is the survival odds the click
-      had at that moment; silence on a guess-death = a safe move still existed)
-      — the pill's one-word label can't carry this alone (user call)
-- [ ] …and that the luck stats are **exact but conservative** (best effort, user
-      call): recorded guesses always carry true odds, but positions too tangled
-      to analyze — and on XXXL anything but a sealed pocket — go unrecorded
-- [ ] Comic-styled frames (reuse the manga asset-slot pattern), not screenshots
-      (authored art reads clearer + ages better than cropped board captures)
-- [ ] Interactive teach deferred — let **practice mode** be the "now try it" half
-      rather than building a separate tutorial engine
-- [ ] **donpa-site gets the expanded English version** (user call): the same
-      illustrations exported for the web, support.md growing into a proper
-      how-to-play page — linkable (store description, rival onboarding) and
-      long-form where the in-app page stays a quick reference. The in-app page
-      remains canonical: it's offline (the audience is a first-session player)
-      and localized via the catalogs, which the EN-only site isn't.
+**Post-b19 tail (decided 2026-07-09, small enough to land in 0.5.0).** The
+Rivals pass goes FIRST; the four features follow in any order:
+
+- [ ] **Rivals end-to-end UX pass** — walk the whole share → add → compare →
+      nearby loop once with fresh eyes on real flows; includes deciding the
+      sync-toggle's Mess hall placement (today it sits in the Record footer).
+- [ ] **Question-mark flag cycle** (flag → ? → clear). Decisions pinned: **no
+      achievement** (Bare Hands already owns purity, and a `?`-feat is tool
+      preference, not skill); placing a `?` **violates Bare Hands** (an
+      external note is the same crutch as a flag — and it rides the existing
+      purity bit, so exempting it would be the extra work); a `?` never
+      satisfies a number, so chording is unaffected; **Settings toggle**
+      ("Question marks"), **default off** — the third state taxes everyone's
+      flag→clear loop, and the players who want it know to look for it.
+- [ ] **Minimal sound** — the manga "ドーン!" result sting + a couple of soft
+      interaction ticks, behind a remembered mute. **Procedural**, like the
+      app icon: a `Scripts/assets/` generator emits the files (tick/thud/boom
+      synthesis demoed 2026-07-09) — no licensing, no deps, tunable by
+      editing numbers. If the sting ever wants to be lush rather than punchy,
+      a sampled taiko is the one candidate for real audio.
+- [ ] **Drills as the newcomer default** — a fresh install's New Game lands on
+      Drills (how-to-play a `?` away); veterans' remembered selection is
+      untouched.
+- [ ] **Richer haptics** (iOS only) — flag *tick*, chord *thud*, cascade
+      *rumble* as transients / sub-half-second bursts (battery-noise at that
+      scale — the system keyboard fires more per minute); `prepare()` only
+      right before likely use; shares the sound setting's mute.
 
 ## v0.6.0 — Finishing touches (tentative)
 
 Parked here from a 2026-07-09 backlog + platform-capability review: items that
 would each land a more finished 1.0, none individually a gate. **Tentative by
 design** — evaluate each when this milestone opens and cut freely; the ones
-that survive should all be modest builds.
+that survive should all be modest builds. (The smaller half of the original
+list — the Rivals UX pass, `?`-flags, sound, the Drills default, haptics —
+moved up into the 0.5.0 post-b19 tail the same day.)
 
 **From the backlog / parked ideas:**
 
@@ -153,25 +165,9 @@ that survive should all be modest builds.
       a11y gap left) with one navigable cursor, scaled to huge boards. Also the
       seam that iPad hardware-keyboard play and game-controller support would
       share. Co-design with big-board navigation.
-- [ ] **Question-mark flag cycle** (classic third flag state) — the one classic
-      feature veterans will notice missing.
-- [ ] **Minimal sound** — the melodramatic manga "ドーン!" result sting plus a
-      couple of soft interaction ticks, behind a remembered mute toggle. A fully
-      silent game reads as unfinished in store reviews; pairs with the haptics
-      item below.
-- [ ] **Drills as the newcomer default** — a fresh install's New Game lands on
-      Drills (with how-to-play a `?` away); veterans' remembered selection is
-      untouched. Completes the onboarding story.
-- [ ] **Rivals end-to-end UX pass** — walk the whole share → add → compare loop
-      once with fresh eyes; includes deciding the sync-toggle's Mess hall
-      placement (today it sits in the Record footer).
 
 **Platform capabilities (all native, all serverless):**
 
-- [ ] **Richer haptics** — flag *tick*, chord *thud*, cascade *rumble*
-      (CoreHaptics pattern scaled to flood size). Today only the end-of-game
-      notification haptic exists; in a genre played muted, haptics are the
-      sound design. iOS 16-safe, no permissions.
 - [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
       Drills" from Spotlight and Siri; small, no UI beyond the intent
       definitions.
