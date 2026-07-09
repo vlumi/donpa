@@ -207,7 +207,8 @@ extension BoardScene {
     // Non-private: read by the tile-texture builders in BoardScene+TileTextures.
     func fillColor(for cell: Cell) -> SKColor {
         switch cell.state {
-        case .hidden, .flagged:
+        case .hidden, .flagged, .questioned:
+            // A "?" sits on an unopened tile, like a flag.
             return palette.hiddenTile
         case .revealed:
             return cell.isMine ? palette.mineTile : palette.revealedTile
@@ -218,6 +219,8 @@ extension BoardScene {
         switch cell.state {
         case .flagged:
             return nil  // drawn as a flagNode, not a text glyph
+        case .questioned:
+            return ("?", palette.flagGlyph)
         case .hidden:
             return nil
         case .revealed:

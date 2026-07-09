@@ -36,6 +36,9 @@ public struct GameSnapshot: Codable, Sendable {
     public let mines: Set<Coord>
     public let revealed: Set<Coord>
     public let flagged: Set<Coord>
+    /// "?" marks (opt-in question-mark cycle); additive, so older saves decode to
+    /// empty and older apps simply ignore the field.
+    public let questioned: Set<Coord>
     public let status: GameStatus
     public let revealedSafeCount: Int
     public let lossCoord: Coord?
@@ -60,6 +63,7 @@ public struct GameSnapshot: Codable, Sendable {
         mines = try c.decode(Set<Coord>.self, forKey: .mines)
         revealed = try c.decodeIfPresent(Set<Coord>.self, forKey: .revealed) ?? []
         flagged = try c.decodeIfPresent(Set<Coord>.self, forKey: .flagged) ?? []
+        questioned = try c.decodeIfPresent(Set<Coord>.self, forKey: .questioned) ?? []
         status = try c.decodeIfPresent(GameStatus.self, forKey: .status) ?? .playing
         revealedSafeCount = try c.decodeIfPresent(Int.self, forKey: .revealedSafeCount) ?? 0
         lossCoord = try c.decodeIfPresent(Coord.self, forKey: .lossCoord)
@@ -81,6 +85,7 @@ public struct GameSnapshot: Codable, Sendable {
         self.mines = game.board.mineCoords
         self.revealed = game.board.revealedCoords
         self.flagged = game.board.flaggedCoords
+        self.questioned = game.board.questionedCoords
         self.status = game.status
         self.revealedSafeCount = game.revealedSafeCount
         self.lossCoord = game.lossCoord
@@ -118,7 +123,8 @@ public struct GameSnapshot: Codable, Sendable {
             c.x >= 0 && c.x < width && c.y >= 0 && c.y < height
         }
         return mines.allSatisfy(inBounds) && revealed.allSatisfy(inBounds)
-            && flagged.allSatisfy(inBounds) && (lossCoord.map(inBounds) ?? true)
+            && flagged.allSatisfy(inBounds) && questioned.allSatisfy(inBounds)
+            && (lossCoord.map(inBounds) ?? true)
     }
 
     /// Migration seam for a future *breaking* change: when `currentVersion` is

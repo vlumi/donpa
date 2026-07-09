@@ -83,7 +83,9 @@ extension BoardScene {
             switch cell.state {
             case .revealed: color = cell.isMine ? colors.mine : colors.revealed
             case .flagged: color = colors.flag
-            case .hidden: color = nil  // background already painted
+            // A "?" is an unopened maybe-note, not a committed flag — leave it as
+            // background on the overview, like a hidden cell.
+            case .hidden, .questioned: color = nil  // background already painted
             }
             guard let color else { return }
             let x = i % boardW

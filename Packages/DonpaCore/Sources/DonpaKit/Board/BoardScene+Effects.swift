@@ -95,20 +95,27 @@ extension BoardScene {
             // `c` is the screen position (drawn there); read state from the logical
             // cell it shows (identity when bounded, wrapped cell when not).
             let state = viewModel.game.board[displayCoord(c)].state
-            guard state == .hidden || state == .flagged else { return }
+            // A "?" tile is unopened too, so it takes the screentone like a flag.
+            guard state == .hidden || state == .flagged || state == .questioned else { return }
             let center = layout.center(of: c)
             let tile = SKSpriteNode(texture: texture, size: washSize)
             tile.position = center
             tile.isUserInteractionEnabled = false
             glowLayer.addChild(tile)
+            // Re-stamp the mark above the wash: the view sets `ignoresSiblingOrder`,
+            // so equal-z siblings draw in undefined order — without an explicit
+            // higher z the screentone sprite can land on top and stripe/dot the mark.
             if state == .flagged {
                 let flag = flagSprite(size: size, color: palette.flagGlyph)
                 flag.position = center
-                // Above the wash: the view sets `ignoresSiblingOrder`, so equal-z
-                // siblings draw in undefined order — without an explicit higher z the
-                // screentone sprite can land on top and stripe/dot the flag.
                 flag.zPosition = 1
                 glowLayer.addChild(flag)
+            } else if state == .questioned {
+                let mark = SKSpriteNode(texture: glyphTexture("?", color: palette.flagGlyph))
+                mark.size = CGSize(width: size, height: size)
+                mark.position = center
+                mark.zPosition = 1
+                glowLayer.addChild(mark)
             }
         }
     }

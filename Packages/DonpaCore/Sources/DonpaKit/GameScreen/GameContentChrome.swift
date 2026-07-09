@@ -74,7 +74,8 @@ extension GameContent {
             // normal arrow elsewhere (title, result panel, finished board, paused).
             boardCursorActive: gameInProgress && !navigator.showingTitle && !viewModel.isPaused,
             showMinimap: settings.showMinimap,
-            minimapScale: settings.minimapScale
+            minimapScale: settings.minimapScale,
+            useQuestionMarks: settings.questionMarks
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Per-cell VoiceOver is a future task; for now announce a summary.
