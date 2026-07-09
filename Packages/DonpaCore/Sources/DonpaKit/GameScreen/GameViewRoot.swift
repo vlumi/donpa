@@ -371,7 +371,10 @@ private struct ReceivePrompt: ViewModifier {
                 }
             } message: {
                 Text(
-                    "This share was made with your own identity — a rival card from your other device is still you.",
+                    """
+                    This share was made with your own identity — a rival card \
+                    from your other device is still you.
+                    """,
                     bundle: .module)
             }
     }
