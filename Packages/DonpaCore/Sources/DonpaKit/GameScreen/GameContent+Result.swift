@@ -78,6 +78,7 @@ extension GameContent {
     func handleResult() {
         guard let result = viewModel.lastResult?.result else { return }
         fireHaptic(for: result)
+        scene.soundPlayer?.play(.result)  // the ドーン sting, alongside the haptic
 
         // Snapshot BEFORE the submits below, so a win can diff what it opened.
         let recordsBefore = scoreboard.displayRecords

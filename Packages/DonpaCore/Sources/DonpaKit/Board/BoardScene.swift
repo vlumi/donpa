@@ -65,6 +65,9 @@ public final class BoardScene: SKScene {
     /// Whether the flag cycle includes the "?" step (Settings.questionMarks), pushed
     /// from the host like `showMinimap`. Read by the flag input paths.
     var useQuestionMarks = false
+    /// Plays the input sound effects (flag/chord/reveal). The host owns it and keeps
+    /// its `isEnabled` in step with Settings; nil until wired (tests, previews).
+    weak var soundPlayer: SoundPlayer?
     /// Minimap size multiplier (persisted in Settings), clamped when applied.
     var minimapScale: CGFloat = 1
     /// Whether a drag in progress began on the minimap, so the whole drag scrubs

@@ -147,6 +147,22 @@ extension GameContent {
                             .font(.title2.bold())
                         Text("Tap to resume", bundle: .module)
                             .font(.callout.weight(.semibold)).foregroundStyle(.secondary)
+                        // A quiet moment is a natural place to silence the game; its
+                        // own Button consumes the tap so it doesn't also resume.
+                        Button {
+                            settings.sound.toggle()
+                        } label: {
+                            Label {
+                                Text(settings.sound ? "Sound on" : "Sound off", bundle: .module)
+                            } icon: {
+                                Image(
+                                    systemName: settings.sound
+                                        ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                            }
+                            .font(.callout)
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("game.paused.sound")
                     }
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

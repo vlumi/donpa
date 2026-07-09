@@ -52,6 +52,17 @@ struct HomeScreen: View {
             // Secondary utilities in the screen's top-right corner, as before.
             .overlay(alignment: .topTrailing) {
                 HStack(spacing: 8) {
+                    roundButton(
+                        label: settings.sound ? "Mute sound" : "Unmute sound",
+                        id: "title.sound", action: { settings.sound.toggle() }
+                    ) {
+                        Image(
+                            systemName: settings.sound
+                                ? "speaker.wave.2.fill" : "speaker.slash.fill"
+                        )
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                    }
                     roundButton(label: "How to play", id: "title.howto", action: onHowTo) {
                         Image(systemName: "questionmark")
                             .font(.system(size: 16, weight: .bold))

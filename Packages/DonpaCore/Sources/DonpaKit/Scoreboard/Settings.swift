@@ -215,6 +215,11 @@ public final class Settings: ObservableObject {
     @Published public var questionMarks: Bool {
         didSet { defaults.set(questionMarks, forKey: questionMarksKey) }
     }
+    /// Play sound effects (flag/chord/reveal + the result sting). On by default;
+    /// on iOS the Ring/Silent switch also mutes it (the audio session is `.ambient`).
+    @Published public var sound: Bool {
+        didSet { defaults.set(sound, forKey: soundKey) }
+    }
     /// Sync the scoreboard across devices via iCloud. Opt-in, off by default — our
     /// own toggle, not a system grant (KVS rides on the system sign-in).
     @Published public var syncScores: Bool {
@@ -252,6 +257,7 @@ public final class Settings: ObservableObject {
     private let showMinimapKey = "donpa.showMinimap"
     private let minimapScaleKey = "donpa.minimapScale"
     private let questionMarksKey = "donpa.questionMarks"
+    private let soundKey = "donpa.sound"
     private let syncScoresKey = "donpa.syncScores"
 
     public init(defaults: UserDefaults = .standard) {
@@ -309,6 +315,8 @@ public final class Settings: ObservableObject {
         minimapScale = defaults.object(forKey: minimapScaleKey) as? Double ?? 1.0
         // Off by default — the "?" step is opt-in.
         questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
+        // On by default — the ringer switch is the quick mute on iOS.
+        sound = defaults.object(forKey: soundKey) as? Bool ?? true
         syncScores = defaults.object(forKey: syncScoresKey) as? Bool ?? false
         language =
             defaults.string(forKey: languageKey).flatMap(LanguagePreference.init(rawValue:))

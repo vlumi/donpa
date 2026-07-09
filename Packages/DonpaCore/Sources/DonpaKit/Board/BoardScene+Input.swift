@@ -46,7 +46,7 @@ extension BoardScene {
     func flag(atScenePoint p: CGPoint) {
         guard !isOverMinimapUI(atScenePoint: p) else { return }
         guard let c = coord(atScenePoint: p) else { return }
-        viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
+        toggleFlagWithSound(c)
     }
 
     /// A plain tap/click: a revealed number chords; a hidden cell follows the
@@ -61,15 +61,15 @@ extension BoardScene {
         if handleMinimapNavigation(atScenePoint: p) { return }
         guard let c = coord(atScenePoint: p) else { return }
         if viewModel.game.board[c].state == .revealed {
-            viewModel.chord(c)
+            chordWithSound(c)
         } else {
             switch viewModel.inputMode {
             case .reveal:
                 // On a known mine, show the hit-mine tile instantly (before the
                 // off-thread reveal). No-op on the safe first click.
                 if viewModel.canRevealHitMine(c) { revealHitTileInstantly(at: c) }
-                viewModel.reveal(c)
-            case .flag: viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
+                revealWithSound(c)
+            case .flag: toggleFlagWithSound(c)
             }
         }
     }
@@ -80,13 +80,42 @@ extension BoardScene {
         guard !isOverMinimapUI(atScenePoint: p) else { return }
         guard let c = coord(atScenePoint: p) else { return }
         if viewModel.game.board[c].state == .revealed {
-            viewModel.chord(c)
+            chordWithSound(c)
         } else {
             switch viewModel.inputMode {
-            case .reveal: viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
-            case .flag: viewModel.reveal(c)
+            case .reveal: toggleFlagWithSound(c)
+            case .flag: revealWithSound(c)
             }
         }
+    }
+
+    // MARK: Input + sound
+
+    /// Toggle a flag and play the flag click only when a mark is newly PLACED
+    /// (hidden → flag, or flag → "?"), not when clearing it back to hidden.
+    private func toggleFlagWithSound(_ c: Coord) {
+        let before = viewModel.game.board[c].state
+        viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
+        let after = viewModel.game.board[c].state
+        if after != before, after == .flagged || after == .questioned {
+            soundPlayer?.play(.flag)
+        }
+    }
+
+    /// Reveal and play the dig blip once for the action (not per flooded cell) —
+    /// only when the tap actually opens something (a hidden/"?" cell).
+    private func revealWithSound(_ c: Coord) {
+        let s = viewModel.game.board[c].state
+        viewModel.reveal(c)
+        if s == .hidden || s == .questioned { soundPlayer?.play(.reveal) }
+    }
+
+    /// Chord and play the knock only when it will act (satisfied number with a
+    /// hidden neighbour left), so a stray tap on a 0-cell stays silent.
+    private func chordWithSound(_ c: Coord) {
+        let acts = viewModel.game.canChord(c)
+        viewModel.chord(c)
+        if acts { soundPlayer?.play(.chord) }
     }
 
     /// Map a hosting-view point to scene space via `SKView`'s own view↔scene
