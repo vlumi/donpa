@@ -360,6 +360,16 @@ devices instead of one person's. The whole pipeline lives in `DonpaCore/Sharing`
   never folded into your own `Scoreboard`. Comparison (`ScoreComparison`: per-config
   leaderboard + head-to-head) reads both and interleaves at display time — so removing
   a rival just drops their record, with nothing to disentangle from your stats.
+- **Nearby exchange is a transport, not a second pipeline.** `NearbyExchange`
+  (v0.5.0) swaps the *same* signed share URL both ways over MultipeerConnectivity
+  (encryption required) — the received bytes re-enter the exact scan/link classify
+  path, so all the verification above applies unchanged. Both sides advertise *and*
+  browse under one Bonjour type; opening the sheet is the consent gesture, so an
+  invite is auto-accepted (the import still stops at the normal confirm step).
+  Devices advertise a short prefix of their own public key, letting a browser hide
+  the player's own other devices — self-recognition only; the full key is still
+  checked on receive (and a self-add is classified `.own` and rejected gently).
+  NFC was the wish, but iOS gives third-party apps no phone-to-phone NFC.
 
 ## Rival-list sync: the same blob model, different merge
 
