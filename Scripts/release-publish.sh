@@ -4,7 +4,10 @@
 # auto-merging PR, and blocks until CI passes and it merges. All the cross-step
 # state (new version/build, branch name) lives here, in memory, within this one
 # run. The pure steps that follow (tag, distribute) read the result back from the
-# merged commit on main — so nothing is passed between scripts.
+# merged commit on the release base — so nothing is passed between scripts.
+#
+# The base is main, or a release/X.Y.x maintenance branch for a patch on a
+# shipped version (see release_base in release-lib.sh).
 #
 # Versioning (project.yml, shared across all app targets):
 #   • MARKETING_VERSION — bumped only on an `all` release, and only if you say so.
@@ -18,6 +21,7 @@ cd "$(dirname "$0")/.."
 . Scripts/release-lib.sh
 
 platform="$(require_platform "${1:-}")"
+base="$(release_base)"
 
 # Releasing all is the common path (just confirm). Single-platform is explicit.
 if [ "$platform" = "all" ]; then
@@ -31,12 +35,12 @@ cur_version="$(read_unique MARKETING_VERSION)"
 cur_build="$(read_unique CURRENT_PROJECT_VERSION)"
 echo "current: version ${cur_version}, build ${cur_build}"
 
-# Resume guard: if main's build is already ahead of every tag, a previous run's
-# bump merged but wasn't tagged — publishing is done. Skip (don't re-bump / open
-# a second PR); the chain flows on to release-tag. The tags are the record, so no
-# state file is needed.
+# Resume guard: if the base's build is already ahead of every tag, a previous
+# run's bump merged but wasn't tagged — publishing is done. Skip (don't re-bump /
+# open a second PR); the chain flows on to release-tag. The tags are the record,
+# so no state file is needed.
 if [ "$cur_build" -gt "$(highest_tagged_build)" ]; then
-    echo "✓ build ${cur_build} already merged to main but untagged — publish already done, skipping to tag."
+    echo "✓ build ${cur_build} already merged to ${base} but untagged — publish already done, skipping to tag."
     exit 0
 fi
 
@@ -59,7 +63,12 @@ EOF
 else
     echo "single-platform release ($platform): keeping version ${cur_version} (build still bumps every target)."
 fi
-new_build=$(( cur_build + 1 ))
+# Next build = one past BOTH the base's current build and every existing tag:
+# on main those agree, but a patch branch lags behind builds main has cut since
+# (and vice versa), and build numbers stay globally monotonic across branches so
+# the trains never collide.
+highest="$(highest_tagged_build)"
+new_build=$(( (cur_build > highest ? cur_build : highest) + 1 ))
 echo "release: version ${new_version}, build ${new_build} (build applies to every target)"
 
 # ── Apply the bump to project.yml ─────────────────────────────────────────────
@@ -92,14 +101,22 @@ EOF
 )"
 git push --quiet -u origin "$rel_branch"
 
-say "Opening PR…"
+say "Opening PR (into ${base})…"
 gh pr create \
     --title "Release v${new_version} build ${new_build} (${platform})" \
-    --body "Version **${new_version}**, build **${new_build}** (build bumped on every target; release scope: **${platform}**). Opened by \`Scripts/release-publish.sh\`; set to auto-merge once CI passes. The resulting merge commit on main is tagged and distributed." \
-    --head "$rel_branch" >/dev/null
+    --body "Version **${new_version}**, build **${new_build}** (build bumped on every target; release scope: **${platform}**). Opened by \`Scripts/release-publish.sh\`; set to auto-merge once CI passes. The resulting merge commit on ${base} is tagged and distributed." \
+    --base "$base" --head "$rel_branch" >/dev/null
 
 say "Enabling auto-merge (merge commit) — will merge when CI passes…"
-gh pr merge "$rel_branch" --auto --merge
+# Auto-merge needs branch protection with required checks — main has it, a
+# release/X.Y.x base typically doesn't (GitHub then refuses to arm it because
+# the PR is already mergeable). Fall back to merging directly after the CI wait
+# below, so the green-before-merge guarantee holds either way.
+automerge=1
+if ! gh pr merge "$rel_branch" --auto --merge 2>/dev/null; then
+    automerge=0
+    echo "  (auto-merge unavailable on ${base} — will merge directly once CI passes)"
+fi
 
 # ── Wait for CI; stop (PR left open) before anything irreversible if it fails ──
 # Right after `pr create`, gh may report "no checks" before the workflow appears.
@@ -121,10 +138,13 @@ if ! gh pr checks "$rel_branch" --watch --fail-fast; then
 fi
 
 say "Confirming merge…"
+# The no-auto-merge fallback: CI is green (watched above), merge now ourselves.
+[ "$automerge" -eq 1 ] || gh pr merge "$rel_branch" --merge >/dev/null
+
 # Auto-merge is ASYNC: GitHub performs the merge a few seconds AFTER checks go
 # green, so a single immediate check races ahead and sees OPEN. Poll until MERGED
 # (or give up after ~60s, which would mean something really is blocking it, e.g. a
-# required review). The later steps re-derive from main, so a timeout here is
+# required review). The later steps re-derive from the base, so a timeout here is
 # recoverable by simply re-running `make release`.
 state=""
 for _ in $(seq 1 20); do
@@ -134,4 +154,8 @@ for _ in $(seq 1 20); do
 done
 [ "$state" = "MERGED" ] || die "PR is '$state' after waiting, not MERGED (a required review may be blocking auto-merge). Once it merges, re-run \`make release\` — it detects the merged-but-untagged build and resumes at the tag step."
 
-echo "✓ published: v${new_version} build ${new_build} merged to main."
+# Leave the tree back on the merged base tip (also what release-tag expects).
+git checkout -q "$base"
+git pull --quiet --ff-only origin "$base"
+
+echo "✓ published: v${new_version} build ${new_build} merged to ${base}."

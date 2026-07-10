@@ -30,6 +30,38 @@ final class GameViewModelTests: XCTestCase {
         return Coord(0, 0)
     }
 
+    // MARK: Primed placeholder
+
+    /// The primed-board lifecycle: a board the player never asked for (the initial
+    /// board, or the launch swap to the persisted config) is flagged so autosave
+    /// won't read its `.notStarted` state as "no game → discard this config's
+    /// save". Any player-initiated start/restore clears the flag. Regression test
+    /// for the launch sequence that deleted the last-started config's save ~2s
+    /// after every launch.
+    func testPrimedBoardFlagLifecycle() async {
+        let vm = GameViewModel(config: .beginner)
+        XCTAssertTrue(vm.isPrimedBoard, "the initial board is the launch placeholder")
+
+        vm.prime(config: .intermediate)
+        XCTAssertTrue(vm.isPrimedBoard, "the launch swap stays a placeholder")
+        XCTAssertEqual(vm.config, .intermediate, "prime still swaps the board")
+
+        vm.newGame(config: .beginner)
+        XCTAssertFalse(vm.isPrimedBoard, "a player-started game is not a placeholder")
+
+        // A restored game is the player's too — build a snapshot from a played
+        // board, restore it into a freshly-primed VM, and check the flag clears.
+        let played = await startedGame()
+        guard let snapshot = played.snapshot() else {
+            XCTFail("no snapshot from a playing game")
+            return
+        }
+        let vm2 = GameViewModel(config: .beginner)
+        vm2.prime(config: .intermediate)
+        vm2.restore(from: snapshot)
+        XCTAssertFalse(vm2.isPrimedBoard, "a restored game is not a placeholder")
+    }
+
     // MARK: New game / counters
 
     func testNewGameBumpsGameIDAndRevision() {

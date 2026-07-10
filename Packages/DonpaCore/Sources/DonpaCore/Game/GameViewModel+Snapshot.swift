@@ -30,4 +30,15 @@ extension GameViewModel {
             game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
             camera: cameraView, inputMode: inputMode)
     }
+
+    /// The launch-time board swap: a fresh board like `newGame`, but flagged as the
+    /// placeholder it is — the player never asked for it, so autosave must not
+    /// treat it as the player having abandoned the config's saved game. (It did:
+    /// the priming `newGame`'s revision bump scheduled a debounced autosave whose
+    /// clear-branch deleted the last-selected config's save ~2s after every
+    /// launch.) Any player-initiated `newGame`/`restore` clears `isPrimedBoard`.
+    public func prime(config: GameConfig) {
+        newGame(config: config)
+        isPrimedBoard = true
+    }
 }
