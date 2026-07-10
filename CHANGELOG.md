@@ -22,6 +22,13 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Fixed: an in-progress save could be deleted at launch.** The app primes a
+  placeholder board to the last picker selection at startup, and the autosave
+  that followed mistook the untouched board for "no game in progress" —
+  deleting that config's real save from disk about two seconds after every
+  launch. The placeholder is now flagged, and no autosave path may discard a
+  save on its behalf.
+
 ## [0.5.0] — Progression
 
 **Achievements, progressive gating & practice mode** (see ROADMAP.md). Shipped

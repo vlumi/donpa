@@ -146,6 +146,12 @@ public final class GameViewModel: ObservableObject {
         self.game = Game(config: config)
     }
 
+    /// True while the board is only an unplayed launch placeholder (the initial
+    /// board, or the `prime(config:)` swap to the persisted config): its config's
+    /// on-disk save is still the player's real game, so autosave must not read the
+    /// untouched `.notStarted` board as "no game → discard the save". See `prime`.
+    public internal(set) var isPrimedBoard = true
+
     public var status: GameStatus { game.status }
     public var flagsRemaining: Int { game.flagsRemaining }
     public var boardWidth: Int { config.width }
@@ -351,6 +357,7 @@ public final class GameViewModel: ObservableObject {
         flushedFlags = 0
         flushedCentiseconds = 0
         resetTimer()
+        isPrimedBoard = false  // player-requested (prime() re-flags the launch swap)
         gameID &+= 1
         InputTrace.log("newGame gid=\(gameID)")
         bump()
@@ -407,6 +414,7 @@ public final class GameViewModel: ObservableObject {
         flushedFlags = 0
         flushedCentiseconds = snapshot.elapsedCentiseconds
         if game.status == .playing { startTimer() } else { runningSince = nil }
+        isPrimedBoard = false  // a restored game is the player's, not the placeholder
         gameID &+= 1
         bump()
     }
