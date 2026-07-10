@@ -18,10 +18,14 @@ struct DonpaApp: App {
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator
             )
-            // Min size fits the end-of-game result panel and the New Game modal
-            // (its sidebar options on one row, full height without clipping). The
-            // modal centres itself, so a bigger window just adds margin.
-            .frame(minWidth: 680, minHeight: 640)
+            // Width fits the New Game modal's sidebar options on one row; the
+            // height floor keeps the result panel readable. 560 (was 640) so the
+            // whole window fits the smallest scaled-display canvases (1024×640
+            // logical under "larger text") with the menu + title bars — the modal
+            // scrolls when short and the result panel clamps to the board, so
+            // nothing clips at the floor. The modal centres itself, so a bigger
+            // window just adds margin.
+            .frame(minWidth: 680, minHeight: 560)
             .onChange(of: viewModel.config) { _, config in
                 WindowSizer.growToFit(for: config)
             }

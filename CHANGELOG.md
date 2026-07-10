@@ -27,6 +27,12 @@ they merge.
   sizes (or a small window) make their content taller than the screen —
   their confirm and close buttons stay pinned and reachable instead of
   being pushed off the bottom.
+- **Everything fits small Mac screens (macOS).** On scaled "larger text"
+  display resolutions, the game window (minimum height 640 → 560), the
+  Head-to-head sheet, and the full-size QR view could all extend past the
+  screen's bottom edge — Head-to-head's Done button unreachably so. Their
+  minimums now follow their content, Esc always closes Head-to-head, and
+  the QR scales down instead of overflowing.
 - **New Game holds up at large text.** The picker scrolls when
   accessibility text sizes outgrow the screen, keeping the Start button
   reachable, and the size chips and caption lines grow with the text
