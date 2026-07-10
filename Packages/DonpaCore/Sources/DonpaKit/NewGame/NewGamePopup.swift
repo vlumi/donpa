@@ -169,14 +169,12 @@ struct NewGamePopup: View {
     }
     #endif
 
-    /// A card that hugs its content; the outer frame centres it. Both layouts are
-    /// tuned to fit the shortest device (iPhone SE) at DEFAULT text — when large
-    /// accessibility text outgrows any fixed tuning, the picker body scrolls
-    /// (ViewThatFits keeps the natural hug otherwise) so the title above and
-    /// Start below never leave the screen.
-    /// Start is pinned full-width at the card's BOTTOM in both layouts — the confirm
-    /// belongs at the bottom edge (with Start tucked under the family sidebar, the
-    /// Flat/Round toggle sat where Start was expected and got tapped as one). `short`
+    /// A card that hugs its content; the outer frame centres it. Tuned to fit
+    /// the shortest device (iPhone SE) at default text; when accessibility text
+    /// outgrows that, the picker body scrolls so the pinned title and Start
+    /// never leave the screen. Start sits full-width at the card's BOTTOM in
+    /// both layouts — the confirm belongs at the bottom edge (with Start under
+    /// the family sidebar, the Flat/Round toggle got tapped as Start). `short`
     /// (landscape phone) compensates for that row via the picker's compact mode.
     private func card(
         layout: BoardSelectionPicker.Layout, width: CGFloat, short: Bool

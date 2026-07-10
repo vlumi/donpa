@@ -11,14 +11,9 @@ extension View {
 }
 
 /// Shared column widths for the high-score table, so `ScoreRow` and the header
-/// (`ScoreboardView.columnHeader`) stay aligned from one source.
-///
-/// These are BASE widths at the default text size: each using view multiplies by
-/// its own `@ScaledMetric(relativeTo: .body)` factor (`ScoreColumns.baseScale`'s
-/// doc pattern) so the columns grow with Dynamic Type — fixed columns forced
-/// grown values to shrink back toward half size, defeating the enlargement in
-/// exactly the numbers a low-vision reader wants big. `numericCell` stays as the
-/// safety net for the rare over-long value.
+/// (`ScoreboardView.columnHeader`) stay aligned from one source. BASE widths:
+/// each view multiplies by its own `@ScaledMetric` factor so the columns grow
+/// with Dynamic Type; `numericCell` stays the safety net for over-long values.
 enum ScoreColumns {
     static let cleared: CGFloat = 56
     static let bestProgress: CGFloat = 64

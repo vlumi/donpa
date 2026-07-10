@@ -368,8 +368,6 @@ struct GameContent: View {
         } else if viewModel.isPrimedBoard {
             // The launch-primed placeholder: the player never touched this board,
             // so its config's on-disk save is still the real game — leave it be.
-            // (Clearing here deleted the last-started config's save ~2s after
-            // every launch, via the priming newGame's debounced autosave.)
         } else {
             // Not in progress (won/lost/not started) → discard THIS config's save.
             let config = viewModel.config

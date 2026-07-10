@@ -112,13 +112,10 @@ struct MessHallView: View {
 
     // MARK: Share / scan header
 
-    /// The header, COMPACT by design (the taller original starved the rivals
-    /// list — on a landscape SE it never appeared at all): the share card
-    /// (which drops captions and merges name + career toggle onto one row when
-    /// width allows), then the tab picker sharing a row with the icon-only
-    /// Add-rival door to the scanner. Nearby lives ON the card as its promoted
-    /// default action (the card also carries the no-name gate, so a nameless
-    /// "?" card never crosses to a rival).
+    /// The header, COMPACT by design (a taller one starves the rivals list —
+    /// on a landscape SE it never appeared at all): the share card, then the
+    /// tab picker sharing a row with the icon-only Add-rival door to the
+    /// scanner. Nearby lives ON the card as its promoted default action.
     private var shareHeader: some View {
         VStack(spacing: 8) {
             ShareCardView(
@@ -341,12 +338,10 @@ struct MessHallView: View {
             }
         }
         .padding(20)
-        // Deliberately NO outer minHeight: the sheet's floor derives from the
-        // content's own minimums (fixed chrome + the tab list's floor above), so no
-        // size it can present or resize to clips the title or the footer row — a
-        // fixed 420 sat below the real content minimum and clipped both. With the
-        // QR demoted behind a button the whole sheet now fits INSIDE even the
-        // minimum game window (680×640); the ideal keeps it there.
+        // No outer minHeight: the sheet's floor derives from the content's own
+        // minimums, so nothing it can present or resize to clips the chrome
+        // (a fixed floor below the content minimum clipped both ends). The
+        // ideal keeps it inside the minimum game window.
         .frame(minWidth: 600, idealHeight: 600)
         #endif
     }
