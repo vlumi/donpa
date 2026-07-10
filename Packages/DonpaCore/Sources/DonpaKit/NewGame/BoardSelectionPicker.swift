@@ -48,6 +48,14 @@ struct BoardSelectionPicker: View {
     /// the card's bottom, so nothing scrolls on a landscape SE.
     var compact = false
 
+    /// Chip/caption line boxes scale with the text they hold (Dynamic Type) — a
+    /// hard 22pt clipped grown labels vertically. Scaled as a set (and the
+    /// insignia with them) so the rows keep their relative proportions; at the
+    /// default size nothing changes.
+    @ScaledMetric(relativeTo: .subheadline) var chipContentHeight: CGFloat = 22
+    @ScaledMetric(relativeTo: .subheadline) var insigniaWidth: CGFloat = 36
+    @ScaledMetric(relativeTo: .body) var captionLineHeight: CGFloat = 22
+
     /// The current selection has a save AND we can resume it → the button says Continue.
     private var canContinue: Bool {
         onResume != nil && index.hasSave(for: settings.currentConfig)

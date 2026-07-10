@@ -121,7 +121,7 @@ extension BoardSelectionPicker {
             DensityInsignia.markImage(density)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 36, height: 22)
+                .frame(width: insigniaWidth, height: chipContentHeight)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 11)  // 22pt content + 2×11 = the 44pt tap target
                 .foregroundStyle(selected ? Color.white : Color.primary)
@@ -195,9 +195,10 @@ extension BoardSelectionPicker {
             Text(verbatim: size.label)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
-                // Match the difficulty chips' pill size (same 22pt content height +
+                // Match the difficulty chips' pill size (same content height +
                 // 8pt padding), so the size row never reads as bigger than it.
-                .frame(height: 22)
+                // Scaled, not fixed: 22pt clipped grown text at accessibility sizes.
+                .frame(height: chipContentHeight)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 11)  // 22pt content + 2×11 = the 44pt tap target
                 .foregroundStyle(selected ? Color.white : Color.primary)
@@ -216,8 +217,9 @@ extension BoardSelectionPicker {
     // MARK: Shared rows
 
     /// The caption under a chip row: board facts (bold) then tagline (italic). Each
-    /// line is fixed-height and shrinks to fit its width, so a long value scales
-    /// down instead of wrapping and the block's height never changes.
+    /// line has a stable height (scaled with Dynamic Type, constant per size) and
+    /// shrinks to fit its width, so a long value scales down instead of wrapping
+    /// and selection changes never move the rows.
     @ViewBuilder func detailLine(detail: String, tagline: String) -> some View {
         Group {
             if compact {
@@ -229,7 +231,7 @@ extension BoardSelectionPicker {
                     .foregroundColor(.secondary))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                    .frame(height: Self.captionLineHeight)
+                    .frame(height: captionLineHeight)
                     .frame(maxWidth: .infinity)
             } else {
                 VStack(spacing: 2) {
@@ -252,12 +254,8 @@ extension BoardSelectionPicker {
             .foregroundStyle(.primary.opacity(opacity))
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .frame(height: Self.captionLineHeight)
+            .frame(height: captionLineHeight)
     }
-
-    /// Fixed height for one `.body` caption line, so shrinking a long value never
-    /// changes the row's height.
-    private static let captionLineHeight: CGFloat = 22
 
     // MARK: Drills' creed line
 
