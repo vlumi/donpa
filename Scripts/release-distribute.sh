@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Release step 4 (pure): regenerate the project from main's tip, then archive,
-# export, and (unless --no-upload) upload each selected platform via the existing
-# Scripts/distribute.sh. Reads nothing but its platform argument; builds straight
-# from the checked-out main, which is the tagged merge commit after the prior step.
+# Release step 4 (pure): regenerate the project from the checked-out tree, then
+# archive, export, and (unless --no-upload) upload each selected platform via the
+# existing Scripts/distribute.sh. Reads nothing but its platform argument; builds
+# straight from the checked-out release base (main or release/X.Y.x), which is
+# the tagged merge commit after the prior step.
 #
 # Usage: release-distribute.sh <ios|macos|all> [--no-upload|--upload-only] [--require-tag]
 #   --no-upload:   archive/export only, skip the ASC upload

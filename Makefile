@@ -88,7 +88,7 @@ release-build:  ## Like `release` but stop after export (no upload)
 	@$(MAKE) release UPLOAD=0
 
 .PHONY: release-preflight
-release-preflight:  ## Release step 1: verify clean, up-to-date main
+release-preflight:  ## Release step 1: verify a clean, up-to-date base (main or release/X.Y.x)
 	@Scripts/release-preflight.sh
 
 .PHONY: release-publish
