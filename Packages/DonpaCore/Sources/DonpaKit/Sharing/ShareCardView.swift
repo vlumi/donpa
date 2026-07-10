@@ -2,15 +2,15 @@ import DonpaCore
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The inline "share my scores" card — lives ON the Mess hall, not behind a sheet:
-/// your name, career opt-in, and the sharing actions. **Nearby is the promoted
-/// default** (the two-way, in-the-room swap); the remote channels sit on a
-/// secondary row — link, and the QR behind a button (Nearby covers in-person
-/// now, so the code no longer earns a permanent inline pane) whose full-size
-/// view also carries the branded-card image exports. The payload is built from
-/// the MERGED cross-device view; when sync is on we refresh first, and either
-/// way the footer says honestly whether it's your synced best or this device
-/// only.
+/// The inline "share my scores" card — lives ON the Mess hall, not behind a
+/// sheet: your name, career opt-in, and the sharing actions, kept deliberately
+/// LEAN (every row here starves the rivals list below). **Nearby is the
+/// promoted default** (the two-way, in-the-room swap); the remote channels sit
+/// on a secondary row — link, and the QR behind a button (Nearby covers
+/// in-person now, so the code no longer earns a permanent inline pane) whose
+/// full-size view also carries the branded-card image exports. The payload is
+/// built from the MERGED cross-device view; when sync is on we refresh first
+/// (the Service Record's footer is where sync provenance is spelled out).
 struct ShareCardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
@@ -18,10 +18,6 @@ struct ShareCardView: View {
     /// sheet (it also receives the swapped card); the card owns the gate: the
     /// button only shows once a name has produced a shareable link.
     var onNearby: (() -> Void)?
-    /// Compact-height mode (phone landscape): the name field and career toggle
-    /// share one row and the provenance caption drops, so the card leaves the
-    /// rivals list actual room on a ~375pt-tall screen.
-    var compact = false
 
     /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
@@ -34,15 +30,22 @@ struct ShareCardView: View {
     @State private var enlarged = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: compact ? 8 : 10) {
-            if compact {
+        VStack(alignment: .leading, spacing: 8) {
+            // Name + career toggle on ONE row where width allows (the field
+            // keeps a usable minimum); narrow portrait phones stack them. The
+            // card is deliberately lean everywhere — every header row it gives
+            // up is a rivals-list row (on a landscape SE the list used to not
+            // appear at all). The provenance caption went with the diet: the
+            // Service Record's sync footer says the same thing.
+            ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
-                    nameField
+                    nameField.frame(minWidth: 140)
                     careerToggle.fixedSize()
                 }
-            } else {
-                nameField
-                careerToggle
+                VStack(alignment: .leading, spacing: 8) {
+                    nameField
+                    careerToggle
+                }
             }
             if let link {
                 shareActions(for: link)
@@ -54,13 +57,6 @@ struct ShareCardView: View {
             } else if failed {
                 Text("Couldn't prepare your share.", bundle: .module)
                     .font(.caption).foregroundStyle(.secondary)
-            }
-            if !compact {
-                // Honest provenance: synced best vs. this device only. (Compact
-                // drops it — the Service Record's footer says the same thing.)
-                Text(provenanceKey, bundle: .module)
-                    .font(.caption2).foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(12)
@@ -165,14 +161,6 @@ struct ShareCardView: View {
     /// suppresses sharing so no "?" card ever goes out.
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// The footer key: synced-across-devices vs. this-device-only, mirroring how the
-    /// scoreboard footer labels sync state.
-    private var provenanceKey: LocalizedStringKey {
-        scoreboard.isCloudActive
-            ? "These are your current best scores across all your devices."
-            : "Sync is off — sharing this device's current scores only."
     }
 
     /// Rebuild the payload → QR + link. Refresh from cloud first when sync is active

@@ -112,18 +112,18 @@ struct MessHallView: View {
 
     // MARK: Share / scan header
 
-    #if os(iOS)
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
-
-    /// The phone-landscape header: the compact share card, then the tab picker
-    /// sharing a row with an icon-only Add rival (landscape has the width for
-    /// it, and the saved row is exactly what the list needs).
-    private var compactHeader: some View {
+    /// The header, COMPACT by design (the taller original starved the rivals
+    /// list — on a landscape SE it never appeared at all): the share card
+    /// (which drops captions and merges name + career toggle onto one row when
+    /// width allows), then the tab picker sharing a row with the icon-only
+    /// Add-rival door to the scanner. Nearby lives ON the card as its promoted
+    /// default action (the card also carries the no-name gate, so a nameless
+    /// "?" card never crosses to a rival).
+    private var shareHeader: some View {
         VStack(spacing: 8) {
             ShareCardView(
                 scoreboard: scoreboard, settings: settings,
-                onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) },
-                compact: true)
+                onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) })
             HStack(spacing: 10) {
                 tabPicker
                 Button {
@@ -134,33 +134,6 @@ struct MessHallView: View {
                 .buttonStyle(.bordered)
                 .accessibilityLabel(Text("Add rival", bundle: .module))
             }
-        }
-    }
-    #endif
-
-    /// Your share card, INLINE (the wireframe's shape — sharing is the social act,
-    /// one glance away, no sheet), and the Add-rival door to the scanner. Nearby
-    /// lives ON the card as its promoted default action (the card also carries
-    /// the no-name gate, so a nameless "?" card never crosses to a rival).
-    private var shareHeader: some View {
-        VStack(spacing: 10) {
-            Text("Share my scores", bundle: .module)
-                .font(.caption).foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            ShareCardView(
-                scoreboard: scoreboard, settings: settings,
-                onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) })
-            Button {
-                scanning = true
-            } label: {
-                Label {
-                    Text("Add rival", bundle: .module)
-                } icon: {
-                    Image(systemName: "qrcode.viewfinder")
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
         }
     }
 
@@ -331,16 +304,7 @@ struct MessHallView: View {
         #if os(iOS)
         NavigationStack {
             VStack(spacing: 0) {
-                if verticalSizeClass == .compact {
-                    // Phone landscape (~375pt tall): the full header left the
-                    // rivals list NO room. Compact card (one name+toggle row, no
-                    // captions) and Add rival folds to an icon beside the tab
-                    // picker — the list gets the height back.
-                    compactHeader.padding([.horizontal, .top], 10)
-                } else {
-                    shareHeader.padding([.horizontal, .top], 12)
-                    tabPicker.padding([.horizontal, .top], 12)
-                }
+                shareHeader.padding([.horizontal, .top], 12)
                 tabContent
             }
             .safeAreaInset(edge: .bottom) { syncFooter.background(.bar) }
@@ -360,7 +324,6 @@ struct MessHallView: View {
         VStack(spacing: 12) {
             Text("Mess hall", bundle: .module).font(.title2.bold())
             shareHeader
-            tabPicker
             // The list is the flexible part: an explicit ideal, because a List's
             // ideal height resolves near ZERO under a sheet's unbounded proposal —
             // the sheet then presents at the frame minimums and the fixed chrome
