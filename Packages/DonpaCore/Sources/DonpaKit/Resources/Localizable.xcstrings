@@ -61,13 +61,13 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld lautaa"
+            "value" : "%lld kenttää"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lldボード"
+            "value" : "%lld面"
           }
         }
       }
@@ -140,7 +140,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@勝"
+            "value" : "%lld勝"
           }
         }
       }
@@ -301,7 +301,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kevyt napautus lipuille, soinnuille ja kaivuulle."
+            "value" : "Kevyt napautus lipuille, alueavauksille ja kaivuulle."
           }
         },
         "ja" : {
@@ -751,7 +751,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lauta"
+            "value" : "Kenttä"
           }
         },
         "ja" : {
@@ -2022,7 +2022,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lippu, sointu, kaivuu ja tulossoinnahdus. iPhonessa myös Ääni/Äänetön-kytkin mykistää sen."
+            "value" : "Lippu, alueavaus, kaivuu ja tulosääni. iPhonessa myös Ääni/Äänetön-kytkin mykistää sen."
           }
         },
         "ja" : {
@@ -3076,13 +3076,13 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uusi peli tällä laudalla"
+            "value" : "Uusi peli tällä kentällä"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このボードで新規ゲーム"
+            "value" : "この盤面で新規ゲーム"
           }
         }
       }
@@ -3148,13 +3148,13 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ei vielä pelejä tällä laudalla."
+            "value" : "Ei vielä pelejä tällä kentällä."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このボードのプレイ記録はまだありません。"
+            "value" : "この盤面のプレイ記録はまだありません。"
           }
         }
       }
@@ -4852,13 +4852,13 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tallennus oli lukukelvoton, joten tällä laudalla alkaa uusi peli."
+            "value" : "Tallennus oli lukukelvoton, joten tällä kentällä alkaa uusi peli."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "セーブデータが読み込めなかったため、このボードで新しいゲームを開始します。"
+            "value" : "セーブデータが読み込めなかったため、この盤面で新しいゲームを開始します。"
           }
         }
       }
@@ -4914,7 +4914,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このデバイスのハイスコアとキャリア統計を消去します。プレイで解放した盤面は再びロックされます。"
+            "value" : "このデバイスのハイスコアと通算成績を消去します。プレイで解放した盤面は再びロックされます。"
           }
         }
       }
@@ -4947,7 +4947,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iCloudにサインインしているすべてのデバイスからハイスコアとキャリア統計を消去します。プレイで解放した盤面は再びロックされます。元に戻せません。"
+            "value" : "iCloudにサインインしているすべてのデバイスからハイスコアと通算成績を消去します。プレイで解放した盤面は再びロックされます。元に戻せません。"
           }
         }
       }
