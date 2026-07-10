@@ -5502,19 +5502,19 @@
         }
       }
     },
-    "Win every rank of one size, L or smaller." : {
+    "Win every rank of one size." : {
       "comment" : "Achievement description (Decorations grid + future ASC)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita yhden koon kaikki tasot — enintään L."
+            "value" : "Voita yhden koon kaikki tasot."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1つのサイズの全難易度で勝利する — L以下。"
+            "value" : "1つのサイズの全難易度で勝利する。"
           }
         }
       }

@@ -126,11 +126,13 @@ final class AchievementEngineTests: XCTestCase {
 
     // MARK: Full-clear tie-ins
 
-    func testFullClearSizeStopsAtL() {
-        // Every rank at XL — above the one-sitting ceiling, no feat.
-        for density in Density.allCases { win(.grid(.xl, density, .flat)) }
+    func testFullClearAnySizeCounts() {
+        // One rank short of a full clear — no feat yet.
+        for density in Density.allCases.dropLast() { win(.grid(.xl, density, .flat)) }
         XCTAssertNil(earned()[.fullClearSize])
-        for density in Density.allCases { win(.grid(.s, density, .flat)) }
+        // Completing the ladder at XL earns it: no size ceiling (an XXXL-only
+        // player full-clearing their size did something HARDER than L — it counts).
+        win(.grid(.xl, Density.allCases.last!, .flat))
         XCTAssertEqual(earned()[.fullClearSize], 1)
     }
 

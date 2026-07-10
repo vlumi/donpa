@@ -112,7 +112,7 @@ public enum AchievementEngine {
             award(.luckLongShot, luckiest <= 1.0 / 3.0 + eps)
             award(.luckMiracle, luckiest <= 0.25 + eps)
         }
-        award(.fullClearSize, facts.anyFullClearedSizeAtOrBelowL)
+        award(.fullClearSize, facts.anyFullClearedSize)
         award(.trifecta, facts.trifectaDone)
         if let total = facts.trifectaTotalCentiseconds {
             award(.trifectaTime, facts.trifectaDone && total < 30_000)  // under 5:00
@@ -211,11 +211,14 @@ public enum AchievementEngine {
             universe.compactMap { $0.record.luckiestGuess?.survival }.min()
         }
 
-        /// Any (family × edges × size ≤ L) leaf with every rank won.
-        var anyFullClearedSizeAtOrBelowL: Bool {
+        /// Any (family × edges × size) leaf with every rank won. No size ceiling:
+        /// full-clearing XXXL is strictly harder than L, so a player who only
+        /// plays big boards earns it too (the old ≤ L cap punished exactly the
+        /// harder path — lifted 2026-07-10).
+        var anyFullClearedSize: Bool {
             for family in [BoardFamily.grid, .hive] {
                 for edges in BoardEdges.allCases {
-                    for size in BoardSize.allCases where size <= .l {
+                    for size in BoardSize.allCases {
                         let cleared = Density.allCases.allSatisfy { density in
                             guard let config = GameConfig.custom(family, size, density, edges)
                             else { return false }
