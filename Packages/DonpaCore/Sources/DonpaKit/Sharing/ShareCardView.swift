@@ -5,12 +5,9 @@ import UniformTypeIdentifiers
 /// The inline "share my scores" card — lives ON the Mess hall, not behind a
 /// sheet: your name, career opt-in, and the sharing actions, kept deliberately
 /// LEAN (every row here starves the rivals list below). **Nearby is the
-/// promoted default** (the two-way, in-the-room swap); the remote channels sit
-/// on a secondary row — link, and the QR behind a button (Nearby covers
-/// in-person now, so the code no longer earns a permanent inline pane) whose
-/// full-size view also carries the branded-card image exports. The payload is
-/// built from the MERGED cross-device view; when sync is on we refresh first
-/// (the Service Record's footer is where sync provenance is spelled out).
+/// promoted default**; link and the QR (behind a button, full-size on demand
+/// with the image exports) are the remote row. The payload is built from the
+/// MERGED cross-device view; when sync is on we refresh first.
 struct ShareCardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
@@ -31,12 +28,8 @@ struct ShareCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Name + career toggle on ONE row where width allows (the field
-            // keeps a usable minimum); narrow portrait phones stack them. The
-            // card is deliberately lean everywhere — every header row it gives
-            // up is a rivals-list row (on a landscape SE the list used to not
-            // appear at all). The provenance caption went with the diet: the
-            // Service Record's sync footer says the same thing.
+            // Name + career toggle share a row where width allows (the field
+            // keeps a usable minimum); narrow portrait phones stack them.
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
                     nameField.frame(minWidth: 140)
@@ -327,11 +320,8 @@ private struct QRZoomSheet: View {
                 .keyboardShortcut(.cancelAction)
             }
             if let qr {
-                // The QR plate is the flexible element in BOTH axes: scaledToFit
-                // keeps the code square while it fills whatever the sheet offers,
-                // so resizing works in every direction and there's no dead space
-                // (a fixed 480pt width cap + a bottom Spacer made the sheet
-                // stretch only downward, into an empty gap).
+                // Flexible in both axes (scaledToFit keeps the code square), so
+                // the plate fills the sheet with no dead space.
                 qr
                     .interpolation(.none)
                     .resizable()
@@ -348,13 +338,13 @@ private struct QRZoomSheet: View {
         .contentShape(Rectangle())
         .onTapGesture { dismiss() }
         #if os(macOS)
-        // Ideal, not floor: a hard 620 minHeight pushed the code offscreen on
-        // scaled ("larger text") displays. The QR is scaledToFit, so it shrinks
-        // with the sheet — smaller than ~440pt it drops below comfortable
-        // direct-scan density, but every control stays reachable and the sheet
-        // can always be grown. The ideal is square-ish: the top row + paddings
-        // eat ~90pt, so the plate lands near 520×510.
-        .frame(minWidth: 480, idealWidth: 560, minHeight: 420, idealHeight: 600)
+        // Low floors so small scaled-display screens can shrink it (the QR
+        // scales down), capped at the ideal: macOS won't resize a sheet's width,
+        // so extra height would only add dead space around the square code. The
+        // ideal lands the plate near-square (~520pt), well above scan density.
+        .frame(
+            minWidth: 480, idealWidth: 560, maxWidth: 560,
+            minHeight: 420, idealHeight: 600, maxHeight: 600)
         #endif
     }
 }

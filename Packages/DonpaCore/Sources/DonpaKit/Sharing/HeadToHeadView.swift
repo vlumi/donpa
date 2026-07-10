@@ -291,9 +291,8 @@ struct HeadToHeadView: View {
                 Text("Done", bundle: .module)
             }
             .keyboardShortcut(.defaultAction)
-            // Esc closes too (Done carries Return) — with the sheet's bottom
-            // able to hang past a small screen's edge, dismissal must not
-            // depend on the Done button being visible.
+            // Esc closes too (Done carries Return) — dismissal must not depend
+            // on the Done button being on-screen.
             .background(
                 Button("") { dismiss() }
                     .keyboardShortcut(.cancelAction)
@@ -301,12 +300,9 @@ struct HeadToHeadView: View {
             )
         }
         .padding(20)
-        // Roomy is the IDEAL, not the floor: a hard minHeight 640 matched the
-        // whole logical screen on scaled ("larger text") displays, pushing the
-        // bottom Done below the screen edge. The floor now derives from the
-        // content minimums (title + tally + the list's 280 + Done), which fit
-        // even the smallest scaled canvas; the ideal keeps the roomy default
-        // (380×420 read cramped over the 600-wide Mess hall).
+        // Ideal, no height floor: the sheet's minimum derives from the content,
+        // so small scaled displays fit; a hard 640 pushed Done off their edge.
+        // (380×420 read cramped over the 600-wide Mess hall, hence the ideal.)
         .frame(minWidth: 520, idealHeight: 600)
         #endif
     }
