@@ -112,7 +112,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ruutua avattu"
+            "value" : "%@ avausta"
           }
         },
         "ja" : {
@@ -1024,7 +1024,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selvitä Asiantuntija alle 180 \/ 120 \/ 90 sekunnin."
+            "value" : "Selvitä asiantuntija 180 \/ 120 \/ 90 sekunnissa."
           }
         },
         "ja" : {
@@ -1769,7 +1769,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ansaitse se nähdäksesi sen."
+            "value" : "Ansaitse nähdäksesi."
           }
         },
         "ja" : {
@@ -1937,7 +1937,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekspertin partio"
+            "value" : "Asiantuntija"
           }
         },
         "ja" : {
@@ -3377,7 +3377,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avaa 10 000 \/ 100 000 \/ 1 000 000 ruutua."
+            "value" : "Avaa 10 000 \/ 100 000 \/ 1 000 000 ruutua tai kennoa."
           }
         },
         "ja" : {
@@ -4499,6 +4499,23 @@
         }
       }
     },
+    "Squares cleared" : {
+      "comment" : "Per-board stat label on a SQUARE board (the hive twin is \"Cells cleared\"); a cross-family career total uses the neutral \"Tiles cleared\".",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avatut ruudut"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開けたマス"
+          }
+        }
+      }
+    },
     "Start" : {
       "comment" : "Home hub: begin a game with the current selection",
       "localizations" : {
@@ -4573,7 +4590,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selviä pakotetusta arvauksesta korkeintaan 1\/3-kertoimella."
+            "value" : "Selviä korkeintaan 1\/3-kertoimen pakotetusta arvauksesta."
           }
         },
         "ja" : {
@@ -4721,7 +4738,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klassikkokolmikko yhteisajassa alle 5:00."
+            "value" : "Klassikkokolmikko alle viidessä minuutissa."
           }
         },
         "ja" : {
@@ -4983,7 +5000,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avatut ruudut"
+            "value" : "Avaukset"
           }
         },
         "ja" : {
@@ -5373,7 +5390,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita kenttä pyöreillä reunoilla."
+            "value" : "Voita reunaton kenttä."
           }
         },
         "ja" : {
@@ -5407,7 +5424,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita Kennon Legenda-kenttä, koko M tai isompi."
+            "value" : "Voita kenno-legenda vähintään koolla M."
           }
         },
         "ja" : {
@@ -5424,7 +5441,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita Legenda-kenttä, koko M tai isompi."
+            "value" : "Voita legenda vähintään koolla M."
           }
         },
         "ja" : {
@@ -5441,7 +5458,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita Mielipuoli-kenttä — millä tahansa koolla."
+            "value" : "Voita mielipuoli-kenttä."
           }
         },
         "ja" : {
@@ -5474,7 +5491,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita Aloittelija, Keskitaso ja Asiantuntija."
+            "value" : "Voita aloittelija, keskitaso ja asiantuntija."
           }
         },
         "ja" : {
@@ -5525,7 +5542,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita asettamatta yhtään lippua — M tai isompi, Pioneeri tai tiheämpi."
+            "value" : "Voita asettamatta yhtään lippua — vähintään M, vähintään pioneeri."
           }
         },
         "ja" : {
@@ -5559,7 +5576,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita ensimmäinen Kenno-kenttä."
+            "value" : "Voita ensimmäinen kenno-kenttä."
           }
         },
         "ja" : {
