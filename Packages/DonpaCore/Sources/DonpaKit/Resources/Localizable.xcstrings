@@ -3728,6 +3728,28 @@
         }
       }
     },
+    "QR code" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR code"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-koodi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QRコード"
+          }
+        }
+      }
+    },
     "Question marks" : {
       "comment" : "Settings: question-marks toggle section title",
       "localizations" : {

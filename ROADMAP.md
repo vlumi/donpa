@@ -152,18 +152,15 @@ into 0.5.0 and shipped there.)
       seam that iPad hardware-keyboard play and game-controller support would
       share. Co-design with big-board navigation.
 - [ ] **macOS windows must fit small/scaled displays** (found on-device,
-      2026-07-10): the Mess hall sheet's honest minimum is ~784pt tall — it
-      overflows out the bottom of the game window (macOS sheets CAN outgrow
-      their window; min window is 640pt) and beats low-resolution logical
-      sizes and the "larger text" scaled modes (accessibility). The driver is
-      the inline share card at the directly-scannable QR threshold (a tall
-      fixed block); the fix is an adaptive card that drops to the tap-to-zoom
-      thumb QR when vertical space is tight (~200pt back), after which the
-      sheet can size itself to fit WITHIN the window at every window size —
-      the Scoreboard's `available: windowSize` convention, the acceptance
-      criterion here. Also audit every fixed window/sheet minimum (game window
-      680×640, How to play, Head-to-head) against the smallest scaled-display
-      heights.
+      2026-07-10): fixed window/sheet minimums can beat low-resolution logical
+      sizes and the "larger text" scaled modes (accessibility), and macOS
+      sheets CAN outgrow their window — the Mess hall did (~784pt against the
+      640pt-min window) until the share-card redesign (Nearby promoted, QR
+      behind a button) brought it inside. Remaining: audit every fixed
+      window/sheet minimum (game window 680×640, How to play, Head-to-head,
+      QR zoom) against the smallest scaled-display heights, with "fits WITHIN
+      the window at every window size" (the Scoreboard's
+      `available: windowSize` convention) as the acceptance criterion.
 
 **Platform capabilities (all native, all serverless):**
 
