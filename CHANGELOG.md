@@ -41,11 +41,12 @@ they merge.
 - **Everything fits small Mac screens (macOS).** On scaled "larger text"
   display resolutions, the game window (minimum height 640 → 560), the
   Head-to-head sheet, and the full-size QR view could all extend past the
-  screen's bottom edge — Head-to-head's Done button unreachably so. Their
-  minimums now follow their content, Esc always closes Head-to-head, and
-  the QR scales down instead of overflowing — its zoom window also resizes
-  in both directions now, the code filling it instead of stretching an
-  empty gap below.
+  screen's bottom edge — Head-to-head's Done button unreachably so — while
+  the Mess hall did the opposite, presenting shorter than its own content
+  and clipping its title and bottom buttons. Window and sheet minimums now
+  follow their content (the flexible lists are what shrink), Esc always
+  closes Head-to-head, and the QR view sits at a comfortable fixed size
+  that the code fills edge to edge.
 - **New Game holds up at large text.** The picker scrolls when
   accessibility text sizes outgrow the screen, keeping the Start button
   reachable, and the size chips and caption lines grow with the text
@@ -56,10 +57,6 @@ they merge.
   beside Share link, opening full-size on demand with the image share/save
   actions alongside the code they render. The Mess hall gets a lot shorter
   and now fits inside even the smallest game window on macOS.
-- **Fixed: the Mess hall no longer clips on small windows (macOS).** The
-  sheet could present shorter than its own content, cutting off the title and
-  the bottom button row; its minimum size now follows the content, and the
-  rival list is what shrinks.
 
 ## [0.5.0] — Progression
 
