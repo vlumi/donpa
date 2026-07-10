@@ -51,6 +51,10 @@ these slot into whichever release they're ready for.
       truncation escaped exactly this gap). Profile huge boards on real hardware
       (the simulator software-renders SpriteKit and overstates cost), and confirm
       the XXXL (1M) first-arm/reveal feel + baseline memory in Instruments.
+      Include a large-text sweep: the 2026-07-10 code audit fixed every
+      stranded-control/clipping path it found (scroll fallbacks, scaled chip
+      boxes and stat columns, content-derived macOS floors) — walk the app at
+      AX5 / smallest scaled resolution to confirm on real screens.
 - [ ] **JA/FI native review** — the strings are the maker's drafts; refine from
       play-testing feedback ("report weirdnesses"), not a string-by-string review
       pass. Catalog review markers were dropped as noise while strings churn —
@@ -151,17 +155,6 @@ into 0.5.0 and shipped there.)
       a11y gap left) with one navigable cursor, scaled to huge boards. Also the
       seam that iPad hardware-keyboard play and game-controller support would
       share. Co-design with big-board navigation.
-- [ ] **macOS windows must fit small/scaled displays** (found on-device,
-      2026-07-10): fixed window/sheet minimums can beat low-resolution logical
-      sizes and the "larger text" scaled modes (accessibility), and macOS
-      sheets CAN outgrow their window — the Mess hall did (~784pt against the
-      640pt-min window) until the share-card redesign (Nearby promoted, QR
-      behind a button) brought it inside. Remaining: audit every fixed
-      window/sheet minimum (game window 680×640, How to play, Head-to-head,
-      QR zoom) against the smallest scaled-display heights, with "fits WITHIN
-      the window at every window size" (the Scoreboard's
-      `available: windowSize` convention) as the acceptance criterion.
-
 **Platform capabilities (all native, all serverless):**
 
 - [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
