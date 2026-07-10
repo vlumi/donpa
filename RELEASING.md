@@ -16,10 +16,17 @@ on to the next — and through v0.1–v0.3 that never happened, so don't create 
 per release. The release **tag** is the exact cut point when a patch is ever
 needed; branch from it then:
 
-- Cut `release/<minor>` (e.g. `release/0.2`) **from that version's last release
-  tag** (`git switch -c release/0.2 mac/v0.2.0-9`). Forward work stays on `main`.
-- **Fixes land on the release branch** (branch off it → PR into it → tag the new
-  build from it), NOT on `main` directly.
+- Cut `release/<minor>.x` (e.g. `release/0.5.x`) **from that version's last
+  release tag** (`git switch -c release/0.5.x mac/v0.5.0-21`). Forward work
+  stays on `main`. (Any name but a `v` prefix works — `release/v…` is reserved
+  for the lane's own PR branches.)
+- **Fixes land on the release branch** (branch off it → PR into it), NOT on
+  `main` directly. Then **cut the patch build with the normal lane from the
+  branch**: `make release` run on a version-line branch releases from it —
+  the PR targets the branch, the build number continues past every existing
+  tag (so trains never collide), and the GitHub "latest" badge stays with the
+  actual latest version. Auto-merge falls back to a direct merge after green
+  CI (the branch has no protection rules).
 - **Every release-branch fix must also reach `main`** — cherry-pick it over, or
   the next version silently regresses it. The only discipline a release branch
   demands.
@@ -89,7 +96,8 @@ committed `main` so the stamp is meaningful.
 
 ## Cutting a release
 
-One command from a clean, up-to-date `main`:
+One command from a clean, up-to-date release base — `main`, or a version-line
+`release/<minor>.x` branch when patching a shipped version (see § Branching):
 
 ```sh
 make release                  # both platforms → App Store Connect
@@ -102,9 +110,9 @@ make release-build             # alias for UPLOAD=0
 `make release` runs a four-step chain (each step is its own
 [`Scripts/release-*.sh`](Scripts/); the Makefile wires the order). The pure
 steps re-derive their inputs from git + `project.yml`, so the only state passed
-between them is the merged commit on `main` — no state file:
+between them is the merged commit on the base — no state file:
 
-1. **preflight** — refuse unless on a clean `main` that matches `origin/main`.
+1. **preflight** — refuse unless on a clean release base matching its origin.
 2. **publish** — the interactive, stateful step. Prompts to bump
    `MARKETING_VERSION` (all-platform releases only; blank = keep, `p` = patch
    bump, or type `X.Y.Z`); always bumps the shared build number. Commits the
@@ -113,8 +121,9 @@ between them is the merged commit on `main` — no state file:
    here — PR left open, nothing tagged or built.
 3. **tag** — tags the merge commit per platform and publishes a GitHub release
    with a version/build/commit table and the commits since the platform's
-   previous tag. **iOS is pinned "latest"** (GitHub allows one); macOS is a full
-   release without the badge.
+   previous tag. **iOS carries "latest"** (GitHub allows one) whenever its tag
+   really is the highest — a version-line patch never steals the badge from a
+   newer `main` release; macOS is a full release without the badge.
 4. **distribute** — archives, exports, and (unless `UPLOAD=0`) uploads each
    platform to App Store Connect.
 
@@ -179,7 +188,7 @@ progress file to go stale. Re-enter the chain at the right point:
 | Where it died | What happened | Recovery |
 | --- | --- | --- |
 | preflight / publish, **before** the PR merged | nothing irreversible; PR (if any) left open | `make release` again — a clean restart |
-| **after** the PR merged, before tagging | `main` has the bumped build but no tag yet | `make release` — **publish self-skips** (its build is already ahead of every tag) and the chain tags + distributes |
+| **after** the PR merged, before tagging | the base has the bumped build but no tag yet | `make release` (from the base) — **publish self-skips** (its build is already ahead of every tag) and the chain tags + distributes |
 | **partway through tagging** (e.g. iOS tagged, macOS failed) | one platform tagged/released, the other not | `make release-tag` — per platform: skips a done one, creates a missing release for an existing tag, tags the rest |
 | **upload only** (export succeeded, ASC upload flaked) | the `.ipa`/`.pkg` is already in `dist/` | `make release-upload` — uploads the existing package, no rebuild |
 | **archive/export** (or you want a clean rebuild) | release is tagged; the build itself failed | `make release-distribute-retry` (optionally `PLATFORM=macos`) — verifies the tag exists, then re-archives/exports/uploads **without** touching git/PR/tags |
