@@ -33,6 +33,10 @@ they merge.
   screen's bottom edge — Head-to-head's Done button unreachably so. Their
   minimums now follow their content, Esc always closes Head-to-head, and
   the QR scales down instead of overflowing.
+- **New Game holds up at large text.** The picker scrolls when
+  accessibility text sizes outgrow the screen, keeping the Start button
+  reachable, and the size chips and caption lines grow with the text
+  instead of clipping it.
 - **Nearby is the share card's headline action.** The in-the-room swap is
   the promoted default on the card, and the QR code — no longer needing a
   permanent pane now that Nearby covers in-person — moved behind a button
