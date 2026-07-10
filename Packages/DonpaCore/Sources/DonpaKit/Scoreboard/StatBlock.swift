@@ -139,7 +139,7 @@ struct StatBlock: View {
             ("No-chord wins", grouped(figures.noChordWins)),
             // Opening actions grouped (tiles + chords, which clear tiles), then the
             // flag/mine cluster, then playtime.
-            (hexCells ? "Cells cleared" : "Tiles cleared", grouped(figures.tilesOpened)),
+            (hexCells ? "Cells cleared" : "Squares cleared", grouped(figures.tilesOpened)),
             ("Chords used", grouped(figures.chordsUsed)),
             ("Flags placed", grouped(figures.flagsPlaced)),
             ("Mines disarmed", grouped(figures.minesDisarmed)),
