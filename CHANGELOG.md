@@ -22,6 +22,11 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Mess hall fits landscape phones.** In landscape on a small iPhone the
+  share header filled the whole height and the rivals list never appeared.
+  A compact header takes over: name and career toggle on one row, captions
+  dropped, and Add rival folds to an icon beside the Rivals/Squads picker —
+  the list gets the space back.
 - **Score columns grow with your text size.** The Service Record's
   Cleared / Best % / Best columns (and Head-to-head's value columns) now
   widen along with larger accessibility text instead of shrinking the

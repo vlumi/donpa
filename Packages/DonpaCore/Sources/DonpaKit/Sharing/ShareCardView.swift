@@ -18,6 +18,10 @@ struct ShareCardView: View {
     /// sheet (it also receives the swapped card); the card owns the gate: the
     /// button only shows once a name has produced a shareable link.
     var onNearby: (() -> Void)?
+    /// Compact-height mode (phone landscape): the name field and career toggle
+    /// share one row and the provenance caption drops, so the card leaves the
+    /// rivals list actual room on a ~375pt-tall screen.
+    var compact = false
 
     /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
@@ -30,22 +34,16 @@ struct ShareCardView: View {
     @State private var enlarged = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            TextField(text: $name) {
-                Text("Your name", bundle: .module)
+        VStack(alignment: .leading, spacing: compact ? 8 : 10) {
+            if compact {
+                HStack(spacing: 12) {
+                    nameField
+                    careerToggle.fixedSize()
+                }
+            } else {
+                nameField
+                careerToggle
             }
-            .textFieldStyle(.roundedBorder)
-            .onChangeCompat(of: name) { _ in
-                settings.shareName = name
-                rebuild()
-            }
-            Toggle(isOn: $settings.shareIncludeCareer) {
-                Text("Include career stats", bundle: .module)
-                    // Wrap on a narrow column instead of truncating to
-                    // "Include care…".
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
             if let link {
                 shareActions(for: link)
             } else if trimmedName.isEmpty {
@@ -57,10 +55,13 @@ struct ShareCardView: View {
                 Text("Couldn't prepare your share.", bundle: .module)
                     .font(.caption).foregroundStyle(.secondary)
             }
-            // Honest provenance: synced best vs. this device only.
-            Text(provenanceKey, bundle: .module)
-                .font(.caption2).foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if !compact {
+                // Honest provenance: synced best vs. this device only. (Compact
+                // drops it — the Service Record's footer says the same thing.)
+                Text(provenanceKey, bundle: .module)
+                    .font(.caption2).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(12)
         .background(
@@ -78,6 +79,27 @@ struct ShareCardView: View {
             if name.isEmpty { name = settings.shareName }
             rebuild()
         }
+    }
+
+    private var nameField: some View {
+        TextField(text: $name) {
+            Text("Your name", bundle: .module)
+        }
+        .textFieldStyle(.roundedBorder)
+        .onChangeCompat(of: name) { _ in
+            settings.shareName = name
+            rebuild()
+        }
+    }
+
+    private var careerToggle: some View {
+        Toggle(isOn: $settings.shareIncludeCareer) {
+            Text("Include career stats", bundle: .module)
+                // Wrap on a narrow column instead of truncating to
+                // "Include care…".
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
     }
 
     /// All the share actions, ONE row when it fits: Nearby (the promoted default)
