@@ -47,18 +47,7 @@ struct ShareCardView: View {
             }
             .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
             if let link {
-                if let onNearby {
-                    Button(action: onNearby) {
-                        Label {
-                            Text("Nearby", bundle: .module)
-                        } icon: {
-                            Image(systemName: "person.line.dotted.person.fill")
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                shareButtons(for: link)
+                shareActions(for: link)
             } else if trimmedName.isEmpty {
                 // A nameless card would go out stamped "?" — a poor first
                 // handshake in a name-is-identity model. Nudge, don't ship it.
@@ -91,32 +80,63 @@ struct ShareCardView: View {
         }
     }
 
-    /// Send the link (the system share sheet already offers Copy, so no separate
-    /// copy button) and show the QR full size — the branded-card image exports
-    /// (share/save) live inside the QR view, beside the code they render.
-    @ViewBuilder private func shareButtons(for link: URL) -> some View {
-        // Wraps to a column when the row is narrow (compact phones).
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) { shareButtonRow(for: link) }
-            VStack(alignment: .leading, spacing: 8) { shareButtonRow(for: link) }
-        }
-        .buttonStyle(.bordered)
-    }
-
-    @ViewBuilder private func shareButtonRow(for link: URL) -> some View {
-        ShareLinkButton(url: link)
-        if qr != nil {
-            Button {
-                enlarged = true
-            } label: {
-                Label {
-                    Text("QR code", bundle: .module)
-                } icon: {
-                    Image(systemName: "qrcode")
+    /// All the share actions, ONE row when it fits: Nearby (the promoted default)
+    /// at half the width, the remote channels a quarter each — two flexible
+    /// siblings split the row 50/50 and the remote pair halves its side. Narrow
+    /// layouts (compact phones) stack Nearby above the remote pair instead.
+    @ViewBuilder private func shareActions(for link: URL) -> some View {
+        if onNearby != nil {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    nearbyButton
+                    remoteButtons(for: link).frame(maxWidth: .infinity)
+                }
+                VStack(spacing: 8) {
+                    nearbyButton
+                    remoteButtons(for: link)
                 }
             }
-            .accessibilityHint(Text("Shows the code full size.", bundle: .module))
+        } else {
+            remoteButtons(for: link)
         }
+    }
+
+    @ViewBuilder private var nearbyButton: some View {
+        if let onNearby {
+            Button(action: onNearby) {
+                Label {
+                    Text("Nearby", bundle: .module)
+                } icon: {
+                    Image(systemName: "person.line.dotted.person.fill")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+
+    /// The remote channels: send the link (the system share sheet already offers
+    /// Copy, so no separate copy button) and show the QR full size — the
+    /// branded-card image exports (share/save) live inside the QR view, beside
+    /// the code they render.
+    private func remoteButtons(for link: URL) -> some View {
+        HStack(spacing: 8) {
+            ShareLinkButton(url: link)
+            if qr != nil {
+                Button {
+                    enlarged = true
+                } label: {
+                    Label {
+                        Text("QR code", bundle: .module)
+                    } icon: {
+                        Image(systemName: "qrcode")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .accessibilityHint(Text("Shows the code full size.", bundle: .module))
+            }
+        }
+        .buttonStyle(.bordered)
     }
 
     /// The trimmed name: stamped on the card, and (when empty) the gate that
@@ -166,7 +186,8 @@ struct ShareCardView: View {
 }
 
 /// A thin wrapper over SwiftUI's `ShareLink` (the system share sheet) so the call
-/// site stays clean and cross-platform.
+/// site stays clean and cross-platform. Stretches to fill its slot in the
+/// share-actions row.
 private struct ShareLinkButton: View {
     let url: URL
     var body: some View {
@@ -176,6 +197,7 @@ private struct ShareLinkButton: View {
             } icon: {
                 Image(systemName: "square.and.arrow.up")
             }
+            .frame(maxWidth: .infinity)
         }
     }
 }
