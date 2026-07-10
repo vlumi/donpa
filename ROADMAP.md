@@ -410,8 +410,10 @@ freely; IDs lock at build.
   no-chord — "bare hands" was the same feat twice — and no-chord alone (flag
   freely, click one by one) is slower play, not harder play. Resumed games
   can't earn it (the purity bit defaults to violated on restore — decided).
-- `speed.expert` (tiers 100/60/40) — **Expert Sweep** · *Ekspertin partio* ·
-  *エキスパート速攻* — "Clear Basic Expert in under 100 / 60 / 40 seconds."
+- `speed.expert` (tiers 180/120/90) — **Expert Sweep** · *Salamaraivaus* ·
+  *エキスパート速攻* — "Clear Basic Expert in under 180 / 120 / 90 seconds."
+  (Retuned from 100/60/40 pre-release: even bronze was near-world-class,
+  towering over the rest of the set; thresholds are tunable, only IDs lock.)
   Derivable from the Expert best time.
 - `insane.win` — **Stuff of Legends** · *Legendojen ainesta* · *生ける伝説* —
   "Win a Legend board, M or larger." (XS Legend is a lottery.) Renamed from
