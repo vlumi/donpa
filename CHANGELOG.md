@@ -25,6 +25,20 @@ development — entries land under Unreleased as they merge.
   rank of one size) no longer stops at L — clearing every rank at XL, XXL, or
   XXXL earns it too. If you already did, it's stamped retroactively on your
   next launch.
+- **Finnish and Japanese polish.** A full pass over both languages from
+  native review: consistent core vocabulary (one word each for board, chord,
+  career; Ace is now エース, dig is 掘り), more natural achievement and
+  gating wording in Finnish (vähintään-floors, lowercase tier names, a
+  sharper Expert-speed feat name: *Salamaraivaus*), the Round-edges feat now
+  explains the wrap-around in all three languages, and sixteen sharing-flow
+  strings that had never been translated (collision dialog, share errors,
+  sync footers) now speak Finnish and Japanese. Also fixes a Japanese
+  formatting bug that garbled the win count on rival cards.
+- **How to play teaches the long-press.** The in-app guide's dig-and-flag
+  section now mentions that a long-press does the other action — the most
+  useful control tip, previously undocumented. The long version at
+  donpa.app/how-to-play also gained the mouse mapping, the optional ? mark,
+  and Nearby.
 
 ### build 20 — 2026-07-09
 
@@ -265,6 +279,7 @@ platforms).
 - **About speaks the game's language.** The genre blurb ("A Minesweeper game for
   Apple platforms") gave way to the game's own tagline — 地雷を除去し、命を守れ /
   Clear the mines, save lives.
+
 ## [0.3.0] — Board variants
 
 **Board-topology variants: wrapped (torus) + hex grids** (see ROADMAP.md).
