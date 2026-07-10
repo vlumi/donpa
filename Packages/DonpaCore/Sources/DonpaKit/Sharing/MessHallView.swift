@@ -113,46 +113,29 @@ struct MessHallView: View {
     // MARK: Share / scan header
 
     /// Your share card, INLINE (the wireframe's shape — sharing is the social act,
-    /// one glance away, no sheet), and the Add-rival door to the scanner.
+    /// one glance away, no sheet), and the Add-rival door to the scanner. Nearby
+    /// lives ON the card as its promoted default action (the card also carries
+    /// the no-name gate, so a nameless "?" card never crosses to a rival).
     private var shareHeader: some View {
         VStack(spacing: 10) {
             Text("Share my scores", bundle: .module)
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            ShareCardView(scoreboard: scoreboard, settings: settings)
-            HStack(spacing: 10) {
-                Button {
-                    scanning = true
-                } label: {
-                    Label {
-                        Text("Add rival", bundle: .module)
-                    } icon: {
-                        Image(systemName: "qrcode.viewfinder")
-                    }
-                    .frame(maxWidth: .infinity)
+            ShareCardView(
+                scoreboard: scoreboard, settings: settings,
+                onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) })
+            Button {
+                scanning = true
+            } label: {
+                Label {
+                    Text("Add rival", bundle: .module)
+                } icon: {
+                    Image(systemName: "qrcode.viewfinder")
                 }
-                .buttonStyle(.bordered)
-                Button {
-                    nearbyURL = currentShareURL().map(NearbyPayload.init)
-                } label: {
-                    Label {
-                        Text("Nearby", bundle: .module)
-                    } icon: {
-                        Image(systemName: "person.line.dotted.person.fill")
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                // No name → no card to swap (same gate the share card applies).
-                .disabled(!hasShareName)
+                .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.bordered)
         }
-    }
-
-    /// Whether a shareable name has been entered — gates Nearby, so a nameless "?"
-    /// card never crosses to a rival.
-    private var hasShareName: Bool {
-        !settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     /// The signed share link, exactly as the share card builds it. Nil when there's
@@ -361,13 +344,13 @@ struct MessHallView: View {
             }
         }
         .padding(20)
-        // Wide enough that the share card crosses its directly-scannable QR
-        // threshold (240pt needs a ~520pt card; 360 left it at the tap-to-zoom thumb).
         // Deliberately NO outer minHeight: the sheet's floor derives from the
         // content's own minimums (fixed chrome + the tab list's floor above), so no
         // size it can present or resize to clips the title or the footer row — a
-        // fixed 420 sat below the real content minimum and clipped both.
-        .frame(minWidth: 600, idealHeight: 680)
+        // fixed 420 sat below the real content minimum and clipped both. With the
+        // QR demoted behind a button the whole sheet now fits INSIDE even the
+        // minimum game window (680×640); the ideal keeps it there.
+        .frame(minWidth: 600, idealHeight: 600)
         #endif
     }
 }

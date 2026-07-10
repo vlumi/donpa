@@ -3,13 +3,20 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The inline "share my scores" card — lives ON the Mess hall, not behind a sheet:
-/// your name, career opt-in, the QR (the primary, in-person channel — matches the
-/// trust model), and share/copy-link buttons, one glance away. The payload is built
-/// from the MERGED cross-device view; when sync is on we refresh first, and either
-/// way the footer says honestly whether it's your synced best or this device only.
+/// your name, career opt-in, and the sharing actions. **Nearby is the promoted
+/// default** (the two-way, in-the-room swap); the remote channels — link, the QR
+/// behind a button (Nearby covers in-person now, so the code no longer earns a
+/// permanent inline pane), and the image exports — sit on a secondary row. The
+/// payload is built from the MERGED cross-device view; when sync is on we refresh
+/// first, and either way the footer says honestly whether it's your synced best
+/// or this device only.
 struct ShareCardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    /// Open the Nearby exchange — the promoted, in-person path. The host owns the
+    /// sheet (it also receives the swapped card); the card owns the gate: the
+    /// button only shows once a name has produced a shareable link.
+    var onNearby: (() -> Void)?
 
     /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
@@ -18,48 +25,47 @@ struct ShareCardView: View {
     @State private var link: URL?
     @State private var qr: Image?
     @State private var failed = false
-    /// The full-size QR overlay (compact layouts show a thumb too dense to scan).
+    /// The full-size QR sheet (behind the "QR code" button).
     @State private var enlarged = false
-    /// Measured card width → picks the inline QR size (see `qrSize`).
-    @State private var cardWidth: CGFloat = 0
-
-    /// The share payload is DENSE (signed + every board's best), so small renders
-    /// don't resolve in a scanner. Wide layouts (Mac, iPad) get a directly-scannable
-    /// size inline; compact ones keep a thumb and rely on tap-to-enlarge.
-    private var qrSize: CGFloat { cardWidth >= 480 ? 240 : 132 }
 
     var body: some View {
-        // The QR sits beside the fields so the card stays shallow and the rivals
-        // list below keeps the room. Tapping the QR opens it full size.
-        VStack(spacing: 8) {
-            HStack(alignment: .top, spacing: 14) {
-                VStack(alignment: .leading, spacing: 10) {
-                    TextField(text: $name) {
-                        Text("Your name", bundle: .module)
+        VStack(alignment: .leading, spacing: 10) {
+            TextField(text: $name) {
+                Text("Your name", bundle: .module)
+            }
+            .textFieldStyle(.roundedBorder)
+            .onChangeCompat(of: name) { _ in
+                settings.shareName = name
+                rebuild()
+            }
+            Toggle(isOn: $settings.shareIncludeCareer) {
+                Text("Include career stats", bundle: .module)
+                    // Wrap on a narrow column instead of truncating to
+                    // "Include care…".
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
+            if let link {
+                if let onNearby {
+                    Button(action: onNearby) {
+                        Label {
+                            Text("Nearby", bundle: .module)
+                        } icon: {
+                            Image(systemName: "person.line.dotted.person.fill")
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .textFieldStyle(.roundedBorder)
-                    .onChangeCompat(of: name) { _ in
-                        settings.shareName = name
-                        rebuild()
-                    }
-                    Toggle(isOn: $settings.shareIncludeCareer) {
-                        Text("Include career stats", bundle: .module)
-                            // Wrap on a narrow column instead of truncating to
-                            // "Include care…".
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
-                    if let link {
-                        shareButtons(for: link)
-                    } else if trimmedName.isEmpty {
-                        // A nameless card would go out stamped "?" — a poor first
-                        // handshake in a name-is-identity model. Nudge, don't ship it.
-                        Text("Add your name to share.", bundle: .module)
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
+                    .buttonStyle(.borderedProminent)
                 }
-                .frame(maxWidth: .infinity)
-                qrThumb
+                shareButtons(for: link)
+            } else if trimmedName.isEmpty {
+                // A nameless card would go out stamped "?" — a poor first
+                // handshake in a name-is-identity model. Nudge, don't ship it.
+                Text("Add your name to share.", bundle: .module)
+                    .font(.caption).foregroundStyle(.secondary)
+            } else if failed {
+                Text("Couldn't prepare your share.", bundle: .module)
+                    .font(.caption).foregroundStyle(.secondary)
             }
             // Honest provenance: synced best vs. this device only.
             Text(provenanceKey, bundle: .module)
@@ -70,15 +76,6 @@ struct ShareCardView: View {
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.primary.opacity(0.05))
-        )
-        // Measure the card's width to size the inline QR (no GeometryReader wrapper —
-        // it would fight the card's natural height).
-        .background(
-            GeometryReader { geo in
-                Color.clear
-                    .onAppear { cardWidth = geo.size.width }
-                    .onChangeCompat(of: geo.size.width) { cardWidth = $0 }
-            }
         )
         .sheet(isPresented: $enlarged) { QRZoomSheet(qr: qr) }
         .onAppear {
@@ -91,56 +88,11 @@ struct ShareCardView: View {
         }
     }
 
-    @ViewBuilder private var qrThumb: some View {
-        if let qr {
-            Button {
-                enlarged = true
-            } label: {
-                qr
-                    .interpolation(.none)  // keep QR modules crisp
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: qrSize, height: qrSize)
-                    .padding(8)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 10))
-                    // The "this grows" hint, tucked on the corner of the plate.
-                    .overlay(alignment: .bottomTrailing) {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(.white)
-                            .padding(4)
-                            .background(.black.opacity(0.55), in: Circle())
-                            .padding(5)
-                    }
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text("Share QR code", bundle: .module))
-            .accessibilityHint(Text("Shows the code full size.", bundle: .module))
-        } else if failed {
-            Text("Couldn't prepare your share.", bundle: .module)
-                .font(.caption).foregroundStyle(.secondary)
-                .frame(width: 148, height: 148)
-        } else if trimmedName.isEmpty {
-            // Awaiting a name — the nudge under the field carries the message;
-            // a placeholder plate keeps the card's shape steady.
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.primary.opacity(0.05))
-                .frame(width: qrSize, height: qrSize)
-                .overlay {
-                    Image(systemName: "qrcode")
-                        .font(.largeTitle).foregroundStyle(.tertiary)
-                }
-                .accessibilityHidden(true)
-        } else {
-            ProgressView().frame(width: 148, height: 148)
-        }
-    }
-
     /// Send the link (the system share sheet already offers Copy, so no separate
-    /// copy button) plus share a branded QR IMAGE — the framed card, for posting
-    /// where a bare link/QR has no context.
+    /// copy button), show the QR full size, plus share a branded QR IMAGE — the
+    /// framed card, for posting where a bare link/QR has no context.
     @ViewBuilder private func shareButtons(for link: URL) -> some View {
-        // Wraps to two rows when the column is narrow (compact phones).
+        // Wraps to a column when the row is narrow (compact phones).
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) { shareButtonRow(for: link) }
             VStack(alignment: .leading, spacing: 8) { shareButtonRow(for: link) }
@@ -151,6 +103,16 @@ struct ShareCardView: View {
     @ViewBuilder private func shareButtonRow(for link: URL) -> some View {
         ShareLinkButton(url: link)
         if let qr {
+            Button {
+                enlarged = true
+            } label: {
+                Label {
+                    Text("QR code", bundle: .module)
+                } icon: {
+                    Image(systemName: "qrcode")
+                }
+            }
+            .accessibilityHint(Text("Shows the code full size.", bundle: .module))
             // `link` keys the render: it changes whenever the QR does (name /
             // career edit), so the card image rebuilds to match.
             ShareImageButton(qr: qr, name: trimmedName, linkID: link)

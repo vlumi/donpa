@@ -22,6 +22,12 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Nearby is the share card's headline action.** The in-the-room swap is
+  the promoted default on the card, and the QR code — no longer needing a
+  permanent pane now that Nearby covers in-person — moved behind a button
+  beside Share link and the image exports, opening full-size on demand. The
+  Mess hall gets a lot shorter and now fits inside even the smallest game
+  window on macOS.
 - **Fixed: the Mess hall no longer clips on small windows (macOS).** The
   sheet could present shorter than its own content, cutting off the title and
   the bottom button row; its minimum size now follows the content, and the
