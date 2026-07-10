@@ -13,7 +13,9 @@ extension AchievementID {
         case .hiveFirst:
             return String(localized: "Win your first Hive board.", bundle: .module)
         case .roundFirst:
-            return String(localized: "Win a board with Round edges.", bundle: .module)
+            return String(
+                localized: "Win a board with Round edges — the world wraps around.",
+                bundle: .module)
         case .hiveInsane:
             return String(
                 localized: "Win a Hive board at Legend, M or larger.", bundle: .module)
