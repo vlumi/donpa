@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Release step 3 (pure): tag the released commit and publish a GitHub release, per
 # platform. Re-derives everything from durable state — the version/build from the
-# merged project.yml on main, the commit from main's tip — so it needs nothing
-# passed in and is safe to re-run (it refuses to clobber an existing tag).
+# merged project.yml on the release base (main or release/X.Y.x, whichever is
+# checked out — see release_base), the commit from that base's tip — so it needs
+# nothing passed in and is safe to re-run (it refuses to clobber an existing tag).
 #
 # iOS is the repo's "latest" (GitHub allows one); macOS is a full release without
 # the badge. Tags are ios/vX.Y.Z-N and mac/vX.Y.Z-N (no beta/rc).
@@ -14,14 +15,14 @@ cd "$(dirname "$0")/.."
 
 platform="$(require_platform "${1:-}")"
 
-say "Refreshing main…"
-git checkout -q main
-git pull --quiet --ff-only origin main
+base="$(release_base)"
+say "Refreshing ${base}…"
+git pull --quiet --ff-only origin "$base"
 version="$(read_unique MARKETING_VERSION)"
 build="$(read_unique CURRENT_PROJECT_VERSION)"
 merge_sha="$(git rev-parse HEAD)"
 git log -1 --pretty=%s | grep -q "Merge pull request" \
-    || echo "  note: main tip isn't a merge commit (subject: $(git log -1 --pretty=%s)) — tagging it anyway."
+    || echo "  note: ${base} tip isn't a merge commit (subject: $(git log -1 --pretty=%s)) — tagging it anyway."
 echo "tagging v${version} build ${build} at ${merge_sha:0:7}"
 
 release_one() {  # $1 = ios|macos
@@ -71,7 +72,14 @@ ${label} release for ${version} build ${build}.
 ${notes_changes}
 EOF
 )"
-    local latest; latest="$([ "$plat" = ios ] && echo true || echo false)"
+    # iOS carries the repo's "latest" badge (GitHub allows one) — but only when
+    # this tag really is the highest, so a patch cut on an old version from a
+    # release/X.Y.x branch doesn't steal it from a newer main release. (The
+    # strict vX.Y.Z-N scheme makes -v:refname order correct; see previous_tag.)
+    local latest=false
+    if [ "$plat" = ios ]; then
+        [ "$(git tag --list 'ios/v*' --sort=-v:refname | head -1)" = "$tag" ] && latest=true
+    fi
     gh release create "$tag" --verify-tag \
         --title "${label} v${version} (build ${build}) — Donpa Squad" \
         --notes "$notes" --latest="$latest" >/dev/null

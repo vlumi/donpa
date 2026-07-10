@@ -58,6 +58,21 @@ promote_changelog_build() {
     echo "  promoted Unreleased → build ${build}"
 }
 
+# The branch this release is cut from: main (the normal lane), or a version-line
+# release branch (a patch on a shipped version after main has moved on — e.g.
+# release/0.5.x once main is 0.6.0; see RELEASING.md § Branching). Anything else
+# dies — in particular a release/vX.Y.Z-N PR branch (always v-prefixed, so it
+# can't be mistaken for a version line) left checked out by an interrupted
+# publish; check out the real base first.
+release_base() {
+    local b; b="$(git rev-parse --abbrev-ref HEAD)"
+    case "$b" in
+        release/v*) die "on '$b' — the release lane's own PR branch, not a base. Check out main (or the version-line release branch) first." ;;
+        main|release/*) printf '%s' "$b" ;;
+        *) die "not on a release base (on '$b') — release from main or a version-line release/… branch." ;;
+    esac
+}
+
 # Echo the sole distinct value of a quoted setting in project.yml, or die if it's
 # missing or differs between the two targets (they're kept in lock-step).
 read_unique() {

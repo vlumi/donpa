@@ -276,8 +276,10 @@ struct GameContent: View {
         } else if viewModel.config != settings.currentConfig {
             // Land on Home (no auto-resume — the Continue card is one predictable
             // tap); prime the board to the persisted config so an immediate New
-            // Game matches the last selection.
-            viewModel.newGame(config: settings.currentConfig)
+            // Game matches the last selection. `prime` (not `newGame`): the swap is
+            // OUR placeholder, and autosave must not read it as the player having
+            // abandoned that config's saved game (see `isPrimedBoard`).
+            viewModel.prime(config: settings.currentConfig)
         }
     }
 
@@ -363,6 +365,11 @@ struct GameContent: View {
                 // opened (big boards: the first move is still computing at open).
                 await MainActor.run { navigator.savesChanged &+= 1 }
             }
+        } else if viewModel.isPrimedBoard {
+            // The launch-primed placeholder: the player never touched this board,
+            // so its config's on-disk save is still the real game — leave it be.
+            // (Clearing here deleted the last-started config's save ~2s after
+            // every launch, via the priming newGame's debounced autosave.)
         } else {
             // Not in progress (won/lost/not started) → discard THIS config's save.
             let config = viewModel.config
@@ -403,7 +410,7 @@ struct GameContent: View {
         defer { navigator.savesChanged &+= 1 }
         if let snapshot = viewModel.snapshot() {
             saveStore.save(snapshot)
-        } else {
+        } else if !viewModel.isPrimedBoard {  // see autosave(): never clear for the placeholder
             saveStore.clear(config: viewModel.config)
         }
     }

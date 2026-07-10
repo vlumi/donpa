@@ -27,6 +27,15 @@ they merge.
 **Achievements, progressive gating & practice mode** (see ROADMAP.md). Shipped
 to TestFlight (both platforms).
 
+### build 22 — 2026-07-10
+
+- **Fixed: an in-progress save could be deleted at launch.** The app primes a
+  placeholder board to the last picker selection at startup, and the autosave
+  that followed mistook the untouched board for "no game in progress" —
+  deleting that config's real save from disk about two seconds after every
+  launch. The placeholder is now flagged, and no autosave path may discard a
+  save on its behalf.
+
 ### build 21 — 2026-07-10
 
 - **Sector Secure counts any size.** The full-clear achievement (win every
