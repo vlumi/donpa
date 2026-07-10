@@ -178,29 +178,41 @@ struct SettingsView: View {
     @ViewBuilder private var sheetChrome: some View {
         #if os(iOS)
         NavigationStack {
-            settingsList
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(heightReader)
-                .navigationTitle(Text("Settings", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                        .accessibilityIdentifier("sheet.done")
+            // Scrolls when the rows outgrow the detent (large accessibility
+            // text) — the fit-content detent is measured from the UNSCROLLED
+            // content, so nothing changes when everything fits; Done stays a
+            // pinned toolbar item either way.
+            ScrollView {
+                settingsList
+                    .padding(24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(heightReader)
+            }
+            .navigationTitle(Text("Settings", bundle: .module))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done", bundle: .module)
                     }
+                    .accessibilityIdentifier("sheet.done")
                 }
+            }
         }
         // +64 leaves room for the nav bar + grabber.
         .presentationDetents(contentHeight > 0 ? [.height(contentHeight + 64)] : [.medium])
         #else
         VStack(alignment: .leading, spacing: 20) {
             Text("Settings", bundle: .module).font(.title2.bold())
-            settingsList
+            // Scroll fallback for short windows / large text; ViewThatFits so
+            // the sheet still hugs its natural height when the rows fit. The
+            // title and Done row stay pinned outside the scroller.
+            ViewThatFits(in: .vertical) {
+                settingsList
+                ScrollView { settingsList }
+            }
             Divider()
             HStack {
                 Spacer()

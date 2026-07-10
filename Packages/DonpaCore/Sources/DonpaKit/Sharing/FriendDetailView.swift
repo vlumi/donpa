@@ -85,25 +85,36 @@ struct FriendDetailView: View {
     @ViewBuilder private var chrome: some View {
         #if os(iOS)
         NavigationStack {
-            content.padding(20)
-                .navigationTitle(Text(friend.displayName))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(action: done) {
-                            Text("Done", bundle: .module)
-                        }
+            // Scrolls when the squad checklist + big text outgrow the sheet
+            // (its sibling GroupEditView always had this); Done stays pinned
+            // in the toolbar.
+            ScrollView {
+                content.padding(20)
+            }
+            .navigationTitle(Text(friend.displayName))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(action: done) {
+                        Text("Done", bundle: .module)
                     }
                 }
-                .confirmationDialog(
-                    Text("Remove \(friend.displayName)?", bundle: .module),
-                    isPresented: $confirmingRemove, titleVisibility: .visible
-                ) { removeButton }
+            }
+            .confirmationDialog(
+                Text("Remove \(friend.displayName)?", bundle: .module),
+                isPresented: $confirmingRemove, titleVisibility: .visible
+            ) { removeButton }
         }
         #else
         VStack(spacing: 16) {
             Text(friend.displayName).font(.title2.bold())
-            content
+            // Scroll fallback for short windows / large text (ViewThatFits so
+            // the sheet hugs its natural height when the checklist fits); the
+            // title and Done stay pinned outside the scroller.
+            ViewThatFits(in: .vertical) {
+                content
+                ScrollView { content }
+            }
             Button(action: done) {
                 Text("Done", bundle: .module)
             }

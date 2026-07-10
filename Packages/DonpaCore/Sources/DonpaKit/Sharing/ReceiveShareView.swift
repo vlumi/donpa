@@ -250,7 +250,15 @@ private struct SharePromptChrome<Content: View>: View {
                 Text(title, bundle: .module)
             }
             .font(.title2.bold())
-            content
+            // The body scrolls when space runs short (large text on a small
+            // screen), with the title above and the DECISION buttons below
+            // pinned — a trust prompt must never push Confirm/Cancel offscreen.
+            // ViewThatFits so the sheet still hugs its natural height when
+            // everything fits (a bare ScrollView is greedy and would balloon it).
+            ViewThatFits(in: .vertical) {
+                content
+                ScrollView { content }
+            }
             buttons
         }
         .padding(24)
