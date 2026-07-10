@@ -23,17 +23,12 @@ struct NearbyExchangeView: View {
     var body: some View {
         VStack(spacing: 16) {
             header
-            switch exchange.phase {
-            case .browsing:
-                browsing
-            case .connecting(let name):
-                status(Text("Connecting to \(name)…", bundle: .module), spinner: true)
-            case .exchanging(let name):
-                status(Text("Swapping scores with \(name)…", bundle: .module), spinner: true)
-            case .done(let name):
-                done(name)
-            case .failed:
-                status(Text("The connection dropped — try again.", bundle: .module), spinner: false)
+            // The phase content scrolls if it ever outgrows the sheet (a long
+            // peer list at large text); ViewThatFits keeps the natural hug
+            // otherwise. Header and the dismiss button stay pinned.
+            ViewThatFits(in: .vertical) {
+                phaseContent
+                ScrollView { phaseContent }
             }
             Spacer(minLength: 0)
             dismissButton
@@ -42,6 +37,21 @@ struct NearbyExchangeView: View {
         .frame(minWidth: 300, idealWidth: 340, minHeight: 360)
         .onAppear { exchange.start() }
         .onDisappear { exchange.stop() }
+    }
+
+    @ViewBuilder private var phaseContent: some View {
+        switch exchange.phase {
+        case .browsing:
+            browsing
+        case .connecting(let name):
+            status(Text("Connecting to \(name)…", bundle: .module), spinner: true)
+        case .exchanging(let name):
+            status(Text("Swapping scores with \(name)…", bundle: .module), spinner: true)
+        case .done(let name):
+            done(name)
+        case .failed:
+            status(Text("The connection dropped — try again.", bundle: .module), spinner: false)
+        }
     }
 
     /// The bottom button. Once a card has arrived, closing must NOT drop it —
