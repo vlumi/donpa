@@ -39,7 +39,7 @@ extension AchievementID {
                 localized: "Survive a forced guess at one-in-four or worse.", bundle: .module)
         case .fullClearSize:
             return String(
-                localized: "Win every rank of one size, L or smaller.", bundle: .module)
+                localized: "Win every rank of one size.", bundle: .module)
         case .trifecta:
             return String(
                 localized: "Win Beginner, Intermediate and Expert.", bundle: .module)

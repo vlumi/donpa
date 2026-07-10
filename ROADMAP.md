@@ -435,7 +435,9 @@ match the in-game toasts)
 **Full-clear tie-ins** (derivable from the Record's standings)
 
 - `fullclear.size` — **Sector Secure** · *Sektori varmistettu* · *区域制圧* —
-  "Full-clear every rank of one size, L or smaller (any family × edges leaf)."
+  "Full-clear every rank of one size (any family × edges leaf, any size)." The
+  original ≤ L cap was lifted 2026-07-10: an XXXL-only player full-clearing
+  their size does something strictly harder, so it counts too.
 - `trifecta` — **The Classics** · *Klassikot* · *クラシック三冠* — "Win
   Beginner, Intermediate and Expert."
 - `trifecta.time` — **Hat Trick** · *Hattutemppu* · *ハットトリック* — "The
@@ -464,8 +466,10 @@ match the in-game toasts)
   after more than 999 seconds." (The old timer-cap joke.)
 
 Deliberately ABSENT: streaks (luck-heavy — rewards variance, not nerve),
-anything above size L or multi-session (one-sitting cap; the Service Record is
-the trophy for those), per-size/per-rank attrition filler.
+feats that REQUIRE big multi-session boards (the one-sitting cap keeps every
+feat earnable in an afternoon; big boards can still *count* toward feats — see
+fullclear.size — they're just never the only path), per-size/per-rank
+attrition filler.
 
 ### Feat rank — SCRAPPED (2026-07-09)
 
