@@ -332,7 +332,12 @@ private struct QRZoomSheet: View {
         .contentShape(Rectangle())
         .onTapGesture { dismiss() }
         #if os(macOS)
-        .frame(minWidth: 560, minHeight: 620)
+        // Ideal, not floor: a hard 620 minHeight pushed the code offscreen on
+        // scaled ("larger text") displays. The QR is scaledToFit, so it shrinks
+        // with the sheet — smaller than ~440pt it drops below comfortable
+        // direct-scan density, but every control stays reachable and the sheet
+        // can always be grown.
+        .frame(minWidth: 480, idealWidth: 560, minHeight: 420, idealHeight: 600)
         #endif
     }
 }
