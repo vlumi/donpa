@@ -151,6 +151,15 @@ into 0.5.0 and shipped there.)
       a11y gap left) with one navigable cursor, scaled to huge boards. Also the
       seam that iPad hardware-keyboard play and game-controller support would
       share. Co-design with big-board navigation.
+- [ ] **macOS windows must fit small/scaled displays** (found on-device,
+      2026-07-10): the Mess hall sheet's honest minimum is ~784pt tall — taller
+      than low-resolution logical sizes and the "larger text" scaled modes
+      (accessibility). The driver is the inline share card at the
+      directly-scannable QR threshold (a tall fixed block); the likely fix is
+      an adaptive card that drops to the tap-to-zoom thumb QR when vertical
+      space is tight (~200pt back), plus auditing every fixed window/sheet
+      minimum (game window 680×640, How to play, Head-to-head) against the
+      smallest scaled-display heights.
 
 **Platform capabilities (all native, all serverless):**
 
