@@ -4921,18 +4921,18 @@
         }
       }
     },
-    "The corner toggle switches what a tap does: dig (open the tile) or plant a flag on a suspected mine. Flags are your notes — they can be wrong, and you can clear them. Your first dig of a game is always safe." : {
+    "The corner toggle switches what a tap does: dig (open the tile) or plant a flag on a suspected mine. A long-press does the other one. Flags are your notes — they can be wrong, and you can clear them. Your first dig of a game is always safe." : {
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kulmakytkin vaihtaa napautuksen toimintoa: kaiva (avaa ruutu) tai liputa epäilty miina. Liput ovat muistiinpanojasi — ne voivat olla väärässä, ja voit poistaa ne. Pelin ensimmäinen kaivuu on aina turvallinen."
+            "value" : "Kulmakytkin vaihtaa napautuksen toimintoa: kaiva (avaa ruutu) tai liputa epäilty miina. Pitkä painallus tekee vastakkaisen toiminnon. Liput ovat muistiinpanojasi — ne voivat olla väärässä, ja voit poistaa ne. Pelin ensimmäinen kaivuu on aina turvallinen."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "隅のトグルでタップの動作を切り替える：掘る（マスを開く）か、怪しいマスに旗を立てるか。旗はメモ — 間違っていてもよく、外すこともできる。最初の一掘りは必ず安全。"
+            "value" : "隅のトグルでタップの動作を切り替える：掘る（マスを開く）か、怪しいマスに旗を立てるか。長押しでもう一方の操作ができる。旗はメモ — 間違っていてもよく、外すこともできる。最初の一掘りは必ず安全。"
           }
         }
       }
