@@ -344,7 +344,11 @@ struct MessHallView: View {
             Text("Mess hall", bundle: .module).font(.title2.bold())
             shareHeader
             tabPicker
-            tabContent.frame(minHeight: 260)
+            // The list is the flexible part: an explicit ideal, because a List's
+            // ideal height resolves near ZERO under a sheet's unbounded proposal —
+            // the sheet then presents at the frame minimums and the fixed chrome
+            // clips top and bottom.
+            tabContent.frame(minHeight: 180, idealHeight: 300)
             HStack(spacing: 12) {
                 SyncFooterControl(settings: settings, scoreboard: scoreboard)
                 Spacer()
@@ -359,7 +363,11 @@ struct MessHallView: View {
         .padding(20)
         // Wide enough that the share card crosses its directly-scannable QR
         // threshold (240pt needs a ~520pt card; 360 left it at the tap-to-zoom thumb).
-        .frame(minWidth: 600, minHeight: 420)
+        // Deliberately NO outer minHeight: the sheet's floor derives from the
+        // content's own minimums (fixed chrome + the tab list's floor above), so no
+        // size it can present or resize to clips the title or the footer row — a
+        // fixed 420 sat below the real content minimum and clipped both.
+        .frame(minWidth: 600, idealHeight: 680)
         #endif
     }
 }

@@ -22,6 +22,11 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Fixed: the Mess hall no longer clips on small windows (macOS).** The
+  sheet could present shorter than its own content, cutting off the title and
+  the bottom button row; its minimum size now follows the content, and the
+  rival list is what shrinks.
+
 ## [0.5.0] — Progression
 
 **Achievements, progressive gating & practice mode** (see ROADMAP.md). Shipped
