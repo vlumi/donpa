@@ -4,12 +4,13 @@ import UniformTypeIdentifiers
 
 /// The inline "share my scores" card — lives ON the Mess hall, not behind a sheet:
 /// your name, career opt-in, and the sharing actions. **Nearby is the promoted
-/// default** (the two-way, in-the-room swap); the remote channels — link, the QR
-/// behind a button (Nearby covers in-person now, so the code no longer earns a
-/// permanent inline pane), and the image exports — sit on a secondary row. The
-/// payload is built from the MERGED cross-device view; when sync is on we refresh
-/// first, and either way the footer says honestly whether it's your synced best
-/// or this device only.
+/// default** (the two-way, in-the-room swap); the remote channels sit on a
+/// secondary row — link, and the QR behind a button (Nearby covers in-person
+/// now, so the code no longer earns a permanent inline pane) whose full-size
+/// view also carries the branded-card image exports. The payload is built from
+/// the MERGED cross-device view; when sync is on we refresh first, and either
+/// way the footer says honestly whether it's your synced best or this device
+/// only.
 struct ShareCardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
@@ -77,7 +78,9 @@ struct ShareCardView: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.primary.opacity(0.05))
         )
-        .sheet(isPresented: $enlarged) { QRZoomSheet(qr: qr) }
+        .sheet(isPresented: $enlarged) {
+            QRZoomSheet(qr: qr, name: trimmedName, link: link)
+        }
         .onAppear {
             // Pull the latest synced name (iCloud Keychain has no change
             // notifications, so opening the card is the refresh point) BEFORE
@@ -89,8 +92,8 @@ struct ShareCardView: View {
     }
 
     /// Send the link (the system share sheet already offers Copy, so no separate
-    /// copy button), show the QR full size, plus share a branded QR IMAGE — the
-    /// framed card, for posting where a bare link/QR has no context.
+    /// copy button) and show the QR full size — the branded-card image exports
+    /// (share/save) live inside the QR view, beside the code they render.
     @ViewBuilder private func shareButtons(for link: URL) -> some View {
         // Wraps to a column when the row is narrow (compact phones).
         ViewThatFits(in: .horizontal) {
@@ -102,7 +105,7 @@ struct ShareCardView: View {
 
     @ViewBuilder private func shareButtonRow(for link: URL) -> some View {
         ShareLinkButton(url: link)
-        if let qr {
+        if qr != nil {
             Button {
                 enlarged = true
             } label: {
@@ -113,14 +116,6 @@ struct ShareCardView: View {
                 }
             }
             .accessibilityHint(Text("Shows the code full size.", bundle: .module))
-            // `link` keys the render: it changes whenever the QR does (name /
-            // career edit), so the card image rebuilds to match.
-            ShareImageButton(qr: qr, name: trimmedName, linkID: link)
-            #if os(macOS)
-            // macOS's share picker has NO save-to-disk service (iOS's sheet offers
-            // "Save to Files"), so saving the card is its own button + save panel.
-            SaveImageButton(qr: qr, name: trimmedName, linkID: link)
-            #endif
         }
     }
 
@@ -265,14 +260,32 @@ private struct ShareImageButton: View {
 }
 
 /// The QR at scanning size: near the full sheet width on iOS, a generous fixed
-/// square on macOS. Tap anywhere (or Close) to dismiss.
+/// square on macOS. The branded-card image exports (share/save) sit on the top
+/// row — they render exactly what's shown, so they live beside it. Tap anywhere
+/// (or Close) to dismiss.
 private struct QRZoomSheet: View {
     let qr: Image?
+    /// Stamped on the exported card image.
+    let name: String
+    /// Keys the exported-card render — it changes whenever the QR does.
+    let link: URL?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 20) {
-            HStack {
+            HStack(spacing: 8) {
+                if let qr, let link {
+                    Group {
+                        ShareImageButton(qr: qr, name: name, linkID: link)
+                        #if os(macOS)
+                        // macOS's share picker has NO save-to-disk service (iOS's
+                        // sheet offers "Save to Files"), so saving the card is its
+                        // own button + save panel.
+                        SaveImageButton(qr: qr, name: name, linkID: link)
+                        #endif
+                    }
+                    .buttonStyle(.bordered)
+                }
                 Spacer()
                 Button {
                     dismiss()
