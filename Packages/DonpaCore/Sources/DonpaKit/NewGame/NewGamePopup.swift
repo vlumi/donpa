@@ -170,7 +170,10 @@ struct NewGamePopup: View {
     #endif
 
     /// A card that hugs its content; the outer frame centres it. Both layouts are
-    /// tuned to fit the shortest device (iPhone SE), so neither needs a ScrollView.
+    /// tuned to fit the shortest device (iPhone SE) at DEFAULT text — when large
+    /// accessibility text outgrows any fixed tuning, the picker body scrolls
+    /// (ViewThatFits keeps the natural hug otherwise) so the title above and
+    /// Start below never leave the screen.
     /// Start is pinned full-width at the card's BOTTOM in both layouts — the confirm
     /// belongs at the bottom edge (with Start tucked under the family sidebar, the
     /// Flat/Round toggle sat where Start was expected and got tapped as one). `short`
@@ -183,12 +186,10 @@ struct NewGamePopup: View {
         let sidebar = layout == .sidebar
         return VStack(spacing: sidebar ? (short ? 8 : 12) : 20) {
             Text("New game", bundle: .module).font(short ? .headline : .title2.bold())
-            picker(layout: layout, compact: short)
-            #if os(macOS)
-            Text("⌘1–4 family · arrows to choose · Return to start", bundle: .module)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            #endif
+            ViewThatFits(in: .vertical) {
+                pickerBody(layout: layout, short: short)
+                ScrollView { pickerBody(layout: layout, short: short) }
+            }
             picker(layout: layout, compact: short).startButton
         }
         .frame(maxWidth: .infinity)
@@ -198,6 +199,22 @@ struct NewGamePopup: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 6)
+    }
+
+    /// The scrollable middle of the card: the picker (and the macOS key legend),
+    /// between the pinned title and Start.
+    @ViewBuilder private func pickerBody(
+        layout: BoardSelectionPicker.Layout, short: Bool
+    ) -> some View {
+        let sidebar = layout == .sidebar
+        VStack(spacing: sidebar ? (short ? 8 : 12) : 20) {
+            picker(layout: layout, compact: short)
+            #if os(macOS)
+            Text("⌘1–4 family · arrows to choose · Return to start", bundle: .module)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            #endif
+        }
     }
 
     /// The `BoardSelectionPicker` for a layout.

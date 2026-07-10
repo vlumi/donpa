@@ -22,6 +22,9 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
     /// this for the in-progress-save dot). Defaults to none, so other callers (the
     /// scoreboard filters) render unbadged.
     var badge: (Value) -> Bool = { _ in false }
+    /// The stacked label's line box — scaled with Dynamic Type so grown captions
+    /// aren't clipped (see its use below for why the box is fixed per size).
+    @ScaledMetric(relativeTo: .caption) private var labelLineHeight: CGFloat = 16
     /// Stack the glyph ABOVE a caption-size label instead of beside it. Four
     /// family segments on a phone leave ~36pt beside the glyph — every locale
     /// truncated there; stacked, the label gets the segment's full width.
@@ -69,10 +72,11 @@ struct SegmentedGlyphPicker<Value: Hashable & Identifiable>: View {
                         .font(.caption.weight(selected ? .bold : .regular))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
-                        // Fixed line box: a shrunk-to-fit label otherwise has a
-                        // shorter line, shifting its whole segment stack — the
-                        // glyph row read as misaligned across segments.
-                        .frame(height: 16)
+                        // Stable line box (scaled with Dynamic Type): a
+                        // shrunk-to-fit label otherwise has a shorter line,
+                        // shifting its whole segment stack — the glyph row read
+                        // as misaligned across segments.
+                        .frame(height: labelLineHeight)
                 }
             }
         } else {
