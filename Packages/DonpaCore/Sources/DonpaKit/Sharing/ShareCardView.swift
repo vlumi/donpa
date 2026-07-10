@@ -353,8 +353,14 @@ private struct QRZoomSheet: View {
         // with the sheet — smaller than ~440pt it drops below comfortable
         // direct-scan density, but every control stays reachable and the sheet
         // can always be grown. The ideal is square-ish: the top row + paddings
-        // eat ~90pt, so the plate lands near 520×510.
-        .frame(minWidth: 480, idealWidth: 560, minHeight: 420, idealHeight: 600)
+        // eat ~90pt, so the plate lands near 520×510. The maxes must be
+        // EXPLICIT: the macOS sheet window takes its resize limits from the
+        // hosting view's reported max size, and without them width pinned at
+        // the ideal — the sheet only grew downward, and scaledToFit then
+        // capped the code at the stuck width no matter how tall it got.
+        .frame(
+            minWidth: 480, idealWidth: 560, maxWidth: .infinity,
+            minHeight: 420, idealHeight: 600, maxHeight: .infinity)
         #endif
     }
 }
