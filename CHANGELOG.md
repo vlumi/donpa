@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 21 — 2026-07-10
+
 - **Sector Secure counts any size.** The full-clear achievement (win every
   rank of one size) no longer stops at L — clearing every rank at XL, XXL, or
   XXXL earns it too. If you already did, it's stamped retroactively on your
