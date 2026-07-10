@@ -112,6 +112,32 @@ struct MessHallView: View {
 
     // MARK: Share / scan header
 
+    #if os(iOS)
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    /// The phone-landscape header: the compact share card, then the tab picker
+    /// sharing a row with an icon-only Add rival (landscape has the width for
+    /// it, and the saved row is exactly what the list needs).
+    private var compactHeader: some View {
+        VStack(spacing: 8) {
+            ShareCardView(
+                scoreboard: scoreboard, settings: settings,
+                onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) },
+                compact: true)
+            HStack(spacing: 10) {
+                tabPicker
+                Button {
+                    scanning = true
+                } label: {
+                    Image(systemName: "qrcode.viewfinder")
+                }
+                .buttonStyle(.bordered)
+                .accessibilityLabel(Text("Add rival", bundle: .module))
+            }
+        }
+    }
+    #endif
+
     /// Your share card, INLINE (the wireframe's shape — sharing is the social act,
     /// one glance away, no sheet), and the Add-rival door to the scanner. Nearby
     /// lives ON the card as its promoted default action (the card also carries
@@ -305,8 +331,16 @@ struct MessHallView: View {
         #if os(iOS)
         NavigationStack {
             VStack(spacing: 0) {
-                shareHeader.padding([.horizontal, .top], 12)
-                tabPicker.padding([.horizontal, .top], 12)
+                if verticalSizeClass == .compact {
+                    // Phone landscape (~375pt tall): the full header left the
+                    // rivals list NO room. Compact card (one name+toggle row, no
+                    // captions) and Add rival folds to an icon beside the tab
+                    // picker — the list gets the height back.
+                    compactHeader.padding([.horizontal, .top], 10)
+                } else {
+                    shareHeader.padding([.horizontal, .top], 12)
+                    tabPicker.padding([.horizontal, .top], 12)
+                }
                 tabContent
             }
             .safeAreaInset(edge: .bottom) { syncFooter.background(.bar) }
