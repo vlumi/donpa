@@ -37,7 +37,9 @@ they merge.
   Head-to-head sheet, and the full-size QR view could all extend past the
   screen's bottom edge — Head-to-head's Done button unreachably so. Their
   minimums now follow their content, Esc always closes Head-to-head, and
-  the QR scales down instead of overflowing.
+  the QR scales down instead of overflowing — its zoom window also resizes
+  in both directions now, the code filling it instead of stretching an
+  empty gap below.
 - **New Game holds up at large text.** The picker scrolls when
   accessibility text sizes outgrow the screen, keeping the Start button
   reachable, and the size chips and caption lines grow with the text

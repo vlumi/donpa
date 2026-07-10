@@ -317,16 +317,22 @@ private struct QRZoomSheet: View {
                 .keyboardShortcut(.cancelAction)
             }
             if let qr {
+                // The QR plate is the flexible element in BOTH axes: scaledToFit
+                // keeps the code square while it fills whatever the sheet offers,
+                // so resizing works in every direction and there's no dead space
+                // (a fixed 480pt width cap + a bottom Spacer made the sheet
+                // stretch only downward, into an empty gap).
                 qr
                     .interpolation(.none)
                     .resizable()
                     .scaledToFit()
-                    .frame(maxWidth: 480)
                     .padding(20)
                     .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .accessibilityLabel(Text("Share QR code", bundle: .module))
+            } else {
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
         }
         .padding(20)
         .contentShape(Rectangle())
@@ -336,7 +342,8 @@ private struct QRZoomSheet: View {
         // scaled ("larger text") displays. The QR is scaledToFit, so it shrinks
         // with the sheet — smaller than ~440pt it drops below comfortable
         // direct-scan density, but every control stays reachable and the sheet
-        // can always be grown.
+        // can always be grown. The ideal is square-ish: the top row + paddings
+        // eat ~90pt, so the plate lands near 520×510.
         .frame(minWidth: 480, idealWidth: 560, minHeight: 420, idealHeight: 600)
         #endif
     }
