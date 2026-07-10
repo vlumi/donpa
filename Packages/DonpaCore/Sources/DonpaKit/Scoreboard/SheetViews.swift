@@ -52,6 +52,9 @@ struct ScoreboardView: View {
     @State private var filterEdges: BoardEdges = .flat
     /// The one config expanded to its stat-block (accordion — at most one open).
     @State private var expandedKey: String?
+    /// Grows the header's stat columns with Dynamic Type — must match
+    /// `ScoreRow.columnScale` so the table stays aligned.
+    @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
 
     var body: some View {
         sheetChrome
@@ -335,16 +338,21 @@ struct ScoreboardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// The list's column titles (Cleared / Best % / Best), matching `ScoreRow`.
+    /// The list's column titles (Cleared / Best % / Best), matching `ScoreRow` —
+    /// the same scaled widths, and shrink-to-fit so a grown (or long localized)
+    /// title never wraps or clips inside its column.
     private var columnHeader: some View {
         HStack {
             Spacer()
             Text("Cleared", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                .frame(width: ScoreColumns.cleared, alignment: .trailing)
+                .numericCell()
+                .frame(width: ScoreColumns.cleared * columnScale, alignment: .trailing)
             Text("Best %", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                .frame(width: ScoreColumns.bestProgress, alignment: .trailing)
+                .numericCell()
+                .frame(width: ScoreColumns.bestProgress * columnScale, alignment: .trailing)
             Text("Best", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                .frame(width: ScoreColumns.bestTime, alignment: .trailing)
+                .numericCell()
+                .frame(width: ScoreColumns.bestTime * columnScale, alignment: .trailing)
         }
         .padding(.vertical, 4)
         .padding(.horizontal, Self.rowInset)
