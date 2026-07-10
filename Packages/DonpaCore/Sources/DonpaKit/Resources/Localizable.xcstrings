@@ -5593,19 +5593,19 @@
         }
       }
     },
-    "Win a board with Round edges." : {
+    "Win a board with Round edges — the world wraps around." : {
       "comment" : "Achievement description (Decorations grid + future ASC)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita reunaton kenttä."
+            "value" : "Voita pyöreä kenttä — maailma kiertyy ympäri."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ラウンド辺の盤面でクリアする。"
+            "value" : "ラウンドの盤面をクリアする — 端は反対側へつながる。"
           }
         }
       }
