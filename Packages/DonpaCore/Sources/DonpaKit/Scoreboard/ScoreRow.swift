@@ -24,6 +24,13 @@ struct ScoreRow: View {
     var rivals: [Friend] = []
     var yourName: String = ""
 
+    /// Grows the stat columns with Dynamic Type (×1 at the default size): fixed
+    /// widths forced grown values to shrink back toward half size via
+    /// `numericCell`, defeating the enlargement in exactly the numbers a
+    /// low-vision reader wants big. Must match the header's factor
+    /// (`ScoreboardView.columnScale`) so the table stays aligned.
+    @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
+
     /// You + rivals ranked by best time on this config — nil when there are no rivals,
     /// so rows behave exactly as before when the friends list is empty.
     private var ranking: ScoreComparison.Ranking? {
@@ -64,7 +71,7 @@ struct ScoreRow: View {
             Text(verbatim: ScoreboardView.grouped(scoreboard.wins(for: config)))
                 .font(.body.monospaced())
                 .numericCell()
-                .frame(width: ScoreColumns.cleared, alignment: .trailing)
+                .frame(width: ScoreColumns.cleared * columnScale, alignment: .trailing)
             HStack(spacing: 3) {
                 if recordMarker == .progress { newBestMarker }
                 if let progress = scoreboard.bestProgress(for: config) {
@@ -75,7 +82,7 @@ struct ScoreRow: View {
                     Text("—").foregroundStyle(.secondary)
                 }
             }
-            .frame(width: ScoreColumns.bestProgress, alignment: .trailing)
+            .frame(width: ScoreColumns.bestProgress * columnScale, alignment: .trailing)
             HStack(spacing: 3) {
                 if let rank = ranking?.yourRank { rankBadge(rank) }
                 if recordMarker == .time { newBestMarker }
@@ -86,7 +93,7 @@ struct ScoreRow: View {
                     Text("—").foregroundStyle(.secondary)
                 }
             }
-            .frame(width: ScoreColumns.bestTime, alignment: .trailing)
+            .frame(width: ScoreColumns.bestTime * columnScale, alignment: .trailing)
         }
         .padding(.vertical, 10)
         .padding(.horizontal, rowInset)

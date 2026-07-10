@@ -18,6 +18,13 @@ struct HeadToHeadView: View {
     var onPlay: ((GameConfig) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
+    /// The your/their value columns, grown with Dynamic Type (×1 at the default
+    /// size) — fixed 76/72pt forced grown times to shrink back down via
+    /// `minimumScaleFactor`, defeating the enlargement. Shared by the career
+    /// rows, the group headers, and the per-board rows so they stay aligned.
+    @ScaledMetric(relativeTo: .callout) private var yourColumnWidth: CGFloat = 76
+    @ScaledMetric(relativeTo: .callout) private var theirColumnWidth: CGFloat = 72
+
     var body: some View {
         chrome
     }
@@ -113,7 +120,7 @@ struct HeadToHeadView: View {
             // A long duration ("10 h 39 min") mustn't wrap to two lines — shrink it.
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .frame(width: 76, alignment: .trailing)
+            .frame(width: yourColumnWidth, alignment: .trailing)
     }
 
     /// A centered sports-style scoreline — the two lead counts big and adjacent with a
@@ -157,8 +164,10 @@ struct HeadToHeadView: View {
                     .accessibilityLabel(Text(verbatim: group.edges.label))
             }
             Spacer()
-            Text("You", bundle: .module).frame(width: 76, alignment: .trailing)
-            Text(verbatim: opponentName).frame(width: 72, alignment: .trailing)
+            Text("You", bundle: .module)
+                .frame(width: yourColumnWidth, alignment: .trailing)
+            Text(verbatim: opponentName)
+                .frame(width: theirColumnWidth, alignment: .trailing)
         }
         .font(.caption).foregroundStyle(.secondary)
         // The List's default uppercase transform inflated the FI names past an SE's
@@ -196,12 +205,12 @@ struct HeadToHeadView: View {
                 time(row.yourBest, winner: row.lead == .you)
                 if let gap = row.gap, gap != 0 { gapLabel(gap) }
             }
-            .frame(width: 76, alignment: .trailing)
+            .frame(width: yourColumnWidth, alignment: .trailing)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(
                 Text("You: \(timeSpoken(row.yourBest))", bundle: .module))
             time(row.theirBest, winner: row.lead == .them)
-                .frame(width: 72, alignment: .trailing)
+                .frame(width: theirColumnWidth, alignment: .trailing)
                 .accessibilityLabel(
                     Text("Rival: \(timeSpoken(row.theirBest))", bundle: .module))
         }

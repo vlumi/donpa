@@ -22,6 +22,11 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Score columns grow with your text size.** The Service Record's
+  Cleared / Best % / Best columns (and Head-to-head's value columns) now
+  widen along with larger accessibility text instead of shrinking the
+  numbers back down to fit fixed columns — the stats a low-vision reader
+  most wants enlarged now actually enlarge.
 - **Sheets survive large text.** The add-rival confirmation, Settings, the
   rival detail, and the Nearby exchange now scroll when accessibility text
   sizes (or a small window) make their content taller than the screen —
