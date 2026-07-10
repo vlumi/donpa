@@ -110,9 +110,10 @@ public struct HowToPlayView: View {
             text: Text(
                 """
                 The corner toggle switches what a tap does: dig (open the \
-                tile) or plant a flag on a suspected mine. Flags are your \
-                notes — they can be wrong, and you can clear them. Your \
-                first dig of a game is always safe.
+                tile) or plant a flag on a suspected mine. A long-press \
+                does the other one. Flags are your notes — they can be \
+                wrong, and you can clear them. Your first dig of a game \
+                is always safe.
                 """, bundle: .module)
         )
     }
