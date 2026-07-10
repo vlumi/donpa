@@ -21,6 +21,8 @@ development — entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 22 — 2026-07-10
+
 - **Fixed: an in-progress save could be deleted at launch.** The app primes a
   placeholder board to the last picker selection at startup, and the autosave
   that followed mistook the untouched board for "no game in progress" —
