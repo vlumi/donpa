@@ -14,12 +14,18 @@ build's heading and opens a fresh empty one. Keep that heading immediately
 followed by its list items (no prose between), so the release script can promote
 it with a one-line edit.
 
-## [0.5.0] — Progression
+## [0.6.0] — Finishing touches
 
-**Achievements, progressive gating & practice mode** (see ROADMAP.md). In
-development — entries land under Unreleased as they merge.
+**The last pre-store polish: keyboard & VoiceOver board play, and the platform
+extras** (see ROADMAP.md). In development — entries land under Unreleased as
+they merge.
 
 ### Unreleased (next build)
+
+## [0.5.0] — Progression
+
+**Achievements, progressive gating & practice mode** (see ROADMAP.md). Shipped
+to TestFlight (both platforms).
 
 ### build 21 — 2026-07-10
 

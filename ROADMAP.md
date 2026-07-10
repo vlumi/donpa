@@ -7,7 +7,7 @@ game logic.
 
 Versions are indicative, not contractual. Each minor groups related work into one
 meaty release: v0.4.0 = friendly rivalry (score sharing); v0.5.0 = progression
-(achievements, gating, practice); v0.6.0 = finishing touches (tentative);
+(achievements, gating, practice); v0.6.0 = finishing touches;
 v1.0.0 = the store release.
 
 **Shipped milestones live in [CHANGELOG.md](CHANGELOG.md)** (full detail) and are
@@ -88,21 +88,12 @@ section below; this block is the build order. Note the sequencing freedom: the
 UnlockEngine derives from win RECORDS (not events), so **gating can ship first,
 standalone**; only achievements need the game-end event.
 
-**Gating and achievements are SHIPPED** (see CHANGELOG and
-the code: `UnlockEngine`/`UnlockGates` + the New Game teasers, and
-`AchievementEngine`/`AchievementStore` + the Decorations grid). The shipped
-behavior follows the Progression spec below, which stays as the reference for
-the remaining steps and any value tuning. Still ahead:
-
-- [ ] **Game Center reporter** (later; deferrable to the 1.0 runway — GC only
-      goes live at the store release): ASC achievement definitions per the
-      tier-flattening mapping in the spec (sandbox from day one; they only go
-      LIVE — and permanent — with the first App Store release), a
-      GKAchievement reporter behind the store, graceful degradation when auth
-      is declined. **Every ASC definition needs its own 1024×1024 image (29
-      after tier-flattening)** — export them from `MedalView`, the same
-      renderer the Decorations grid draws with (per-feat emblems already in
-      place there).
+**The milestone SHIPPED in full** (b18–b21; see CHANGELOG): gating and
+achievements (`UnlockEngine`/`UnlockGates`, `AchievementEngine`/`AchievementStore`
++ the Decorations grid), with the Progression spec below staying as the
+reference for value tuning. The one intentionally-deferred piece — the **Game
+Center reporter** — moved to the v1.0.0 runway (GC only goes live at the store
+release anyway).
 
 **Practice mode — SHIPPED as the Drills family** (FI Soha, JA 演習; see
 CHANGELOG): verified no-guess boards, XS–XL at 12 %, leftmost New Game page,
@@ -143,14 +134,14 @@ pass plus four small features, done:
 Note for future audio work: the flood-open sound is keyed on hitting a 0
 (the fuller variant plays whenever a region cascades, however it was opened).
 
-## v0.6.0 — Finishing touches (tentative)
+## v0.6.0 — Finishing touches
 
-Parked here from a 2026-07-09 backlog + platform-capability review: items that
-would each land a more finished 1.0, none individually a gate. **Tentative by
-design** — evaluate each when this milestone opens and cut freely; the ones
-that survive should all be modest builds. (The smaller half of the original
-list — the Rivals UX pass, `?`-flags, sound, the Drills default, haptics —
-moved up into the 0.5.0 post-b19 tail the same day.)
+**OPEN as of 2026-07-10** (0.5.0 shipped in full through b21). From the
+2026-07-09 backlog + platform-capability review: items that each land a more
+finished 1.0, none individually a gate — evaluate each and cut freely; every
+one should be a modest build. (The smaller half of the original list — the
+Rivals UX pass, `?`-flags, sound, the Drills default, haptics — was pulled
+into 0.5.0 and shipped there.)
 
 **From the backlog / parked ideas:**
 
@@ -194,6 +185,13 @@ toggle covers the pain — stays in the backlog).
 The features are in by 0.5; 1.0 makes them ship-shape for the public App Store.
 (The original "epic set composes" goal was reached in 0.3.0.)
 
+- [ ] **Game Center reporter** (from 0.5.0 — GC only goes live at the store
+      release): ASC achievement definitions per the tier-flattening mapping in
+      the Progression spec (sandbox from day one; they only go LIVE — and
+      permanent — with the first App Store release), a GKAchievement reporter
+      behind the store, graceful degradation when auth is declined. **Every ASC
+      definition needs its own 1024×1024 image (29 after tier-flattening)** —
+      export them from `MedalView` (the MedalGalleryRender harness is the seam).
 - [ ] Real-device test pass — older/slower devices, iPad, small screens; profile
       huge boards on hardware; XXXL memory/leaks in Instruments
 - [ ] Settings, theming, polish sweep across all modes
