@@ -518,6 +518,13 @@ Still open:
 ## Distribution & extras (later)
 
 - [ ] **Static home page** (marketing/landing site for the app).
+- [ ] **Real board images on donpa.app/how-to-play** — replace the monospace
+      unicode diagrams with actual rendered boards. Not hand-cropped
+      screenshots: export the in-app guide's own `TileDiagram` (+ mode chips)
+      headlessly to PNGs, the way `MedalGalleryRender` renders medals — pixel-
+      perfect, light + dark variants, regenerable whenever the art changes.
+      (The in-app guide keeps its LIVE TileDiagrams — those already render the
+      real thing and track dark mode for free.)
 - [x] **TestFlight** beta distribution (iOS + Mac) — live; the channel for
       pre-release testing.
 - [ ] **watchOS version?** — a big maybe; minesweeper on a tiny screen is its
