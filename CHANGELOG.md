@@ -22,6 +22,12 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Esc backs out of everything, and the menus reach everywhere.** Every
+  sheet now closes on Esc (the Nearby exchange previously had no keyboard
+  dismiss at all — its Esc also hands a received card to the confirm flow
+  instead of dropping it), and the macOS menus gain the missing doors:
+  Mess Hall (⇧⌘M), How to Play in the Help menu (⌘?), and a sound toggle
+  in the Game menu.
 - **Keyboard board play (macOS).** Arrow keys move a focused-cell cursor —
   the first press starts it mid-screen — Return digs (or chords a revealed
   number, following the input mode like a click), and F plants a flag. The

@@ -35,6 +35,13 @@ struct NearbyExchangeView: View {
         }
         .padding(20)
         .frame(minWidth: 300, idealWidth: 340, minHeight: 360)
+        // Esc = the dismiss button's exact routing: a received card must reach
+        // the confirm flow, never be dropped by the close.
+        .escDismisses {
+            let received = exchange.receivedURL
+            dismiss()
+            if let received { onReceived(received) }
+        }
         .onAppear { exchange.start() }
         .onDisappear { exchange.stop() }
     }

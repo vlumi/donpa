@@ -85,6 +85,23 @@ struct DonpaApp: App {
                 }
                 .keyboardShortcut("b", modifiers: .command)
                 .disabled(modalOpen)
+                Button {
+                    navigator.showingMessHall = true
+                } label: {
+                    Text("Mess Hall…")
+                }
+                .keyboardShortcut("m", modifiers: [.command, .shift])
+                .disabled(modalOpen)
+            }
+            // Help menu: the in-app guide at the standard ⌘? slot.
+            CommandGroup(replacing: .help) {
+                Button {
+                    navigator.showingHowTo = true
+                } label: {
+                    Text("How to Play")
+                }
+                .keyboardShortcut("?", modifiers: .command)
+                .disabled(modalOpen)
             }
             // Text overload for the same extraction reason as the Buttons above —
             // the bare-literal CommandMenu init was also flagged stale.
@@ -111,6 +128,17 @@ struct DonpaApp: App {
                     }
                 }
                 .keyboardShortcut("f", modifiers: .command)
+                .disabled(modalOpen)
+
+                Button {
+                    settings.sound.toggle()
+                } label: {
+                    if settings.sound {
+                        Text("Turn Sound Off")
+                    } else {
+                        Text("Turn Sound On")
+                    }
+                }
                 .disabled(modalOpen)
 
                 Divider()

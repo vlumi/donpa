@@ -59,6 +59,7 @@ struct MessHallView: View {
 
     var body: some View {
         chrome
+            .escDismisses { dismiss() }
             .sheet(isPresented: $scanning) {
                 AddRivalSheet { url in
                     scanning = false

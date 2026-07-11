@@ -58,6 +58,7 @@ struct ScoreboardView: View {
 
     var body: some View {
         sheetChrome
+            .escDismisses { dismiss() }
             .onAppear(perform: seedFilterFromCurrent)
     }
 

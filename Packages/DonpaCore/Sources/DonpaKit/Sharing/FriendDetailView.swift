@@ -25,6 +25,7 @@ struct FriendDetailView: View {
 
     var body: some View {
         chrome
+            .escDismisses { done() }
     }
 
     @ViewBuilder private var content: some View {

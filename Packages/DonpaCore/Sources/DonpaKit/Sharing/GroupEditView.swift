@@ -28,6 +28,7 @@ struct GroupEditView: View {
 
     var body: some View {
         chrome
+            .escDismisses { dismiss() }
             .confirmationDialog(
                 Text("Delete “\(group.name)”?", bundle: .module),
                 isPresented: $confirmingDelete, titleVisibility: .visible
