@@ -149,12 +149,16 @@ into 0.5.0 and shipped there.)
 
 **From the backlog / parked ideas:**
 
-- [ ] **A focused-cell cursor model** — the highest-value item here: unblocks
-      **keyboard play on Mac** (arrow-key move + reveal/flag keys — a store-front
-      Mac game shouldn't need a mouse) and **per-cell board VoiceOver** (the one
-      a11y gap left) with one navigable cursor, scaled to huge boards. Also the
-      seam that iPad hardware-keyboard play and game-controller support would
-      share. Co-design with big-board navigation.
+- [ ] **Focused-cell cursor follow-ons** — the cursor model SHIPPED (keyboard
+      play on Mac: arrows/Return/F, camera-follow, seam-crossing on Round;
+      per-cell VoiceOver rides the same cursor via custom actions and spoken
+      cells). Remaining on the seam: **iPad hardware-keyboard play** (route
+      UIKit key commands into the same scene entry points) and **game
+      controllers**; verify the VO flow with a real VoiceOver session.
+- [ ] **Keyboard navigation beyond the board** (found on-device, 2026-07-11):
+      the New Game popup is arrow-drivable but the other surfaces (Service
+      Record, Mess hall, Settings) lean on mouse/standard focus only —
+      sweep them for basic keyboard operability on macOS.
 **Platform capabilities (all native, all serverless):**
 
 - [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
