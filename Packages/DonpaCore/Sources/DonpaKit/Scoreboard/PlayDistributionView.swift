@@ -10,8 +10,10 @@ struct PlayDistributionView: View {
     @ObservedObject var scoreboard: Scoreboard
     /// Shared horizontal inset (matches the stat rows).
     let rowInset: CGFloat
-
-    @State private var metric: PlayDistribution.Metric = .playtime
+    /// Hoisted so the host's keyboard zone can flip it (←/→ or Space).
+    @Binding var metric: PlayDistribution.Metric
+    /// The host's Tab focus (ring on the metric picker).
+    var keyFocused: Bool = false
 
     var body: some View {
         let entries = Self.entries(from: scoreboard)
@@ -33,6 +35,7 @@ struct PlayDistributionView: View {
                     .pickerStyle(.segmented)
                     .labelsHidden()
                     .fixedSize()
+                    .modifier(FocusRing(focused: keyFocused, inset: 2))
                 }
                 ForEach(axes, id: \.axis) { axis, shares in
                     if !shares.isEmpty {
@@ -41,6 +44,15 @@ struct PlayDistributionView: View {
                 }
             }
             .padding(.horizontal, rowInset)
+        }
+    }
+
+    /// Whether the block renders at all — the host's keyboard ring skips its
+    /// zone when it doesn't.
+    static func hasData(_ scoreboard: Scoreboard) -> Bool {
+        let entries = entries(from: scoreboard)
+        return PlayDistribution.Axis.allCases.contains {
+            !PlayDistribution.shares(entries: entries, metric: .games, axis: $0).isEmpty
         }
     }
 

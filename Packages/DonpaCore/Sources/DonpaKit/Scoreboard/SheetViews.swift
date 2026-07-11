@@ -58,7 +58,6 @@ struct ScoreboardView: View {
     /// The keyboard-focused row's config key (arrow navigation); nil until the
     /// first arrow press. See ScoreboardKeyboard.
     @State var keyRowKey: String?
-    /// Which control zone Tab has focused.
     /// The Tab-focused zone; nil until the keyboard enters the sheet.
     @State var keyZone: KeyZone?
     /// The focused medal while the medals zone is active (←/→ browsing).
@@ -73,7 +72,12 @@ struct ScoreboardView: View {
     /// The sheet's Tab-cyclable control zones, in visual order. `career` is a
     /// read-only scroll anchor (stats have nothing to operate); `edges` is
     /// skipped while the family has no edges axis.
-    enum KeyZone: CaseIterable { case career, medals, family, edges, rivals, manage, rows, sync }
+    enum KeyZone: CaseIterable {
+        case career, breakdown, medals, family, edges, rivals, manage, rows, sync
+    }
+
+    /// The Breakdown block's metric, hoisted so the keyboard can flip it.
+    @State var breakdownMetric: PlayDistribution.Metric = .playtime
     /// Grows the header's stat columns with Dynamic Type — must match
     /// `ScoreRow.columnScale` so the table stays aligned.
     @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
@@ -223,8 +227,12 @@ struct ScoreboardView: View {
                 StatBlock(
                     figures: career, twoColumnWidth: Self.twoColumnMinWidth,
                     rowInset: Self.rowInset)
-                PlayDistributionView(scoreboard: scoreboard, rowInset: Self.rowInset)
-                    .padding(.top, 8)
+                PlayDistributionView(
+                    scoreboard: scoreboard, rowInset: Self.rowInset,
+                    metric: $breakdownMetric, keyFocused: breakdownKeyFocused
+                )
+                .padding(.top, 8)
+                .id("zone.breakdown")
             } else {
                 Text("Play a game to start your career stats.", bundle: .module)
                     .font(.callout)
@@ -324,6 +332,14 @@ struct ScoreboardView: View {
         return keyZone == .medals ? keyMedalIndex : nil
         #else
         return nil
+        #endif
+    }
+
+    private var breakdownKeyFocused: Bool {
+        #if os(macOS)
+        return keyZone == .breakdown
+        #else
+        return false
         #endif
     }
 

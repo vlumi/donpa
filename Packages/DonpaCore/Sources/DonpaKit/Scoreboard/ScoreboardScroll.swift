@@ -50,6 +50,7 @@ extension ScoreboardView {
                 let anchor: String? =
                     switch zone {
                     case .career: "zone.career"
+                    case .breakdown: "zone.breakdown"
                     case .medals: "zone.medals"
                     case .family, .edges: "zone.filters"
                     case .rivals, .manage: "zone.rivals"

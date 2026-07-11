@@ -22,6 +22,12 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Two more keyboard fixes.** The Record's Breakdown metric
+  (Playtime/Games) is a Tab stop now — ←/→ or Space flip it. And
+  continuing a game from the in-progress list left the arrow keys dead:
+  closing that sheet silently handed the keyboard back to whatever had it
+  before, so the board now reclaims it whenever it's the live surface
+  (macOS).
 - **Keyboard focus starts clean and lands visibly.** Sheets open with
   nothing focused; the first Tab enters at the first control (before, the
   Record's arrows acted on the score list with no ring showing). Landing
