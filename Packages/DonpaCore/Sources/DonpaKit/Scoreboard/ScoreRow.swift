@@ -14,6 +14,8 @@ struct ScoreRow: View {
     let rowInset: CGFloat
     /// Whether this row's stat-block expansion is open (accordion — one at a time).
     var isExpanded: Bool = false
+    /// Whether the row carries the keyboard-focus ring (macOS arrow navigation).
+    var isKeyFocused: Bool = false
     /// Toggle the expansion. When nil the row isn't expandable (kept for callers
     /// that just want a static row).
     var onToggle: (() -> Void)?
@@ -45,6 +47,7 @@ struct ScoreRow: View {
             if isExpanded { expansion }
         }
         .background(rowHighlight)
+        .modifier(FocusRing(focused: isKeyFocused, inset: 0))
     }
 
     // A tap gesture (not a Button) so a scroll that STARTS on a row doesn't toggle

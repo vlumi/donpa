@@ -26,7 +26,7 @@ struct ScoreboardView: View {
     var currentConfig: GameConfig?
     /// The current config's storage key — the scroll anchor for the "jump to current"
     /// behaviour.
-    private var currentConfigKey: String? { currentConfig?.storageKey }
+    var currentConfigKey: String? { currentConfig?.storageKey }
     /// Start a fresh game on a config (the row expansion's "New game on this board").
     /// The host wires this to begin the game and dismiss the sheet. nil = no button.
     var onPlay: ((GameConfig) -> Void)?
@@ -48,10 +48,17 @@ struct ScoreboardView: View {
     /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
     /// View-only state — a browsing choice, not persisted. Seeded in `onAppear` to
     /// the config being played, so opening in-game lands on the relevant list.
-    @State private var filterFamily: BoardFamily = .basic
-    @State private var filterEdges: BoardEdges = .flat
+    /// Not `private` (file-scoped): the keyboard handler lives in the
+    /// ScoreboardKeyboard extension, another file.
+    @State var filterFamily: BoardFamily = .basic
+    @State var filterEdges: BoardEdges = .flat
     /// The one config expanded to its stat-block (accordion — at most one open).
-    @State private var expandedKey: String?
+    @State var expandedKey: String?
+    #if os(macOS)
+    /// The keyboard-focused row's config key (arrow navigation); nil until the
+    /// first arrow press. See ScoreboardKeyboard.
+    @State var keyRowKey: String?
+    #endif
     /// Grows the header's stat columns with Dynamic Type — must match
     /// `ScoreRow.columnScale` so the table stays aligned.
     @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
@@ -106,6 +113,8 @@ struct ScoreboardView: View {
         }
         .padding(.vertical, 24)
         .padding(.horizontal, 14)  // rest of the side margin lives on the rows
+        // Arrow/Return/⌘1-4/E/P keyboard driving — see ScoreboardKeyboard.
+        .background(KeyCatcher { handleKey($0) })
         // Width is driven firmly (else the sheet shrinks to content and won't widen
         // for two columns). Height is a cap only — the sheet sizes to content and
         // only grows to `sheetHeight` (then the scores column scrolls).
@@ -191,7 +200,25 @@ struct ScoreboardView: View {
                     }
                 }
             }
+            #if os(macOS)
+            // The keyboard focus scrolls with the arrows, like the expansion.
+            .onChangeCompat(of: keyRowKey) { key in
+                guard let key else { return }
+                withAnimation(.easeOut(duration: 0.15)) {
+                    proxy.scrollTo(key, anchor: .center)
+                }
+            }
+            #endif
         }
+    }
+
+    /// Whether a row carries the keyboard-focus ring (macOS arrow navigation).
+    private func keyFocused(_ config: GameConfig) -> Bool {
+        #if os(macOS)
+        return keyRowKey == config.storageKey
+        #else
+        return false
+        #endif
     }
 
     /// Width for the column decision: the sheet width (macOS) or presenting window
@@ -320,6 +347,7 @@ struct ScoreboardView: View {
                         scoreboard: scoreboard, config: config,
                         currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
                         isExpanded: expandedKey == config.storageKey,
+                        isKeyFocused: keyFocused(config),
                         onToggle: { toggleExpanded(config.storageKey) },
                         onPlay: gates.config(config)
                             ? onPlay.map { play in { play(config) } } : nil,
@@ -360,7 +388,7 @@ struct ScoreboardView: View {
     }
 
     /// Accordion toggle: open the tapped row, closing any other.
-    private func toggleExpanded(_ key: String) {
+    func toggleExpanded(_ key: String) {
         expandedKey = (expandedKey == key) ? nil : key
     }
 
