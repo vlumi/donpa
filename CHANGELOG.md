@@ -22,6 +22,10 @@ they merge.
 
 ### Unreleased (next build)
 
+- **The Service Record is keyboard-drivable (macOS).** Arrows move a row
+  focus through the score table, Return expands or collapses it, P starts
+  a game on the focused board, ⌘1–⌘4 pick the family filter and E flips
+  Flat/Round — the same vocabulary as the New Game picker.
 - **Esc backs out of everything, and the menus reach everywhere.** Every
   sheet now closes on Esc (the Nearby exchange previously had no keyboard
   dismiss at all — its Esc also hands a received card to the confirm flow

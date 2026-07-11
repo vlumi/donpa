@@ -7,23 +7,36 @@ import SwiftUI
 /// from the SpriteKit board, especially after a game ends.
 struct KeyCatcher: NSViewRepresentable {
     /// Arrow / Return / Escape, plus ⌘1–⌘4 (the New Game popup picks the board
-    /// family by number — families are a list, not something to arrow through).
-    enum Key { case up, down, left, right, enter, escape, family(Int) }
+    /// family by number — families are a list, not something to arrow through)
+    /// and plain letter keys (surface-specific actions, e.g. the Record's play).
+    enum Key: Equatable {
+        case up, down, left, right, enter, escape
+        case family(Int)
+        case character(Character)
+    }
     let onKey: (Key) -> Void
+    /// When true, never steal first responder from an active text field — for
+    /// surfaces that mix list navigation with editable fields (the Mess hall's
+    /// name fields). The default (false) claims aggressively, which is right
+    /// for field-free overlays like the New Game popup.
+    var yieldsToTextFields = false
 
     func makeNSView(context: Context) -> KeyCatcherView {
         let v = KeyCatcherView()
         v.onKey = onKey
+        v.yieldsToTextFields = yieldsToTextFields
         return v
     }
 
     func updateNSView(_ view: KeyCatcherView, context: Context) {
         view.onKey = onKey
+        view.yieldsToTextFields = yieldsToTextFields
         view.claimFocus()
     }
 
     final class KeyCatcherView: NSView {
         var onKey: ((Key) -> Void)?
+        var yieldsToTextFields = false
 
         override var acceptsFirstResponder: Bool { true }
 
@@ -37,6 +50,11 @@ struct KeyCatcher: NSViewRepresentable {
             guard let window else { return }
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.window === window else { return }
+                if self.yieldsToTextFields,
+                    window.firstResponder is NSTextView  // a field editor is typing
+                {
+                    return
+                }
                 window.makeFirstResponder(self)
             }
         }
@@ -50,7 +68,17 @@ struct KeyCatcher: NSViewRepresentable {
             case 124: key = .right
             case 36, 76: key = .enter  // Return, keypad Enter
             case 53: key = .escape
-            default: key = nil
+            default:
+                // Plain letters only — modified combos stay key equivalents.
+                if event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+                    .subtracting(.shift).isEmpty,
+                    let ch = event.charactersIgnoringModifiers?.lowercased().first,
+                    ch.isLetter
+                {
+                    key = .character(ch)
+                } else {
+                    key = nil
+                }
             }
             if let key {
                 onKey?(key)

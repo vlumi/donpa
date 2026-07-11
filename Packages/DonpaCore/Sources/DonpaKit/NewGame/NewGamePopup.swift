@@ -119,12 +119,7 @@ struct NewGamePopup: View {
         switch key {
         // Family is picked by number (⌘1/2/3), not arrowed through — it's a list of
         // distinct board types, not a value to step. Arrows drive the OTHER rows.
-        case .family(let n):
-            let families = BoardFamily.allCases
-            if (1...families.count).contains(n) {
-                settings.family = families[n - 1]
-                focusedRow = nil  // reset focus into the new family's rows
-            }
+        case .family(let n): pickFamily(n)
         // Basic's presets are a single VERTICAL list, so ↑/↓ step through them
         // (matching their layout); ←/→ do the same for good measure. Grid/Hive have
         // multiple horizontal chip-rows, so ↑/↓ move BETWEEN rows and ←/→ cycle within.
@@ -144,6 +139,15 @@ struct NewGamePopup: View {
         case .right: cycleSelection(in: focusedRow ?? 0, by: 1)
         case .enter: commitSelection()
         case .escape: onClose()
+        case .character: break  // no letter actions on this surface
+        }
+    }
+
+    private func pickFamily(_ n: Int) {
+        let families = BoardFamily.allCases
+        if (1...families.count).contains(n) {
+            settings.family = families[n - 1]
+            focusedRow = nil  // reset focus into the new family's rows
         }
     }
 
