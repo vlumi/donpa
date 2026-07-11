@@ -28,6 +28,7 @@ struct SettingsView: View {
 
     var body: some View {
         sheetChrome
+            .escDismisses { dismiss() }
             .onAppear { launchLanguage = settings.language }
             .animation(.easeInOut(duration: 0.2), value: languageChanged)
             .confirmationDialog(

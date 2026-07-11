@@ -17,6 +17,11 @@ public struct HowToPlayView: View {
     private var palette: Palette { Palette.resolved(for: colorScheme) }
 
     public var body: some View {
+        sheet
+            .escDismisses { dismiss() }
+    }
+
+    @ViewBuilder private var sheet: some View {
         #if os(iOS)
         NavigationStack {
             content

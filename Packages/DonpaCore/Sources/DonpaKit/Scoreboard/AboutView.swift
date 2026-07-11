@@ -45,6 +45,7 @@ public struct AboutView: View {
 
     public var body: some View {
         chrome
+            .escDismisses { dismiss() }
             .background(palette.pageBackground.ignoresSafeArea())
             .accessibilityElement(children: .contain)
     }

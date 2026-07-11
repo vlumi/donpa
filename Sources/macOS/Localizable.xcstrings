@@ -69,6 +69,40 @@
         }
       }
     },
+    "How to Play" : {
+      "comment" : "Help menu: opens the in-app guide",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Näin pelataan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "遊び方"
+          }
+        }
+      }
+    },
+    "Mess Hall…" : {
+      "comment" : "New-item menu: opens the social screen",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sotku…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "食堂…"
+          }
+        }
+      }
+    },
     "New Game…" : {
       "comment" : "File-menu command opening the New Game popup",
       "localizations" : {
@@ -167,6 +201,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ミニマップのサイズを切り替え"
+          }
+        }
+      }
+    },
+    "Turn Sound Off" : {
+      "comment" : "Game menu: sound toggle, on state",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poista äänet käytöstä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サウンドをオフにする"
+          }
+        }
+      }
+    },
+    "Turn Sound On" : {
+      "comment" : "Game menu: sound toggle, off state",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ota äänet käyttöön"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サウンドをオンにする"
           }
         }
       }
