@@ -150,13 +150,12 @@ into 0.5.0 and shipped there.)
 **From the backlog / parked ideas:**
 
 - [ ] **Cursor/keyboard follow-ons** — the cursor model AND the all-keyboard
-      app SHIPPED (board keys on Mac + iPad hardware keyboards; arrow-driven
-      Record / Mess hall / in-progress lists; Esc everywhere; shared menu
-      commands incl. the iPadOS hold-⌘ HUD; the ⌘/ reference). Remaining:
-      **game controllers** (the cursor seam is ready), a **real VoiceOver
-      session** to validate the spoken-cell flow, and Settings' inner
-      toggles/pickers (still system Full-Keyboard-Access only — every
-      setting has a menu/shortcut path, so low stakes).
+      app SHIPPED (arrows/WASD + board keys on Mac and iPad hardware
+      keyboards; Tab-between-groups / arrows-within navigation over every
+      screen incl. Settings; fields edit on focus; Esc everywhere; shared
+      menu commands incl. the iPadOS hold-⌘ HUD; the ⌘/ reference).
+      Remaining: **game controllers** (the cursor seam is ready) and a
+      **real VoiceOver session** to validate the spoken-cell flow.
 **Platform capabilities (all native, all serverless):**
 
 - [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start

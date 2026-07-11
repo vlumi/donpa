@@ -284,13 +284,13 @@ final class KeyForwardingSKView: SKView {
         return true
     }
 
-    /// Arrow → cursor step; rows render bottom-up, so up = +y.
+    /// Arrow/WASD → cursor step; rows render bottom-up, so up = +y.
     private static func arrowVector(_ code: UIKeyboardHIDUsage) -> (Int, Int)? {
         switch code {
-        case .keyboardUpArrow: return (0, 1)
-        case .keyboardDownArrow: return (0, -1)
-        case .keyboardLeftArrow: return (-1, 0)
-        case .keyboardRightArrow: return (1, 0)
+        case .keyboardUpArrow, .keyboardW: return (0, 1)
+        case .keyboardDownArrow, .keyboardS: return (0, -1)
+        case .keyboardLeftArrow, .keyboardA: return (-1, 0)
+        case .keyboardRightArrow, .keyboardD: return (1, 0)
         default: return nil
         }
     }

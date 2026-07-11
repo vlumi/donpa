@@ -375,7 +375,19 @@ extension BoardScene {
         case 3:  // F
             flagCursor()
         default:
-            super.keyDown(with: event)
+            handleLetterKey(event)
+        }
+    }
+
+    /// WASD moves like the arrows (by typed character, so it follows the
+    /// user's layout).
+    private func handleLetterKey(_ event: NSEvent) {
+        switch event.charactersIgnoringModifiers?.lowercased() {
+        case "w": moveCursor(dx: 0, dy: 1)
+        case "s": moveCursor(dx: 0, dy: -1)
+        case "a": moveCursor(dx: -1, dy: 0)
+        case "d": moveCursor(dx: 1, dy: 0)
+        default: super.keyDown(with: event)
         }
     }
     #endif
