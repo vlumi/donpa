@@ -87,6 +87,35 @@ final class ScrollForwardingSKView: SKView {
     }
 
     private var pointerInside = false
+    private var keyWindowObserver: Any?
+
+    // Closing a macOS sheet RESTORES the parent window's pre-sheet first
+    // responder, silently overriding the claim updateNSView made when the
+    // game resumed — continuing from the in-progress sheet left the arrows
+    // dead. Reclaim (deferred, to land after the restoration) whenever the
+    // window becomes key while the board is the live surface.
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if let keyWindowObserver {
+            NotificationCenter.default.removeObserver(keyWindowObserver)
+            self.keyWindowObserver = nil
+        }
+        guard let window else { return }
+        keyWindowObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            DispatchQueue.main.async { self?.reclaimIfActive() }
+        }
+    }
+
+    deinit {
+        if let keyWindowObserver { NotificationCenter.default.removeObserver(keyWindowObserver) }
+    }
+
+    private func reclaimIfActive() {
+        guard boardCursorActive, let window, window.firstResponder !== self else { return }
+        window.makeFirstResponder(self)
+    }
 
     // Tracking area + explicit `NSCursor.set()` rather than `addCursorRect`: cursor
     // rects proved unreliable in the SwiftUI-hosted scene (the custom cursor never

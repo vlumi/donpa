@@ -37,7 +37,7 @@ extension ScoreboardView {
     private func confirmOrActivate() {
         switch keyZone {
         case .rows, .medals, .manage: activateZone()
-        case .career, .family, .edges, .rivals, .sync, nil: dismiss()
+        case .career, .breakdown, .family, .edges, .rivals, .sync, nil: dismiss()
         }
     }
 
@@ -48,6 +48,9 @@ extension ScoreboardView {
         var zones = ScoreboardView.KeyZone.allCases
         if !(filterFamily == .grid || filterFamily == .hive) {
             zones.removeAll { $0 == .edges }
+        }
+        if !PlayDistributionView.hasData(scoreboard) {
+            zones.removeAll { $0 == .breakdown }
         }
         if friends.friends.isEmpty {
             zones.removeAll { $0 == .rivals || $0 == .manage }
@@ -86,6 +89,8 @@ extension ScoreboardView {
     private func operateZone(_ step: Int) {
         switch keyZone {
         case .career, .manage, .rows, .sync, nil: break
+        case .breakdown:
+            breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
         case .medals: moveMedalFocus(step)
         case .rivals:
             // ←/→ walk the comparison scope: All rivals, then each squad.
@@ -118,6 +123,8 @@ extension ScoreboardView {
             onMessHall?()
         case .sync:
             syncActivateTick += 1
+        case .breakdown:
+            breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
         case .career, .family, .edges, .rivals, nil:
             break
         }
