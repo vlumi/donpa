@@ -130,7 +130,8 @@ public struct GameView: View {
                 onMessHall: { navigator.showingMessHall = true },
                 onSettings: { navigator.showingSettings = true },
                 onAbout: { navigator.showingAbout = true },
-                onHowTo: { navigator.showingHowTo = true }
+                onHowTo: { navigator.showingHowTo = true },
+                keyboardActive: navigator.showingTitle && !navigator.isModalPresented
             )
             .opacity(navigator.showingTitle ? 1 : 0)
             .allowsHitTesting(navigator.showingTitle)

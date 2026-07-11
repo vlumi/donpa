@@ -36,7 +36,7 @@ extension HomeScreen {
 
             if snapshots.count > 1 {
                 Divider()
-                allGamesRow
+                allGamesRow.modifier(homeRing(.inProgress))
             }
         }
         .background(
@@ -128,8 +128,8 @@ extension HomeScreen {
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .down: moveRowFocus(1)
-        case .up: moveRowFocus(-1)
+        case .down, .tab: moveRowFocus(1)
+        case .up, .backTab: moveRowFocus(-1)
         case .enter:
             guard let index = keyRowIndex, snapshots.indices.contains(index) else { return }
             showAll = false

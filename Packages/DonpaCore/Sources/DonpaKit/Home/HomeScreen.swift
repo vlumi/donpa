@@ -29,6 +29,10 @@ struct HomeScreen: View {
     let onSettings: () -> Void
     let onAbout: () -> Void
     let onHowTo: () -> Void
+    /// Whether the title is the LIVE key surface (visible, nothing modal above).
+    /// Home stays mounted under the game, so its key catcher must stand down
+    /// whenever it isn't the one on screen.
+    var keyboardActive: Bool = false
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -38,7 +42,17 @@ struct HomeScreen: View {
     /// The in-progress sheet's keyboard-focused row (arrow navigation); nil
     /// until the first arrow press. See HomeContinue.
     @State var keyRowIndex: Int?
+    /// The title's keyboard-focused menu item (Tab/arrow navigation); nil
+    /// until the first press.
+    @State private var keyItem: HomeKeyItem?
     #endif
+
+    /// The title's keyboard-walkable items, in visual order (top-right corner
+    /// utilities last).
+    enum HomeKeyItem: CaseIterable {
+        case continueLatest, inProgress, newGame, record, messHall
+        case sound, howTo, settings, about
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -59,7 +73,8 @@ struct HomeScreen: View {
                 HStack(spacing: 8) {
                     roundButton(
                         label: settings.sound ? "Mute sound" : "Unmute sound",
-                        id: "title.sound", action: { settings.sound.toggle() }
+                        id: "title.sound", action: { settings.sound.toggle() },
+                        ring: homeRing(.sound)
                     ) {
                         Image(
                             systemName: settings.sound
@@ -68,17 +83,26 @@ struct HomeScreen: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
                     }
-                    roundButton(label: "How to play", id: "title.howto", action: onHowTo) {
+                    roundButton(
+                        label: "How to play", id: "title.howto", action: onHowTo,
+                        ring: homeRing(.howTo)
+                    ) {
                         Image(systemName: "questionmark")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
                     }
-                    roundButton(label: "Settings", id: "title.settings", action: onSettings) {
+                    roundButton(
+                        label: "Settings", id: "title.settings", action: onSettings,
+                        ring: homeRing(.settings)
+                    ) {
                         Image(systemName: "gearshape.fill")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.white)
                     }
-                    roundButton(label: "About", id: "title.about", action: onAbout) {
+                    roundButton(
+                        label: "About", id: "title.about", action: onAbout,
+                        ring: homeRing(.about)
+                    ) {
                         Image(systemName: "info")
                             .font(.system(size: 17, weight: .bold))
                             .foregroundStyle(.white)
@@ -87,7 +111,83 @@ struct HomeScreen: View {
                 .padding(16)
             }
             .sheet(isPresented: $showAll) { inProgressSheet }
+            #if os(macOS)
+            .background(
+                // Conditional: Home stays mounted (opacity 0) under the game,
+                // and an always-on catcher would eat the board's keys.
+                keyboardActive ? KeyCatcher(onKey: handleHomeKey) : nil
+            )
+            #endif
         }
+    }
+
+    #if os(macOS)
+    private var homeKeyItems: [HomeKeyItem] {
+        HomeKeyItem.allCases.filter { item in
+            switch item {
+            case .continueLatest: return !snapshots.isEmpty
+            case .inProgress: return snapshots.count > 1
+            default: return true
+            }
+        }
+    }
+
+    private func handleHomeKey(_ key: KeyCatcher.Key) {
+        switch key {
+        case .down, .tab, .right:
+            moveItemFocus(1)
+        case .up, .backTab, .left:
+            moveItemFocus(-1)
+        case .enter:
+            activateFocusedItem()
+        default:
+            keyItem = key == .escape ? nil : keyItem
+        }
+    }
+
+    private func moveItemFocus(_ delta: Int) {
+        let items = homeKeyItems
+        guard !items.isEmpty else { return }
+        guard let current = keyItem, let i = items.firstIndex(of: current) else {
+            keyItem = items.first
+            return
+        }
+        keyItem = items[min(max(i + delta, 0), items.count - 1)]
+    }
+
+    private func activateFocusedItem() {
+        // No focus yet (nil): Return keeps the art button's primary action
+        // (continue-or-start) via its .defaultAction shortcut.
+        guard let item = keyItem else { return }
+        homeActions[item]?()
+    }
+
+    /// Dispatch table (not a switch — a pure mapping).
+    private var homeActions: [HomeKeyItem: () -> Void] {
+        var actions: [HomeKeyItem: () -> Void] = [
+            .inProgress: { showAll = true },
+            .newGame: onNewGame,
+            .record: onScores,
+            .messHall: onMessHall,
+            .sound: { settings.sound.toggle() },
+            .howTo: onHowTo,
+            .settings: onSettings,
+            .about: onAbout,
+        ]
+        if let latest = snapshots.first {
+            actions[.continueLatest] = { onContinue(latest.config) }
+        }
+        return actions
+    }
+    #endif
+
+    /// The keyboard-focus ring for a title item; a no-op ring off macOS.
+    func homeRing(_ item: HomeKeyItem) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyItem == item, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
     }
 
     // MARK: Layouts
@@ -159,11 +259,11 @@ struct HomeScreen: View {
     private var menu: some View {
         VStack(spacing: 12) {
             if let latest = snapshots.first {
-                continueCard(latest: latest)
+                continueCard(latest: latest).modifier(homeRing(.continueLatest))
             }
-            newGameButton
-            recordButton
-            messHallButton
+            newGameButton.modifier(homeRing(.newGame))
+            recordButton.modifier(homeRing(.record))
+            messHallButton.modifier(homeRing(.messHall))
         }
     }
 
@@ -269,6 +369,7 @@ struct HomeScreen: View {
     /// Small round overlay button for a secondary corner action (as on the old title).
     private func roundButton<Icon: View>(
         label: LocalizedStringKey, id: String, action: @escaping () -> Void,
+        ring: FocusRing? = nil,
         @ViewBuilder icon: () -> Icon
     ) -> some View {
         Button(action: action) {
@@ -278,6 +379,7 @@ struct HomeScreen: View {
                 .overlay(Circle().stroke(.white.opacity(0.5), lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .modifier(ring ?? FocusRing(focused: false, inset: 0))
         .accessibilityLabel(Text(label, bundle: .module))
         .accessibilityIdentifier(id)
     }

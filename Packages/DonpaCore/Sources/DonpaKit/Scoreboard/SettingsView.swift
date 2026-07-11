@@ -25,6 +25,16 @@ struct SettingsView: View {
 
     /// Measured content height, to size the iOS sheet to a compact card.
     @State private var contentHeight: CGFloat = 0
+    #if os(macOS)
+    /// The keyboard-focused settings row (Tab/arrow navigation); nil until the
+    /// first press. ←/→ or Return operate the focused control.
+    @State private var keyRow: SettingsKeyRow?
+    #endif
+
+    /// The keyboard-walkable rows, in visual order (haptics is iOS-only).
+    enum SettingsKeyRow: CaseIterable {
+        case appearance, toggleSide, questionMarks, sound, language, reset
+    }
 
     var body: some View {
         sheetChrome
@@ -72,7 +82,7 @@ struct SettingsView: View {
             // The Picker labels are visually hidden but still read by VoiceOver —
             // as Text(bundle: .module) so they resolve in this package's catalog
             // (a bare string key would look in the app bundle: unlocalized).
-            settingRow("Appearance") {
+            settingRow("Appearance", key: .appearance) {
                 Picker(selection: $settings.appearance) {
                     ForEach(AppearancePreference.allCases) { pref in
                         Text(verbatim: pref.label).tag(pref)  // label localized in Settings
@@ -84,7 +94,7 @@ struct SettingsView: View {
                 .labelsHidden()
             }
 
-            settingRow("Toggle side") {
+            settingRow("Toggle side", key: .toggleSide) {
                 Picker(selection: $settings.handedness) {
                     ForEach(Handedness.allCases) { hand in
                         Text(verbatim: hand.label).tag(hand)
@@ -96,7 +106,7 @@ struct SettingsView: View {
                 .labelsHidden()
             }
 
-            settingRow("Question marks") {
+            settingRow("Question marks", key: .questionMarks) {
                 Toggle(isOn: $settings.questionMarks) {
                     Text("Cycle through a ? mark", bundle: .module)
                         .fixedSize(horizontal: false, vertical: true)
@@ -108,7 +118,7 @@ struct SettingsView: View {
                 .font(.caption).foregroundStyle(.secondary)
             }
 
-            settingRow("Sound") {
+            settingRow("Sound", key: .sound) {
                 Toggle(isOn: $settings.sound) {
                     Text("Play sound effects", bundle: .module)
                         .fixedSize(horizontal: false, vertical: true)
@@ -134,7 +144,7 @@ struct SettingsView: View {
             }
             #endif
 
-            settingRow("Language") {
+            settingRow("Language", key: .language) {
                 Picker(selection: $settings.language) {
                     ForEach(LanguagePreference.allCases) { lang in
                         Text(verbatim: lang.label).tag(lang)
@@ -151,7 +161,7 @@ struct SettingsView: View {
             // Score sync lives in the scoreboard; About on the title screen.
 
             Divider()
-            resetRow
+            resetRow.modifier(rowRing(.reset))
         }
     }
 
@@ -227,17 +237,76 @@ struct SettingsView: View {
         }
         .padding(24)
         .frame(minWidth: 320)
+        // Tab/arrows move between rows; ←/→ or Return operate the focused
+        // control; Esc closes. (Done keeps Return only until a row is focused.)
+        .background(KeyCatcher(onKey: handleKey))
         #endif
     }
 
-    /// A headline over its control(s).
+    #if os(macOS)
+    private func handleKey(_ key: KeyCatcher.Key) {
+        switch key {
+        case .down, .tab: moveRowFocus(1)
+        case .up, .backTab: moveRowFocus(-1)
+        case .left: operateFocusedRow(step: -1)
+        case .right: operateFocusedRow(step: 1)
+        case .enter: operateFocusedRow(step: 1)
+        case .escape: dismiss()
+        case .family, .character: break
+        }
+    }
+
+    private func moveRowFocus(_ delta: Int) {
+        let rows = SettingsKeyRow.allCases
+        guard let current = keyRow, let i = rows.firstIndex(of: current) else {
+            keyRow = rows.first
+            return
+        }
+        keyRow = rows[min(max(i + delta, 0), rows.count - 1)]
+    }
+
+    /// Operate the focused row: pickers cycle by `step`, toggles flip, Reset
+    /// asks for its confirmation (never resets directly).
+    private func operateFocusedRow(step: Int) {
+        switch keyRow {
+        case .appearance: settings.appearance = cycled(settings.appearance, by: step)
+        case .toggleSide: settings.handedness = cycled(settings.handedness, by: step)
+        case .questionMarks: settings.questionMarks.toggle()
+        case .sound: settings.sound.toggle()
+        case .language: settings.language = cycled(settings.language, by: step)
+        case .reset: confirmingReset = true
+        case nil: break
+        }
+    }
+
+    /// The next case in a CaseIterable, clamped at the ends (no wrap — matches
+    /// how the segmented controls read).
+    private func cycled<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
+        let all = Array(T.allCases)
+        guard let i = all.firstIndex(of: value) else { return value }
+        return all[min(max(i + step, 0), all.count - 1)]
+    }
+    #endif
+
+    /// A headline over its control(s), carrying the keyboard-focus ring when
+    /// its row is the arrow-focused one.
     private func settingRow<Content: View>(
-        _ title: LocalizedStringKey, @ViewBuilder _ content: () -> Content
+        _ title: LocalizedStringKey, key: SettingsKeyRow? = nil,
+        @ViewBuilder _ content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title, bundle: .module).font(.headline)
             content()
         }
+        .modifier(rowRing(key))
+    }
+
+    private func rowRing(_ key: SettingsKeyRow?) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: key != nil && keyRow == key, inset: 4)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
     }
 
     /// Reports the content's natural height (for the iOS fit-content detent).

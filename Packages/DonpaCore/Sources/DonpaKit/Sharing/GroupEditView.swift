@@ -9,6 +9,10 @@ struct GroupEditView: View {
     let group: FriendGroup
     @ObservedObject var friends: FriendsStore
     @Environment(\.dismiss) private var dismiss
+    #if os(macOS)
+    /// The keyboard-focused member checkbox (arrow navigation).
+    @State private var keyIndex: Int?
+    #endif
 
     @State private var name: String
     @State private var confirmingDelete = false
@@ -70,12 +74,44 @@ struct GroupEditView: View {
         }
     }
 
+    private func memberRing(_ index: Int) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyIndex == index, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    #if os(macOS)
+    private func handleKey(_ key: KeyCatcher.Key) {
+        switch key {
+        case .down, .tab: moveFocus(1)
+        case .up, .backTab: moveFocus(-1)
+        case .enter:
+            guard let index = keyIndex, rivals.indices.contains(index) else { return }
+            let rival = rivals[index]
+            let member = rival.groups.contains(group.id)
+            friends.setMembership(!member, of: rival.publicKey, in: group.id)
+        default: break
+        }
+    }
+
+    private func moveFocus(_ delta: Int) {
+        guard !rivals.isEmpty else { return }
+        guard let current = keyIndex else {
+            keyIndex = 0
+            return
+        }
+        keyIndex = min(max(current + delta, 0), rivals.count - 1)
+    }
+    #endif
+
     @ViewBuilder private var memberList: some View {
         if rivals.isEmpty {
             Text("No rivals to add yet.", bundle: .module)
                 .font(.callout).foregroundStyle(.secondary)
         } else {
-            ForEach(rivals) { rival in
+            ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
                 let member = rival.groups.contains(group.id)
                 Button {
                     friends.setMembership(!member, of: rival.publicKey, in: group.id)
@@ -91,6 +127,7 @@ struct GroupEditView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .modifier(memberRing(index))
             }
         }
     }
@@ -124,6 +161,9 @@ struct GroupEditView: View {
         }
         .padding(20)
         .frame(minWidth: 340, minHeight: 380)
+        // Arrows/Tab move through the member checkboxes, Return toggles the
+        // focused one; yields while the name field is being typed in.
+        .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
         #endif
     }
 }

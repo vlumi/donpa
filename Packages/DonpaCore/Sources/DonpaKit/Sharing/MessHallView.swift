@@ -285,10 +285,14 @@ extension MessHallView {
     /// number equivalents; they mirror the hidden tab buttons.
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .down: moveRowFocus(1)
-        case .up: moveRowFocus(-1)
+        case .down, .tab: moveRowFocus(1)
+        case .up, .backTab: moveRowFocus(-1)
         case .enter: activateFocusedRow(edit: false)
         case .character("e"): activateFocusedRow(edit: true)
+        case .character("a"): scanning = true
+        case .character("n"):
+            // Same gate as the card's button: no name → no card to swap.
+            nearbyURL = currentShareURL().map(NearbyPayload.init)
         case .escape: dismiss()
         case .family(1):
             tab = .rivals
