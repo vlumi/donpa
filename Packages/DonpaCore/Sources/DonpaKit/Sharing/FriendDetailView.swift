@@ -101,11 +101,12 @@ struct FriendDetailView: View {
             keyZone = keyZone == .groups ? .remove : .groups
         case .down: if keyZone == .groups { moveFocus(1) }
         case .up: if keyZone == .groups { moveFocus(-1) }
-        case .enter:
+        case .space:
             activateFocusedZone()
-        case .escape:
-            // The catcher owns keyDown, so the sheet's cancel never sees Esc —
-            // route it to the same commit-then-close Done runs.
+        case .enter, .escape:
+            // Return confirms the modal (Space toggles); the catcher owns
+            // keyDown, so Esc must route here too — both run the same
+            // commit-then-close as Done.
             done()
         default: break
         }

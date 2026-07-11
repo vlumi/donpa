@@ -17,6 +17,10 @@ struct HeadToHeadView: View {
     /// The host owns the navigation (dismissing this sheet included).
     var onPlay: ((GameConfig) -> Void)?
     @Environment(\.dismiss) private var dismiss
+    #if os(macOS)
+    /// The keyboard-focused board row (arrow navigation across all groups).
+    @State private var keyIndex: Int?
+    #endif
 
     /// The your/their value columns, grown with Dynamic Type (×1 at the default
     /// size) — fixed 76/72pt forced grown times to shrink back down via
@@ -41,19 +45,26 @@ struct HeadToHeadView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 80)
             } else {
-                List {
-                    // Sticky family+edges sub-sections (New Game's ordering falls
-                    // out of the canonical config order), so the rows themselves
-                    // stay as slim as the Service Record's — the full per-row
-                    // "Family · Size · …" text truncated on an SE.
-                    ForEach(RivalRanking.grouped(result.rows)) { group in
-                        Section {
-                            ForEach(group.rows) { rowView($0) }
-                        } header: {
-                            groupHeader(group)
+                ScrollViewReader { proxy in
+                    List {
+                        // Sticky family+edges sub-sections (New Game's ordering
+                        // falls out of the canonical config order), so the rows
+                        // themselves stay as slim as the Service Record's — the
+                        // full per-row "Family · Size · …" text truncated on an SE.
+                        ForEach(RivalRanking.grouped(result.rows)) { group in
+                            Section {
+                                ForEach(group.rows) { row in
+                                    rowView(row)
+                                        .id(row.id)
+                                        .modifier(rowRing(row))
+                                }
+                            } header: {
+                                groupHeader(group)
+                            }
                         }
+                        if let career { careerSection(career) }
                     }
-                    if let career { careerSection(career) }
+                    .background(h2hKeyCatcher(proxy))
                 }
                 // Plain, not the sheet-default inset-grouped: only plain PINS its
                 // section headers while scrolling — the whole point of the family
@@ -62,6 +73,55 @@ struct HeadToHeadView: View {
             }
         }
     }
+
+    private func rowRing(_ row: RivalRanking.H2HRow) -> FocusRing {
+        #if os(macOS)
+        let focused =
+            keyIndex.map { result.rows.indices.contains($0) && result.rows[$0].id == row.id }
+            ?? false
+        return FocusRing(focused: focused, inset: 1)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    /// Arrows walk the board rows (following with the scroll), P rematches the
+    /// focused board; Return = Done and Esc closes, routed here since the
+    /// catcher owns keyDown.
+    @ViewBuilder private func h2hKeyCatcher(_ proxy: ScrollViewProxy) -> some View {
+        #if os(macOS)
+        KeyCatcher { key in
+            switch key {
+            case .down, .tab: moveRowFocus(1, proxy: proxy)
+            case .up, .backTab: moveRowFocus(-1, proxy: proxy)
+            case .character("p"), .space: playFocused()
+            case .enter, .escape: dismiss()
+            default: break
+            }
+        }
+        #endif
+    }
+
+    #if os(macOS)
+    private func moveRowFocus(_ delta: Int, proxy: ScrollViewProxy) {
+        guard !result.rows.isEmpty else { return }
+        let next: Int
+        if let current = keyIndex {
+            next = min(max(current + delta, 0), result.rows.count - 1)
+        } else {
+            next = 0
+        }
+        keyIndex = next
+        withAnimation(.easeOut(duration: 0.15)) {
+            proxy.scrollTo(result.rows[next].id, anchor: .center)
+        }
+    }
+
+    private func playFocused() {
+        guard let index = keyIndex, result.rows.indices.contains(index) else { return }
+        onPlay?(result.rows[index].config)
+    }
+    #endif
 
     /// Lifetime career, you vs. them — shown only when the rival shared it. Each stat
     /// is one row; the higher side is tinted so you see who leads at a glance. "More is

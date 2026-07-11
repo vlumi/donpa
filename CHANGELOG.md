@@ -22,6 +22,17 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Keyboard coverage, completed.** Space toggles the focused control
+  everywhere while Return confirms the sheet; the Service Record's Tab now
+  also reaches the career stats, the medal grid (browse with arrows, open
+  a detail with Space), and the sync toggle — through its own guarded
+  enable flow — and skips the Flat/Round filter when the family has none;
+  the Mess hall's Tab walks the whole card (name, career, Nearby, Share
+  link, QR), the Rivals/Squads picker (arrows switch), Add rival, the
+  list, and sync; the ⌘/ reference scrolls by keyboard and fits without a
+  scrollbar; and — found in our own sweep — the Nearby player list,
+  Head-to-head boards (arrows + P to rematch), and the add-rival
+  confirmation's squad checkboxes are keyboard-drivable too.
 - **Keyboard focus works like focus.** Tab now moves BETWEEN a screen's
   control groups (and wraps — the title menu rolls over after About),
   while arrows work within one: in the Service Record and Mess hall, Tab

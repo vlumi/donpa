@@ -9,6 +9,10 @@ struct NearbyExchangeView: View {
     /// Route the rival's received link into the root classify/confirm path.
     let onReceived: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
+    #if os(macOS)
+    /// The keyboard-focused peer while browsing (arrow navigation).
+    @State private var keyIndex: Int?
+    #endif
 
     init(
         displayName: String, payloadURL: URL, identityKey: Data?,
@@ -37,11 +41,8 @@ struct NearbyExchangeView: View {
         .frame(minWidth: 300, idealWidth: 340, minHeight: 360)
         // Esc = the dismiss button's exact routing: a received card must reach
         // the confirm flow, never be dropped by the close.
-        .escDismisses {
-            let received = exchange.receivedURL
-            dismiss()
-            if let received { onReceived(received) }
-        }
+        .escDismisses(close)
+        .background(nearbyKeyCatcher)
         .onAppear { exchange.start() }
         .onDisappear { exchange.stop() }
     }
@@ -60,6 +61,54 @@ struct NearbyExchangeView: View {
             status(Text("The connection dropped — try again.", bundle: .module), spinner: false)
         }
     }
+
+    /// Close with the received-card routing (a card must never be dropped).
+    private func close() {
+        let received = exchange.receivedURL
+        dismiss()
+        if let received { onReceived(received) }
+    }
+
+    /// Arrows pick a nearby player, Return invites them — or, once cards have
+    /// crossed, adds the received one; Esc = the same never-drop close.
+    @ViewBuilder private var nearbyKeyCatcher: some View {
+        #if os(macOS)
+        KeyCatcher { key in
+            switch key {
+            case .down, .tab: movePeerFocus(1)
+            case .up, .backTab: movePeerFocus(-1)
+            case .enter, .space: activate()
+            case .escape: close()
+            default: break
+            }
+        }
+        #endif
+    }
+
+    #if os(macOS)
+    private func movePeerFocus(_ delta: Int) {
+        guard case .browsing = exchange.phase, !exchange.peers.isEmpty else { return }
+        guard let current = keyIndex else {
+            keyIndex = 0
+            return
+        }
+        keyIndex = min(max(current + delta, 0), exchange.peers.count - 1)
+    }
+
+    private func activate() {
+        switch exchange.phase {
+        case .browsing:
+            guard let index = keyIndex, exchange.peers.indices.contains(index) else { return }
+            exchange.invite(exchange.peers[index])
+        case .done:
+            guard let url = exchange.receivedURL else { return }
+            dismiss()
+            onReceived(url)
+        default:
+            break
+        }
+    }
+    #endif
 
     /// The bottom button. Once a card has arrived, closing must NOT drop it —
     /// dismissing routes the received URL into the confirm flow (the same as
@@ -82,6 +131,14 @@ struct NearbyExchangeView: View {
             }
             .buttonStyle(.bordered)
         }
+    }
+
+    private func peerRing(_ index: Int) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyIndex == index, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
     }
 
     private var header: some View {
@@ -107,7 +164,7 @@ struct NearbyExchangeView: View {
             if exchange.peers.isEmpty {
                 status(Text("Looking for nearby players…", bundle: .module), spinner: true)
             } else {
-                ForEach(exchange.peers, id: \.self) { peer in
+                ForEach(Array(exchange.peers.enumerated()), id: \.element) { index, peer in
                     Button {
                         exchange.invite(peer)
                     } label: {
@@ -119,6 +176,7 @@ struct NearbyExchangeView: View {
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+                    .modifier(peerRing(index))
                 }
             }
         }

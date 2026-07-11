@@ -101,10 +101,11 @@ struct GroupEditView: View {
             keyZone = keyZone == .members ? .delete : .members
         case .down: if keyZone == .members { moveFocus(1) }
         case .up: if keyZone == .members { moveFocus(-1) }
-        case .enter:
+        case .space:
             activateFocusedZone()
-        case .escape:
-            // The catcher owns keyDown, so the sheet's cancel never sees Esc.
+        case .enter, .escape:
+            // Return confirms the modal (Space toggles); the catcher owns
+            // keyDown, so Esc must route here too.
             dismiss()
         default: break
         }

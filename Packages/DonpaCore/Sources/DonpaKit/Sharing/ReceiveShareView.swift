@@ -50,6 +50,10 @@ private struct ConfirmAddView: View {
     @State private var alias = ""
     /// Groups to put the friend in, staged until confirm (they aren't stored yet).
     @State private var groupSelection: Set<String> = []
+    #if os(macOS)
+    /// The keyboard-focused squad checkbox (arrow navigation).
+    @State private var keyIndex: Int?
+    #endif
     /// A typed-but-not-created new squad name; confirm commits it (see GroupPicker).
     @State private var pendingGroupName = ""
 
@@ -59,6 +63,60 @@ private struct ConfirmAddView: View {
     }
 
     var body: some View {
+        promptChrome
+            .background(confirmKeyCatcher)
+    }
+
+    private var pickerFocusIndex: Int? {
+        #if os(macOS)
+        return keyIndex
+        #else
+        return nil
+        #endif
+    }
+
+    /// Arrows walk the squad checkboxes, Space toggles the focused one; Return
+    /// and Esc keep their modal meaning (confirm / cancel), routed here since
+    /// the catcher owns keyDown. Yields while a field is being typed in.
+    @ViewBuilder private var confirmKeyCatcher: some View {
+        #if os(macOS)
+        KeyCatcher(
+            onKey: { key in
+                switch key {
+                case .down, .tab: moveFocus(1)
+                case .up, .backTab: moveFocus(-1)
+                case .space:
+                    if let index = keyIndex { toggleGroup(at: index) }
+                case .enter: confirm()
+                case .escape: finish()
+                default: break
+                }
+            }, yieldsToTextFields: true)
+        #endif
+    }
+
+    #if os(macOS)
+    private func moveFocus(_ delta: Int) {
+        guard !friends.groups.isEmpty else { return }
+        guard let current = keyIndex else {
+            keyIndex = 0
+            return
+        }
+        keyIndex = min(max(current + delta, 0), friends.groups.count - 1)
+    }
+
+    private func toggleGroup(at index: Int) {
+        guard friends.groups.indices.contains(index) else { return }
+        let id = friends.groups[index].id
+        if groupSelection.contains(id) {
+            groupSelection.remove(id)
+        } else {
+            groupSelection.insert(id)
+        }
+    }
+    #endif
+
+    private var promptChrome: some View {
         SharePromptChrome(
             title: isRefresh ? "Update scores?" : "Add rival?",
             confirmTitle: isRefresh ? "Update" : "Add",
@@ -88,7 +146,8 @@ private struct ConfirmAddView: View {
                             .font(.caption).foregroundStyle(.secondary)
                         GroupPicker(
                             friends: friends, selection: $groupSelection,
-                            pendingName: $pendingGroupName)
+                            pendingName: $pendingGroupName,
+                            keyFocusIndex: pickerFocusIndex)
                     }
                 }
             }

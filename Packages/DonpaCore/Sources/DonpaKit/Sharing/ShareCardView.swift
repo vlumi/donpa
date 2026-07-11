@@ -15,8 +15,14 @@ struct ShareCardView: View {
     /// sheet (it also receives the swapped card); the card owns the gate: the
     /// button only shows once a name has produced a shareable link.
     var onNearby: (() -> Void)?
-    /// The host's Tab-focus ring for the Nearby button (keyboard zone cycling).
-    var nearbyRing: FocusRing = FocusRing(focused: false, inset: 0)
+    /// The card control the host's Tab-cycling has focused (ring + activation
+    /// target), or nil.
+    var keyFocus: KeyFocus?
+    /// Bumped by the host to activate the focused control from the keyboard.
+    var activateTick: Int = 0
+
+    /// The card's keyboard-focusable controls, in visual order.
+    enum KeyFocus { case name, career, nearby, shareLink, qr }
 
     /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
@@ -27,6 +33,11 @@ struct ShareCardView: View {
     @State private var failed = false
     /// The full-size QR sheet (behind the "QR code" button).
     @State private var enlarged = false
+    /// Keyboard focus for the name field (the host's Return on the name zone).
+    @FocusState private var nameFocused: Bool
+    /// Bumped to open the macOS share picker from the keyboard (ShareLink
+    /// itself can't be invoked programmatically).
+    @State private var sharePickTick = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -70,6 +81,27 @@ struct ShareCardView: View {
             if name.isEmpty { name = settings.shareName }
             rebuild()
         }
+        .onChangeCompat(of: activateTick) { _ in
+            guard activateTick > 0 else { return }
+            activateFocusedControl()
+        }
+    }
+
+    /// The host's keyboard activation, routed to whichever control its
+    /// Tab-cycling has focused.
+    private func activateFocusedControl() {
+        switch keyFocus {
+        case .name: nameFocused = true
+        case .career: settings.shareIncludeCareer.toggle()
+        case .nearby: onNearby?()
+        case .shareLink: sharePickTick += 1
+        case .qr: enlarged = true
+        case nil: break
+        }
+    }
+
+    private func ring(_ control: KeyFocus) -> FocusRing {
+        FocusRing(focused: keyFocus == control, inset: 2)
     }
 
     private var nameField: some View {
@@ -77,6 +109,8 @@ struct ShareCardView: View {
             Text("Your name", bundle: .module)
         }
         .textFieldStyle(.roundedBorder)
+        .focused($nameFocused)
+        .modifier(ring(.name))
         .onChangeCompat(of: name) { _ in
             settings.shareName = name
             rebuild()
@@ -90,6 +124,7 @@ struct ShareCardView: View {
                 // "Include care…".
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .modifier(ring(.career))
         .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
     }
 
@@ -125,7 +160,7 @@ struct ShareCardView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .modifier(nearbyRing)
+            .modifier(ring(.nearby))
         }
     }
 
@@ -135,7 +170,12 @@ struct ShareCardView: View {
     /// the code they render.
     private func remoteButtons(for link: URL) -> some View {
         HStack(spacing: 8) {
+            #if os(macOS)
+            SharePickerButton(url: link, activateTick: sharePickTick)
+                .modifier(ring(.shareLink))
+            #else
             ShareLinkButton(url: link)
+            #endif
             if qr != nil {
                 Button {
                     enlarged = true
@@ -147,6 +187,7 @@ struct ShareCardView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
+                .modifier(ring(.qr))
                 .accessibilityHint(Text("Shows the code full size.", bundle: .module))
             }
         }
@@ -190,220 +231,3 @@ struct ShareCardView: View {
     }
 
 }
-
-/// A thin wrapper over SwiftUI's `ShareLink` (the system share sheet) so the call
-/// site stays clean and cross-platform. Stretches to fill its slot in the
-/// share-actions row.
-private struct ShareLinkButton: View {
-    let url: URL
-    var body: some View {
-        ShareLink(item: url) {
-            Label {
-                Text("Share link", bundle: .module)
-            } icon: {
-                Image(systemName: "square.and.arrow.up")
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-/// Shares the branded QR card as a PNG. The rendered image is written to a temp file
-/// once and shared by URL — reliable on both iOS and macOS share sheets (sharing a
-/// bare in-memory image is fiddlier cross-platform).
-private struct ShareImageButton: View {
-    let qr: Image
-    let name: String
-    /// Identity that changes with the QR (the share URL) — re-renders on edit.
-    let linkID: URL
-    /// Rendered card image + its temp-file URL. Rebuilt when `linkID` changes;
-    /// rendering on every body pass would be wasteful.
-    @State private var rendered: (image: PlatformImage, url: URL)?
-
-    var body: some View {
-        Group {
-            if let rendered {
-                ShareLink(
-                    item: rendered.url,
-                    preview: SharePreview(previewTitle, image: previewImage(rendered.image))
-                ) {
-                    label
-                }
-            } else {
-                label.opacity(0.5)
-            }
-        }
-        .task(id: linkID) { rendered = await build() }
-    }
-
-    private var label: some View {
-        Label {
-            Text("Share image", bundle: .module)
-        } icon: {
-            Image(systemName: "photo")
-        }
-    }
-
-    /// Render the branded card once, then write its PNG to a temp file. The card's date
-    /// is "now" — the moment of sharing (matches the payload's `issuedAt` closely enough
-    /// for a human-readable day stamp).
-    @MainActor
-    private func build() async -> (PlatformImage, URL)? {
-        guard let image = ShareCard.render(qr: qr, name: name, date: Date()),
-            let url = Self.writePNG(image)
-        else { return nil }
-        return (image, url)
-    }
-
-    private var previewTitle: String {
-        String(localized: "Donpa Squad score share", bundle: .module)
-    }
-
-    private func previewImage(_ image: PlatformImage) -> Image {
-        #if os(iOS)
-        Image(uiImage: image)
-        #elseif os(macOS)
-        Image(nsImage: image)
-        #endif
-    }
-
-    /// PNG bytes for the platform image → a temp file the share sheet can hand off.
-    private static func writePNG(_ image: PlatformImage) -> URL? {
-        guard let data = pngData(image) else { return nil }
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("donpa-rival-share.png")
-        return (try? data.write(to: url, options: .atomic)) == nil ? nil : url
-    }
-
-    private static func pngData(_ image: PlatformImage) -> Data? {
-        #if os(iOS)
-        return image.pngData()
-        #elseif os(macOS)
-        guard let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) else {
-            return nil
-        }
-        return rep.representation(using: .png, properties: [:])
-        #endif
-    }
-}
-
-/// The QR at scanning size: near the full sheet width on iOS, a generous fixed
-/// square on macOS. The branded-card image exports (share/save) sit on the top
-/// row — they render exactly what's shown, so they live beside it. Tap anywhere
-/// (or Close) to dismiss.
-private struct QRZoomSheet: View {
-    let qr: Image?
-    /// Stamped on the exported card image.
-    let name: String
-    /// Keys the exported-card render — it changes whenever the QR does.
-    let link: URL?
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 20) {
-            HStack(spacing: 8) {
-                if let qr, let link {
-                    Group {
-                        ShareImageButton(qr: qr, name: name, linkID: link)
-                        #if os(macOS)
-                        // macOS's share picker has NO save-to-disk service (iOS's
-                        // sheet offers "Save to Files"), so saving the card is its
-                        // own button + save panel.
-                        SaveImageButton(qr: qr, name: name, linkID: link)
-                        #endif
-                    }
-                    .buttonStyle(.bordered)
-                }
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Close", bundle: .module)
-                }
-                .keyboardShortcut(.cancelAction)
-            }
-            if let qr {
-                // Flexible in both axes (scaledToFit keeps the code square), so
-                // the plate fills the sheet with no dead space.
-                qr
-                    .interpolation(.none)
-                    .resizable()
-                    .scaledToFit()
-                    .padding(20)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityLabel(Text("Share QR code", bundle: .module))
-            } else {
-                Spacer(minLength: 0)
-            }
-        }
-        .padding(20)
-        .contentShape(Rectangle())
-        .onTapGesture { dismiss() }
-        #if os(macOS)
-        // Low floors so small scaled-display screens can shrink it (the QR
-        // scales down), capped at the ideal: macOS won't resize a sheet's width,
-        // so extra height would only add dead space around the square code. The
-        // ideal lands the plate near-square (~520pt), well above scan density.
-        .frame(
-            minWidth: 480, idealWidth: 560, maxWidth: 560,
-            minHeight: 420, idealHeight: 600, maxHeight: 600)
-        #endif
-    }
-}
-
-#if os(macOS)
-/// Saves the branded QR card as a PNG via the system save panel — macOS's share
-/// picker offers no save-to-disk service, so the affordance must be the app's own.
-private struct SaveImageButton: View {
-    let qr: Image
-    let name: String
-    /// Identity that changes with the QR (the share URL) — re-renders on edit.
-    let linkID: URL
-
-    @State private var png: Data?
-    @State private var exporting = false
-
-    var body: some View {
-        Button {
-            exporting = true
-        } label: {
-            Label {
-                Text("Save image", bundle: .module)
-            } icon: {
-                Image(systemName: "square.and.arrow.down")
-            }
-        }
-        .disabled(png == nil)
-        .task(id: linkID) { png = await render() }
-        .fileExporter(
-            isPresented: $exporting,
-            document: PNGDocument(data: png ?? Data()),
-            contentType: .png,
-            defaultFilename: "donpa-scores"
-        ) { _ in }
-    }
-
-    @MainActor
-    private func render() async -> Data? {
-        guard let image = ShareCard.render(qr: qr, name: name, date: Date()),
-            let tiff = image.tiffRepresentation,
-            let rep = NSBitmapImageRep(data: tiff)
-        else { return nil }
-        return rep.representation(using: .png, properties: [:])
-    }
-}
-
-/// A PNG payload for `fileExporter`.
-private struct PNGDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.png] }
-    var data: Data
-    init(data: Data) { self.data = data }
-    init(configuration: ReadConfiguration) throws {
-        data = configuration.file.regularFileContents ?? Data()
-    }
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        FileWrapper(regularFileWithContents: data)
-    }
-}
-#endif

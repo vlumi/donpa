@@ -23,50 +23,106 @@ public struct KeyboardShortcutsView: View {
             }
             .padding()
             Divider()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    section(
-                        Text("On the board", bundle: .module),
-                        rows: [
-                            ("↑ ↓ ← →", Text("Move the cursor", bundle: .module)),
-                            ("⏎", Text("Dig — or chord a revealed number", bundle: .module)),
-                            ("F", Text("Plant or clear a flag", bundle: .module)),
-                            ("Space", Text("Switch dig/flag mode", bundle: .module)),
-                            ("Esc", Text("Pause and resume", bundle: .module)),
-                        ])
-                    section(
-                        Text("In lists and pickers", bundle: .module),
-                        rows: [
-                            ("↑ ↓ ← →", Text("Move the selection", bundle: .module)),
-                            ("⏎", Text("Open, expand, or start", bundle: .module)),
-                            ("E", Text("Edit the selection · flip Flat/Round", bundle: .module)),
-                            ("P", Text("Play the selected board", bundle: .module)),
-                            ("⌘1–⌘4", Text("Pick the family or tab", bundle: .module)),
-                            ("Esc", Text("Close the screen", bundle: .module)),
-                        ])
-                    section(
-                        Text("Anywhere", bundle: .module),
-                        rows: [
-                            ("⌘N", Text("New game", bundle: .module)),
-                            ("⌘R", Text("Restart the board", bundle: .module)),
-                            ("⌘B", Text("Barracks (home)", bundle: .module)),
-                            ("⇧⌘M", Text("Mess hall", bundle: .module)),
-                            ("⇧⌘S", Text("Service Record", bundle: .module)),
-                            ("⌘F", Text("Switch dig/flag mode", bundle: .module)),
-                            ("⌘0", Text("Toggle minimap size", bundle: .module)),
-                            ("⌘+ ⌘−", Text("Zoom the board", bundle: .module)),
-                            ("⌘/", Text("This reference", bundle: .module)),
-                        ])
-                }
-                .padding(20)
-                .frame(maxWidth: 460)
-                .frame(maxWidth: .infinity)
+            ScrollViewReader { proxy in
+                scrollBody(proxy)
             }
         }
         .escDismisses { dismiss() }
         #if os(macOS)
-        .frame(minWidth: 380, idealWidth: 440, minHeight: 420, idealHeight: 620)
+        .frame(
+            minWidth: 380, idealWidth: 440, maxWidth: 560,
+            minHeight: 420, idealHeight: 660, maxHeight: 760)
         #endif
+    }
+
+    @ViewBuilder private func scrollBody(_ proxy: ScrollViewProxy) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                boardSection
+                listsSection
+                anywhereSection
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
+            .frame(maxWidth: 460)
+            .frame(maxWidth: .infinity)
+        }
+        #if os(macOS)
+        // Arrows/Tab step section by section (no keyboard scrolling on a bare
+        // SwiftUI ScrollView without system Full Keyboard Access).
+        .background(
+            KeyCatcher { key in
+                switch key {
+                case .down, .tab: stepSection(1, proxy: proxy)
+                case .up, .backTab: stepSection(-1, proxy: proxy)
+                case .enter, .escape: dismiss()
+                default: break
+                }
+            }
+        )
+        #endif
+    }
+
+    #if os(macOS)
+    @State private var keySection: Int?
+
+    private func stepSection(_ delta: Int, proxy: ScrollViewProxy) {
+        let next = min(max((keySection ?? -1) + delta, 0), 2)
+        keySection = next
+        withAnimation(.easeOut(duration: 0.15)) {
+            proxy.scrollTo("section-\(next)", anchor: .top)
+        }
+    }
+    #endif
+
+    private var boardSection: some View {
+        section(
+            Text("On the board", bundle: .module),
+            rows: [
+                ("↑ ↓ ← →", Text("Move the cursor", bundle: .module)),
+                ("⏎", Text("Dig — or chord a revealed number", bundle: .module)),
+                ("F", Text("Plant or clear a flag", bundle: .module)),
+                ("Space", Text("Switch dig/flag mode", bundle: .module)),
+                ("Esc", Text("Pause and resume", bundle: .module)),
+            ]
+        )
+        .id("section-0")
+    }
+
+    private var listsSection: some View {
+        section(
+            Text("In lists and pickers", bundle: .module),
+            rows: [
+                ("↑ ↓ ← →", Text("Move the selection", bundle: .module)),
+                ("⏎", Text("Open, expand, or start", bundle: .module)),
+                ("Space", Text("Toggle the focused control", bundle: .module)),
+                ("Tab", Text("Next control group", bundle: .module)),
+                ("E", Text("Edit the selection · flip Flat/Round", bundle: .module)),
+                ("P", Text("Play the selected board", bundle: .module)),
+                ("⌘1–⌘4", Text("Pick the family or tab", bundle: .module)),
+                ("Esc", Text("Close the screen", bundle: .module)),
+            ]
+        )
+        .id("section-1")
+    }
+
+    private var anywhereSection: some View {
+        section(
+            Text("Anywhere", bundle: .module),
+            rows: [
+                ("⌘N", Text("New game", bundle: .module)),
+                ("⌘R", Text("Restart the board", bundle: .module)),
+                ("⌘B", Text("Barracks (home)", bundle: .module)),
+                ("⇧⌘M", Text("Mess hall", bundle: .module)),
+                ("⇧⌘S", Text("Service Record", bundle: .module)),
+                ("⌘F", Text("Switch dig/flag mode", bundle: .module)),
+                ("⌘0", Text("Toggle minimap size", bundle: .module)),
+                ("⌘+ ⌘−", Text("Zoom the board", bundle: .module)),
+                ("⌘/", Text("This reference", bundle: .module)),
+            ]
+        )
+        .id("section-2")
     }
 
     private func section(_ title: Text, rows: [(String, Text)]) -> some View {
