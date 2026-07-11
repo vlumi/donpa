@@ -175,13 +175,13 @@ private struct BoardSKView: UIViewRepresentable {
     let scene: BoardScene
     let palette: Palette
     let inputMode: InputMode  // unused on iOS (no pointer cursor)
-    let boardCursorActive: Bool  // unused on iOS
+    let boardCursorActive: Bool  // gates the hardware-keyboard focus claim
     let showMinimap: Bool
     let minimapScale: Double
     let useQuestionMarks: Bool
 
-    func makeUIView(context: Context) -> SKView {
-        let view = SKView()
+    func makeUIView(context: Context) -> KeyForwardingSKView {
+        let view = KeyForwardingSKView()
         view.ignoresSiblingOrder = true
         scene.palette = palette
         scene.showMinimap = showMinimap
@@ -191,12 +191,71 @@ private struct BoardSKView: UIViewRepresentable {
         return view
     }
 
-    func updateUIView(_ view: SKView, context: Context) {
+    func updateUIView(_ view: KeyForwardingSKView, context: Context) {
         if view.scene !== scene { view.presentScene(scene) }
         scene.palette = palette
         scene.showMinimap = showMinimap
         scene.minimapScale = CGFloat(minimapScale)
         scene.useQuestionMarks = useQuestionMarks
+        // While the board is the live surface, hold first responder so a
+        // hardware keyboard (iPad) drives the cursor. boardCursorActive is
+        // false whenever a modal is up, so a sheet's text field is never
+        // robbed of its keyboard.
+        if boardCursorActive, !view.isFirstResponder, view.window != nil {
+            DispatchQueue.main.async { [weak view] in
+                guard let view, view.window != nil, !view.isFirstResponder else { return }
+                view.becomeFirstResponder()
+            }
+        }
+    }
+}
+
+/// An `SKView` that maps hardware-keyboard presses (iPad, or a paired keyboard
+/// on iPhone) onto the same cursor entry points the Mac's keyDown drives.
+final class KeyForwardingSKView: SKView {
+    override var canBecomeFirstResponder: Bool { true }
+
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        guard let board = scene as? BoardScene else {
+            return super.pressesBegan(presses, with: event)
+        }
+        var handled = false
+        for press in presses {
+            guard let key = press.key else { continue }
+            handled = handle(key.keyCode, on: board) || handled
+        }
+        if !handled { super.pressesBegan(presses, with: event) }
+    }
+
+    private func handle(_ code: UIKeyboardHIDUsage, on board: BoardScene) -> Bool {
+        if let (dx, dy) = Self.arrowVector(code) {
+            board.moveCursor(dx: dx, dy: dy)
+            return true
+        }
+        switch code {
+        case .keyboardReturnOrEnter, .keypadEnter: board.activateCursor()
+        case .keyboardF: board.flagCursor()
+        case .keyboardSpacebar: board.viewModel.inputMode.toggle()
+        case .keyboardEscape:
+            if board.viewModel.isPaused {
+                board.viewModel.resume()
+            } else {
+                board.viewModel.pause()
+            }
+        default: return false
+        }
+        return true
+    }
+
+    /// Arrow → cursor step; rows render bottom-up, so up = +y.
+    private static func arrowVector(_ code: UIKeyboardHIDUsage) -> (Int, Int)? {
+        switch code {
+        case .keyboardUpArrow: return (0, 1)
+        case .keyboardDownArrow: return (0, -1)
+        case .keyboardLeftArrow: return (-1, 0)
+        case .keyboardRightArrow: return (1, 0)
+        default: return nil
+        }
     }
 }
 #endif

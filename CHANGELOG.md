@@ -22,6 +22,11 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Hardware keyboards work on iPad and iPhone.** The board cursor
+  (arrows, Return, F, Space, Esc) responds to a connected keyboard, and
+  holding ⌘ shows the shortcut overlay with the same commands as the Mac
+  menus — New Game, Restart, Barracks, Mess Hall, High Scores, mode,
+  minimap, and zoom.
 - **The in-progress list is keyboard-drivable (macOS).** Arrows pick a
   saved board, Return resumes it.
 - **The Mess hall is keyboard-drivable (macOS).** Arrows move through the
