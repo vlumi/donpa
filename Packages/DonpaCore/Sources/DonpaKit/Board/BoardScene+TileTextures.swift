@@ -242,8 +242,9 @@ extension BoardScene {
 
     /// Render a `wPx×hPx`-point image (supersampled by `scale`) with `draw`, which
     /// receives the context and the scaled canvas width/height. For non-square tiles
-    /// (hex) whose sprite is taller than wide.
-    private func drawTileImage(
+    /// (hex) whose sprite is taller than wide. Internal: the cursor ring
+    /// (BoardScene+Cursor) draws through it too.
+    func drawTileImage(
         wPx: Int, hPx: Int, scale: CGFloat, _ draw: (CGContext, CGFloat, CGFloat) -> Void
     ) -> CGImage {
         let w = Int(CGFloat(wPx) * scale)

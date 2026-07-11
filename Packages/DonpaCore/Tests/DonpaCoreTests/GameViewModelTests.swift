@@ -62,6 +62,24 @@ final class GameViewModelTests: XCTestCase {
         XCTAssertFalse(vm2.isPrimedBoard, "a restored game is not a placeholder")
     }
 
+    /// The focused-cell cursor doesn't survive a board swap: new game and
+    /// restore both clear it (the scene re-seeds on the next arrow key).
+    func testFocusedCellClearsOnNewGameAndRestore() async {
+        let vm = await startedGame()
+        vm.focusedCell = Coord(1, 1)
+        vm.newGame()
+        XCTAssertNil(vm.focusedCell, "new game clears the cursor")
+
+        let played = await startedGame()
+        guard let snapshot = played.snapshot() else {
+            XCTFail("no snapshot from a playing game")
+            return
+        }
+        vm.focusedCell = Coord(2, 2)
+        vm.restore(from: snapshot)
+        XCTAssertNil(vm.focusedCell, "restore clears the cursor")
+    }
+
     // MARK: New game / counters
 
     func testNewGameBumpsGameIDAndRevision() {

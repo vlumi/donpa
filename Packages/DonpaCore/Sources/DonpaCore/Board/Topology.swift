@@ -16,6 +16,17 @@ public protocol Topology: Sendable {
     func allCoords() -> AnySequence<Coord>
 }
 
+extension Topology {
+    /// The cell one step away in a cardinal direction, or nil at a bounded edge
+    /// (the cursor stays put); wrapped topologies fold across the seam. On hex
+    /// (odd-r offset) a vertical step is always a true neighbour — the half-column
+    /// lean alternates by row parity, so repeated steps zigzag around a straight
+    /// line instead of drifting.
+    public func stepped(_ c: Coord, dx: Int, dy: Int) -> Coord? {
+        normalize(Coord(c.x + dx, c.y + dy))
+    }
+}
+
 /// A topology whose cells form a dense `width × height` rectangle — the property
 /// that licenses flat array storage (`index = y·width + x`) over a dictionary,
 /// the speed/memory path for huge boards. A non-grid topology wouldn't conform.

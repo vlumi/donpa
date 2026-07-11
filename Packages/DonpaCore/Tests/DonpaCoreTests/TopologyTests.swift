@@ -132,3 +132,54 @@ final class TopologyTests: XCTestCase {
         XCTAssertEqual(t.normalize(Coord(10, 3)), Coord(2, 3))
     }
 }
+
+// MARK: Cursor stepping (Topology.stepped)
+
+extension TopologyTests {
+    /// Bounded boards clamp: a step off the edge returns nil (the cursor stays).
+    func testSteppedClampsAtBoundedEdges() {
+        let t = BoundedSquareTopology(width: 3, height: 3)
+        XCTAssertNil(t.stepped(Coord(0, 0), dx: -1, dy: 0))
+        XCTAssertNil(t.stepped(Coord(0, 0), dx: 0, dy: -1))
+        XCTAssertNil(t.stepped(Coord(2, 2), dx: 1, dy: 0))
+        XCTAssertEqual(t.stepped(Coord(1, 1), dx: 1, dy: 0), Coord(2, 1))
+    }
+
+    /// Wrapped boards fold: a step off the edge lands on the opposite side.
+    func testSteppedWrapsAcrossTheSeam() {
+        let t = WrappedSquareTopology(width: 4, height: 4)
+        XCTAssertEqual(t.stepped(Coord(0, 0), dx: -1, dy: 0), Coord(3, 0))
+        XCTAssertEqual(t.stepped(Coord(3, 3), dx: 1, dy: 1), Coord(0, 0))
+    }
+
+    /// On hex (odd-r), a vertical step is ALWAYS a true neighbour — the cursor's
+    /// up/down zigzags around a straight line instead of drifting, both parities.
+    func testSteppedVerticalIsAlwaysAHexNeighbour() {
+        let t = HexTopology(width: 6, height: 6)
+        for y in 1..<5 {
+            for x in 1..<5 {
+                let c = Coord(x, y)
+                for dy in [-1, 1] {
+                    let stepped = t.stepped(c, dx: 0, dy: dy)
+                    XCTAssertNotNil(stepped)
+                    XCTAssertTrue(
+                        t.neighbors(of: c).contains(stepped!),
+                        "stepping (0,\(dy)) from \(c) must land on a neighbour")
+                }
+            }
+        }
+    }
+
+    /// Wrapped hex: vertical steps stay neighbours across the seam too.
+    func testSteppedVerticalWrappedHexStaysNeighbour() {
+        let t = WrappedHexTopology(width: 4, height: 4)
+        for x in 0..<4 {
+            let top = Coord(x, 0)
+            let stepped = t.stepped(top, dx: 0, dy: -1)
+            XCTAssertNotNil(stepped)
+            XCTAssertTrue(
+                t.neighbors(of: top).contains(stepped!),
+                "seam step from \(top) must land on a neighbour")
+        }
+    }
+}

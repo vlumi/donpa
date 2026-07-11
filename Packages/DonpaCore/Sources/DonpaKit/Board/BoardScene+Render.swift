@@ -17,6 +17,7 @@ extension BoardScene {
             lastAnimatedResultID = -1  // a fresh game can animate its own result
             effectsLayer.removeAllChildren()
             boardLayer.position = .zero  // clear any leftover shake offset
+            resetCursor()  // board geometry changed under the cursor
             // A resumed game adopts its saved view as the sticky restore target
             // (consuming the VM's one-shot hand-off); a fresh game clears it and
             // falls back to the default fit.

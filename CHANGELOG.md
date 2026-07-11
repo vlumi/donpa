@@ -22,6 +22,12 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Keyboard board play (macOS).** Arrow keys move a focused-cell cursor —
+  the first press starts it mid-screen — Return digs (or chords a revealed
+  number, following the input mode like a click), and F plants a flag. The
+  view scrolls along when the cursor walks past its edge, and on Round
+  boards the cursor crosses the seam like a pan. Space still switches
+  dig/flag mode.
 - **A leaner Mess hall header — the rivals list gets the room.** The share
   card drops its captions, puts your name and the career toggle on one row
   wherever width allows, and Add rival folds to an icon beside the

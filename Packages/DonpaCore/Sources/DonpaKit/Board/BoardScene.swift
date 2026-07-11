@@ -23,6 +23,10 @@ public final class BoardScene: SKScene {
     /// Mode-glow wash over unopened tiles: above `boardLayer`, below `effectsLayer`.
     /// Never wiped by `rebuild()`.
     let glowLayer = SKNode()
+    /// The focused-cell cursor's own layer: above the glow, below effects; its own
+    /// so neither the glow refresh (wipes `glowLayer`) nor the idle throttle
+    /// (`effectsLayer` children force active FPS) touches it.
+    let cursorLayer = SKNode()
     // Render state — read/written by BoardScene+Render.
     var lastRevision = -1
     var lastGameID = -1
@@ -46,6 +50,14 @@ public final class BoardScene: SKScene {
     /// batches same-texture sprites into one draw call (cheaper than per-cell
     /// `SKShapeNode` on big boards).
     var tileTextureCache: [String: SKTexture] = [:]
+
+    // Focused-cell cursor (keyboard/VoiceOver navigation) — BoardScene+Cursor.
+    /// The cursor's SCREEN cell — unclamped on wrapped boards, like `cellNodes`
+    /// keys; the logical cell it focuses is `displayCoord` of this, mirrored to
+    /// `viewModel.focusedCell` for the chrome. nil until the first move.
+    var cursorScreenCoord: Coord?
+    /// The single ring node marking the cursor, on its own layer above the glow.
+    var cursorNode: SKSpriteNode?
 
     // Minimap — corner thumbnail of the whole board with a viewport rectangle,
     // shown only when the board exceeds the view. Lives in BoardScene+Minimap;
@@ -124,9 +136,11 @@ public final class BoardScene: SKScene {
         // the opaque sprite tiles and vanish.
         boardLayer.zPosition = 0
         glowLayer.zPosition = 1  // above tiles…
+        cursorLayer.zPosition = 1.5  // …cursor over the glow…
         effectsLayer.zPosition = 2  // …but below end-game effects
         addChild(boardLayer)
         addChild(glowLayer)
+        addChild(cursorLayer)
         addChild(effectsLayer)
         addChild(cameraNode)
         camera = cameraNode
@@ -162,6 +176,7 @@ public final class BoardScene: SKScene {
     private static let idleGrace: TimeInterval = 0.4  // settle before throttling
     private var lastActiveTime: TimeInterval = 0
     private var lastCameraSnapshot: CameraView?
+    private var lastCursorSnapshot: Coord?
     private var lastActivityRevision = -1
 
     public override func update(_ currentTime: TimeInterval) {
@@ -170,6 +185,7 @@ public final class BoardScene: SKScene {
         // pan, zoom, and the animated spring-back without each calling in.
         buildVisibleCells()
         refreshModeGlow()
+        refreshCursor()
         refreshMinimap()
         // Keep the live camera view current so an autosave persists the view.
         viewModel.cameraView = currentCameraView()
@@ -187,6 +203,9 @@ public final class BoardScene: SKScene {
         if viewModel.revision != lastActivityRevision || viewModel.gameID != lastGameID {
             return true
         }
+        // A cursor move counts as activity (it doesn't bump `revision` or move the
+        // camera when the target is already on-screen — at idle FPS it would lag).
+        if cursorScreenCoord != lastCursorSnapshot { return true }
         // Camera move (pan/zoom/scroll/spring) — compared via the transform rather
         // than hooking every input handler, so no path can forget to wake the view.
         return currentCameraView() != lastCameraSnapshot
@@ -197,6 +216,7 @@ public final class BoardScene: SKScene {
             lastActiveTime = currentTime
             lastActivityRevision = viewModel.revision
             lastCameraSnapshot = currentCameraView()
+            lastCursorSnapshot = cursorScreenCoord
         }
         let idle = currentTime - lastActiveTime > Self.idleGrace
         let target = idle ? Self.idleFPS : Self.activeFPS
