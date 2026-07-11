@@ -130,6 +130,7 @@ struct NewGamePopup: View {
         case .enter: commitSelection()
         case .escape: onClose()
         case .character: break  // no letter actions on this surface
+        case .space: break  // Space stays the board's mode key, not a commit
         }
     }
 

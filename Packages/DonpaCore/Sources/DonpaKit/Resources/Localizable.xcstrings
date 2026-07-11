@@ -331,6 +331,28 @@
         }
       }
     },
+    "Next control group" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next control group"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuraava säädinryhmä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次の操作グループへ"
+          }
+        }
+      }
+    },
     "On the board" : {
       "localizations" : {
         "en" : {
@@ -569,6 +591,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ミニマップの大きさ切替"
+          }
+        }
+      }
+    },
+    "Toggle the focused control" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle the focused control"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kytke valittu säädin"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択中の操作を切替"
           }
         }
       }

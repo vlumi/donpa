@@ -10,7 +10,7 @@ struct KeyCatcher: NSViewRepresentable {
     /// family by number — families are a list, not something to arrow through)
     /// and plain letter keys (surface-specific actions, e.g. the Record's play).
     enum Key: Equatable {
-        case up, down, left, right, enter, escape
+        case up, down, left, right, enter, escape, space
         case tab, backTab
         case family(Int)
         case character(Character)
@@ -61,32 +61,33 @@ struct KeyCatcher: NSViewRepresentable {
         }
 
         override func keyDown(with event: NSEvent) {
-            let key: Key?
-            switch event.keyCode {
-            case 126: key = .up
-            case 125: key = .down
-            case 123: key = .left
-            case 124: key = .right
-            case 36, 76: key = .enter  // Return, keypad Enter
-            case 53: key = .escape
-            case 48:  // Tab / ⇧Tab — "next"/"previous" for surfaces without FKA
-                key = event.modifierFlags.contains(.shift) ? .backTab : .tab
-            default:
-                // Plain letters only — modified combos stay key equivalents.
-                if event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-                    .subtracting(.shift).isEmpty,
-                    let ch = event.charactersIgnoringModifiers?.lowercased().first,
-                    ch.isLetter
-                {
-                    key = .character(ch)
-                } else {
-                    key = nil
-                }
-            }
-            if let key {
+            if let key = Self.key(for: event) {
                 onKey?(key)
             } else {
                 super.keyDown(with: event)
+            }
+        }
+
+        private static func key(for event: NSEvent) -> Key? {
+            switch event.keyCode {
+            case 126: return .up
+            case 125: return .down
+            case 123: return .left
+            case 124: return .right
+            case 36, 76: return .enter  // Return, keypad Enter
+            case 49: return .space  // toggles the focused control (Return confirms)
+            case 53: return .escape
+            case 48:  // Tab / ⇧Tab — "next"/"previous" for surfaces without FKA
+                return event.modifierFlags.contains(.shift) ? .backTab : .tab
+            default:
+                // Plain letters only — modified combos stay key equivalents.
+                guard
+                    event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+                        .subtracting(.shift).isEmpty,
+                    let ch = event.charactersIgnoringModifiers?.lowercased().first,
+                    ch.isLetter
+                else { return nil }
+                return .character(ch)
             }
         }
 

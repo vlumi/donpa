@@ -18,12 +18,12 @@ struct MessHallView: View {
     /// Start a game on a board picked inside a head-to-head (the rematch loop).
     /// This view closes itself; the host routes the config into a fresh game.
     var onPlay: ((GameConfig) -> Void)?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) var dismiss
 
     /// Whether the Add-rival scanner sheet is presented.
-    @State private var scanning = false
+    @State var scanning = false
     /// `sheet(item:)` needs Identifiable; identity = the link itself.
-    private struct NearbyPayload: Identifiable {
+    struct NearbyPayload: Identifiable {
         let url: URL
         var id: String { url.absoluteString }
     }
@@ -31,36 +31,42 @@ struct MessHallView: View {
     /// The Nearby sheet's payload, built ONCE when the button is tapped —
     /// building it in the sheet's ViewBuilder published from within a view
     /// update (refreshFromCloud mutates the scoreboard) and looped forever.
-    @State private var nearbyURL: NearbyPayload?
+    @State var nearbyURL: NearbyPayload?
     private let identityStore = ShareIdentityStore()
 
-    private enum Tab: Hashable { case rivals, squads }
-    @State private var tab: Tab = .rivals
+    enum Tab: Hashable { case rivals, squads }
+    @State var tab: Tab = .rivals
     #if os(macOS)
     /// The keyboard-focused row index in the CURRENT tab's list (arrow
     /// navigation); nil until the first arrow press, reset on tab switch.
-    @State private var keyRowIndex: Int?
+    @State var keyRowIndex: Int?
     /// Which zone Tab has focused: the list, or one of the header actions.
-    @State private var keyZone: KeyZone = .rows
+    @State var keyZone: KeyZone = .rows
+    /// Bumped to activate the card's focused control (see ShareCardView).
+    @State var cardActivateTick = 0
+    /// Bumped to flip the sync toggle (see SyncFooterControl).
+    @State var syncActivateTick = 0
     #endif
 
-    /// Tab-cyclable zones, in visual order (top to bottom: card action, the
-    /// scanner door, then the list).
-    enum KeyZone: CaseIterable { case nearby, addRival, rows }
+    /// Tab-cyclable zones, in visual order. The card's action zones only
+    /// exist once a share name has produced a card (matching what's visible).
+    enum KeyZone: CaseIterable {
+        case name, career, nearby, shareLink, qr, tabs, addRival, rows, sync
+    }
 
     /// The rival whose detail (edit) sheet is open, or nil.
-    @State private var editingRival: Friend?
+    @State var editingRival: Friend?
     /// The rival being compared head-to-head, or nil.
-    @State private var comparingRival: Friend?
+    @State var comparingRival: Friend?
     /// The group being edited (name / members / delete), or nil.
-    @State private var editingGroup: FriendGroup?
+    @State var editingGroup: FriendGroup?
     /// The group being compared head-to-head, or nil.
-    @State private var comparingGroup: FriendGroup?
+    @State var comparingGroup: FriendGroup?
     /// A new group's name field (Groups tab).
     @State private var newGroupName = ""
 
     /// Rivals alphabetical; ties broken by key for a stable order.
-    private var rivals: [Friend] {
+    var rivals: [Friend] {
         friends.friends.sorted {
             let byName = $0.displayName.localizedCaseInsensitiveCompare($1.displayName)
             if byName != .orderedSame { return byName == .orderedAscending }
@@ -133,9 +139,9 @@ struct MessHallView: View {
             ShareCardView(
                 scoreboard: scoreboard, settings: settings,
                 onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) },
-                nearbyRing: zoneRing(.nearby))
+                keyFocus: messCardFocus, activateTick: messCardTick)
             HStack(spacing: 10) {
-                tabPicker
+                tabPicker.modifier(zoneRing(.tabs))
                 Button {
                     scanning = true
                 } label: {
@@ -151,7 +157,7 @@ struct MessHallView: View {
     /// The signed share link, exactly as the share card builds it. Nil when there's
     /// no name yet (the card gates its own actions the same way) — a "?" card is a
     /// bad first handshake.
-    private func currentShareURL() -> URL? {
+    func currentShareURL() -> URL? {
         if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
         let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty,
@@ -274,119 +280,7 @@ struct MessHallView: View {
 
 }
 
-// MARK: Keyboard driving (same file: the helpers read private state)
-
 extension MessHallView {
-    /// The keyboard-focus ring for a list row (macOS arrow navigation);
-    /// a no-op ring elsewhere.
-    private func keyFocusRing(_ index: Int) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == .rows && keyRowIndex == index, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
-    }
-
-    /// The Tab-focus ring for a header zone; a no-op ring off macOS.
-    func zoneRing(_ zone: KeyZone) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == zone, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
-    }
-
-    #if os(macOS)
-    /// Arrow/Return/E/⌘-number keyboard driving — the Record's vocabulary on
-    /// the social lists. ⌘1/⌘2 arrive here because the KeyCatcher consumes
-    /// number equivalents; they mirror the hidden tab buttons.
-    private func handleKey(_ key: KeyCatcher.Key) {
-        switch key {
-        case .tab: moveZone(1)
-        case .backTab: moveZone(-1)
-        case .down: moveRowFocus(1)
-        case .up: moveRowFocus(-1)
-        case .enter: activateFocusedZone()
-        case .escape: dismiss()
-        case .character(let ch): handleLetter(ch)
-        case .family(let n): pickTab(n)
-        case .left, .right: break
-        }
-    }
-
-    /// E edits the focused row; A opens the scanner; N starts Nearby.
-    private func handleLetter(_ ch: Character) {
-        switch ch {
-        case "e": if keyZone == .rows { activateFocusedRow(edit: true) }
-        case "a": scanning = true
-        case "n": startNearby()
-        default: break
-        }
-    }
-
-    /// ⌘1/⌘2 mirror the hidden tab buttons (the catcher consumes number
-    /// equivalents).
-    private func pickTab(_ n: Int) {
-        switch n {
-        case 1: tab = .rivals
-        case 2: tab = .squads
-        default: return
-        }
-        keyRowIndex = nil
-    }
-
-    /// Tab moves BETWEEN zones (wrapping); arrows walk the list within its zone.
-    private func moveZone(_ delta: Int) {
-        let zones = KeyZone.allCases
-        let i = zones.firstIndex(of: keyZone) ?? 0
-        keyZone = zones[(i + delta + zones.count) % zones.count]
-    }
-
-    private func activateFocusedZone() {
-        switch keyZone {
-        case .rows: activateFocusedRow(edit: false)
-        case .nearby: startNearby()
-        case .addRival: scanning = true
-        }
-    }
-
-    /// Same gate as the card's button: no name → no card to swap.
-    private func startNearby() {
-        nearbyURL = currentShareURL().map(NearbyPayload.init)
-    }
-
-    private var focusedRowCount: Int {
-        tab == .rivals ? rivals.count : friends.groups.count
-    }
-
-    private func moveRowFocus(_ delta: Int) {
-        guard keyZone == .rows, focusedRowCount > 0 else { return }
-        guard let current = keyRowIndex else {
-            keyRowIndex = 0
-            return
-        }
-        keyRowIndex = min(max(current + delta, 0), focusedRowCount - 1)
-    }
-
-    /// Return = the row's tap (compare); E = its pencil (edit).
-    private func activateFocusedRow(edit: Bool) {
-        guard let index = keyRowIndex else { return }
-        switch tab {
-        case .rivals:
-            guard rivals.indices.contains(index) else { return }
-            if edit { editingRival = rivals[index] } else { comparingRival = rivals[index] }
-        case .squads:
-            guard friends.groups.indices.contains(index) else { return }
-            let group = friends.groups[index]
-            if edit {
-                editingGroup = group
-            } else if !friends.members(of: group.id).isEmpty {
-                comparingGroup = group
-            }
-        }
-    }
-    #endif
-
     private func createGroup() {
         guard let group = friends.createGroup(named: newGroupName) else { return }
         newGroupName = ""
@@ -425,7 +319,9 @@ extension MessHallView {
             // clips top and bottom.
             tabContent.frame(minHeight: 180, idealHeight: 300)
             HStack(spacing: 12) {
-                SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                SyncFooterControl(
+                    settings: settings, scoreboard: scoreboard,
+                    keyFocused: messSyncFocused, activateTick: messSyncTick)
                 Spacer()
                 Button {
                     dismiss()
@@ -445,6 +341,60 @@ extension MessHallView {
         // tabs, Esc closes. Yields while a name field is being edited, so
         // typing is never hijacked (Return there still submits the field).
         .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
+        #endif
+    }
+}
+
+// Cross-platform accessors for the (macOS-only) keyboard state — the chrome
+// reads them on both platforms, so they can't live in MessHallKeyboard.
+extension MessHallView {
+    /// a no-op ring elsewhere.
+    func keyFocusRing(_ index: Int) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyZone == .rows && keyRowIndex == index, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    /// The Tab-focus ring for a header zone; a no-op ring off macOS.
+    func zoneRing(_ zone: KeyZone) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyZone == zone, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    var messSyncFocused: Bool {
+        #if os(macOS)
+        return keyZone == .sync
+        #else
+        return false
+        #endif
+    }
+
+    var messSyncTick: Int {
+        #if os(macOS)
+        return syncActivateTick
+        #else
+        return 0
+        #endif
+    }
+
+    var messCardFocus: ShareCardView.KeyFocus? {
+        #if os(macOS)
+        return cardKeyFocus
+        #else
+        return nil
+        #endif
+    }
+
+    var messCardTick: Int {
+        #if os(macOS)
+        return cardActivateTick
+        #else
+        return 0
         #endif
     }
 }

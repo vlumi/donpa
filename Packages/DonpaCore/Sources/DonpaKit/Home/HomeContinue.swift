@@ -130,7 +130,7 @@ extension HomeScreen {
         switch key {
         case .down, .tab: moveRowFocus(1)
         case .up, .backTab: moveRowFocus(-1)
-        case .enter:
+        case .enter, .space:
             guard let index = keyRowIndex, snapshots.indices.contains(index) else { return }
             showAll = false
             onContinue(snapshots[index].config)

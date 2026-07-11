@@ -138,7 +138,7 @@ struct HomeScreen: View {
             moveItemFocus(1)
         case .up, .backTab, .left:
             moveItemFocus(-1)
-        case .enter:
+        case .enter, .space:
             activateFocusedItem()
         default:
             keyItem = key == .escape ? nil : keyItem

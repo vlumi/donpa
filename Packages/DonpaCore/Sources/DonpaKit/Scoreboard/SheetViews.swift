@@ -58,12 +58,21 @@ struct ScoreboardView: View {
     /// The keyboard-focused row's config key (arrow navigation); nil until the
     /// first arrow press. See ScoreboardKeyboard.
     @State var keyRowKey: String?
-    /// Which control zone Tab has focused (rows / family filter / edges).
+    /// Which control zone Tab has focused.
     @State var keyZone: KeyZone = .rows
+    /// The focused medal while the medals zone is active (←/→ browsing).
+    @State var keyMedalIndex: Int?
+    /// Bumped to flip the sync toggle from the keyboard (see SyncFooterControl).
+    @State var syncActivateTick = 0
     #endif
+    /// The tapped/keyboard-selected medal whose detail line shows under the
+    /// grid. Hoisted from DecorationsSection so the keyboard can drive it.
+    @State var selectedMedal: AchievementID?
 
-    /// The sheet's Tab-cyclable control zones, in visual order.
-    enum KeyZone: CaseIterable { case rows, family, edges }
+    /// The sheet's Tab-cyclable control zones, in visual order. `career` is a
+    /// read-only scroll anchor (stats have nothing to operate); `edges` is
+    /// skipped while the family has no edges axis.
+    enum KeyZone: CaseIterable { case career, medals, family, edges, rows, sync }
     /// Grows the header's stat columns with Dynamic Type — must match
     /// `ScoreRow.columnScale` so the table stays aligned.
     @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
@@ -105,7 +114,9 @@ struct ScoreboardView: View {
 
             Divider()
             HStack(spacing: 12) {
-                SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                SyncFooterControl(
+                    settings: settings, scoreboard: scoreboard,
+                    keyFocused: keyZone == .sync, activateTick: syncActivateTick)
                 Spacer()
                 Button {
                     dismiss()
@@ -161,59 +172,20 @@ struct ScoreboardView: View {
         anchoredScroll {
             VStack(alignment: .leading, spacing: 24) {
                 careerSection
+                    .id("zone.career")
+                    .modifier(zoneRing(.career))
                 if let achievements {
                     DecorationsSection(
                         achievements: achievements, records: scoreboard.displayRecords,
-                        rowInset: Self.rowInset)
+                        rowInset: Self.rowInset, selected: $selectedMedal,
+                        keyFocusIndex: medalFocusIndex
+                    )
+                    .id("zone.medals")
                 }
                 scoresSection
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.trailing, Self.scrollbarGutter)
-        }
-    }
-
-    /// A ScrollView that, when opened in-game (`currentConfigKey` set), jumps the
-    /// current config's row into view — so you land on the board you're playing.
-    /// Opened from the title (key nil) it stays at the top for plain browsing.
-    @ViewBuilder private func anchoredScroll<Content: View>(
-        @ViewBuilder _ content: () -> Content
-    ) -> some View {
-        let inner = content()
-        ScrollViewReader { proxy in
-            ScrollView {
-                inner
-            }
-            .onAppear {
-                guard let key = currentConfigKey else { return }
-                // A beat after layout so the target row exists before we scroll.
-                DispatchQueue.main.async {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        proxy.scrollTo(key, anchor: .center)
-                    }
-                }
-            }
-            // Expanding a row scrolls it into view — otherwise expanding the LAST
-            // row opens content that's off-screen below the fold (and there may be
-            // no layout shift to nudge it up). A beat later so the taller row has
-            // laid out before we scroll to it.
-            .onChangeCompat(of: expandedKey) { key in
-                guard let key else { return }
-                DispatchQueue.main.async {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        proxy.scrollTo(key, anchor: .center)
-                    }
-                }
-            }
-            #if os(macOS)
-            // The keyboard focus scrolls with the arrows, like the expansion.
-            .onChangeCompat(of: keyRowKey) { key in
-                guard let key else { return }
-                withAnimation(.easeOut(duration: 0.15)) {
-                    proxy.scrollTo(key, anchor: .center)
-                }
-            }
-            #endif
         }
     }
 
@@ -302,6 +274,7 @@ struct ScoreboardView: View {
         }
         .labelsHidden()
         .padding(.horizontal, Self.rowInset)
+        .id("zone.filters")
     }
 
     private func familyPicker(stacked: Bool) -> some View {
@@ -335,11 +308,21 @@ struct ScoreboardView: View {
     }
 
     /// The Tab-focus ring for a filter zone; a no-op ring off macOS.
-    private func zoneRing(_ zone: KeyZone) -> FocusRing {
+    func zoneRing(_ zone: KeyZone) -> FocusRing {
         #if os(macOS)
         return FocusRing(focused: keyZone == zone, inset: 3)
         #else
         return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    /// The medal the keyboard is browsing (ring in the grid), while the medals
+    /// zone is active.
+    private var medalFocusIndex: Int? {
+        #if os(macOS)
+        return keyZone == .medals ? keyMedalIndex : nil
+        #else
+        return nil
         #endif
     }
 

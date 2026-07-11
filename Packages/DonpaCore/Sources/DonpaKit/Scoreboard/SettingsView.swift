@@ -254,7 +254,8 @@ struct SettingsView: View {
         case .up, .backTab: moveRowFocus(-1)
         case .left: operateFocusedRow(step: -1)
         case .right: operateFocusedRow(step: 1)
-        case .enter: operateFocusedRow(step: 1)
+        case .space: operateFocusedRow(step: 1)
+        case .enter: dismiss()  // Return confirms the modal; Space operates
         case .escape: dismiss()
         case .family, .character: break
         }

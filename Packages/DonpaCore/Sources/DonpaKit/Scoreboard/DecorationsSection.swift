@@ -11,8 +11,11 @@ struct DecorationsSection: View {
     /// Merged score records, for the detail line's live stat value (e.g. "472 wins").
     let records: [String: ScoreRecord]
     let rowInset: CGFloat
-
-    @State private var selected: AchievementID?
+    /// The medal whose detail line shows — hoisted to the host so keyboard
+    /// browsing can drive it alongside taps.
+    @Binding var selected: AchievementID?
+    /// The HOST's keyboard-focused medal (Tab-zone browsing ring), or nil.
+    var keyFocusIndex: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -20,8 +23,9 @@ struct DecorationsSection: View {
                 .font(.title3.bold())
                 .padding(.horizontal, rowInset)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 6)], spacing: 10) {
-                ForEach(AchievementID.allCases, id: \.self) { id in
+                ForEach(Array(AchievementID.allCases.enumerated()), id: \.element) { index, id in
                     cell(id)
+                        .modifier(FocusRing(focused: keyFocusIndex == index, inset: 1))
                 }
             }
             .padding(.horizontal, rowInset)

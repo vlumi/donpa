@@ -14,6 +14,12 @@ import AppKit
 struct SyncFooterControl: View {
     @ObservedObject var settings: Settings
     @ObservedObject var scoreboard: Scoreboard
+    /// The host's Tab-focus ring (keyboard zone cycling).
+    var keyFocused: Bool = false
+    /// Bumped by the host to flip the toggle from the keyboard — routed through
+    /// `syncBinding`, so the enable path keeps its wipe-confirm and
+    /// iCloud-availability guards.
+    var activateTick: Int = 0
 
     /// Asking the player to confirm enabling sync when a global wipe happened while
     /// sync was off — enabling would honor the tombstone and clear this device too.
@@ -79,6 +85,11 @@ struct SyncFooterControl: View {
             }
         }
         .lineLimit(1)
+        .modifier(FocusRing(focused: keyFocused, inset: 2))
+        .onChangeCompat(of: activateTick) { _ in
+            guard activateTick > 0 else { return }
+            syncBinding.wrappedValue = !settings.syncScores
+        }
     }
 
     /// The enable-after-wipe warning, extracted so the long localized key fits the

@@ -12,11 +12,11 @@ extension ScoreboardView {
         switch key {
         case .tab: moveZone(1)
         case .backTab: moveZone(-1)
-        case .down: moveRowFocus(1)
-        case .up: moveRowFocus(-1)
+        case .down: moveWithinZone(1)
+        case .up: moveWithinZone(-1)
         case .left: operateZone(-1)
         case .right: operateZone(1)
-        case .enter: activateRow()
+        case .enter, .space: activateZone()
         case .escape:
             dismiss()
         case .family(let n): pickFilterFamily(n)
@@ -24,17 +24,29 @@ extension ScoreboardView {
         }
     }
 
-    /// Tab moves BETWEEN the sheet's control zones (wrapping); arrows operate
-    /// within one — rows walk the table, ←/→ cycle the focused filter.
+    /// Tab moves BETWEEN the sheet's control zones (wrapping, skipping an
+    /// edges filter the current family doesn't show); arrows work within one.
     private func moveZone(_ delta: Int) {
-        let zones = ScoreboardView.KeyZone.allCases
+        var zones = ScoreboardView.KeyZone.allCases
+        if !(filterFamily == .grid || filterFamily == .hive) {
+            zones.removeAll { $0 == .edges }
+        }
         let i = zones.firstIndex(of: keyZone) ?? 0
         keyZone = zones[(i + delta + zones.count) % zones.count]
     }
 
+    private func moveWithinZone(_ delta: Int) {
+        switch keyZone {
+        case .rows: moveRowFocus(delta)
+        case .medals: moveMedalFocus(delta)
+        default: break
+        }
+    }
+
     private func operateZone(_ step: Int) {
         switch keyZone {
-        case .rows: break  // ←/→ have no meaning on a table row
+        case .career, .rows, .sync: break
+        case .medals: moveMedalFocus(step)
         case .family:
             let all = BoardFamily.allCases
             guard let i = all.firstIndex(of: filterFamily) else { return }
@@ -42,11 +54,38 @@ extension ScoreboardView {
             expandedKey = nil
             keyRowKey = nil
         case .edges:
-            guard filterFamily == .grid || filterFamily == .hive else { return }
             filterEdges = filterEdges == .flat ? .round : .flat
             expandedKey = nil
             keyRowKey = nil
         }
+    }
+
+    private func activateZone() {
+        switch keyZone {
+        case .rows:
+            if let key = keyRowKey { toggleExpanded(key) }
+        case .medals:
+            guard let i = keyMedalIndex, AchievementID.allCases.indices.contains(i)
+            else { return }
+            let id = AchievementID.allCases[i]
+            selectedMedal = selectedMedal == id ? nil : id
+        case .sync:
+            syncActivateTick += 1
+        case .career, .family, .edges:
+            break
+        }
+    }
+
+    /// ←/→ browse the medal grid linearly (the adaptive column count isn't
+    /// knowable here, so no 2D stepping).
+    private func moveMedalFocus(_ delta: Int) {
+        let count = AchievementID.allCases.count
+        guard count > 0 else { return }
+        guard let current = keyMedalIndex else {
+            keyMedalIndex = 0
+            return
+        }
+        keyMedalIndex = min(max(current + delta, 0), count - 1)
     }
 
     private func pickFilterFamily(_ n: Int) {
@@ -85,10 +124,6 @@ extension ScoreboardView {
 
     /// Step the focus; the first press lands on the current config's row (the
     /// "you are here" band) when it's in this list, else the first row.
-    private func activateRow() {
-        if keyZone == .rows, let key = keyRowKey { toggleExpanded(key) }
-    }
-
     private func moveRowFocus(_ delta: Int) {
         guard keyZone == .rows else { return }
         let keys = orderedConfigs.map(\.storageKey)
