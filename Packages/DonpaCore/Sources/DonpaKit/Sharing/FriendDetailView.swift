@@ -14,11 +14,14 @@ struct FriendDetailView: View {
     @State private var groupSelection: Set<String>
     @State private var confirmingRemove = false
     #if os(macOS)
-    /// Tab-cyclable zones: the squad checkboxes, then the Remove button.
-    private enum KeyZone: CaseIterable { case groups, remove }
-    @State private var keyZone: KeyZone = .groups
+    /// Tab-cyclable zones: the alias field, the squad checkboxes, the
+    /// new-squad field, then the Remove button.
+    private enum KeyZone: CaseIterable { case alias, groups, newGroup, remove }
+    @State private var keyZone: KeyZone = .alias
     /// The focused checkbox while the groups zone is active.
     @State private var keyIndex: Int?
+    @FocusState private var aliasFocused: Bool
+    @State private var newGroupFocusTick = 0
     #endif
     /// A typed-but-not-created new squad name; Done commits it (see GroupPicker).
     @State private var pendingGroupName = ""
@@ -47,11 +50,9 @@ struct FriendDetailView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Your name for them", bundle: .module)
                     .font(.caption).foregroundStyle(.secondary)
-                TextField(text: $alias) {
-                    Text("Optional", bundle: .module)
-                }
-                .textFieldStyle(.roundedBorder)
-                .onChangeCompat(of: alias) { friends.setAlias($0, for: friend.publicKey) }
+                aliasField
+                    .textFieldStyle(.roundedBorder)
+                    .onChangeCompat(of: alias) { friends.setAlias($0, for: friend.publicKey) }
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -60,7 +61,9 @@ struct FriendDetailView: View {
                 GroupPicker(
                     friends: friends, selection: $groupSelection,
                     pendingName: $pendingGroupName,
-                    keyFocusIndex: pickerFocusIndex
+                    keyFocusIndex: pickerFocusIndex,
+                    fieldKeyFocused: newGroupRingFocused,
+                    fieldFocusTick: newGroupTick
                 )
                 .onChangeCompat(of: groupSelection) {
                     friends.setGroups(Array($0), for: friend.publicKey)
@@ -77,11 +80,41 @@ struct FriendDetailView: View {
         }
     }
 
+    /// The alias field, focusable from the keyboard on macOS.
+    @ViewBuilder private var aliasField: some View {
+        let field = TextField(text: $alias) {
+            Text("Optional", bundle: .module)
+        }
+        #if os(macOS)
+        field
+            .focused($aliasFocused)
+            .modifier(FocusRing(focused: keyZone == .alias, inset: 2))
+        #else
+        field
+        #endif
+    }
+
     private var pickerFocusIndex: Int? {
         #if os(macOS)
         return keyZone == .groups ? keyIndex : nil
         #else
         return nil
+        #endif
+    }
+
+    private var newGroupRingFocused: Bool {
+        #if os(macOS)
+        return keyZone == .newGroup
+        #else
+        return false
+        #endif
+    }
+
+    private var newGroupTick: Int {
+        #if os(macOS)
+        return newGroupFocusTick
+        #else
+        return 0
         #endif
     }
 
@@ -96,26 +129,45 @@ struct FriendDetailView: View {
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .tab, .backTab:
-            // Two zones: Tab toggles between them (wrapping either way).
-            keyZone = keyZone == .groups ? .remove : .groups
+        case .tab: moveZone(1)
+        case .backTab: moveZone(-1)
         case .down: if keyZone == .groups { moveFocus(1) }
         case .up: if keyZone == .groups { moveFocus(-1) }
         case .space:
             activateFocusedZone()
-        case .enter, .escape:
-            // Return confirms the modal (Space toggles); the catcher owns
-            // keyDown, so Esc must route here too — both run the same
+        case .enter:
+            confirmOrActivate()
+        case .escape:
+            // The catcher owns keyDown, so Esc routes here — same
             // commit-then-close as Done.
             done()
         default: break
         }
     }
 
+    /// Desktop convention: Return presses the focused control when it's a
+    /// button (or enters a field); on the checkboxes it's the sheet's
+    /// default — Done (commit-then-close).
+    private func confirmOrActivate() {
+        if keyZone == .groups { done() } else { activateFocusedZone() }
+    }
+
+    /// Tab wraps through the zones, skipping the checkboxes when there are none.
+    private func moveZone(_ delta: Int) {
+        var zones = KeyZone.allCases
+        if friends.groups.isEmpty { zones.removeAll { $0 == .groups } }
+        let i = zones.firstIndex(of: keyZone) ?? 0
+        keyZone = zones[(i + delta + zones.count) % zones.count]
+    }
+
     private func activateFocusedZone() {
         switch keyZone {
+        case .alias:
+            aliasFocused = true
         case .groups:
             if let index = keyIndex { toggleGroup(at: index) }
+        case .newGroup:
+            newGroupFocusTick += 1
         case .remove:
             confirmingRemove = true
         }
@@ -197,8 +249,8 @@ struct FriendDetailView: View {
         }
         .padding(24)
         .frame(minWidth: 340)
-        // Tab: checkboxes ↔ Remove; arrows walk the checkboxes, Return
-        // toggles; yields while the alias/new-squad field is being typed in.
+        // Tab: alias → checkboxes → new squad → Remove; Space toggles, Return
+        // presses buttons/enters fields (else Done); yields while typing.
         .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
         .confirmationDialog(
             Text("Remove \(friend.displayName)?", bundle: .module),

@@ -10,26 +10,50 @@ import SwiftUI
 extension ScoreboardView {
     func handleKey(_ key: KeyCatcher.Key) {
         switch key {
+        case .tab, .backTab, .down, .up, .left, .right: handleMove(key)
+        case .enter: confirmOrActivate()
+        case .space: activateZone()
+        case .escape: dismiss()
+        case .family(let n): pickFilterFamily(n)
+        case .character(let ch): handleLetter(ch)
+        }
+    }
+
+    private func handleMove(_ key: KeyCatcher.Key) {
+        switch key {
         case .tab: moveZone(1)
         case .backTab: moveZone(-1)
         case .down: moveWithinZone(1)
         case .up: moveWithinZone(-1)
         case .left: operateZone(-1)
         case .right: operateZone(1)
-        case .enter, .space: activateZone()
-        case .escape:
-            dismiss()
-        case .family(let n): pickFilterFamily(n)
-        case .character(let ch): handleLetter(ch)
+        default: break
+        }
+    }
+
+    /// Return follows the desktop convention: it presses the focused control
+    /// when that control is a button (rows, medals, Manage rivals); anywhere
+    /// else it's the sheet's default — Done.
+    private func confirmOrActivate() {
+        switch keyZone {
+        case .rows, .medals, .manage: activateZone()
+        case .career, .family, .edges, .rivals, .sync: dismiss()
         }
     }
 
     /// Tab moves BETWEEN the sheet's control zones (wrapping, skipping an
-    /// edges filter the current family doesn't show); arrows work within one.
+    /// edges filter the current family doesn't show and rival controls that
+    /// aren't rendered); arrows work within one.
     private func moveZone(_ delta: Int) {
         var zones = ScoreboardView.KeyZone.allCases
         if !(filterFamily == .grid || filterFamily == .hive) {
             zones.removeAll { $0 == .edges }
+        }
+        if friends.friends.isEmpty {
+            zones.removeAll { $0 == .rivals || $0 == .manage }
+        } else {
+            if friends.groups.isEmpty { zones.removeAll { $0 == .rivals } }
+            if onMessHall == nil { zones.removeAll { $0 == .manage } }
         }
         let i = zones.firstIndex(of: keyZone) ?? 0
         keyZone = zones[(i + delta + zones.count) % zones.count]
@@ -45,8 +69,13 @@ extension ScoreboardView {
 
     private func operateZone(_ step: Int) {
         switch keyZone {
-        case .career, .rows, .sync: break
+        case .career, .manage, .rows, .sync: break
         case .medals: moveMedalFocus(step)
+        case .rivals:
+            // ←/→ walk the comparison scope: All rivals, then each squad.
+            let options: [String?] = [nil] + friends.groups.map(\.id)
+            let i = options.firstIndex(of: rivalGroupID) ?? 0
+            rivalGroupID = options[min(max(i + step, 0), options.count - 1)]
         case .family:
             let all = BoardFamily.allCases
             guard let i = all.firstIndex(of: filterFamily) else { return }
@@ -69,9 +98,11 @@ extension ScoreboardView {
             else { return }
             let id = AchievementID.allCases[i]
             selectedMedal = selectedMedal == id ? nil : id
+        case .manage:
+            onMessHall?()
         case .sync:
             syncActivateTick += 1
-        case .career, .family, .edges:
+        case .career, .family, .edges, .rivals:
             break
         }
     }

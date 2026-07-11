@@ -52,6 +52,7 @@ extension ScoreboardView {
                     case .career: "zone.career"
                     case .medals: "zone.medals"
                     case .family, .edges: "zone.filters"
+                    case .rivals, .manage: "zone.rivals"
                     case .rows, .sync: nil  // rows self-scroll; sync is pinned
                     }
                 guard let anchor else { return }

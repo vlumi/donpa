@@ -99,7 +99,7 @@ public struct KeyboardShortcutsView: View {
             Text("In lists and pickers", bundle: .module),
             rows: [
                 ("↑ ↓ ← →", Text("Move the selection", bundle: .module)),
-                ("⏎", Text("Open, expand, or start", bundle: .module)),
+                ("⏎", Text("Press the focused button, or Done", bundle: .module)),
                 ("Space", Text("Toggle the focused control", bundle: .module)),
                 ("Tab", Text("Next control group", bundle: .module)),
                 ("E", Text("Edit the selection · flip Flat/Round", bundle: .module)),

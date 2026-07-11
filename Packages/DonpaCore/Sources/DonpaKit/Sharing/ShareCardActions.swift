@@ -248,24 +248,31 @@ struct QRZoomSheet: View {
         }
     }
 
-    /// Arrows/Tab move between the export buttons, Space activates the focused
-    /// one; Return and Esc dismiss (the catcher owns keyDown, so both are
-    /// routed here).
+    /// Arrows/Tab move between the export buttons; Return and Space press the
+    /// focused one, Return with none focused is the default — Done. Esc
+    /// dismisses (the catcher owns keyDown, so it's routed here).
     @ViewBuilder private var zoomKeyCatcher: some View {
         #if os(macOS)
         KeyCatcher { key in
             switch key {
             case .tab, .right, .down: moveFocus(1)
             case .backTab, .left, .up: moveFocus(-1)
-            case .space:
-                if keyIndex == 0 { shareTick += 1 }
-                if keyIndex == 1 { saveTick += 1 }
-            case .enter, .escape: dismiss()
+            case .space: activateFocused()
+            case .enter:
+                if keyIndex == nil { dismiss() } else { activateFocused() }
+            case .escape: dismiss()
             default: break
             }
         }
         #endif
     }
+
+    #if os(macOS)
+    private func activateFocused() {
+        if keyIndex == 0 { shareTick += 1 }
+        if keyIndex == 1 { saveTick += 1 }
+    }
+    #endif
 
     #if os(macOS)
     private func moveFocus(_ delta: Int) {
