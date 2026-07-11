@@ -22,6 +22,10 @@ they merge.
 
 ### Unreleased (next build)
 
+- **The Mess hall is keyboard-drivable (macOS).** Arrows move through the
+  rivals or squads, Return opens the focused head-to-head, E edits it,
+  and ⌘1/⌘2 still switch the tabs — typing in the name fields is never
+  hijacked.
 - **The Service Record is keyboard-drivable (macOS).** Arrows move a row
   focus through the score table, Return expands or collapses it, P starts
   a game on the focused board, ⌘1–⌘4 pick the family filter and E flips
