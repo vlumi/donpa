@@ -84,7 +84,6 @@ they merge.
   beside Share link, opening full-size on demand with the image share/save
   actions alongside the code they render. The Mess hall gets a lot shorter
   and now fits inside even the smallest game window on macOS.
-- The Service Record's Finnish comparison label is now "Vertailu".
 
 ## [0.5.0] — Progression
 
