@@ -44,8 +44,14 @@ public struct HowToPlayView: View {
         }
         #else
         VStack(spacing: 0) {
+            Text("How to play", bundle: .module)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+            Divider()
+            content
+            Divider()
             HStack {
-                Text("How to play", bundle: .module).font(.headline)
                 Spacer()
                 Button {
                     dismiss()
@@ -56,8 +62,6 @@ public struct HowToPlayView: View {
                 .accessibilityIdentifier("sheet.done")
             }
             .padding()
-            Divider()
-            content
         }
         .frame(minWidth: 460, idealWidth: 520, minHeight: 480, idealHeight: 640)
         #endif

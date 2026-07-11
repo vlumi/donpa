@@ -22,6 +22,11 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Every sheet closes the same way.** The full-size QR view and both help
+  screens (How to play, the keyboard reference) now end with the standard
+  bottom-right Done like every other sheet — the QR view's image-export
+  buttons are keyboard-reachable there too (Tab/arrows focus, Space opens
+  the share picker or save panel).
 - **Keyboard coverage, completed.** Space toggles the focused control
   everywhere while Return confirms the sheet; the Service Record's Tab now
   also reaches the career stats, the medal grid (browse with arrows, open
