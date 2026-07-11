@@ -11,8 +11,16 @@ public struct KeyboardShortcutsView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
+            Text("Keyboard Shortcuts", bundle: .module)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+            Divider()
+            ScrollViewReader { proxy in
+                scrollBody(proxy)
+            }
+            Divider()
             HStack {
-                Text("Keyboard Shortcuts", bundle: .module).font(.headline)
                 Spacer()
                 Button {
                     dismiss()
@@ -22,16 +30,12 @@ public struct KeyboardShortcutsView: View {
                 .keyboardShortcut(.defaultAction)
             }
             .padding()
-            Divider()
-            ScrollViewReader { proxy in
-                scrollBody(proxy)
-            }
         }
         .escDismisses { dismiss() }
         #if os(macOS)
         .frame(
             minWidth: 380, idealWidth: 440, maxWidth: 560,
-            minHeight: 420, idealHeight: 660, maxHeight: 760)
+            minHeight: 420, idealHeight: 715, maxHeight: 815)
         #endif
     }
 

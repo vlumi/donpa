@@ -71,11 +71,33 @@ struct ShareImageButton: View {
     let name: String
     /// Identity that changes with the QR (the share URL) — re-renders on edit.
     let linkID: URL
+    /// Bumped by the host to open the picker from the keyboard (macOS).
+    var activateTick: Int = 0
     /// Rendered card image + its temp-file URL. Rebuilt when `linkID` changes;
     /// rendering on every body pass would be wasteful.
     @State private var rendered: (image: PlatformImage, url: URL)?
+    #if os(macOS)
+    @State private var anchor = SharePickerButton.AnchorView()
+    #endif
 
     var body: some View {
+        // macOS drives NSSharingServicePicker instead of ShareLink so the
+        // keyboard's Space opens the same picker the click does (ShareLink
+        // can't be invoked programmatically).
+        #if os(macOS)
+        Button {
+            show()
+        } label: {
+            label
+        }
+        .disabled(rendered == nil)
+        .background(SharePickerButton.AnchorRepresentable(view: anchor))
+        .task(id: linkID) { rendered = await build() }
+        .onChangeCompat(of: activateTick) { _ in
+            guard activateTick > 0 else { return }
+            show()
+        }
+        #else
         Group {
             if let rendered {
                 ShareLink(
@@ -89,7 +111,16 @@ struct ShareImageButton: View {
             }
         }
         .task(id: linkID) { rendered = await build() }
+        #endif
     }
+
+    #if os(macOS)
+    private func show() {
+        guard let rendered else { return }
+        NSSharingServicePicker(items: [rendered.url])
+            .show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
+    }
+    #endif
 
     private var label: some View {
         Label {
@@ -143,9 +174,9 @@ struct ShareImageButton: View {
 }
 
 /// The QR at scanning size: near the full sheet width on iOS, a generous fixed
-/// square on macOS. The branded-card image exports (share/save) sit on the top
-/// row — they render exactly what's shown, so they live beside it. Tap anywhere
-/// (or Close) to dismiss.
+/// square on macOS. The branded-card image exports (share/save) render exactly
+/// what's shown, so they live beside it, in the footer with the standard
+/// bottom-right Done. Tap anywhere (or Done) to dismiss.
 struct QRZoomSheet: View {
     let qr: Image?
     /// Stamped on the exported card image.
@@ -153,30 +184,13 @@ struct QRZoomSheet: View {
     /// Keys the exported-card render — it changes whenever the QR does.
     let link: URL?
     @Environment(\.dismiss) private var dismiss
+    /// The keyboard-focused export button (macOS): 0 share, 1 save.
+    @State private var keyIndex: Int?
+    @State private var shareTick = 0
+    @State private var saveTick = 0
 
     var body: some View {
         VStack(spacing: 20) {
-            HStack(spacing: 8) {
-                if let qr, let link {
-                    Group {
-                        ShareImageButton(qr: qr, name: name, linkID: link)
-                        #if os(macOS)
-                        // macOS's share picker has NO save-to-disk service (iOS's
-                        // sheet offers "Save to Files"), so saving the card is its
-                        // own button + save panel.
-                        SaveImageButton(qr: qr, name: name, linkID: link)
-                        #endif
-                    }
-                    .buttonStyle(.bordered)
-                }
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Close", bundle: .module)
-                }
-                .keyboardShortcut(.cancelAction)
-            }
             if let qr {
                 // Flexible in both axes (scaledToFit keeps the code square), so
                 // the plate fills the sheet with no dead space.
@@ -191,10 +205,12 @@ struct QRZoomSheet: View {
             } else {
                 Spacer(minLength: 0)
             }
+            footer
         }
         .padding(20)
         .contentShape(Rectangle())
         .onTapGesture { dismiss() }
+        .background(zoomKeyCatcher)
         #if os(macOS)
         // Low floors so small scaled-display screens can shrink it (the QR
         // scales down), capped at the ideal: macOS won't resize a sheet's width,
@@ -205,6 +221,62 @@ struct QRZoomSheet: View {
             minHeight: 420, idealHeight: 600, maxHeight: 600)
         #endif
     }
+
+    private var footer: some View {
+        HStack(spacing: 8) {
+            if let qr, let link {
+                Group {
+                    ShareImageButton(qr: qr, name: name, linkID: link, activateTick: shareTick)
+                        .modifier(FocusRing(focused: keyIndex == 0, inset: 2))
+                    #if os(macOS)
+                    // macOS's share picker has NO save-to-disk service (iOS's
+                    // sheet offers "Save to Files"), so saving the card is its
+                    // own button + save panel.
+                    SaveImageButton(qr: qr, name: name, linkID: link, activateTick: saveTick)
+                        .modifier(FocusRing(focused: keyIndex == 1, inset: 2))
+                    #endif
+                }
+                .buttonStyle(.bordered)
+            }
+            Spacer()
+            Button {
+                dismiss()
+            } label: {
+                Text("Done", bundle: .module)
+            }
+            .keyboardShortcut(.defaultAction)
+        }
+    }
+
+    /// Arrows/Tab move between the export buttons, Space activates the focused
+    /// one; Return and Esc dismiss (the catcher owns keyDown, so both are
+    /// routed here).
+    @ViewBuilder private var zoomKeyCatcher: some View {
+        #if os(macOS)
+        KeyCatcher { key in
+            switch key {
+            case .tab, .right, .down: moveFocus(1)
+            case .backTab, .left, .up: moveFocus(-1)
+            case .space:
+                if keyIndex == 0 { shareTick += 1 }
+                if keyIndex == 1 { saveTick += 1 }
+            case .enter, .escape: dismiss()
+            default: break
+            }
+        }
+        #endif
+    }
+
+    #if os(macOS)
+    private func moveFocus(_ delta: Int) {
+        guard qr != nil, link != nil else { return }
+        guard let current = keyIndex else {
+            keyIndex = 0
+            return
+        }
+        keyIndex = (current + delta + 2) % 2
+    }
+    #endif
 }
 
 #if os(macOS)
@@ -215,6 +287,8 @@ struct SaveImageButton: View {
     let name: String
     /// Identity that changes with the QR (the share URL) — re-renders on edit.
     let linkID: URL
+    /// Bumped by the host to open the save panel from the keyboard.
+    var activateTick: Int = 0
 
     @State private var png: Data?
     @State private var exporting = false
@@ -231,6 +305,10 @@ struct SaveImageButton: View {
         }
         .disabled(png == nil)
         .task(id: linkID) { png = await render() }
+        .onChangeCompat(of: activateTick) { _ in
+            guard activateTick > 0, png != nil else { return }
+            exporting = true
+        }
         .fileExporter(
             isPresented: $exporting,
             document: PNGDocument(data: png ?? Data()),
