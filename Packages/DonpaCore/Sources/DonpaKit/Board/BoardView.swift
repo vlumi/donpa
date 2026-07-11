@@ -54,6 +54,18 @@ private struct BoardSKView: NSViewRepresentable {
         scene.useQuestionMarks = useQuestionMarks
         view.inputMode = inputMode
         view.boardCursorActive = boardCursorActive
+        // While the board is the live surface, keep it first responder so the
+        // cursor keys land here: SwiftUI buttons keep focus after popups/sheets
+        // close, leaving arrows dead and Return firing a stray default action.
+        // Inactive states (title, pause, popups — boardCursorActive false) leave
+        // focus alone, so this never fights the New Game popup's KeyCatcher; the
+        // deferred claim mirrors KeyCatcher's own (win after the dismissal).
+        if boardCursorActive, view.window?.firstResponder !== view {
+            DispatchQueue.main.async { [weak view] in
+                guard let view, let window = view.window else { return }
+                if window.firstResponder !== view { window.makeFirstResponder(view) }
+            }
+        }
     }
 }
 

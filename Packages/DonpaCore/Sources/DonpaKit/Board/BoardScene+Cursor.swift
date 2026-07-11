@@ -18,20 +18,23 @@ extension BoardScene {
     /// the row index), so the up arrow passes dy = +1.
     func moveCursor(dx: Int, dy: Int) {
         guard cursorLive else { return }
-        guard let current = cursorScreenCoord else {
+        if let current = cursorScreenCoord {
+            if isWrapped {
+                // Screen space tiles infinitely; the logical cell folds via
+                // `displayCoord`, so the cursor crosses the seam like a drag pans.
+                cursorScreenCoord = Coord(current.x + dx, current.y + dy)
+            } else if let stepped = viewModel.game.board.topology.stepped(
+                current, dx: dx, dy: dy)
+            {
+                cursorScreenCoord = stepped
+            }  // bounded edge: stay put
+        } else {
             seedCursor()
-            return
         }
-        if isWrapped {
-            // Screen space tiles infinitely; the logical cell folds via
-            // `displayCoord`, so the cursor crosses the seam like a drag pans.
-            cursorScreenCoord = Coord(current.x + dx, current.y + dy)
-        } else if let stepped = viewModel.game.board.topology.stepped(
-            current, dx: dx, dy: dy)
-        {
-            cursorScreenCoord = stepped
-        }  // bounded edge: stay put
         syncFocusAndCamera()
+        // Render the move NOW — at the idle frame rate it lags a beat behind
+        // the key (the throttle only lifts on the next frame).
+        view?.preferredFramesPerSecond = 60
     }
 
     /// The primary action on the focused cell — exactly a tap's routing
@@ -53,7 +56,6 @@ extension BoardScene {
         let mid = Coord((r.minX + r.maxX) / 2, (r.minY + r.maxY) / 2)
         cursorScreenCoord =
             isWrapped ? mid : viewModel.game.board.topology.normalize(mid) ?? Coord(0, 0)
-        syncFocusAndCamera()
     }
 
     /// Mirror the logical cell to the VM and keep the cursor on-screen: when it
@@ -102,12 +104,13 @@ extension BoardScene {
     }
 
     /// Tile-outline ring (square or hex per layout), cached like the other tile
-    /// textures. Full-strength screentone ink and thicker than the over-flag
-    /// ring, so "you are here" reads without relying on colour.
+    /// textures. Full-strength glyph ink (white on dark, near-black on light —
+    /// the screentone wash ink was invisible on dark tiles) and thicker than
+    /// the over-flag ring, so "you are here" reads without relying on colour.
     private func cursorRingTexture() -> SKTexture {
         let shape = layout.tileShape
         let (wPx, hPx) = tilePixelSize()
-        let color = palette.screentoneInk
+        let color = palette.mineGlyph
         let key = "cursor-\(shape)-\(wPx)x\(hPx)-\(color)"
         if let cached = tileTextureCache[key] { return cached }
 
