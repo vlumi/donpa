@@ -36,6 +36,11 @@ struct MessHallView: View {
 
     private enum Tab: Hashable { case rivals, squads }
     @State private var tab: Tab = .rivals
+    #if os(macOS)
+    /// The keyboard-focused row index in the CURRENT tab's list (arrow
+    /// navigation); nil until the first arrow press, reset on tab switch.
+    @State private var keyRowIndex: Int?
+    #endif
 
     /// The rival whose detail (edit) sheet is open, or nil.
     @State private var editingRival: Friend?
@@ -203,11 +208,12 @@ struct MessHallView: View {
                 detail: "Add a rival's scores by scanning their QR code or opening a share link.")
         } else {
             List {
-                ForEach(rivals) { rival in
+                ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
                     // Tap = compare (the primary action); trailing pencil = edit.
                     rowButton(compare: { comparingRival = rival }, edit: { editingRival = rival }) {
                         FriendRow(friend: rival, groupNames: groupNames(for: rival))
                     }
+                    .modifier(keyFocusRing(index))
                 }
                 .onDelete { offsets in
                     offsets.map { rivals[$0].publicKey }.forEach { friends.delete($0) }
@@ -238,7 +244,7 @@ struct MessHallView: View {
                 Text("No squads yet — create one above.", bundle: .module)
                     .font(.callout).foregroundStyle(.secondary)
             } else {
-                ForEach(friends.groups) { group in
+                ForEach(Array(friends.groups.enumerated()), id: \.element.id) { index, group in
                     // Tap = compare vs the group's best; pencil = edit (name/members/delete).
                     rowButton(
                         compare: { comparingGroup = group },
@@ -252,10 +258,80 @@ struct MessHallView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
+                    .modifier(keyFocusRing(index))
                 }
             }
         }
     }
+
+}
+
+// MARK: Keyboard driving (same file: the helpers read private state)
+
+extension MessHallView {
+    /// The keyboard-focus ring for a list row (macOS arrow navigation);
+    /// a no-op ring elsewhere.
+    private func keyFocusRing(_ index: Int) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyRowIndex == index, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    #if os(macOS)
+    /// Arrow/Return/E/⌘-number keyboard driving — the Record's vocabulary on
+    /// the social lists. ⌘1/⌘2 arrive here because the KeyCatcher consumes
+    /// number equivalents; they mirror the hidden tab buttons.
+    private func handleKey(_ key: KeyCatcher.Key) {
+        switch key {
+        case .down: moveRowFocus(1)
+        case .up: moveRowFocus(-1)
+        case .enter: activateFocusedRow(edit: false)
+        case .character("e"): activateFocusedRow(edit: true)
+        case .escape: dismiss()
+        case .family(1):
+            tab = .rivals
+            keyRowIndex = nil
+        case .family(2):
+            tab = .squads
+            keyRowIndex = nil
+        case .left, .right, .family, .character:
+            break
+        }
+    }
+
+    private var focusedRowCount: Int {
+        tab == .rivals ? rivals.count : friends.groups.count
+    }
+
+    private func moveRowFocus(_ delta: Int) {
+        guard focusedRowCount > 0 else { return }
+        guard let current = keyRowIndex else {
+            keyRowIndex = 0
+            return
+        }
+        keyRowIndex = min(max(current + delta, 0), focusedRowCount - 1)
+    }
+
+    /// Return = the row's tap (compare); E = its pencil (edit).
+    private func activateFocusedRow(edit: Bool) {
+        guard let index = keyRowIndex else { return }
+        switch tab {
+        case .rivals:
+            guard rivals.indices.contains(index) else { return }
+            if edit { editingRival = rivals[index] } else { comparingRival = rivals[index] }
+        case .squads:
+            guard friends.groups.indices.contains(index) else { return }
+            let group = friends.groups[index]
+            if edit {
+                editingGroup = group
+            } else if !friends.members(of: group.id).isEmpty {
+                comparingGroup = group
+            }
+        }
+    }
+    #endif
 
     private func createGroup() {
         guard let group = friends.createGroup(named: newGroupName) else { return }
@@ -344,54 +420,10 @@ struct MessHallView: View {
         // (a fixed floor below the content minimum clipped both ends). The
         // ideal keeps it inside the minimum game window.
         .frame(minWidth: 600, idealHeight: 600)
+        // Arrows move the row focus, Return compares, E edits, ⌘1/⌘2 switch
+        // tabs, Esc closes. Yields while a name field is being edited, so
+        // typing is never hijacked (Return there still submits the field).
+        .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
         #endif
-    }
-}
-
-/// A rival's list row: display name (your alias wins), their share date, groups, and a
-/// compact score summary (wins · boards), right-aligned.
-private struct FriendRow: View {
-    let friend: Friend
-    let groupNames: [String]
-
-    private var boardsWon: Int { friend.scores.filter { $0.wins > 0 }.count }
-    private var totalWins: Int { friend.scores.reduce(0) { $0 + $1.wins } }
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(friend.displayName).font(.body.bold())
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                if friend.localAlias != nil {
-                    Text(friend.sharedName).font(.caption).foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                // Their share's own timestamp — makes plain these are a SNAPSHOT that
-                // only changes when they re-share, not something that updates itself.
-                Text(
-                    "Updated \(friend.lastIssuedAt.formatted(date: .abbreviated, time: .omitted))",
-                    bundle: .module
-                )
-                .font(.caption2).foregroundStyle(.secondary)
-                if !groupNames.isEmpty {
-                    // .secondary, not .tertiary: squad membership is real info,
-                    // and tertiary caption2 sat near-invisible for low vision.
-                    Text(groupNames.joined(separator: " · "))
-                        .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                }
-            }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(totalWins) wins", bundle: .module).font(.subheadline.bold())
-                Text("\(boardsWon) boards", bundle: .module)
-                    .font(.caption2).foregroundStyle(.secondary)
-            }
-            .fixedSize()
-        }
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-        // One row, one utterance — six separate texts read as disjointed
-        // fragments under VoiceOver.
-        .accessibilityElement(children: .combine)
     }
 }
