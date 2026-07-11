@@ -34,6 +34,11 @@ struct HomeScreen: View {
 
     /// Whether the full in-progress list sheet is presented.
     @State var showAll = false
+    #if os(macOS)
+    /// The in-progress sheet's keyboard-focused row (arrow navigation); nil
+    /// until the first arrow press. See HomeContinue.
+    @State var keyRowIndex: Int?
+    #endif
 
     var body: some View {
         GeometryReader { geo in

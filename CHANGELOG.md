@@ -22,6 +22,8 @@ they merge.
 
 ### Unreleased (next build)
 
+- **The in-progress list is keyboard-drivable (macOS).** Arrows pick a
+  saved board, Return resumes it.
 - **The Mess hall is keyboard-drivable (macOS).** Arrows move through the
   rivals or squads, Return opens the focused head-to-head, E edits it,
   and ⌘1/⌘2 still switch the tabs — typing in the name fields is never

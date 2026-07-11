@@ -92,7 +92,7 @@ extension HomeScreen {
             .padding(.vertical, 12)
             Divider()
             List {
-                ForEach(snapshots, id: \.config) { snapshot in
+                ForEach(Array(snapshots.enumerated()), id: \.element.config) { index, snapshot in
                     Button {
                         showAll = false
                         onContinue(snapshot.config)
@@ -102,6 +102,7 @@ extension HomeScreen {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .modifier(keyFocusRing(index))
                 }
             }
             #if os(macOS)
@@ -110,8 +111,45 @@ extension HomeScreen {
         }
         #if os(macOS)
         .frame(minWidth: 400, idealWidth: 460, minHeight: 340, idealHeight: 520)
+        // Arrows move the row focus, Return resumes it, Esc closes.
+        .background(KeyCatcher(onKey: handleKey))
         #endif
     }
+
+    /// The keyboard-focus ring for a row (macOS arrows); a no-op elsewhere.
+    private func keyFocusRing(_ index: Int) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyRowIndex == index, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    #if os(macOS)
+    private func handleKey(_ key: KeyCatcher.Key) {
+        switch key {
+        case .down: moveRowFocus(1)
+        case .up: moveRowFocus(-1)
+        case .enter:
+            guard let index = keyRowIndex, snapshots.indices.contains(index) else { return }
+            showAll = false
+            onContinue(snapshots[index].config)
+        case .escape:
+            showAll = false
+        case .left, .right, .family, .character:
+            break
+        }
+    }
+
+    private func moveRowFocus(_ delta: Int) {
+        guard !snapshots.isEmpty else { return }
+        guard let current = keyRowIndex else {
+            keyRowIndex = 0
+            return
+        }
+        keyRowIndex = min(max(current + delta, 0), snapshots.count - 1)
+    }
+    #endif
 
     /// One in-progress board: glyph, family + config (with cleared %), and — trailing —
     /// the elapsed clock over a relative "last played" age.
