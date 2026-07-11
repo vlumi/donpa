@@ -37,7 +37,7 @@ extension ScoreboardView {
     private func confirmOrActivate() {
         switch keyZone {
         case .rows, .medals, .manage: activateZone()
-        case .career, .family, .edges, .rivals, .sync: dismiss()
+        case .career, .family, .edges, .rivals, .sync, nil: dismiss()
         }
     }
 
@@ -55,8 +55,24 @@ extension ScoreboardView {
             if friends.groups.isEmpty { zones.removeAll { $0 == .rivals } }
             if onMessHall == nil { zones.removeAll { $0 == .manage } }
         }
-        let i = zones.firstIndex(of: keyZone) ?? 0
-        keyZone = zones[(i + delta + zones.count) % zones.count]
+        guard let current = keyZone, let i = zones.firstIndex(of: current) else {
+            // Nothing focused yet: the first Tab enters the ring at its start
+            // (Shift-Tab at its end).
+            enter(delta > 0 ? zones.first : zones.last)
+            return
+        }
+        enter(zones[(i + delta + zones.count) % zones.count])
+    }
+
+    /// Landing on a list zone seeds its item focus — a zone the arrows work
+    /// in must show where they'll work from.
+    private func enter(_ zone: ScoreboardView.KeyZone?) {
+        keyZone = zone
+        switch zone {
+        case .rows: if keyRowKey == nil { seedRowFocus() }
+        case .medals: if keyMedalIndex == nil { keyMedalIndex = 0 }
+        default: break
+        }
     }
 
     private func moveWithinZone(_ delta: Int) {
@@ -69,7 +85,7 @@ extension ScoreboardView {
 
     private func operateZone(_ step: Int) {
         switch keyZone {
-        case .career, .manage, .rows, .sync: break
+        case .career, .manage, .rows, .sync, nil: break
         case .medals: moveMedalFocus(step)
         case .rivals:
             // ←/→ walk the comparison scope: All rivals, then each squad.
@@ -102,7 +118,7 @@ extension ScoreboardView {
             onMessHall?()
         case .sync:
             syncActivateTick += 1
-        case .career, .family, .edges, .rivals:
+        case .career, .family, .edges, .rivals, nil:
             break
         }
     }
@@ -153,18 +169,24 @@ extension ScoreboardView {
         return Self.groups(family: filterFamily, edges: edges).flatMap(\.configs)
     }
 
-    /// Step the focus; the first press lands on the current config's row (the
-    /// "you are here" band) when it's in this list, else the first row.
+    /// Step the focus; the first press seeds it instead.
     private func moveRowFocus(_ delta: Int) {
         guard keyZone == .rows else { return }
         let keys = orderedConfigs.map(\.storageKey)
         guard !keys.isEmpty else { return }
         guard let current = keyRowKey, let i = keys.firstIndex(of: current) else {
-            keyRowKey = keys.first(where: { $0 == currentConfigKey }) ?? keys.first
+            seedRowFocus()
             return
         }
         let next = min(max(i + delta, 0), keys.count - 1)
         keyRowKey = keys[next]
+    }
+
+    /// First landing: the current config's row (the "you are here" band) when
+    /// it's in this list, else the first row.
+    private func seedRowFocus() {
+        let keys = orderedConfigs.map(\.storageKey)
+        keyRowKey = keys.first(where: { $0 == currentConfigKey }) ?? keys.first
     }
 }
 #endif

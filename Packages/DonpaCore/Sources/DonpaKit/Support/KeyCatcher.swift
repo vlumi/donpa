@@ -38,12 +38,56 @@ struct KeyCatcher: NSViewRepresentable {
     final class KeyCatcherView: NSView {
         var onKey: ((Key) -> Void)?
         var yieldsToTextFields = false
+        private var fieldMonitor: Any?
 
         override var acceptsFirstResponder: Bool { true }
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            if let fieldMonitor {
+                NSEvent.removeMonitor(fieldMonitor)
+                self.fieldMonitor = nil
+            }
+            guard window != nil else { return }
             claimFocus()
+            if yieldsToTextFields { installFieldMonitor() }
+        }
+
+        deinit {
+            if let fieldMonitor { NSEvent.removeMonitor(fieldMonitor) }
+        }
+
+        /// While a field editor is typing, Tab and Esc must stay NAVIGATION:
+        /// Tab ends the edit and moves on in one press (not the field
+        /// editor's own multi-stop key loop), Esc just ends the edit instead
+        /// of falling through to the sheet's cancel. Everything else types.
+        /// A local monitor, because the catcher isn't first responder while
+        /// the field editor is — its `keyDown` never fires.
+        private func installFieldMonitor() {
+            guard fieldMonitor == nil else { return }
+            fieldMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: .keyDown
+            ) { [weak self] event in
+                guard let self else { return event }
+                return self.interceptFieldKey(event)
+            }
+        }
+
+        private func interceptFieldKey(_ event: NSEvent) -> NSEvent? {
+            guard let window, event.window === window,
+                window.firstResponder is NSTextView
+            else { return event }
+            switch event.keyCode {
+            case 48:  // Tab / ⇧Tab
+                window.makeFirstResponder(self)
+                onKey?(event.modifierFlags.contains(.shift) ? .backTab : .tab)
+                return nil
+            case 53:  // Esc
+                window.makeFirstResponder(self)
+                return nil
+            default:
+                return event
+            }
         }
 
         /// Re-take first responder, deferred so it wins after the board/panel.

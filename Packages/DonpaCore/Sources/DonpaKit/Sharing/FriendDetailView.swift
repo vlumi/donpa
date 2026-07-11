@@ -15,9 +15,10 @@ struct FriendDetailView: View {
     @State private var confirmingRemove = false
     #if os(macOS)
     /// Tab-cyclable zones: the alias field, the squad checkboxes, the
-    /// new-squad field, then the Remove button.
+    /// new-squad field, then the Remove button. Nil until the keyboard
+    /// enters the sheet.
     private enum KeyZone: CaseIterable { case alias, groups, newGroup, remove }
-    @State private var keyZone: KeyZone = .alias
+    @State private var keyZone: KeyZone?
     /// The focused checkbox while the groups zone is active.
     @State private var keyIndex: Int?
     @FocusState private var aliasFocused: Bool
@@ -146,18 +147,36 @@ struct FriendDetailView: View {
     }
 
     /// Desktop convention: Return presses the focused control when it's a
-    /// button (or enters a field); on the checkboxes it's the sheet's
-    /// default — Done (commit-then-close).
+    /// button (or enters a field); on the checkboxes — or before any focus —
+    /// it's the sheet's default — Done (commit-then-close).
     private func confirmOrActivate() {
-        if keyZone == .groups { done() } else { activateFocusedZone() }
+        if keyZone == .groups || keyZone == nil { done() } else { activateFocusedZone() }
     }
 
     /// Tab wraps through the zones, skipping the checkboxes when there are none.
     private func moveZone(_ delta: Int) {
         var zones = KeyZone.allCases
         if friends.groups.isEmpty { zones.removeAll { $0 == .groups } }
-        let i = zones.firstIndex(of: keyZone) ?? 0
-        keyZone = zones[(i + delta + zones.count) % zones.count]
+        guard let current = keyZone, let i = zones.firstIndex(of: current) else {
+            // Nothing focused yet: the first Tab enters the ring at its start
+            // (Shift-Tab at its end).
+            enter(delta > 0 ? zones.first : zones.last)
+            return
+        }
+        enter(zones[(i + delta + zones.count) % zones.count])
+    }
+
+    /// Landing on a field starts editing (a focused field IS an editing
+    /// field); landing on the checkboxes seeds the item focus so the arrows
+    /// show where they'll work from.
+    private func enter(_ zone: KeyZone?) {
+        keyZone = zone
+        switch zone {
+        case .alias: aliasFocused = true
+        case .newGroup: newGroupFocusTick += 1
+        case .groups: if keyIndex == nil { keyIndex = 0 }
+        default: break
+        }
     }
 
     private func activateFocusedZone() {
@@ -170,6 +189,8 @@ struct FriendDetailView: View {
             newGroupFocusTick += 1
         case .remove:
             confirmingRemove = true
+        case nil:
+            break
         }
     }
 

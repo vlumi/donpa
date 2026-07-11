@@ -41,7 +41,8 @@ struct MessHallView: View {
     /// navigation); nil until the first arrow press, reset on tab switch.
     @State var keyRowIndex: Int?
     /// Which zone Tab has focused: the list, or one of the header actions.
-    @State var keyZone: KeyZone = .rows
+    /// The Tab-focused zone; nil until the keyboard enters the sheet.
+    @State var keyZone: KeyZone?
     /// Bumped to activate the card's focused control (see ShareCardView).
     @State var cardActivateTick = 0
     /// Bumped to flip the sync toggle (see SyncFooterControl).
