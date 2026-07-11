@@ -22,6 +22,18 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Return means what it always has.** Settled the classic desktop rule
+  everywhere: Return presses the focused button (or enters the focused
+  text field); when the focus isn't on a button, it presses the sheet's
+  default — Done or the confirm. Space toggles the focused control. The
+  ⌘/ reference says so, and How to play now answers Return at all.
+- **The comparison scope by keyboard.** The Service Record's "Compare
+  with" picker joined the Tab ring — ←/→ walk All rivals and each squad —
+  and so did the Manage rivals button. (Its Finnish label is now
+  "Vertailu".)
+- **Editing rivals fully by keyboard.** The rival and squad editors' Tab
+  now also reaches the name fields and the new-squad row, and the
+  add-rival confirmation reaches its name field too.
 - **Every sheet closes the same way.** The full-size QR view and both help
   screens (How to play, the keyboard reference) now end with the standard
   bottom-right Done like every other sheet — the QR view's image-export

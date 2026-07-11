@@ -255,7 +255,11 @@ struct SettingsView: View {
         case .left: operateFocusedRow(step: -1)
         case .right: operateFocusedRow(step: 1)
         case .space: operateFocusedRow(step: 1)
-        case .enter: dismiss()  // Return confirms the modal; Space operates
+        case .enter:
+            // Desktop convention: Return presses the focused control when
+            // it's a button (Reset); on the toggles/pickers it's the sheet's
+            // default — Done.
+            if keyRow == .reset { confirmingReset = true } else { dismiss() }
         case .escape: dismiss()
         case .family, .character: break
         }

@@ -14,15 +14,23 @@ extension MessHallView {
     /// number equivalents; they mirror the hidden tab buttons.
     func handleKey(_ key: KeyCatcher.Key) {
         switch key {
+        case .tab, .backTab, .down, .up, .left, .right: handleMove(key)
+        case .enter: confirmOrActivate()
+        case .space: activateFocusedZone()
+        case .escape: dismiss()
+        case .character(let ch): handleLetter(ch)
+        case .family(let n): pickTab(n)
+        }
+    }
+
+    private func handleMove(_ key: KeyCatcher.Key) {
+        switch key {
         case .tab: moveZone(1)
         case .backTab: moveZone(-1)
         case .down: moveRowFocus(1)
         case .up: moveRowFocus(-1)
-        case .enter, .space: activateFocusedZone()
-        case .escape: dismiss()
-        case .character(let ch): handleLetter(ch)
-        case .family(let n): pickTab(n)
         case .left, .right: if keyZone == .tabs { switchTab() }
+        default: break
         }
     }
 
@@ -57,6 +65,16 @@ extension MessHallView {
         }
         let i = zones.firstIndex(of: keyZone) ?? 0
         keyZone = zones[(i + delta + zones.count) % zones.count]
+    }
+
+    /// Return presses the focused control when it's a button (or enters the
+    /// name field); on the toggles and the tab strip it's the sheet's
+    /// default — Done. Space always operates the focused control.
+    private func confirmOrActivate() {
+        switch keyZone {
+        case .career, .tabs, .sync: dismiss()
+        case .name, .nearby, .shareLink, .qr, .rows, .addRival: activateFocusedZone()
+        }
     }
 
     private func activateFocusedZone() {

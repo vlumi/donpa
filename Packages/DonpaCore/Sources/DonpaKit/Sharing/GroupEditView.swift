@@ -10,11 +10,13 @@ struct GroupEditView: View {
     @ObservedObject var friends: FriendsStore
     @Environment(\.dismiss) private var dismiss
     #if os(macOS)
-    /// Tab-cyclable zones: the member checkboxes, then the Delete button.
-    private enum KeyZone: CaseIterable { case members, delete }
-    @State private var keyZone: KeyZone = .members
+    /// Tab-cyclable zones: the name field, the member checkboxes, then the
+    /// Delete button.
+    private enum KeyZone: CaseIterable { case name, members, delete }
+    @State private var keyZone: KeyZone = .name
     /// The keyboard-focused member checkbox (arrow navigation).
     @State private var keyIndex: Int?
+    @FocusState private var nameFocused: Bool
     #endif
 
     @State private var name: String
@@ -59,7 +61,7 @@ struct GroupEditView: View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Squad name", bundle: .module).font(.caption).foregroundStyle(.secondary)
-                TextField(text: $name) { Text("Squad name", bundle: .module) }
+                nameField
                     .textFieldStyle(.roundedBorder)
                     // Persist on each edit (blank is ignored by the store).
                     .onChangeCompat(of: name) { friends.renameGroup(group.id, to: $0) }
@@ -94,25 +96,55 @@ struct GroupEditView: View {
         #endif
     }
 
+    /// The squad-name field, focusable from the keyboard on macOS.
+    @ViewBuilder private var nameField: some View {
+        let field = TextField(text: $name) { Text("Squad name", bundle: .module) }
+        #if os(macOS)
+        field
+            .focused($nameFocused)
+            .modifier(FocusRing(focused: keyZone == .name, inset: 2))
+        #else
+        field
+        #endif
+    }
+
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .tab, .backTab:
-            keyZone = keyZone == .members ? .delete : .members
+        case .tab: moveZone(1)
+        case .backTab: moveZone(-1)
         case .down: if keyZone == .members { moveFocus(1) }
         case .up: if keyZone == .members { moveFocus(-1) }
         case .space:
             activateFocusedZone()
-        case .enter, .escape:
-            // Return confirms the modal (Space toggles); the catcher owns
-            // keyDown, so Esc must route here too.
+        case .enter:
+            confirmOrActivate()
+        case .escape:
+            // The catcher owns keyDown, so Esc routes here too.
             dismiss()
         default: break
         }
     }
 
+    /// Desktop convention: Return presses the focused control when it's a
+    /// button (or enters the field); on the checkboxes it's the sheet's
+    /// default — Done.
+    private func confirmOrActivate() {
+        if keyZone == .members { dismiss() } else { activateFocusedZone() }
+    }
+
+    /// Tab wraps through the zones, skipping the checkboxes when there are none.
+    private func moveZone(_ delta: Int) {
+        var zones = KeyZone.allCases
+        if rivals.isEmpty { zones.removeAll { $0 == .members } }
+        let i = zones.firstIndex(of: keyZone) ?? 0
+        keyZone = zones[(i + delta + zones.count) % zones.count]
+    }
+
     private func activateFocusedZone() {
         switch keyZone {
+        case .name:
+            nameFocused = true
         case .members:
             guard let index = keyIndex, rivals.indices.contains(index) else { return }
             let rival = rivals[index]
@@ -188,8 +220,8 @@ struct GroupEditView: View {
         }
         .padding(20)
         .frame(minWidth: 340, minHeight: 380)
-        // Arrows/Tab move through the member checkboxes, Return toggles the
-        // focused one; yields while the name field is being typed in.
+        // Tab: name → checkboxes → Delete; Space toggles, Return presses
+        // buttons/enters the field (else Done); yields while typing.
         .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
         #endif
     }

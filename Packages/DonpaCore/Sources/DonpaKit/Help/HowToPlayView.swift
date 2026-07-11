@@ -92,7 +92,7 @@ public struct HowToPlayView: View {
                     switch key {
                     case .down, .tab: stepSection(1, proxy: proxy)
                     case .up, .backTab: stepSection(-1, proxy: proxy)
-                    case .escape: dismiss()
+                    case .enter, .escape: dismiss()
                     default: break
                     }
                 }

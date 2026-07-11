@@ -51,8 +51,14 @@ private struct ConfirmAddView: View {
     /// Groups to put the friend in, staged until confirm (they aren't stored yet).
     @State private var groupSelection: Set<String> = []
     #if os(macOS)
+    /// Tab-cyclable zones (new adds only — a refresh has no controls): the
+    /// alias field, the squad checkboxes, the new-squad field.
+    private enum KeyZone: CaseIterable { case alias, groups, newGroup }
+    @State private var keyZone: KeyZone = .alias
     /// The keyboard-focused squad checkbox (arrow navigation).
     @State private var keyIndex: Int?
+    @FocusState private var aliasFocused: Bool
+    @State private var newGroupFocusTick = 0
     #endif
     /// A typed-but-not-created new squad name; confirm commits it (see GroupPicker).
     @State private var pendingGroupName = ""
@@ -69,25 +75,62 @@ private struct ConfirmAddView: View {
 
     private var pickerFocusIndex: Int? {
         #if os(macOS)
-        return keyIndex
+        return keyZone == .groups ? keyIndex : nil
         #else
         return nil
         #endif
     }
 
-    /// Arrows walk the squad checkboxes, Space toggles the focused one; Return
-    /// and Esc keep their modal meaning (confirm / cancel), routed here since
-    /// the catcher owns keyDown. Yields while a field is being typed in.
+    private var newGroupRingFocused: Bool {
+        #if os(macOS)
+        return keyZone == .newGroup
+        #else
+        return false
+        #endif
+    }
+
+    private var newGroupTick: Int {
+        #if os(macOS)
+        return newGroupFocusTick
+        #else
+        return 0
+        #endif
+    }
+
+    /// The alias field, focusable from the keyboard on macOS.
+    @ViewBuilder private var aliasField: some View {
+        let field = TextField(text: $alias) {
+            Text("e.g. \(payload.body.name)", bundle: .module)
+        }
+        #if os(macOS)
+        field
+            .focused($aliasFocused)
+            .modifier(FocusRing(focused: keyZone == .alias, inset: 2))
+        #else
+        field
+        #endif
+    }
+
+    /// Tab cycles the zones, arrows walk the checkboxes, Space operates the
+    /// focused control; Return enters a focused field, otherwise it's the
+    /// default — confirm. Esc cancels (the catcher owns keyDown, so both are
+    /// routed here). Yields while a field is being typed in.
     @ViewBuilder private var confirmKeyCatcher: some View {
         #if os(macOS)
         KeyCatcher(
             onKey: { key in
                 switch key {
-                case .down, .tab: moveFocus(1)
-                case .up, .backTab: moveFocus(-1)
-                case .space:
-                    if let index = keyIndex { toggleGroup(at: index) }
-                case .enter: confirm()
+                case .tab: moveZone(1)
+                case .backTab: moveZone(-1)
+                case .down: if keyZone == .groups { moveFocus(1) }
+                case .up: if keyZone == .groups { moveFocus(-1) }
+                case .space: activateFocusedZone()
+                case .enter:
+                    if !isRefresh, keyZone == .alias || keyZone == .newGroup {
+                        activateFocusedZone()
+                    } else {
+                        confirm()
+                    }
                 case .escape: finish()
                 default: break
                 }
@@ -96,6 +139,28 @@ private struct ConfirmAddView: View {
     }
 
     #if os(macOS)
+    /// Tab wraps through the zones; a refresh has none, and the checkbox zone
+    /// drops out when there are no squads yet.
+    private func moveZone(_ delta: Int) {
+        guard !isRefresh else { return }
+        var zones = KeyZone.allCases
+        if friends.groups.isEmpty { zones.removeAll { $0 == .groups } }
+        let i = zones.firstIndex(of: keyZone) ?? 0
+        keyZone = zones[(i + delta + zones.count) % zones.count]
+    }
+
+    private func activateFocusedZone() {
+        guard !isRefresh else { return }
+        switch keyZone {
+        case .alias:
+            aliasFocused = true
+        case .groups:
+            if let index = keyIndex { toggleGroup(at: index) }
+        case .newGroup:
+            newGroupFocusTick += 1
+        }
+    }
+
     private func moveFocus(_ delta: Int) {
         guard !friends.groups.isEmpty else { return }
         guard let current = keyIndex else {
@@ -136,10 +201,8 @@ private struct ConfirmAddView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Your name for them (optional)", bundle: .module)
                             .font(.caption).foregroundStyle(.secondary)
-                        TextField(text: $alias) {
-                            Text("e.g. \(payload.body.name)", bundle: .module)
-                        }
-                        .textFieldStyle(.roundedBorder)
+                        aliasField
+                            .textFieldStyle(.roundedBorder)
                     }
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Squads (optional)", bundle: .module)
@@ -147,7 +210,9 @@ private struct ConfirmAddView: View {
                         GroupPicker(
                             friends: friends, selection: $groupSelection,
                             pendingName: $pendingGroupName,
-                            keyFocusIndex: pickerFocusIndex)
+                            keyFocusIndex: pickerFocusIndex,
+                            fieldKeyFocused: newGroupRingFocused,
+                            fieldFocusTick: newGroupTick)
                     }
                 }
             }

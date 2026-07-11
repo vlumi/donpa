@@ -375,28 +375,6 @@
         }
       }
     },
-    "Open, expand, or start" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open, expand, or start"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avaa, laajenna tai aloita"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開く・展開・開始"
-          }
-        }
-      }
-    },
     "Pause and resume" : {
       "localizations" : {
         "en" : {
@@ -2068,7 +2046,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vertaa keneen"
+            "value" : "Vertailu"
           }
         },
         "ja" : {
@@ -4494,6 +4472,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "演習で練習"
+          }
+        }
+      }
+    },
+    "Press the focused button, or Done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press the focused button, or Done"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paina valittua painiketta, muuten Valmis"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択中のボタンを押す（なければ完了）"
           }
         }
       }

@@ -72,7 +72,7 @@ struct ScoreboardView: View {
     /// The sheet's Tab-cyclable control zones, in visual order. `career` is a
     /// read-only scroll anchor (stats have nothing to operate); `edges` is
     /// skipped while the family has no edges axis.
-    enum KeyZone: CaseIterable { case career, medals, family, edges, rows, sync }
+    enum KeyZone: CaseIterable { case career, medals, family, edges, rivals, manage, rows, sync }
     /// Grows the header's stat columns with Dynamic Type — must match
     /// `ScoreRow.columnScale` so the table stays aligned.
     @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
@@ -240,7 +240,7 @@ struct ScoreboardView: View {
         VStack(alignment: .leading, spacing: 16) {
             sectionHeader("Commendations")
             filterControls
-            if !friends.friends.isEmpty { rivalScopeControl }
+            if !friends.friends.isEmpty { rivalScopeControl.id("zone.rivals") }
             leafRows
         }
     }

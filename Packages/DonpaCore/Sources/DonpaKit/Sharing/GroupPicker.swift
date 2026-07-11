@@ -18,6 +18,11 @@ struct GroupPicker: View {
     /// handling so Tab can move focus OUT of this list to its other controls;
     /// a self-contained catcher trapped Tab and swallowed the sheet's Esc).
     var keyFocusIndex: Int?
+    /// Ring for the new-squad row while the host's Tab focuses it.
+    var fieldKeyFocused: Bool = false
+    /// Bumped by the host to put the caret in the new-squad field.
+    var fieldFocusTick: Int = 0
+    @FocusState private var fieldFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -52,6 +57,7 @@ struct GroupPicker: View {
                     Text("New squad", bundle: .module)
                 }
                 .textFieldStyle(.roundedBorder)
+                .focused($fieldFocused)
                 .onSubmit(create)
                 // "Create", NOT "Add" — the sheet's own confirm button also says
                 // Add, and two same-named buttons doing different things is a trap.
@@ -59,6 +65,11 @@ struct GroupPicker: View {
                     Text("Create", bundle: .module)
                 }
                 .disabled(pendingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .modifier(FocusRing(focused: fieldKeyFocused, inset: 2))
+            .onChangeCompat(of: fieldFocusTick) { _ in
+                guard fieldFocusTick > 0 else { return }
+                fieldFocused = true
             }
         }
     }

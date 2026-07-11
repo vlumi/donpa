@@ -85,9 +85,10 @@ struct HeadToHeadView: View {
         #endif
     }
 
-    /// Arrows walk the board rows (following with the scroll), P rematches the
-    /// focused board; Return = Done and Esc closes, routed here since the
-    /// catcher owns keyDown.
+    /// Arrows walk the board rows (following with the scroll); P and Space
+    /// rematch the focused board, and so does Return — with no row focused
+    /// it's the default, Done. Esc closes (routed here since the catcher owns
+    /// keyDown).
     @ViewBuilder private func h2hKeyCatcher(_ proxy: ScrollViewProxy) -> some View {
         #if os(macOS)
         KeyCatcher { key in
@@ -95,7 +96,9 @@ struct HeadToHeadView: View {
             case .down, .tab: moveRowFocus(1, proxy: proxy)
             case .up, .backTab: moveRowFocus(-1, proxy: proxy)
             case .character("p"), .space: playFocused()
-            case .enter, .escape: dismiss()
+            case .enter:
+                if keyIndex == nil { dismiss() } else { playFocused() }
+            case .escape: dismiss()
             default: break
             }
         }
