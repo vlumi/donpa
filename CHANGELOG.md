@@ -22,6 +22,10 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Continue from the title keeps the keyboard.** Pressing Return on the
+  title to continue the last board left the arrow keys dead (macOS) — the
+  action now hands the keyboard to the board cleanly, with a safety
+  reclaim after the transition settles.
 - **Two more keyboard fixes.** The Record's Breakdown metric
   (Playtime/Games) is a Tab stop now — ←/→ or Space flip it. And
   continuing a game from the in-progress list left the arrow keys dead:
