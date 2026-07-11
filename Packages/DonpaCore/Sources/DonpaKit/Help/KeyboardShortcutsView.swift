@@ -84,7 +84,7 @@ public struct KeyboardShortcutsView: View {
         section(
             Text("On the board", bundle: .module),
             rows: [
-                ("↑ ↓ ← →", Text("Move the cursor", bundle: .module)),
+                ("↑↓←→ WASD", Text("Move the cursor", bundle: .module)),
                 ("⏎", Text("Dig — or chord a revealed number", bundle: .module)),
                 ("F", Text("Plant or clear a flag", bundle: .module)),
                 ("Space", Text("Switch dig/flag mode", bundle: .module)),

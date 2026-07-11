@@ -1337,6 +1337,28 @@
         }
       }
     },
+    "Arrows or WASD move the cursor, Enter digs, F flags, Space switches dig\/flag. Everything else works from the keyboard too — press ⌘\/ for the full reference." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrows or WASD move the cursor, Enter digs, F flags, Space switches dig\/flag. Everything else works from the keyboard too — press ⌘\/ for the full reference."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuolet tai WASD liikuttavat kohdistinta, Enter kaivaa, F liputtaa, välilyönti vaihtaa kaivuun ja liputuksen välillä. Kaikki muukin toimii näppäimistöltä – paina ⌘\/ nähdäksesi koko luettelon."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "矢印キーまたはWASDでカーソルを移動、Enterで掘り、Fで旗を立て、スペースで掘る／旗を切替。他の操作もすべてキーボードで使える——⌘\/で一覧を表示。"
+          }
+        }
+      }
+    },
     "Arrows to choose · Return to start" : {
       "comment" : "New Game popup keyboard hint (macOS)",
       "extractionState" : "stale",
@@ -3277,6 +3299,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "両方残す"
+          }
+        }
+      }
+    },
+    "Keyboard play" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard play"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelaaminen näppäimistöllä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キーボード操作"
           }
         }
       }

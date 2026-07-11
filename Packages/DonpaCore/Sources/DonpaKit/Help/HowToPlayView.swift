@@ -78,7 +78,10 @@ public struct HowToPlayView: View {
                     endings.id(4)
                     luck.id(5)
                     drills.id(6)
-                    webLink.id(7)
+                    #if os(macOS)
+                    keyboardPlay.id(7)
+                    #endif
+                    webLink.id(8)
                 }
                 .padding(20)
                 .frame(maxWidth: 560)
@@ -103,7 +106,7 @@ public struct HowToPlayView: View {
 
     #if os(macOS)
     private func stepSection(_ delta: Int, proxy: ScrollViewProxy) {
-        let last = 7
+        let last = 8
         let next = min(max((keySection ?? -1) + delta, 0), last)
         keySection = next
         withAnimation(.easeOut(duration: 0.15)) {
@@ -234,6 +237,24 @@ public struct HowToPlayView: View {
                 """, bundle: .module)
         )
     }
+
+    #if os(macOS)
+    private var keyboardPlay: some View {
+        section(
+            title: Text("Keyboard play", bundle: .module),
+            diagram: Image(systemName: "keyboard")
+                .font(.system(size: 24))
+                .foregroundStyle(.secondary)
+                .frame(width: 34),
+            text: Text(
+                """
+                Arrows or WASD move the cursor, Enter digs, F flags, Space \
+                switches dig/flag. Everything else works from the keyboard \
+                too — press ⌘/ for the full reference.
+                """, bundle: .module)
+        )
+    }
+    #endif
 
     private var webLink: some View {
         Link(destination: URL(string: "https://donpa.app/how-to-play")!) {

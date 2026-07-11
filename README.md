@@ -122,20 +122,28 @@ across the seam.
 
 ### Keyboard shortcuts
 
-| Key      | Action                                             |
-| -------- | -------------------------------------------------- |
-| Space    | Toggle mode while playing                          |
-| Return   | On the home screen: continue the latest game       |
-| Esc      | Pause / resume; close a popup or the result panel  |
-| ⌘N       | New Game (opens the config popup, macOS menu)      |
-| ⌘R       | Restart with the same setup (macOS menu)           |
-| ⌘B       | Return home to the Barracks (macOS menu)           |
-| ⌘F       | Toggle mode (macOS menu)                           |
-| ⌘⇧S      | High Scores (macOS menu)                           |
-| ⌘,       | Settings (macOS app menu)                          |
-| ⌘+ / ⌘−  | Zoom the board in / out (also ⌘-scroll)            |
-| ⌘0       | Toggle the minimap between small and large         |
-| ⌘1/2/3   | New Game popup: pick family (Basic/Grid/Hive)      |
+The whole app plays and navigates from the keyboard — on macOS, and on
+iPad/iPhone with a hardware keyboard (hold **⌘** there for the system shortcut
+overlay). **⌘/** opens the full in-app reference; the highlights:
+
+| Key       | Action                                              |
+| --------- | --------------------------------------------------- |
+| ↑↓←→/WASD | Move the board cursor (or a list/menu selection)    |
+| Return    | Dig/chord at the cursor; press the focused button   |
+| F         | Plant or clear a flag at the cursor                 |
+| Space     | Toggle dig/flag mode; toggle the focused control    |
+| Tab       | Next control group on a screen (wraps)              |
+| Esc       | Pause / resume; back out of any screen              |
+| ⌘N        | New Game (opens the config popup)                   |
+| ⌘R        | Restart with the same setup                         |
+| ⌘B        | Return home to the Barracks                         |
+| ⇧⌘M       | Mess hall                                           |
+| ⌘F        | Toggle mode                                         |
+| ⌘⇧S       | High Scores                                         |
+| ⌘? / ⌘,   | How to play / Settings                              |
+| ⌘+ / ⌘−   | Zoom the board in / out (also ⌘-scroll)             |
+| ⌘0        | Toggle the minimap between small and large          |
+| ⌘1–⌘4     | Pick the board family or screen tab                 |
 
 ## Start and end of a game
 
@@ -278,6 +286,23 @@ later, this note will credit it.
 
 High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
 in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
+
+### 0.6.0 — keyboard & accessibility (in development)
+
+- **New:** **the whole app works from the keyboard** — a focused-cell board
+  cursor (arrows/WASD, Return digs/chords, F flags) and full navigation over
+  every screen (Tab between control groups, arrows within, Return presses the
+  focused button or the default, Space toggles, Esc backs out), on macOS and
+  on iPad/iPhone hardware keyboards; **⌘/** opens a shortcut reference.
+- **New:** the board **plays with VoiceOver cell by cell** — the cursor
+  doubles as the screen-reader interface, speaking, moving, digging, and
+  flagging the focused cell at any board size.
+- **Improved:** a large-text/small-screen pass — score columns grow with
+  accessibility text, sheets scroll instead of clipping, and every window and
+  sheet fits scaled "larger text" Mac displays.
+- **Changed:** the Mess hall header is compact everywhere (the rivals list
+  gets the room) and **Nearby** is the share card's headline action, with the
+  QR code full-size behind a button beside Share link.
 
 ### 0.5.0 — progression
 

@@ -22,104 +22,33 @@ they merge.
 
 ### Unreleased (next build)
 
-- **Continue from the title keeps the keyboard.** Pressing Return on the
-  title to continue the last board left the arrow keys dead (macOS) — the
-  action now hands the keyboard to the board cleanly, with a safety
-  reclaim after the transition settles.
-- **Two more keyboard fixes.** The Record's Breakdown metric
-  (Playtime/Games) is a Tab stop now — ←/→ or Space flip it. And
-  continuing a game from the in-progress list left the arrow keys dead:
-  closing that sheet silently handed the keyboard back to whatever had it
-  before, so the board now reclaims it whenever it's the live surface
-  (macOS).
-- **Keyboard focus starts clean and lands visibly.** Sheets open with
-  nothing focused; the first Tab enters at the first control (before, the
-  Record's arrows acted on the score list with no ring showing). Landing
-  on a list now highlights a row right away — the current board's in the
-  Record — and landing on a text field puts the caret straight in it:
-  type immediately, Tab moves on in one press, Esc just ends the edit
-  instead of closing the sheet.
-- **Return means what it always has.** Settled the classic desktop rule
-  everywhere: Return presses the focused button (or enters the focused
-  text field); when the focus isn't on a button, it presses the sheet's
-  default — Done or the confirm. Space toggles the focused control. The
-  ⌘/ reference says so, and How to play now answers Return at all.
-- **The comparison scope by keyboard.** The Service Record's "Compare
-  with" picker joined the Tab ring — ←/→ walk All rivals and each squad —
-  and so did the Manage rivals button. (Its Finnish label is now
-  "Vertailu".)
-- **Editing rivals fully by keyboard.** The rival and squad editors' Tab
-  now also reaches the name fields and the new-squad row, and the
-  add-rival confirmation reaches its name field too.
-- **Every sheet closes the same way.** The full-size QR view and both help
-  screens (How to play, the keyboard reference) now end with the standard
-  bottom-right Done like every other sheet — the QR view's image-export
-  buttons are keyboard-reachable there too (Tab/arrows focus, Space opens
-  the share picker or save panel).
-- **Keyboard coverage, completed.** Space toggles the focused control
-  everywhere while Return confirms the sheet; the Service Record's Tab now
-  also reaches the career stats, the medal grid (browse with arrows, open
-  a detail with Space), and the sync toggle — through its own guarded
-  enable flow — and skips the Flat/Round filter when the family has none;
-  the Mess hall's Tab walks the whole card (name, career, Nearby, Share
-  link, QR), the Rivals/Squads picker (arrows switch), Add rival, the
-  list, and sync; the ⌘/ reference scrolls by keyboard and fits without a
-  scrollbar; and — found in our own sweep — the Nearby player list,
-  Head-to-head boards (arrows + P to rematch), and the add-rival
-  confirmation's squad checkboxes are keyboard-drivable too.
-- **Keyboard focus works like focus.** Tab now moves BETWEEN a screen's
-  control groups (and wraps — the title menu rolls over after About),
-  while arrows work within one: in the Service Record and Mess hall, Tab
-  steps from the list to the filters or header actions instead of acting
-  as another arrow; the rival and squad editors Tab between the
-  checkboxes and their Remove/Delete buttons, and Esc closes them again;
-  the language setting became a visible segmented control so arrow
-  changes can be seen.
-- **Keyboard coverage reaches the interiors.** The title screen walks by
-  Tab or arrows with Return to activate; Settings rows operate from the
-  keyboard (arrows move, left/right cycle a picker, Return flips a
-  toggle); How to play scrolls section by section; squad checkboxes in
-  the rival and squad editors toggle with Return; the Mess hall gains A
-  (add rival) and N (Nearby); and Tab works as "next" in every keyboard
-  list.
-- **⌘/ shows every keyboard shortcut.** A reference sheet groups the whole
-  vocabulary — board keys, list keys, and the global commands — reachable
-  from the Help menu on Mac and the same ⌘/ anywhere; the pause screen
-  drops a one-line hint (arrows move · Return digs · F flags) right where
-  a keyboard hand finds it.
-- **Hardware keyboards work on iPad and iPhone.** The board cursor
-  (arrows, Return, F, Space, Esc) responds to a connected keyboard, and
-  holding ⌘ shows the shortcut overlay with the same commands as the Mac
-  menus — New Game, Restart, Barracks, Mess Hall, High Scores, mode,
-  minimap, and zoom.
-- **The in-progress list is keyboard-drivable (macOS).** Arrows pick a
-  saved board, Return resumes it.
-- **The Mess hall is keyboard-drivable (macOS).** Arrows move through the
-  rivals or squads, Return opens the focused head-to-head, E edits it,
-  and ⌘1/⌘2 still switch the tabs — typing in the name fields is never
-  hijacked.
-- **The Service Record is keyboard-drivable (macOS).** Arrows move a row
-  focus through the score table, Return expands or collapses it, P starts
-  a game on the focused board, ⌘1–⌘4 pick the family filter and E flips
-  Flat/Round — the same vocabulary as the New Game picker.
-- **Esc backs out of everything, and the menus reach everywhere.** Every
-  sheet now closes on Esc (the Nearby exchange previously had no keyboard
-  dismiss at all — its Esc also hands a received card to the confirm flow
-  instead of dropping it), and the macOS menus gain the missing doors:
-  Mess Hall (⇧⌘M), How to Play in the Help menu (⌘?), and a sound toggle
-  in the Game menu.
-- **Keyboard board play (macOS).** Arrow keys move a focused-cell cursor —
-  the first press starts it mid-screen — Return digs (or chords a revealed
-  number, following the input mode like a click), and F plants a flag. The
-  view scrolls along when the cursor walks past its edge, and on Round
-  boards the cursor crosses the seam like a pan. Space still switches
-  dig/flag mode, and the keys now reliably reach the board after closing
-  menus, popups, and sheets.
+- **The whole app works from the keyboard.** Full keyboard play and
+  navigation on macOS — and on iPad/iPhone with a hardware keyboard, where
+  holding ⌘ shows the shortcut overlay and the same commands as the Mac
+  menus.
+  - On the board, arrows or WASD move a focused-cell cursor (Return digs
+    or chords, F flags, Space switches dig/flag, Esc pauses); the view
+    scrolls along with the cursor and Round boards cross the seam.
+  - Everywhere else, Tab moves between a screen's control groups and
+    arrows within one; Return presses the focused button — or Done when
+    nothing is — Space toggles the focused control, Esc backs out of
+    everything, and text fields edit the moment they're focused. Every
+    screen is covered: the title, New Game, the Service Record (scores,
+    medals, filters, comparison scope, sync), the Mess hall (share card,
+    rivals, squads, Nearby, Head-to-head, the editors), Settings, and the
+    help screens.
+  - ⌘/ opens a shortcut reference from anywhere (How to play mentions it
+    too), the pause screen drops a one-line key hint, and the macOS menus
+    gained their missing doors: Mess Hall (⇧⌘M), How to Play (⌘?), and a
+    sound toggle.
 - **The board plays with VoiceOver, cell by cell.** The cursor doubles as
   the screen-reader interface: the board element speaks the focused cell
   ("Row 3, column 5: open, 2"), custom actions move it and dig or flag,
   and every move or change under it is announced — on iPhone, iPad, and
   Mac, at any board size.
+- **Every sheet closes the same way.** The full-size QR view and both help
+  screens now end with the standard bottom-right Done like every other
+  sheet.
 - **A leaner Mess hall header — the rivals list gets the room.** The share
   card drops its captions, puts your name and the career toggle on one row
   wherever width allows, and Add rival folds to an icon beside the
@@ -155,6 +84,7 @@ they merge.
   beside Share link, opening full-size on demand with the image share/save
   actions alongside the code they render. The Mess hall gets a lot shorter
   and now fits inside even the smallest game window on macOS.
+- The Service Record's Finnish comparison label is now "Vertailu".
 
 ## [0.5.0] — Progression
 
