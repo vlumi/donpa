@@ -8,8 +8,7 @@ import Foundation
 @MainActor
 public final class GameClock: ObservableObject {
     /// Elapsed centiseconds, from the wall clock (not a tick count) so it's exact.
-    /// Setter internal (was fileprivate): the writers live in
-    /// GameViewModel+Timer.swift, split out for the file-length budget.
+    /// Setter internal: the writers live in GameViewModel+Timer.swift.
     @Published public internal(set) var elapsedCentiseconds: Int = 0
 }
 
@@ -21,8 +20,7 @@ public final class GameViewModel: ObservableObject {
     @Published public private(set) var config: GameConfig
     /// The live clock, observed on its own by the timer readout (see `GameClock`).
     public let clock = GameClock()
-    /// Elapsed centiseconds — the live display value lives on `clock`; this mirrors
-    /// it for snapshot/restore/tests without making the VM re-publish on every tick.
+    /// Mirrors `clock` for snapshot/restore/tests without re-publishing per tick.
     public var elapsedCentiseconds: Int { clock.elapsedCentiseconds }
 
     /// Bumped on every state change so the scene re-renders without diffing.
@@ -152,10 +150,10 @@ public final class GameViewModel: ObservableObject {
     /// untouched `.notStarted` board as "no game → discard the save". See `prime`.
     public internal(set) var isPrimedBoard = true
 
-    public var status: GameStatus { game.status }
-    public var flagsRemaining: Int { game.flagsRemaining }
-    public var boardWidth: Int { config.width }
-    public var boardHeight: Int { config.height }
+    /// The keyboard/VoiceOver cursor's focused cell (logical board coord),
+    /// mirrored here by `BoardScene` (like `boardExceedsViewport`) so the chrome
+    /// can describe it. nil until a game's first arrow key.
+    @Published public var focusedCell: Coord?
 
     // MARK: Actions
 
@@ -357,6 +355,7 @@ public final class GameViewModel: ObservableObject {
         flushedFlags = 0
         flushedCentiseconds = 0
         resetTimer()
+        focusedCell = nil  // the cursor doesn't survive a board swap
         isPrimedBoard = false  // player-requested (prime() re-flags the launch swap)
         gameID &+= 1
         InputTrace.log("newGame gid=\(gameID)")
@@ -414,6 +413,7 @@ public final class GameViewModel: ObservableObject {
         flushedFlags = 0
         flushedCentiseconds = snapshot.elapsedCentiseconds
         if game.status == .playing { startTimer() } else { runningSince = nil }
+        focusedCell = nil  // the cursor doesn't survive a board swap
         isPrimedBoard = false  // a restored game is the player's, not the placeholder
         gameID &+= 1
         bump()

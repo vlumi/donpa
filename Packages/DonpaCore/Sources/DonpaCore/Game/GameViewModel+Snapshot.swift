@@ -1,8 +1,13 @@
 import Foundation
 
-/// Snapshot capture, split from the main view model for the file-length budget
-/// (restore stays beside the state it resets).
+/// Snapshot capture and small accessors, split from the main view model for the
+/// file-length budget (restore stays beside the state it resets).
 extension GameViewModel {
+    public var status: GameStatus { game.status }
+    public var flagsRemaining: Int { game.flagsRemaining }
+    public var boardWidth: Int { config.width }
+    public var boardHeight: Int { config.height }
+
     /// A snapshot of the current game (live timer span folded in for an exact
     /// elapsed), or nil if there's nothing worth saving.
     public func snapshot() -> GameSnapshot? {

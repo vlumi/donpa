@@ -54,6 +54,12 @@ extension BoardScene {
         }
         if handleMinimapNavigation(atScenePoint: p) { return }
         guard let c = coord(atScenePoint: p) else { return }
+        perform(primaryActionAt: c)
+    }
+
+    /// The tap's cell routing, shared with the cursor's primary key: a revealed
+    /// number chords; a hidden cell follows the current input mode.
+    func perform(primaryActionAt c: Coord) {
         if viewModel.game.board[c].state == .revealed {
             chordWithSound(c)
         } else {
@@ -88,7 +94,7 @@ extension BoardScene {
     /// Toggle a flag: an up-tick when a mark is PLACED (hidden → flag, or flag →
     /// "?"), a soft downward wipe when it's CLEARED (→ hidden). Silent only on a
     /// no-op (a tap on a revealed cell).
-    private func toggleFlagWithSound(_ c: Coord) {
+    func toggleFlagWithSound(_ c: Coord) {
         let before = viewModel.game.board[c].state
         viewModel.toggleFlag(c, useQuestionMarks: useQuestionMarks)
         let after = viewModel.game.board[c].state
@@ -344,7 +350,8 @@ extension BoardScene {
 
     // Key input handled directly: SwiftUI menu shortcuts for bare keys don't fire
     // reliably, but the scene receives key events via the responder chain. Space
-    // toggles reveal/flag; Esc pauses/resumes mid-play.
+    // toggles reveal/flag; Esc pauses/resumes mid-play; arrows move the focused-
+    // cell cursor, Return acts on it, F flags it (BoardScene+Cursor).
     public override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 49:  // Space
@@ -355,6 +362,18 @@ extension BoardScene {
             } else {
                 viewModel.pause()
             }
+        case 123:  // ←
+            moveCursor(dx: -1, dy: 0)
+        case 124:  // →
+            moveCursor(dx: 1, dy: 0)
+        case 125:  // ↓ (rows render bottom-up: visually down = row − 1)
+            moveCursor(dx: 0, dy: -1)
+        case 126:  // ↑
+            moveCursor(dx: 0, dy: 1)
+        case 36, 76:  // Return / keypad Enter
+            activateCursor()
+        case 3:  // F
+            flagCursor()
         default:
             super.keyDown(with: event)
         }
