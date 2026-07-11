@@ -83,6 +83,14 @@ final class ScrollForwardingSKView: SKView {
         didSet {
             guard boardCursorActive != oldValue else { return }
             refreshCursor()
+            // Becoming the live surface: one more claim AFTER the transition
+            // settles (Home fade, SwiftUI focus engine) — a commit-time claim
+            // alone can be re-overridden by a late focus re-assertion.
+            if boardCursorActive {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
+                    self?.reclaimIfActive()
+                }
+            }
         }
     }
 

@@ -158,9 +158,15 @@ struct HomeScreen: View {
     }
 
     private func activateFocusedItem() {
-        // No focus yet (nil): Return keeps the art button's primary action
-        // (continue-or-start) via its .defaultAction shortcut.
-        guard let item = keyItem else { return }
+        guard let item = keyItem else {
+            // Nothing focused: Return is the title's primary action (the art
+            // button) — run it HERE rather than via a .defaultAction shortcut.
+            // A shortcut-activated button engages SwiftUI's focus engine,
+            // which re-asserts first responder AFTER the board's claim and
+            // left the arrows dead on continue-from-title.
+            if let latest = snapshots.first { onContinue(latest.config) } else { onNewGame() }
+            return
+        }
         homeActions[item]?()
     }
 
@@ -269,35 +275,6 @@ struct HomeScreen: View {
         }
     }
 
-    // MARK: Masthead art
-
-    /// The manga splash. Tappable as a shortcut for the PRIMARY action — continue the
-    /// latest board, or start a new game when nothing's in progress — which keeps the
-    /// baked-in「▶ PRESS START ◀」honest. The cards below make the same actions
-    /// explicit, so the art is a shortcut, not an invisible fork.
-    private var artButton: some View {
-        Button {
-            if let latest = snapshots.first {
-                onContinue(latest.config)
-            } else {
-                onNewGame()
-            }
-        } label: {
-            Image("TitleScreen", bundle: .module)
-                .resizable()
-                .interpolation(.high)
-                .antialiased(true)
-                .scaledToFit()
-                .background(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .shadow(color: .black.opacity(0.35), radius: 16, y: 5)
-        }
-        .buttonStyle(.plain)
-        .keyboardShortcut(.defaultAction)
-        .accessibilityLabel(Text(snapshots.isEmpty ? "Start" : "Continue", bundle: .module))
-        .accessibilityIdentifier("title.start")
-    }
-
     // MARK: Actions
 
     /// The single path to a fresh game: the full picker, deliberately — no quick-start
@@ -394,4 +371,42 @@ struct HomeScreen: View {
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
+}
+
+// MARK: Masthead art
+
+extension HomeScreen {
+
+    /// The manga splash. Tappable as a shortcut for the PRIMARY action — continue the
+    /// latest board, or start a new game when nothing's in progress — which keeps the
+    /// baked-in「▶ PRESS START ◀」honest. The cards below make the same actions
+    /// explicit, so the art is a shortcut, not an invisible fork.
+    var artButton: some View {
+        Button {
+            if let latest = snapshots.first {
+                onContinue(latest.config)
+            } else {
+                onNewGame()
+            }
+        } label: {
+            Image("TitleScreen", bundle: .module)
+                .resizable()
+                .interpolation(.high)
+                .antialiased(true)
+                .scaledToFit()
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .shadow(color: .black.opacity(0.35), radius: 16, y: 5)
+        }
+        .buttonStyle(.plain)
+        // iOS keeps Return as a shortcut (no KeyCatcher on this screen); on
+        // macOS the catcher runs the same action itself — see
+        // activateFocusedItem — because a shortcut-activated button leaves
+        // SwiftUI focus fighting the board's first-responder claim.
+        #if os(iOS)
+        .keyboardShortcut(.defaultAction)
+        #endif
+        .accessibilityLabel(Text(snapshots.isEmpty ? "Start" : "Continue", bundle: .module))
+        .accessibilityIdentifier("title.start")
+    }
 }
