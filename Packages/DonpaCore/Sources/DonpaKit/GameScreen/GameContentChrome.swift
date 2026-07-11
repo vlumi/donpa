@@ -70,9 +70,11 @@ extension GameContent {
     var board: some View {
         BoardView(
             scene: scene, palette: palette, inputMode: viewModel.inputMode,
-            // Custom reveal/flag cursor only during a live, non-paused game; the
-            // normal arrow elsewhere (title, result panel, finished board, paused).
-            boardCursorActive: gameInProgress && !navigator.showingTitle && !viewModel.isPaused,
+            // Custom reveal/flag cursor only during a live, non-paused game with
+            // nothing modal above it; the normal arrow elsewhere. Also gates the
+            // keyboard focus claims, so a sheet's text field is never robbed.
+            boardCursorActive: gameInProgress && !navigator.showingTitle
+                && !viewModel.isPaused && !navigator.isModalPresented,
             showMinimap: settings.showMinimap,
             minimapScale: settings.minimapScale,
             useQuestionMarks: settings.questionMarks
