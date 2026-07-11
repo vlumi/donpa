@@ -78,11 +78,9 @@ extension GameContent {
             useQuestionMarks: settings.questionMarks
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Per-cell VoiceOver is a future task; for now announce a summary.
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Board", bundle: .module))
-        .accessibilityValue(boardSummary)
-        .accessibilityIdentifier("game.board")
+        // The focused-cell cursor IS the per-cell VoiceOver interface — see
+        // BoardCellA11y (CellVoiceOver.swift).
+        .modifier(BoardCellA11y(viewModel: viewModel, scene: scene, summary: boardSummary))
         .overlay { mangaPanel }
         .overlay { pauseOverlay }
         .overlay { processingOverlay }

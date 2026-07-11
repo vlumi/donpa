@@ -27,7 +27,13 @@ they merge.
   number, following the input mode like a click), and F plants a flag. The
   view scrolls along when the cursor walks past its edge, and on Round
   boards the cursor crosses the seam like a pan. Space still switches
-  dig/flag mode.
+  dig/flag mode, and the keys now reliably reach the board after closing
+  menus, popups, and sheets.
+- **The board plays with VoiceOver, cell by cell.** The cursor doubles as
+  the screen-reader interface: the board element speaks the focused cell
+  ("Row 3, column 5: open, 2"), custom actions move it and dig or flag,
+  and every move or change under it is announced — on iPhone, iPad, and
+  Mac, at any board size.
 - **A leaner Mess hall header — the rivals list gets the room.** The share
   card drops its captions, puts your name and the career toggle on one row
   wherever width allows, and Add rival folds to an icon beside the
