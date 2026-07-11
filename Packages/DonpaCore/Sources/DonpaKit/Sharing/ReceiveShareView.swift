@@ -52,9 +52,10 @@ private struct ConfirmAddView: View {
     @State private var groupSelection: Set<String> = []
     #if os(macOS)
     /// Tab-cyclable zones (new adds only — a refresh has no controls): the
-    /// alias field, the squad checkboxes, the new-squad field.
+    /// alias field, the squad checkboxes, the new-squad field. Nil until the
+    /// keyboard enters the sheet.
     private enum KeyZone: CaseIterable { case alias, groups, newGroup }
-    @State private var keyZone: KeyZone = .alias
+    @State private var keyZone: KeyZone?
     /// The keyboard-focused squad checkbox (arrow navigation).
     @State private var keyIndex: Int?
     @FocusState private var aliasFocused: Bool
@@ -145,8 +146,25 @@ private struct ConfirmAddView: View {
         guard !isRefresh else { return }
         var zones = KeyZone.allCases
         if friends.groups.isEmpty { zones.removeAll { $0 == .groups } }
-        let i = zones.firstIndex(of: keyZone) ?? 0
-        keyZone = zones[(i + delta + zones.count) % zones.count]
+        guard let current = keyZone, let i = zones.firstIndex(of: current) else {
+            // Nothing focused yet: the first Tab enters the ring at its start
+            // (Shift-Tab at its end).
+            enter(delta > 0 ? zones.first : zones.last)
+            return
+        }
+        enter(zones[(i + delta + zones.count) % zones.count])
+    }
+
+    /// Landing on a field starts editing (a focused field IS an editing
+    /// field); landing on the checkboxes seeds the item focus.
+    private func enter(_ zone: KeyZone?) {
+        keyZone = zone
+        switch zone {
+        case .alias: aliasFocused = true
+        case .newGroup: newGroupFocusTick += 1
+        case .groups: if keyIndex == nil { keyIndex = 0 }
+        default: break
+        }
     }
 
     private func activateFocusedZone() {
@@ -158,6 +176,8 @@ private struct ConfirmAddView: View {
             if let index = keyIndex { toggleGroup(at: index) }
         case .newGroup:
             newGroupFocusTick += 1
+        case nil:
+            break
         }
     }
 

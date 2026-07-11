@@ -22,6 +22,13 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Keyboard focus starts clean and lands visibly.** Sheets open with
+  nothing focused; the first Tab enters at the first control (before, the
+  Record's arrows acted on the score list with no ring showing). Landing
+  on a list now highlights a row right away — the current board's in the
+  Record — and landing on a text field puts the caret straight in it:
+  type immediately, Tab moves on in one press, Esc just ends the edit
+  instead of closing the sheet.
 - **Return means what it always has.** Settled the classic desktop rule
   everywhere: Return presses the focused button (or enters the focused
   text field); when the focus isn't on a button, it presses the sheet's

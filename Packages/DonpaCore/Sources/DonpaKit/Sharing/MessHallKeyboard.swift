@@ -63,8 +63,27 @@ extension MessHallView {
         if settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             zones.removeAll { [.nearby, .shareLink, .qr].contains($0) }
         }
-        let i = zones.firstIndex(of: keyZone) ?? 0
-        keyZone = zones[(i + delta + zones.count) % zones.count]
+        guard let current = keyZone, let i = zones.firstIndex(of: current) else {
+            // Nothing focused yet: the first Tab enters the ring at its start
+            // (Shift-Tab at its end).
+            enter(delta > 0 ? zones.first : zones.last)
+            return
+        }
+        enter(zones[(i + delta + zones.count) % zones.count])
+    }
+
+    /// Landing on the list seeds its row focus (arrows must show where
+    /// they'll work from); landing on the name puts the caret in the field —
+    /// a focused field IS an editing field.
+    private func enter(_ zone: MessHallView.KeyZone?) {
+        keyZone = zone
+        switch zone {
+        case .rows:
+            if keyRowIndex == nil, focusedRowCount > 0 { keyRowIndex = 0 }
+        case .name:
+            cardActivateTick += 1
+        default: break
+        }
     }
 
     /// Return presses the focused control when it's a button (or enters the
@@ -72,7 +91,7 @@ extension MessHallView {
     /// default — Done. Space always operates the focused control.
     private func confirmOrActivate() {
         switch keyZone {
-        case .career, .tabs, .sync: dismiss()
+        case .career, .tabs, .sync, nil: dismiss()
         case .name, .nearby, .shareLink, .qr, .rows, .addRival: activateFocusedZone()
         }
     }
@@ -89,6 +108,8 @@ extension MessHallView {
             scanning = true
         case .sync:
             syncActivateTick += 1
+        case nil:
+            break
         }
     }
 

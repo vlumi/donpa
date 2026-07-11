@@ -59,7 +59,8 @@ struct ScoreboardView: View {
     /// first arrow press. See ScoreboardKeyboard.
     @State var keyRowKey: String?
     /// Which control zone Tab has focused.
-    @State var keyZone: KeyZone = .rows
+    /// The Tab-focused zone; nil until the keyboard enters the sheet.
+    @State var keyZone: KeyZone?
     /// The focused medal while the medals zone is active (←/→ browsing).
     @State var keyMedalIndex: Int?
     /// Bumped to flip the sync toggle from the keyboard (see SyncFooterControl).

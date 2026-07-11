@@ -11,9 +11,9 @@ struct GroupEditView: View {
     @Environment(\.dismiss) private var dismiss
     #if os(macOS)
     /// Tab-cyclable zones: the name field, the member checkboxes, then the
-    /// Delete button.
+    /// Delete button. Nil until the keyboard enters the sheet.
     private enum KeyZone: CaseIterable { case name, members, delete }
-    @State private var keyZone: KeyZone = .name
+    @State private var keyZone: KeyZone?
     /// The keyboard-focused member checkbox (arrow navigation).
     @State private var keyIndex: Int?
     @FocusState private var nameFocused: Bool
@@ -127,22 +127,40 @@ struct GroupEditView: View {
     }
 
     /// Desktop convention: Return presses the focused control when it's a
-    /// button (or enters the field); on the checkboxes it's the sheet's
-    /// default — Done.
+    /// button (or enters the field); on the checkboxes — or before any
+    /// focus — it's the sheet's default — Done.
     private func confirmOrActivate() {
-        if keyZone == .members { dismiss() } else { activateFocusedZone() }
+        if keyZone == .members || keyZone == nil { dismiss() } else { activateFocusedZone() }
     }
 
     /// Tab wraps through the zones, skipping the checkboxes when there are none.
     private func moveZone(_ delta: Int) {
         var zones = KeyZone.allCases
         if rivals.isEmpty { zones.removeAll { $0 == .members } }
-        let i = zones.firstIndex(of: keyZone) ?? 0
-        keyZone = zones[(i + delta + zones.count) % zones.count]
+        guard let current = keyZone, let i = zones.firstIndex(of: current) else {
+            // Nothing focused yet: the first Tab enters the ring at its start
+            // (Shift-Tab at its end).
+            enter(delta > 0 ? zones.first : zones.last)
+            return
+        }
+        enter(zones[(i + delta + zones.count) % zones.count])
+    }
+
+    /// Landing on the field starts editing (a focused field IS an editing
+    /// field); landing on the checkboxes seeds the item focus.
+    private func enter(_ zone: KeyZone?) {
+        keyZone = zone
+        switch zone {
+        case .name: nameFocused = true
+        case .members: if keyIndex == nil { keyIndex = 0 }
+        default: break
+        }
     }
 
     private func activateFocusedZone() {
         switch keyZone {
+        case nil:
+            break
         case .name:
             nameFocused = true
         case .members:
