@@ -222,6 +222,9 @@ struct GameContent: View {
         .sheet(isPresented: $navigator.showingHowTo) {
             HowToPlayView()
         }
+        .sheet(isPresented: $navigator.showingShortcuts) {
+            KeyboardShortcutsView()
+        }
         .onChangeCompat(of: navigator.playConfigRequested) { config in
             if let config { playFromScoreboard(config) }
         }

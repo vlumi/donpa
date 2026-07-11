@@ -147,6 +147,15 @@ extension GameContent {
                             .font(.title2.bold())
                         Text("Tap to resume", bundle: .module)
                             .font(.callout.weight(.semibold)).foregroundStyle(.secondary)
+                        #if os(macOS)
+                        // Keyboard-in-hand moment (Esc pauses): the board keys +
+                        // the pointer to the full reference.
+                        Text(
+                            "Arrows move · Return digs · F flags — ⌘/ for all shortcuts",
+                            bundle: .module
+                        )
+                        .font(.caption).foregroundStyle(.secondary)
+                        #endif
                         // A quiet moment is a natural place to silence the game; its
                         // own Button consumes the tap so it doesn't also resume.
                         Button {

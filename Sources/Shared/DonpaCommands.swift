@@ -67,7 +67,8 @@ struct DonpaCommands: Commands {
             .keyboardShortcut("m", modifiers: [.command, .shift])
             .disabled(modalOpen)
         }
-        // Help menu: the in-app guide at the standard ⌘? slot.
+        // Help menu: the in-app guide at the standard ⌘? slot, and the
+        // keyboard reference at ⌘/.
         CommandGroup(replacing: .help) {
             Button {
                 navigator.showingHowTo = true
@@ -75,6 +76,13 @@ struct DonpaCommands: Commands {
                 Text("How to Play")
             }
             .keyboardShortcut("?", modifiers: .command)
+            .disabled(modalOpen)
+            Button {
+                navigator.showingShortcuts = true
+            } label: {
+                Text("Keyboard Shortcuts")
+            }
+            .keyboardShortcut("/", modifiers: .command)
             .disabled(modalOpen)
         }
         CommandMenu(Text("Game")) {
