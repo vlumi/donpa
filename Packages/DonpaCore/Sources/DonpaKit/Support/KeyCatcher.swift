@@ -11,6 +11,7 @@ struct KeyCatcher: NSViewRepresentable {
     /// and plain letter keys (surface-specific actions, e.g. the Record's play).
     enum Key: Equatable {
         case up, down, left, right, enter, escape
+        case tab, backTab
         case family(Int)
         case character(Character)
     }
@@ -68,6 +69,8 @@ struct KeyCatcher: NSViewRepresentable {
             case 124: key = .right
             case 36, 76: key = .enter  // Return, keypad Enter
             case 53: key = .escape
+            case 48:  // Tab / ⇧Tab — "next"/"previous" for surfaces without FKA
+                key = event.modifierFlags.contains(.shift) ? .backTab : .tab
             default:
                 // Plain letters only — modified combos stay key equivalents.
                 if event.modifierFlags.intersection(.deviceIndependentFlagsMask)

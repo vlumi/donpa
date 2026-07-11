@@ -11,6 +11,10 @@ import SwiftUI
 public struct HowToPlayView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    #if os(macOS)
+    /// The section the arrows last scrolled to (keyboard paging).
+    @State private var keySection: Int?
+    #endif
 
     public init() {}
 
@@ -60,22 +64,49 @@ public struct HowToPlayView: View {
     }
 
     private var content: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                goal
-                modes
-                chording
-                counter
-                endings
-                luck
-                drills
-                webLink
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    goal.id(0)
+                    modes.id(1)
+                    chording.id(2)
+                    counter.id(3)
+                    endings.id(4)
+                    luck.id(5)
+                    drills.id(6)
+                    webLink.id(7)
+                }
+                .padding(20)
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity)
             }
-            .padding(20)
-            .frame(maxWidth: 560)
-            .frame(maxWidth: .infinity)
+            #if os(macOS)
+            // Arrows/Tab step section by section — a plain SwiftUI ScrollView
+            // has no keyboard scrolling without system Full Keyboard Access.
+            .background(
+                KeyCatcher { key in
+                    switch key {
+                    case .down, .tab: stepSection(1, proxy: proxy)
+                    case .up, .backTab: stepSection(-1, proxy: proxy)
+                    case .escape: dismiss()
+                    default: break
+                    }
+                }
+            )
+            #endif
         }
     }
+
+    #if os(macOS)
+    private func stepSection(_ delta: Int, proxy: ScrollViewProxy) {
+        let last = 7
+        let next = min(max((keySection ?? -1) + delta, 0), last)
+        keySection = next
+        withAnimation(.easeOut(duration: 0.15)) {
+            proxy.scrollTo(next, anchor: .top)
+        }
+    }
+    #endif
 
     // MARK: Sections
 

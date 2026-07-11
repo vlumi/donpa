@@ -123,23 +123,25 @@ struct NewGamePopup: View {
         // Basic's presets are a single VERTICAL list, so ↑/↓ step through them
         // (matching their layout); ←/→ do the same for good measure. Grid/Hive have
         // multiple horizontal chip-rows, so ↑/↓ move BETWEEN rows and ←/→ cycle within.
-        case .up:
-            if settings.family == .basic {
-                cycleSelection(in: 0, by: -1)
-            } else {
-                focusedRow = max(0, (focusedRow ?? 0) - 1)
-            }
-        case .down:
-            if settings.family == .basic {
-                cycleSelection(in: 0, by: 1)
-            } else {
-                focusedRow = min(rowCount - 1, (focusedRow ?? -1) + 1)
-            }
+        case .up, .backTab: stepRow(-1)
+        case .down, .tab: stepRow(1)
         case .left: cycleSelection(in: focusedRow ?? 0, by: -1)
         case .right: cycleSelection(in: focusedRow ?? 0, by: 1)
         case .enter: commitSelection()
         case .escape: onClose()
         case .character: break  // no letter actions on this surface
+        }
+    }
+
+    /// ↑/↓ (and Tab): Basic's presets are a single vertical list, so they step
+    /// the selection; Grid/Hive step BETWEEN rows (←/→ cycle within one).
+    private func stepRow(_ delta: Int) {
+        if settings.family == .basic {
+            cycleSelection(in: 0, by: delta)
+        } else if delta < 0 {
+            focusedRow = max(0, (focusedRow ?? 0) - 1)
+        } else {
+            focusedRow = min(rowCount - 1, (focusedRow ?? -1) + 1)
         }
     }
 

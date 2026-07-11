@@ -10,8 +10,8 @@ import SwiftUI
 extension ScoreboardView {
     func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .down: moveRowFocus(1)
-        case .up: moveRowFocus(-1)
+        case .down, .tab: moveRowFocus(1)
+        case .up, .backTab: moveRowFocus(-1)
         case .enter:
             if let key = keyRowKey { toggleExpanded(key) }
         case .escape:

@@ -22,6 +22,13 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Keyboard coverage reaches the interiors.** The title screen walks by
+  Tab or arrows with Return to activate; Settings rows operate from the
+  keyboard (arrows move, left/right cycle a picker, Return flips a
+  toggle); How to play scrolls section by section; squad checkboxes in
+  the rival and squad editors toggle with Return; the Mess hall gains A
+  (add rival) and N (Nearby); and Tab works as "next" in every keyboard
+  list.
 - **⌘/ shows every keyboard shortcut.** A reference sheet groups the whole
   vocabulary — board keys, list keys, and the global commands — reachable
   from the Help menu on Mac and the same ⌘/ anywhere; the pause screen
