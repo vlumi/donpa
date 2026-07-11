@@ -22,6 +22,14 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Keyboard focus works like focus.** Tab now moves BETWEEN a screen's
+  control groups (and wraps — the title menu rolls over after About),
+  while arrows work within one: in the Service Record and Mess hall, Tab
+  steps from the list to the filters or header actions instead of acting
+  as another arrow; the rival and squad editors Tab between the
+  checkboxes and their Remove/Delete buttons, and Esc closes them again;
+  the language setting became a visible segmented control so arrow
+  changes can be seen.
 - **Keyboard coverage reaches the interiors.** The title screen walks by
   Tab or arrows with Return to activate; Settings rows operate from the
   keyboard (arrows move, left/right cycle a picker, Return flips a

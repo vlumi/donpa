@@ -10,6 +10,9 @@ struct GroupEditView: View {
     @ObservedObject var friends: FriendsStore
     @Environment(\.dismiss) private var dismiss
     #if os(macOS)
+    /// Tab-cyclable zones: the member checkboxes, then the Delete button.
+    private enum KeyZone: CaseIterable { case members, delete }
+    @State private var keyZone: KeyZone = .members
     /// The keyboard-focused member checkbox (arrow navigation).
     @State private var keyIndex: Int?
     #endif
@@ -70,13 +73,22 @@ struct GroupEditView: View {
             } label: {
                 Text("Delete squad", bundle: .module)
             }
+            .modifier(deleteRing)
             .padding(.top, 4)
         }
     }
 
     private func memberRing(_ index: Int) -> FocusRing {
         #if os(macOS)
-        return FocusRing(focused: keyIndex == index, inset: 2)
+        return FocusRing(focused: keyZone == .members && keyIndex == index, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    private var deleteRing: FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyZone == .delete, inset: 2)
         #else
         return FocusRing(focused: false, inset: 0)
         #endif
@@ -85,14 +97,28 @@ struct GroupEditView: View {
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .down, .tab: moveFocus(1)
-        case .up, .backTab: moveFocus(-1)
+        case .tab, .backTab:
+            keyZone = keyZone == .members ? .delete : .members
+        case .down: if keyZone == .members { moveFocus(1) }
+        case .up: if keyZone == .members { moveFocus(-1) }
         case .enter:
+            activateFocusedZone()
+        case .escape:
+            // The catcher owns keyDown, so the sheet's cancel never sees Esc.
+            dismiss()
+        default: break
+        }
+    }
+
+    private func activateFocusedZone() {
+        switch keyZone {
+        case .members:
             guard let index = keyIndex, rivals.indices.contains(index) else { return }
             let rival = rivals[index]
             let member = rival.groups.contains(group.id)
             friends.setMembership(!member, of: rival.publicKey, in: group.id)
-        default: break
+        case .delete:
+            confirmingDelete = true
         }
     }
 

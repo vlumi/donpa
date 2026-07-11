@@ -152,7 +152,9 @@ struct HomeScreen: View {
             keyItem = items.first
             return
         }
-        keyItem = items[min(max(i + delta, 0), items.count - 1)]
+        // A menu ring: past the last item wraps to the first (and back).
+        let count = items.count
+        keyItem = items[(i + delta + count) % count]
     }
 
     private func activateFocusedItem() {

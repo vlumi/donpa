@@ -14,11 +14,10 @@ struct GroupPicker: View {
     /// can commit a typed-but-not-created squad instead of silently discarding it
     /// (the field trap: type a name, tap the sheet's big button, squad never existed).
     @Binding var pendingName: String
-    #if os(macOS)
-    /// The keyboard-focused checkbox row (arrow navigation); nil until the
-    /// first press.
-    @State private var keyIndex: Int?
-    #endif
+    /// The HOST's keyboard-focused checkbox index (the host owns the key
+    /// handling so Tab can move focus OUT of this list to its other controls;
+    /// a self-contained catcher trapped Tab and swallowed the sheet's Esc).
+    var keyFocusIndex: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -62,44 +61,17 @@ struct GroupPicker: View {
                 .disabled(pendingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
-        #if os(macOS)
-        // Arrows/Tab move through the checkboxes, Return toggles the focused
-        // one; yields while the new-squad field is being typed in (its Return
-        // still creates). Esc reaches the sheet's cancel as a key equivalent
-        // before this catcher ever sees it.
-        .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
-        #endif
     }
 
     private func checkboxRing(_ index: Int) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyIndex == index, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
+        FocusRing(focused: keyFocusIndex == index, inset: 2)
     }
 
-    #if os(macOS)
-    private func handleKey(_ key: KeyCatcher.Key) {
-        switch key {
-        case .down, .tab: moveFocus(1)
-        case .up, .backTab: moveFocus(-1)
-        case .enter:
-            guard let index = keyIndex, friends.groups.indices.contains(index) else { return }
-            toggle(friends.groups[index].id)
-        default: break
-        }
+    /// Toggle by index — the host's Return handler drives this.
+    func toggleGroup(at index: Int) {
+        guard friends.groups.indices.contains(index) else { return }
+        toggle(friends.groups[index].id)
     }
-
-    private func moveFocus(_ delta: Int) {
-        guard !friends.groups.isEmpty else { return }
-        guard let current = keyIndex else {
-            keyIndex = 0
-            return
-        }
-        keyIndex = min(max(current + delta, 0), friends.groups.count - 1)
-    }
-    #endif
 
     private func toggle(_ id: String) {
         if selection.contains(id) {

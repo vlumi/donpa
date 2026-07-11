@@ -13,6 +13,13 @@ struct FriendDetailView: View {
     @State private var alias: String
     @State private var groupSelection: Set<String>
     @State private var confirmingRemove = false
+    #if os(macOS)
+    /// Tab-cyclable zones: the squad checkboxes, then the Remove button.
+    private enum KeyZone: CaseIterable { case groups, remove }
+    @State private var keyZone: KeyZone = .groups
+    /// The focused checkbox while the groups zone is active.
+    @State private var keyIndex: Int?
+    #endif
     /// A typed-but-not-created new squad name; Done commits it (see GroupPicker).
     @State private var pendingGroupName = ""
 
@@ -52,7 +59,8 @@ struct FriendDetailView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 GroupPicker(
                     friends: friends, selection: $groupSelection,
-                    pendingName: $pendingGroupName
+                    pendingName: $pendingGroupName,
+                    keyFocusIndex: pickerFocusIndex
                 )
                 .onChangeCompat(of: groupSelection) {
                     friends.setGroups(Array($0), for: friend.publicKey)
@@ -64,9 +72,74 @@ struct FriendDetailView: View {
             } label: {
                 Text("Remove rival", bundle: .module)
             }
+            .modifier(removeRing)
             .padding(.top, 4)
         }
     }
+
+    private var pickerFocusIndex: Int? {
+        #if os(macOS)
+        return keyZone == .groups ? keyIndex : nil
+        #else
+        return nil
+        #endif
+    }
+
+    private var removeRing: FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyZone == .remove, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    #if os(macOS)
+    private func handleKey(_ key: KeyCatcher.Key) {
+        switch key {
+        case .tab, .backTab:
+            // Two zones: Tab toggles between them (wrapping either way).
+            keyZone = keyZone == .groups ? .remove : .groups
+        case .down: if keyZone == .groups { moveFocus(1) }
+        case .up: if keyZone == .groups { moveFocus(-1) }
+        case .enter:
+            activateFocusedZone()
+        case .escape:
+            // The catcher owns keyDown, so the sheet's cancel never sees Esc —
+            // route it to the same commit-then-close Done runs.
+            done()
+        default: break
+        }
+    }
+
+    private func activateFocusedZone() {
+        switch keyZone {
+        case .groups:
+            if let index = keyIndex { toggleGroup(at: index) }
+        case .remove:
+            confirmingRemove = true
+        }
+    }
+
+    private func moveFocus(_ delta: Int) {
+        guard !friends.groups.isEmpty else { return }
+        guard let current = keyIndex else {
+            keyIndex = 0
+            return
+        }
+        keyIndex = min(max(current + delta, 0), friends.groups.count - 1)
+    }
+
+    private func toggleGroup(at index: Int) {
+        guard friends.groups.indices.contains(index) else { return }
+        let id = friends.groups[index].id
+        if groupSelection.contains(id) {
+            groupSelection.remove(id)
+        } else {
+            groupSelection.insert(id)
+        }
+        friends.setGroups(Array(groupSelection), for: friend.publicKey)
+    }
+    #endif
 
     private func remove() {
         friends.delete(friend.publicKey)
@@ -123,6 +196,9 @@ struct FriendDetailView: View {
         }
         .padding(24)
         .frame(minWidth: 340)
+        // Tab: checkboxes ↔ Remove; arrows walk the checkboxes, Return
+        // toggles; yields while the alias/new-squad field is being typed in.
+        .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
         .confirmationDialog(
             Text("Remove \(friend.displayName)?", bundle: .module),
             isPresented: $confirmingRemove, titleVisibility: .visible
