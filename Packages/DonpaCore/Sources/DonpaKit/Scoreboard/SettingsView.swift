@@ -152,6 +152,10 @@ struct SettingsView: View {
                 } label: {
                     Text("Language", bundle: .module)
                 }
+                // Segmented, not a dropdown: all four options visible, so the
+                // keyboard's ←/→ cycling has somewhere to be SEEN (a closed
+                // menu changed invisibly).
+                .pickerStyle(.segmented)
                 .labelsHidden()
                 if languageChanged {
                     restartNotice

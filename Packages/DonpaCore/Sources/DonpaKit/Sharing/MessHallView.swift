@@ -40,7 +40,13 @@ struct MessHallView: View {
     /// The keyboard-focused row index in the CURRENT tab's list (arrow
     /// navigation); nil until the first arrow press, reset on tab switch.
     @State private var keyRowIndex: Int?
+    /// Which zone Tab has focused: the list, or one of the header actions.
+    @State private var keyZone: KeyZone = .rows
     #endif
+
+    /// Tab-cyclable zones, in visual order (top to bottom: card action, the
+    /// scanner door, then the list).
+    enum KeyZone: CaseIterable { case nearby, addRival, rows }
 
     /// The rival whose detail (edit) sheet is open, or nil.
     @State private var editingRival: Friend?
@@ -126,7 +132,8 @@ struct MessHallView: View {
         VStack(spacing: 8) {
             ShareCardView(
                 scoreboard: scoreboard, settings: settings,
-                onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) })
+                onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) },
+                nearbyRing: zoneRing(.nearby))
             HStack(spacing: 10) {
                 tabPicker
                 Button {
@@ -135,6 +142,7 @@ struct MessHallView: View {
                     Image(systemName: "qrcode.viewfinder")
                 }
                 .buttonStyle(.bordered)
+                .modifier(zoneRing(.addRival))
                 .accessibilityLabel(Text("Add rival", bundle: .module))
             }
         }
@@ -273,7 +281,16 @@ extension MessHallView {
     /// a no-op ring elsewhere.
     private func keyFocusRing(_ index: Int) -> FocusRing {
         #if os(macOS)
-        return FocusRing(focused: keyRowIndex == index, inset: 2)
+        return FocusRing(focused: keyZone == .rows && keyRowIndex == index, inset: 2)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
+    }
+
+    /// The Tab-focus ring for a header zone; a no-op ring off macOS.
+    func zoneRing(_ zone: KeyZone) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyZone == zone, inset: 2)
         #else
         return FocusRing(focused: false, inset: 0)
         #endif
@@ -285,24 +302,57 @@ extension MessHallView {
     /// number equivalents; they mirror the hidden tab buttons.
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .down, .tab: moveRowFocus(1)
-        case .up, .backTab: moveRowFocus(-1)
-        case .enter: activateFocusedRow(edit: false)
-        case .character("e"): activateFocusedRow(edit: true)
-        case .character("a"): scanning = true
-        case .character("n"):
-            // Same gate as the card's button: no name → no card to swap.
-            nearbyURL = currentShareURL().map(NearbyPayload.init)
+        case .tab: moveZone(1)
+        case .backTab: moveZone(-1)
+        case .down: moveRowFocus(1)
+        case .up: moveRowFocus(-1)
+        case .enter: activateFocusedZone()
         case .escape: dismiss()
-        case .family(1):
-            tab = .rivals
-            keyRowIndex = nil
-        case .family(2):
-            tab = .squads
-            keyRowIndex = nil
-        case .left, .right, .family, .character:
-            break
+        case .character(let ch): handleLetter(ch)
+        case .family(let n): pickTab(n)
+        case .left, .right: break
         }
+    }
+
+    /// E edits the focused row; A opens the scanner; N starts Nearby.
+    private func handleLetter(_ ch: Character) {
+        switch ch {
+        case "e": if keyZone == .rows { activateFocusedRow(edit: true) }
+        case "a": scanning = true
+        case "n": startNearby()
+        default: break
+        }
+    }
+
+    /// ⌘1/⌘2 mirror the hidden tab buttons (the catcher consumes number
+    /// equivalents).
+    private func pickTab(_ n: Int) {
+        switch n {
+        case 1: tab = .rivals
+        case 2: tab = .squads
+        default: return
+        }
+        keyRowIndex = nil
+    }
+
+    /// Tab moves BETWEEN zones (wrapping); arrows walk the list within its zone.
+    private func moveZone(_ delta: Int) {
+        let zones = KeyZone.allCases
+        let i = zones.firstIndex(of: keyZone) ?? 0
+        keyZone = zones[(i + delta + zones.count) % zones.count]
+    }
+
+    private func activateFocusedZone() {
+        switch keyZone {
+        case .rows: activateFocusedRow(edit: false)
+        case .nearby: startNearby()
+        case .addRival: scanning = true
+        }
+    }
+
+    /// Same gate as the card's button: no name → no card to swap.
+    private func startNearby() {
+        nearbyURL = currentShareURL().map(NearbyPayload.init)
     }
 
     private var focusedRowCount: Int {
@@ -310,7 +360,7 @@ extension MessHallView {
     }
 
     private func moveRowFocus(_ delta: Int) {
-        guard focusedRowCount > 0 else { return }
+        guard keyZone == .rows, focusedRowCount > 0 else { return }
         guard let current = keyRowIndex else {
             keyRowIndex = 0
             return
@@ -341,39 +391,6 @@ extension MessHallView {
         guard let group = friends.createGroup(named: newGroupName) else { return }
         newGroupName = ""
         editingGroup = group  // open the edit view so you can add rivals right away
-    }
-
-    // MARK: Shared row
-
-    /// A list row whose body taps to compare, with a trailing pencil to edit. Compare
-    /// can be disabled (e.g. an empty group has nothing to compare).
-    @ViewBuilder private func rowButton<Content: View>(
-        compare: @escaping () -> Void, edit: @escaping () -> Void,
-        compareDisabled: Bool = false, @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(spacing: 8) {
-            Button(action: compare) { content().contentShape(Rectangle()) }
-                .buttonStyle(.plain)
-                .disabled(compareDisabled)
-            Button(action: edit) {
-                Image(systemName: "pencil").foregroundStyle(.secondary)
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel(Text("Edit", bundle: .module))
-        }
-    }
-
-    private func emptyState(
-        icon: String, title: LocalizedStringKey, detail: LocalizedStringKey
-    ) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon).font(.system(size: 48)).foregroundStyle(.secondary)
-            Text(title, bundle: .module).font(.headline)
-            Text(detail, bundle: .module)
-                .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
-        }
-        .padding(40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: Chrome

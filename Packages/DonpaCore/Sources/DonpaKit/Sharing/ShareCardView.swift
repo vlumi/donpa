@@ -15,6 +15,8 @@ struct ShareCardView: View {
     /// sheet (it also receives the swapped card); the card owns the gate: the
     /// button only shows once a name has produced a shareable link.
     var onNearby: (() -> Void)?
+    /// The host's Tab-focus ring for the Nearby button (keyboard zone cycling).
+    var nearbyRing: FocusRing = FocusRing(focused: false, inset: 0)
 
     /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
@@ -123,6 +125,7 @@ struct ShareCardView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
+            .modifier(nearbyRing)
         }
     }
 

@@ -58,7 +58,12 @@ struct ScoreboardView: View {
     /// The keyboard-focused row's config key (arrow navigation); nil until the
     /// first arrow press. See ScoreboardKeyboard.
     @State var keyRowKey: String?
+    /// Which control zone Tab has focused (rows / family filter / edges).
+    @State var keyZone: KeyZone = .rows
     #endif
+
+    /// The sheet's Tab-cyclable control zones, in visual order.
+    enum KeyZone: CaseIterable { case rows, family, edges }
     /// Grows the header's stat columns with Dynamic Type — must match
     /// `ScoreRow.columnScale` so the table stays aligned.
     @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
@@ -215,7 +220,7 @@ struct ScoreboardView: View {
     /// Whether a row carries the keyboard-focus ring (macOS arrow navigation).
     private func keyFocused(_ config: GameConfig) -> Bool {
         #if os(macOS)
-        return keyRowKey == config.storageKey
+        return keyZone == .rows && keyRowKey == config.storageKey
         #else
         return false
         #endif
@@ -304,7 +309,9 @@ struct ScoreboardView: View {
             values: BoardFamily.allCases, selection: $filterFamily,
             glyph: { .family($0) }, label: { $0.label },
             onChange: { expandedKey = nil },
-            stacked: stacked)
+            stacked: stacked
+        )
+        .modifier(zoneRing(.family))
     }
 
     /// Gone for Basic and Drills (neither has an edges axis; a ghosted control
@@ -324,6 +331,16 @@ struct ScoreboardView: View {
             glyph: { .edges($0) }, label: { $0.label },
             onChange: { expandedKey = nil }
         )
+        .modifier(zoneRing(.edges))
+    }
+
+    /// The Tab-focus ring for a filter zone; a no-op ring off macOS.
+    private func zoneRing(_ zone: KeyZone) -> FocusRing {
+        #if os(macOS)
+        return FocusRing(focused: keyZone == zone, inset: 3)
+        #else
+        return FocusRing(focused: false, inset: 0)
+        #endif
     }
 
     /// The selected Family × Edges leaf, every size × rank shown (played or not),
