@@ -22,6 +22,11 @@ they merge.
 
 ### Unreleased (next build)
 
+- **⌘/ shows every keyboard shortcut.** A reference sheet groups the whole
+  vocabulary — board keys, list keys, and the global commands — reachable
+  from the Help menu on Mac and the same ⌘/ anywhere; the pause screen
+  drops a one-line hint (arrows move · Return digs · F flags) right where
+  a keyboard hand finds it.
 - **Hardware keyboards work on iPad and iPhone.** The board cursor
   (arrows, Return, F, Space, Esc) responds to a connected keyboard, and
   holding ⌘ shows the shortcut overlay with the same commands as the Mac

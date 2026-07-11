@@ -14,6 +14,8 @@ public final class Navigator: ObservableObject {
     /// Whether the About sheet is presented.
     @Published public var showingAbout = false
     @Published public var showingHowTo = false
+    /// Whether the keyboard-shortcuts reference is presented (⌘/ on Mac/iPad).
+    @Published public var showingShortcuts = false
     /// Whether the New Game config popup is presented.
     @Published public var showingNewGame = false
 
@@ -46,7 +48,7 @@ public final class Navigator: ObservableObject {
     /// up, so their keyboard shortcuts don't mutate the game underneath.
     public var isModalPresented: Bool {
         showingScores || showingSettings || showingAbout || showingHowTo
-            || showingNewGame
+            || showingNewGame || showingShortcuts
             || incomingShare != nil || showingMessHall
     }
 
