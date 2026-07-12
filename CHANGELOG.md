@@ -29,7 +29,10 @@ they merge.
   every other screen and Shift-Tab enters at the last row; the title menu
   no longer keeps an invisible focus on a Continue card whose save is
   gone; and P in the Service Record only starts a game while the score
-  list is the focused group (it could fire on an unseen row before).
+  list is the focused group (it could fire on an unseen row before). The
+  Record's Tab also skips the medal grid when no medals exist yet, Space
+  steps its segmented filters like Settings', and the comparison scope is
+  reachable whenever rivals are shown (it used to need a squad too).
 - **The whole app works from the keyboard.** Full keyboard play and
   navigation on macOS — and on iPad/iPhone with a hardware keyboard, where
   holding ⌘ shows the shortcut overlay and the same commands as the Mac

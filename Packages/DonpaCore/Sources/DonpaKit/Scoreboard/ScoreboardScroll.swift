@@ -46,7 +46,7 @@ extension ScoreboardView {
             }
             // Tab brings the focused zone into view — career and the medals
             // live above the fold once the scores are long.
-            .onChangeCompat(of: keyZone) { zone in
+            .onChangeCompat(of: keys.zone) { zone in
                 let anchor: String? =
                     switch zone {
                     case .career: "zone.career"

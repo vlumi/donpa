@@ -54,17 +54,14 @@ struct ScoreboardView: View {
     @State var filterEdges: BoardEdges = .flat
     /// The one config expanded to its stat-block (accordion — at most one open).
     @State var expandedKey: String?
-    #if os(macOS)
-    /// The keyboard-focused row's config key (arrow navigation); nil until the
-    /// first arrow press. See ScoreboardKeyboard.
+    /// The keyboard-focused row's config key — STRING-keyed satellite state
+    /// beside `keys` (it self-heals across filter changes where an index
+    /// couldn't). Nil until the first arrow press; inert off macOS.
     @State var keyRowKey: String?
-    /// The Tab-focused zone; nil until the keyboard enters the sheet.
-    @State var keyZone: KeyZone?
-    /// The focused medal while the medals zone is active (←/→ browsing).
-    @State var keyMedalIndex: Int?
+    /// The Tab-focused zone plus, in the medals zone, the focused medal.
+    @State var keys = KeyCursor<KeyZone>()
     /// Fired to flip the sync toggle from the keyboard (see SyncFooterControl).
     @State var syncActivate = Pulse()
-    #endif
     /// The tapped/keyboard-selected medal whose detail line shows under the
     /// grid. Hoisted from DecorationsSection so the keyboard can drive it.
     @State var selectedMedal: AchievementID?
@@ -121,7 +118,7 @@ struct ScoreboardView: View {
             HStack(spacing: 12) {
                 SyncFooterControl(
                     settings: settings, scoreboard: scoreboard,
-                    keyFocused: keyZone == .sync, activate: syncActivate)
+                    keyFocused: keys.zone == .sync, activate: syncActivate)
                 Spacer()
                 Button {
                     dismiss()
@@ -196,11 +193,7 @@ struct ScoreboardView: View {
 
     /// Whether a row carries the keyboard-focus ring (macOS arrow navigation).
     private func keyFocused(_ config: GameConfig) -> Bool {
-        #if os(macOS)
-        return keyZone == .rows && keyRowKey == config.storageKey
-        #else
-        return false
-        #endif
+        keys.zone == .rows && keyRowKey == config.storageKey
     }
 
     /// Width for the column decision: the sheet width (macOS) or presenting window
@@ -316,31 +309,19 @@ struct ScoreboardView: View {
         .modifier(zoneRing(.edges))
     }
 
-    /// The Tab-focus ring for a filter zone; a no-op ring off macOS.
+    /// The Tab-focus ring for a filter zone (inert off macOS).
     func zoneRing(_ zone: KeyZone) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == zone, inset: 3)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
+        FocusRing(focused: keys.zone == zone, inset: 3)
     }
 
     /// The medal the keyboard is browsing (ring in the grid), while the medals
     /// zone is active.
     private var medalFocusIndex: Int? {
-        #if os(macOS)
-        return keyZone == .medals ? keyMedalIndex : nil
-        #else
-        return nil
-        #endif
+        keys.zone == .medals ? keys.index : nil
     }
 
     private var breakdownKeyFocused: Bool {
-        #if os(macOS)
-        return keyZone == .breakdown
-        #else
-        return false
-        #endif
+        keys.zone == .breakdown
     }
 
     /// The selected Family × Edges leaf, every size × rank shown (played or not),
