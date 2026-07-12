@@ -9,15 +9,11 @@ struct GroupEditView: View {
     let group: FriendGroup
     @ObservedObject var friends: FriendsStore
     @Environment(\.dismiss) private var dismiss
-    #if os(macOS)
     /// Tab-cyclable zones: the name field, the member checkboxes, then the
-    /// Delete button. Nil until the keyboard enters the sheet.
+    /// Delete button.
     private enum KeyZone: CaseIterable { case name, members, delete }
-    @State private var keyZone: KeyZone?
-    /// The keyboard-focused member checkbox (arrow navigation).
-    @State private var keyIndex: Int?
+    @State private var keys = KeyCursor<KeyZone>()
     @FocusState private var nameFocused: Bool
-    #endif
 
     @State private var name: String
     @State private var confirmingDelete = false
@@ -75,46 +71,24 @@ struct GroupEditView: View {
             } label: {
                 Text("Delete squad", bundle: .module)
             }
-            .modifier(deleteRing)
+            .keyFocusRing(keys.zone == .delete)
             .padding(.top, 4)
         }
     }
 
-    private func memberRing(_ index: Int) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == .members && keyIndex == index, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
-    }
-
-    private var deleteRing: FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == .delete, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
-    }
-
-    /// The squad-name field, focusable from the keyboard on macOS.
-    @ViewBuilder private var nameField: some View {
-        let field = TextField(text: $name) { Text("Squad name", bundle: .module) }
-        #if os(macOS)
-        field
+    private var nameField: some View {
+        TextField(text: $name) { Text("Squad name", bundle: .module) }
             .focused($nameFocused)
-            .modifier(FocusRing(focused: keyZone == .name, inset: 2))
-        #else
-        field
-        #endif
+            .keyFocusRing(keys.zone == .name)
     }
 
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .tab: moveZone(1)
-        case .backTab: moveZone(-1)
-        case .down: if keyZone == .members { moveFocus(1) }
-        case .up: if keyZone == .members { moveFocus(-1) }
+        case .tab: cycleZone(1)
+        case .backTab: cycleZone(-1)
+        case .down: if keys.zone == .members { keys.move(1, count: rivals.count) }
+        case .up: if keys.zone == .members { keys.move(-1, count: rivals.count) }
         case .space:
             activateFocusedZone()
         case .enter:
@@ -126,60 +100,45 @@ struct GroupEditView: View {
         }
     }
 
+    /// Tab wraps through the zones, skipping the checkboxes when there are
+    /// none; landing on the field starts editing.
+    private func cycleZone(_ delta: Int) {
+        var zones = KeyZone.allCases
+        if rivals.isEmpty { zones.removeAll { $0 == .members } }
+        if keys.cycle(delta, through: zones, entering: Self.entry) == .field {
+            nameFocused = true
+        }
+    }
+
+    private static func entry(_ zone: KeyZone) -> KeyCursor<KeyZone>.Entry {
+        switch zone {
+        case .name: return .field
+        case .members: return .list(seed: 0)
+        case .delete: return .plain
+        }
+    }
+
     /// Desktop convention: Return presses the focused control when it's a
     /// button (or enters the field); on the checkboxes — or before any
     /// focus — it's the sheet's default — Done.
     private func confirmOrActivate() {
-        if keyZone == .members || keyZone == nil { dismiss() } else { activateFocusedZone() }
-    }
-
-    /// Tab wraps through the zones, skipping the checkboxes when there are none.
-    private func moveZone(_ delta: Int) {
-        var zones = KeyZone.allCases
-        if rivals.isEmpty { zones.removeAll { $0 == .members } }
-        guard let current = keyZone, let i = zones.firstIndex(of: current) else {
-            // Nothing focused yet: the first Tab enters the ring at its start
-            // (Shift-Tab at its end).
-            enter(delta > 0 ? zones.first : zones.last)
-            return
-        }
-        enter(zones[(i + delta + zones.count) % zones.count])
-    }
-
-    /// Landing on the field starts editing (a focused field IS an editing
-    /// field); landing on the checkboxes seeds the item focus.
-    private func enter(_ zone: KeyZone?) {
-        keyZone = zone
-        switch zone {
-        case .name: nameFocused = true
-        case .members: if keyIndex == nil { keyIndex = 0 }
-        default: break
-        }
+        if keys.zone == .members || keys.zone == nil { dismiss() } else { activateFocusedZone() }
     }
 
     private func activateFocusedZone() {
-        switch keyZone {
+        switch keys.zone {
         case nil:
             break
         case .name:
             nameFocused = true
         case .members:
-            guard let index = keyIndex, rivals.indices.contains(index) else { return }
+            guard let index = keys.index, rivals.indices.contains(index) else { return }
             let rival = rivals[index]
             let member = rival.groups.contains(group.id)
             friends.setMembership(!member, of: rival.publicKey, in: group.id)
         case .delete:
             confirmingDelete = true
         }
-    }
-
-    private func moveFocus(_ delta: Int) {
-        guard !rivals.isEmpty else { return }
-        guard let current = keyIndex else {
-            keyIndex = 0
-            return
-        }
-        keyIndex = min(max(current + delta, 0), rivals.count - 1)
     }
     #endif
 
@@ -204,7 +163,7 @@ struct GroupEditView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .modifier(memberRing(index))
+                .keyFocusRing(keys.zone == .members && keys.index == index)
             }
         }
     }

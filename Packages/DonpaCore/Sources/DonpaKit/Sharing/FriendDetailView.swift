@@ -13,17 +13,12 @@ struct FriendDetailView: View {
     @State private var alias: String
     @State private var groupSelection: Set<String>
     @State private var confirmingRemove = false
-    #if os(macOS)
     /// Tab-cyclable zones: the alias field, the squad checkboxes, the
-    /// new-squad field, then the Remove button. Nil until the keyboard
-    /// enters the sheet.
+    /// new-squad field, then the Remove button.
     private enum KeyZone: CaseIterable { case alias, groups, newGroup, remove }
-    @State private var keyZone: KeyZone?
-    /// The focused checkbox while the groups zone is active.
-    @State private var keyIndex: Int?
+    @State private var keys = KeyCursor<KeyZone>()
     @FocusState private var aliasFocused: Bool
-    @State private var newGroupFocusTick = 0
-    #endif
+    @State private var newGroupFocus = Pulse()
     /// A typed-but-not-created new squad name; Done commits it (see GroupPicker).
     @State private var pendingGroupName = ""
 
@@ -62,9 +57,9 @@ struct FriendDetailView: View {
                 GroupPicker(
                     friends: friends, selection: $groupSelection,
                     pendingName: $pendingGroupName,
-                    keyFocusIndex: pickerFocusIndex,
-                    fieldKeyFocused: newGroupRingFocused,
-                    fieldFocusTick: newGroupTick
+                    keyFocusIndex: keys.zone == .groups ? keys.index : nil,
+                    fieldKeyFocused: keys.zone == .newGroup,
+                    fieldFocus: newGroupFocus
                 )
                 .onChangeCompat(of: groupSelection) {
                     friends.setGroups(Array($0), for: friend.publicKey)
@@ -76,64 +71,26 @@ struct FriendDetailView: View {
             } label: {
                 Text("Remove rival", bundle: .module)
             }
-            .modifier(removeRing)
+            .keyFocusRing(keys.zone == .remove)
             .padding(.top, 4)
         }
     }
 
-    /// The alias field, focusable from the keyboard on macOS.
-    @ViewBuilder private var aliasField: some View {
-        let field = TextField(text: $alias) {
+    private var aliasField: some View {
+        TextField(text: $alias) {
             Text("Optional", bundle: .module)
         }
-        #if os(macOS)
-        field
-            .focused($aliasFocused)
-            .modifier(FocusRing(focused: keyZone == .alias, inset: 2))
-        #else
-        field
-        #endif
-    }
-
-    private var pickerFocusIndex: Int? {
-        #if os(macOS)
-        return keyZone == .groups ? keyIndex : nil
-        #else
-        return nil
-        #endif
-    }
-
-    private var newGroupRingFocused: Bool {
-        #if os(macOS)
-        return keyZone == .newGroup
-        #else
-        return false
-        #endif
-    }
-
-    private var newGroupTick: Int {
-        #if os(macOS)
-        return newGroupFocusTick
-        #else
-        return 0
-        #endif
-    }
-
-    private var removeRing: FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == .remove, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
+        .focused($aliasFocused)
+        .keyFocusRing(keys.zone == .alias)
     }
 
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .tab: moveZone(1)
-        case .backTab: moveZone(-1)
-        case .down: if keyZone == .groups { moveFocus(1) }
-        case .up: if keyZone == .groups { moveFocus(-1) }
+        case .tab: cycleZone(1)
+        case .backTab: cycleZone(-1)
+        case .down: if keys.zone == .groups { keys.move(1, count: friends.groups.count) }
+        case .up: if keys.zone == .groups { keys.move(-1, count: friends.groups.count) }
         case .space:
             activateFocusedZone()
         case .enter:
@@ -146,72 +103,47 @@ struct FriendDetailView: View {
         }
     }
 
-    /// Desktop convention: Return presses the focused control when it's a
-    /// button (or enters a field); on the checkboxes — or before any focus —
-    /// it's the sheet's default — Done (commit-then-close).
-    private func confirmOrActivate() {
-        if keyZone == .groups || keyZone == nil { done() } else { activateFocusedZone() }
-    }
-
-    /// Tab wraps through the zones, skipping the checkboxes when there are none.
-    private func moveZone(_ delta: Int) {
+    /// Tab wraps through the zones, skipping the checkboxes when there are
+    /// none; landing on a field starts editing.
+    private func cycleZone(_ delta: Int) {
         var zones = KeyZone.allCases
         if friends.groups.isEmpty { zones.removeAll { $0 == .groups } }
-        guard let current = keyZone, let i = zones.firstIndex(of: current) else {
-            // Nothing focused yet: the first Tab enters the ring at its start
-            // (Shift-Tab at its end).
-            enter(delta > 0 ? zones.first : zones.last)
-            return
-        }
-        enter(zones[(i + delta + zones.count) % zones.count])
-    }
-
-    /// Landing on a field starts editing (a focused field IS an editing
-    /// field); landing on the checkboxes seeds the item focus so the arrows
-    /// show where they'll work from.
-    private func enter(_ zone: KeyZone?) {
-        keyZone = zone
-        switch zone {
-        case .alias: aliasFocused = true
-        case .newGroup: newGroupFocusTick += 1
-        case .groups: if keyIndex == nil { keyIndex = 0 }
+        switch keys.cycle(delta, through: zones, entering: Self.entry) {
+        case .field where keys.zone == .alias: aliasFocused = true
+        case .field: newGroupFocus.fire()
         default: break
         }
     }
 
+    private static func entry(_ zone: KeyZone) -> KeyCursor<KeyZone>.Entry {
+        switch zone {
+        case .alias, .newGroup: return .field
+        case .groups: return .list(seed: 0)
+        case .remove: return .plain
+        }
+    }
+
+    /// Desktop convention: Return presses the focused control when it's a
+    /// button (or enters a field); on the checkboxes — or before any focus —
+    /// it's the sheet's default — Done (commit-then-close).
+    private func confirmOrActivate() {
+        if keys.zone == .groups || keys.zone == nil { done() } else { activateFocusedZone() }
+    }
+
     private func activateFocusedZone() {
-        switch keyZone {
+        switch keys.zone {
         case .alias:
             aliasFocused = true
         case .groups:
-            if let index = keyIndex { toggleGroup(at: index) }
+            guard let index = keys.index else { return }
+            GroupPicker.toggle(at: index, of: friends.groups, in: &groupSelection)
         case .newGroup:
-            newGroupFocusTick += 1
+            newGroupFocus.fire()
         case .remove:
             confirmingRemove = true
         case nil:
             break
         }
-    }
-
-    private func moveFocus(_ delta: Int) {
-        guard !friends.groups.isEmpty else { return }
-        guard let current = keyIndex else {
-            keyIndex = 0
-            return
-        }
-        keyIndex = min(max(current + delta, 0), friends.groups.count - 1)
-    }
-
-    private func toggleGroup(at index: Int) {
-        guard friends.groups.indices.contains(index) else { return }
-        let id = friends.groups[index].id
-        if groupSelection.contains(id) {
-            groupSelection.remove(id)
-        } else {
-            groupSelection.insert(id)
-        }
-        friends.setGroups(Array(groupSelection), for: friend.publicKey)
     }
     #endif
 
