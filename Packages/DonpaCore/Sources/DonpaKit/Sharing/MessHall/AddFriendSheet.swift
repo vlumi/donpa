@@ -4,7 +4,7 @@ import SwiftUI
 /// The scanner-only sheet behind the Mess hall's "Add rival" — `ScanContent` under
 /// its own chrome. Scan-only by design: showing YOUR code lives on the Mess hall's
 /// inline share card, so this sheet has one job and no mode toggle.
-struct AddRivalSheet: View {
+struct AddFriendSheet: View {
     /// A decoded rival URL; the host closes everything and routes it through the
     /// same receive path as a tapped link.
     let onFound: (URL) -> Void

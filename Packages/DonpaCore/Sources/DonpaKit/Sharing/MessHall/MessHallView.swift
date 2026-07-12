@@ -80,7 +80,7 @@ struct MessHallView: View {
         chrome
             .escDismisses { dismiss() }
             .sheet(isPresented: $scanning) {
-                AddRivalSheet { url in
+                AddFriendSheet { url in
                     scanning = false
                     dismiss()  // close the Mess hall so the prompt shows at root
                     onScanned?(url)
@@ -104,7 +104,7 @@ struct MessHallView: View {
             .sheet(item: $comparingRival) { rival in
                 HeadToHeadView(
                     scoreboard: scoreboard, opponentName: rival.displayName,
-                    result: RivalRanking.headToHead(with: rival, scoreboard: scoreboard),
+                    result: FriendRanking.headToHead(with: rival, scoreboard: scoreboard),
                     // Career comparison only when this rival opted to share it.
                     career: rival.career.map {
                         (yours: SharePayloadBuilder.career(from: scoreboard), theirs: $0)
@@ -115,7 +115,7 @@ struct MessHallView: View {
             .sheet(item: $comparingGroup) { group in
                 HeadToHeadView(
                     scoreboard: scoreboard, opponentName: group.name,
-                    result: RivalRanking.headToHead(
+                    result: FriendRanking.headToHead(
                         withGroup: friends.members(of: group.id), scoreboard: scoreboard),
                     onPlay: play)
             }
@@ -211,14 +211,16 @@ struct MessHallView: View {
 
     @ViewBuilder private var rivalsList: some View {
         if rivals.isEmpty {
-            emptyState(
+            ListEmptyState(
                 icon: "person.2", title: "No rivals yet.",
                 detail: "Add a rival's scores by scanning their QR code or opening a share link.")
         } else {
             List {
                 ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
                     // Tap = compare (the primary action); trailing pencil = edit.
-                    rowButton(compare: { comparingRival = rival }, edit: { editingRival = rival }) {
+                    CompareEditRow(
+                        compare: { comparingRival = rival }, edit: { editingRival = rival }
+                    ) {
                         FriendRow(friend: rival, groupNames: groupNames(for: rival))
                     }
                     .modifier(keyFocusRing(index))
@@ -256,7 +258,7 @@ struct MessHallView: View {
             } else {
                 ForEach(Array(friends.groups.enumerated()), id: \.element.id) { index, group in
                     // Tap = compare vs the group's best; pencil = edit (name/members/delete).
-                    rowButton(
+                    CompareEditRow(
                         compare: { comparingGroup = group },
                         edit: { editingGroup = group },
                         compareDisabled: friends.members(of: group.id).isEmpty

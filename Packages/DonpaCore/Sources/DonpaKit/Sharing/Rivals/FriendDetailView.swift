@@ -153,7 +153,7 @@ struct FriendDetailView: View {
     }
 
     /// Done: commit a squad name typed but never committed with Create (silently
-    /// discarding it was how squads "didn't appear"), then close.
+    /// discarding it loses the squad), then close.
     private func done() {
         if let pending = friends.createGroup(named: pendingGroupName) {
             groupSelection.insert(pending.id)
@@ -166,7 +166,7 @@ struct FriendDetailView: View {
         #if os(iOS)
         NavigationStack {
             // Scrolls when the squad checklist + big text outgrow the sheet
-            // (its sibling GroupEditView always had this); Done stays pinned
+            // (GroupEditView scrolls the same way); Done stays pinned
             // in the toolbar.
             ScrollView {
                 content.padding(20)

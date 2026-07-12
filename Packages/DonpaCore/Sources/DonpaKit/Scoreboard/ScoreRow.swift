@@ -37,7 +37,7 @@ struct ScoreRow: View {
     /// so rows behave exactly as before when the friends list is empty.
     private var ranking: ScoreComparison.Ranking? {
         guard !rivals.isEmpty else { return nil }
-        return RivalRanking.ranking(
+        return FriendRanking.ranking(
             config: config, scoreboard: scoreboard, rivals: rivals, yourName: yourName)
     }
 

@@ -89,9 +89,6 @@ extension BoardScene {
         cameraNode.position = clampedCameraPosition(cameraNode.position)
     }
 
-    /// Reset camera to fit and center the whole board (e.g. on new game).
-    public func resetCamera() { centerCamera() }
-
     /// The current camera view (normalized centre + zoom) for persistence.
     /// Normalized in scene space (camera y up, no flip) so `applyCameraView`
     /// round-trips it. nil when the board has no size yet.

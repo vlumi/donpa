@@ -37,19 +37,17 @@ struct ScoreboardView: View {
     /// Tracked friends, for the per-config rival comparison. No friends → no
     /// comparison shown, rows behave exactly as before.
     @ObservedObject var friends: FriendsStore
-    /// The group to compare against, or nil for all friends (the group filter). Not
-    /// `private`: the rival-scope control lives in a `ScoreboardView` extension in
-    /// another file (ScoreboardRivals) — Swift `private` is file-scoped.
+    // Throughout: state that sibling-file ScoreboardView extensions drive
+    // (Keyboard/Toolbar/Rivals/Scroll) is internal, not `private` — Swift
+    // `private` is file-scoped.
+
+    /// The group to compare against, or nil for all friends (the group filter).
     @State var rivalGroupID: String?
-    // Not `private`: the iOS toolbar lives in a `ScoreboardView` extension in another
-    // file (ScoreboardToolbar) and drives these — Swift `private` is file-scoped.
     @Environment(\.dismiss) var dismiss
 
     /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
     /// View-only state — a browsing choice, not persisted. Seeded in `onAppear` to
     /// the config being played, so opening in-game lands on the relevant list.
-    /// Not `private` (file-scoped): the keyboard handler lives in the
-    /// ScoreboardKeyboard extension, another file.
     @State var filterFamily: BoardFamily = .basic
     @State var filterEdges: BoardEdges = .flat
     /// The one config expanded to its stat-block (accordion — at most one open).
@@ -161,7 +159,6 @@ struct ScoreboardView: View {
     /// Gutter at the right of the table so the scroll indicator sits clear of the
     /// rows and their dividers.
     private static let scrollbarGutter: CGFloat = 16
-    // Not `private`: referenced by the ScoreboardRivals extension (another file).
     /// Horizontal breathing room inside each row (and the record-highlight band).
     static let rowInset: CGFloat = 10
 
@@ -333,7 +330,7 @@ struct ScoreboardView: View {
             filterFamily == .grid || filterFamily == .hive
             ? filterEdges : .flat
         let groups = Self.groups(family: filterFamily, edges: edges)
-        let rivals = RivalRanking.rivals(from: friends, group: rivalGroupID)
+        let rivals = FriendRanking.rivals(from: friends, group: rivalGroupID)
         VStack(spacing: 0) {
             columnHeader
             ForEach(groups) { group in

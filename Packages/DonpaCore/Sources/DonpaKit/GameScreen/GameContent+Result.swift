@@ -6,7 +6,7 @@ import UIKit
 #endif
 
 /// End-of-game result feedback: the manga result screen, score submission, the
-/// restart-button pop, and haptics. Split from `GameView.swift` for the file/type
+/// restart-button pop, and haptics. Split from `GameContent.swift` for the file/type
 /// length caps.
 extension GameContent {
 

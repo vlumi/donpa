@@ -8,8 +8,8 @@ struct HeadToHeadView: View {
     @ObservedObject var scoreboard: Scoreboard
     /// The opponent's display name (friend's name, or the group's name).
     let opponentName: String
-    /// The computed head-to-head (built by `RivalRanking` from the live stores).
-    let result: RivalRanking.H2H
+    /// The computed head-to-head (built by `FriendRanking` from the live stores).
+    let result: FriendRanking.H2H
     /// Career totals to compare (yours vs. theirs), or nil — only for a single rival who
     /// opted to share career (a group's career isn't meaningfully aggregated).
     var career: (yours: SharedCareer, theirs: SharedCareer)?
@@ -49,7 +49,7 @@ struct HeadToHeadView: View {
                         // falls out of the canonical config order), so the rows
                         // themselves stay as slim as the Service Record's — the
                         // full per-row "Family · Size · …" text truncated on an SE.
-                        ForEach(RivalRanking.grouped(result.rows)) { group in
+                        ForEach(FriendRanking.grouped(result.rows)) { group in
                             Section {
                                 ForEach(group.rows) { row in
                                     rowView(row)
@@ -72,7 +72,7 @@ struct HeadToHeadView: View {
         }
     }
 
-    private func rowFocused(_ row: RivalRanking.H2HRow) -> Bool {
+    private func rowFocused(_ row: FriendRanking.H2HRow) -> Bool {
         keyIndex.map { result.rows.indices.contains($0) && result.rows[$0].id == row.id }
             ?? false
     }
@@ -202,7 +202,7 @@ struct HeadToHeadView: View {
     /// A group's sticky title: the family's New Game glyph + name (Round called out
     /// with its glyph; Flat is the unmarked default), with the column captions on
     /// the trailing side — repeated per section so they survive a long scroll.
-    private func groupHeader(_ group: RivalRanking.H2HGroup) -> some View {
+    private func groupHeader(_ group: FriendRanking.H2HGroup) -> some View {
         HStack(spacing: 5) {
             BoardGlyph(kind: .family(group.family), size: 16, tint: .secondary)
             Text(verbatim: group.family.label)
@@ -229,7 +229,7 @@ struct HeadToHeadView: View {
         .minimumScaleFactor(0.7)
     }
 
-    private func rowView(_ row: RivalRanking.H2HRow) -> some View {
+    private func rowView(_ row: FriendRanking.H2HRow) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 1) {
                 boardLabel(row.config)

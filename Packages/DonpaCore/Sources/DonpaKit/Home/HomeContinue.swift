@@ -74,7 +74,7 @@ extension HomeScreen {
 
     /// The full in-progress list, newest played first — every saved board is a row
     /// that resumes it. Header + explicit frame instead of NavigationStack chrome:
-    /// a bare List in a macOS sheet collapses to nothing (the #206 lesson).
+    /// a bare List in a macOS sheet collapses to nothing.
     var inProgressSheet: some View {
         VStack(spacing: 0) {
             HStack {

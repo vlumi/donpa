@@ -6,7 +6,7 @@ import SwiftUI
 /// vocabulary: Tab cycles the visible zones, arrows move within one, ←/→
 /// (and Space) operate the focused control, Return presses buttons (else
 /// Done), ⌘1–⌘4 pick the family filter, E flips Flat/Round, P plays the
-/// focused board. Split from SheetViews because Swift `private` is
+/// focused board. Split from ScoreboardView.swift because Swift `private` is
 /// file-scoped.
 extension ScoreboardView {
     func handleKey(_ key: KeyCatcher.Key) {
