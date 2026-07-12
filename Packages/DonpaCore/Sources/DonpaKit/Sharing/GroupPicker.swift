@@ -20,8 +20,8 @@ struct GroupPicker: View {
     var keyFocusIndex: Int?
     /// Ring for the new-squad row while the host's Tab focuses it.
     var fieldKeyFocused: Bool = false
-    /// Bumped by the host to put the caret in the new-squad field.
-    var fieldFocusTick: Int = 0
+    /// Fired by the host to put the caret in the new-squad field.
+    var fieldFocus = Pulse()
     @FocusState private var fieldFocused: Bool
 
     var body: some View {
@@ -48,7 +48,7 @@ struct GroupPicker: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .modifier(checkboxRing(index))
+                    .keyFocusRing(keyFocusIndex == index)
                 }
             }
 
@@ -66,22 +66,21 @@ struct GroupPicker: View {
                 }
                 .disabled(pendingName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-            .modifier(FocusRing(focused: fieldKeyFocused, inset: 2))
-            .onChangeCompat(of: fieldFocusTick) { _ in
-                guard fieldFocusTick > 0 else { return }
-                fieldFocused = true
-            }
+            .keyFocusRing(fieldKeyFocused)
+            .onPulse(fieldFocus) { fieldFocused = true }
         }
     }
 
-    private func checkboxRing(_ index: Int) -> FocusRing {
-        FocusRing(focused: keyFocusIndex == index, inset: 2)
-    }
-
-    /// Toggle by index — the host's Return handler drives this.
-    func toggleGroup(at index: Int) {
-        guard friends.groups.indices.contains(index) else { return }
-        toggle(friends.groups[index].id)
+    /// Toggle by index in a selection the host owns — its keyboard path
+    /// (Space on a focused checkbox), shared by both host sheets.
+    static func toggle(at index: Int, of groups: [FriendGroup], in selection: inout Set<String>) {
+        guard groups.indices.contains(index) else { return }
+        let id = groups[index].id
+        if selection.contains(id) {
+            selection.remove(id)
+        } else {
+            selection.insert(id)
+        }
     }
 
     private func toggle(_ id: String) {
