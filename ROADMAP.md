@@ -7,7 +7,7 @@ game logic.
 
 Versions are indicative, not contractual. Each minor groups related work into one
 meaty release: v0.4.0 = friendly rivalry (score sharing); v0.5.0 = progression
-(achievements, gating, practice); v0.6.0 = finishing touches;
+(achievements, gating, practice); v0.6.0 = keyboard & accessibility;
 v1.0.0 = the store release.
 
 **Shipped milestones live in [CHANGELOG.md](CHANGELOG.md)** (full detail) and are
@@ -138,45 +138,48 @@ pass plus four small features, done:
 Note for future audio work: the flood-open sound is keyed on hitting a 0
 (the fuller variant plays whenever a region cascades, however it was opened).
 
-## v0.6.0 — Finishing touches
+## v0.6.0 — Keyboard & accessibility
 
-**OPEN as of 2026-07-10** (0.5.0 shipped in full through b21). From the
-2026-07-09 backlog + platform-capability review: items that each land a more
-finished 1.0, none individually a gate — evaluate each and cut freely; every
-one should be a modest build. (The smaller half of the original list — the
-Rivals UX pass, `?`-flags, sound, the Drills default, haptics — was pulled
-into 0.5.0 and shipped there.)
+**Scope settled 2026-07-12.** The release's substance already SHIPPED on main:
+full keyboard play + navigation (board cursor with arrows/WASD; the
+Tab/arrows/Return/Space/Esc vocabulary over every screen; iPad hardware
+keyboards; ⌘/ reference), per-cell VoiceOver, the large-text/small-screen
+pass, and the Mess hall redesign with Nearby promoted — plus the 2026-07-12
+tech-debt cleanup (shared KeyCursor/Pulse keyboard core with unit tests, one
+board focus keeper, Sharing reorganization, dead-code/catalog sweep).
 
-**From the backlog / parked ideas:**
+Remaining before the b23 cut:
 
-- [ ] **Cursor/keyboard follow-ons** — the cursor model AND the all-keyboard
-      app SHIPPED (arrows/WASD + board keys on Mac and iPad hardware
-      keyboards; Tab-between-groups / arrows-within navigation over every
-      screen incl. Settings; fields edit on focus; Esc everywhere; shared
-      menu commands incl. the iPadOS hold-⌘ HUD; the ⌘/ reference).
-      Remaining: **game controllers** (the cursor seam is ready) and a
-      **real VoiceOver session** to validate the spoken-cell flow.
-**Platform capabilities (all native, all serverless):**
-
-- [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
-      Drills" from Spotlight and Siri; small, no UI beyond the intent
-      definitions.
-- [ ] **Widgets** (WidgetKit, home + lock screen) — a continue-your-board deep
-      link and a career-stats/luck-line widget. Needs an app group to share the
-      stores.
 - [ ] **Review prompt** (`SKStoreReviewController`) — ask after a new best
       time, never after a loss. Small, and it matters for a small app's store
       trajectory.
-- [ ] **App Clip** — a rival's donpa.app share link offers "play a board now"
-      without installing (an instant Drills board as the hook). Rides the
-      Universal Link infrastructure; turns the social loop into an acquisition
-      loop. The largest item here.
-- [ ] **SharePlay** (GroupActivities) — race the *same generated board* over
-      FaceTime; Apple's session infrastructure, so still no server. Real
-      multiplayer that respects the no-server principle.
-- [ ] **TipKit contextual tips** (iOS 17+, availability-gated) — one-time
-      nudges like "this number's flags match — tap it to chord". Lower value
-      now that how-to-play shipped; keep only if it earns its place.
+- [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
+      Drills" from Spotlight and Siri. ONLY if it stays ~a day of work; drop
+      without guilt otherwise (expected usage is honestly rare — the case is
+      platform citizenship at low cost).
+
+**Cut from 0.6.0 (decided 2026-07-12, free-app test: no revenue and no DAU
+target, so a feature must make the game better for someone who already likes
+it):**
+
+- **Widgets** — a board doesn't change while you're away, so the widget is a
+  static screenshot; needs an app-group migration of the save store (the
+  layer that just had a data-loss bug patched). High risk, decorative payoff.
+- **App Clip** — solves "try without installing", which the store page of a
+  small free game already solves; permanent extra target/size/AASA surface.
+- **SharePlay** — the biggest lift; Nearby owns the in-the-room story. If
+  real-time co-play ever happens it's its own release.
+- **TipKit** — How to play + Drills already teach.
+
+**Keyboard follow-ons (post-0.6.0):** game controllers (the cursor seam is
+ready) and a real VoiceOver session to validate the spoken-cell flow.
+
+**Parked idea (possible 0.7 social pillar):** a **daily challenge** — one
+shared seed per day, same board for everyone, NO streaks or notifications.
+Its value isn't retention; it gives the rivals layer its first fair
+comparison (same board, same day) instead of best-of-N-attempts. Needs
+deterministic seeded generation, first-attempt-counts rules, and a share-
+payload field — a real pillar, not filler. Decide when 0.7 is scoped.
 
 Evaluated and NOT parked (recorded so the next review doesn't redo it): Live
 Activities (the game is foreground by nature), CloudKit save-sync (KVS is too
