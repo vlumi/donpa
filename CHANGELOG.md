@@ -22,6 +22,8 @@ they merge.
 
 ### Unreleased (next build)
 
+### build 23 — 2026-07-12
+
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the
   board now gives up the keys when it isn't the live surface — pressing
   Esc on the title could silently resume the hidden game's clock, and
