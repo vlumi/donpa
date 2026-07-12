@@ -11,6 +11,11 @@ struct BoardView: View {
     let inputMode: InputMode
     /// When false (e.g. result panel up), show the normal arrow, not the mode cursor.
     var boardCursorActive: Bool = true
+    /// Whether the board owns the hardware keyboard: the live surface,
+    /// INCLUDING paused (Esc must always reach the scene to resume), but never
+    /// under the title or a modal — that's the no-fight contract with the
+    /// KeyCatcher surfaces.
+    var keyboardOwner: Bool = true
     var showMinimap: Bool = true
     var minimapScale: Double = 1
     var useQuestionMarks: Bool = false
@@ -18,9 +23,21 @@ struct BoardView: View {
     var body: some View {
         BoardSKView(
             scene: scene, palette: palette, inputMode: inputMode,
-            boardCursorActive: boardCursorActive, showMinimap: showMinimap,
+            boardCursorActive: boardCursorActive, keyboardOwner: keyboardOwner,
+            showMinimap: showMinimap,
             minimapScale: minimapScale, useQuestionMarks: useQuestionMarks)
     }
+}
+
+/// The scene-property pushes shared by both platform representables.
+private func applyScene(
+    _ scene: BoardScene, palette: Palette, showMinimap: Bool, minimapScale: Double,
+    useQuestionMarks: Bool
+) {
+    scene.palette = palette
+    scene.showMinimap = showMinimap
+    scene.minimapScale = CGFloat(minimapScale)
+    scene.useQuestionMarks = useQuestionMarks
 }
 
 #if os(macOS)
@@ -29,6 +46,7 @@ private struct BoardSKView: NSViewRepresentable {
     let palette: Palette
     let inputMode: InputMode
     let boardCursorActive: Bool
+    let keyboardOwner: Bool
     let showMinimap: Bool
     let minimapScale: Double
     let useQuestionMarks: Bool
@@ -36,36 +54,79 @@ private struct BoardSKView: NSViewRepresentable {
     func makeNSView(context: Context) -> ScrollForwardingSKView {
         let view = ScrollForwardingSKView()
         view.ignoresSiblingOrder = true
-        scene.palette = palette
-        scene.showMinimap = showMinimap
-        scene.minimapScale = CGFloat(minimapScale)
-        scene.useQuestionMarks = useQuestionMarks
+        applyScene(
+            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
+            useQuestionMarks: useQuestionMarks)
         view.inputMode = inputMode
         view.boardCursorActive = boardCursorActive
+        view.keyboardOwner = keyboardOwner
         view.presentScene(scene)
         return view
     }
 
     func updateNSView(_ view: ScrollForwardingSKView, context: Context) {
         if view.scene !== scene { view.presentScene(scene) }
-        scene.palette = palette
-        scene.showMinimap = showMinimap
-        scene.minimapScale = CGFloat(minimapScale)
-        scene.useQuestionMarks = useQuestionMarks
+        applyScene(
+            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
+            useQuestionMarks: useQuestionMarks)
         view.inputMode = inputMode
         view.boardCursorActive = boardCursorActive
-        // While the board is the live surface, keep it first responder so the
-        // cursor keys land here: SwiftUI buttons keep focus after popups/sheets
-        // close, leaving arrows dead and Return firing a stray default action.
-        // Inactive states (title, pause, popups — boardCursorActive false) leave
-        // focus alone, so this never fights the New Game popup's KeyCatcher; the
-        // deferred claim mirrors KeyCatcher's own (win after the dismissal).
-        if boardCursorActive, view.window?.firstResponder !== view {
-            DispatchQueue.main.async { [weak view] in
-                guard let view, let window = view.window else { return }
-                if window.firstResponder !== view { window.makeFirstResponder(view) }
-            }
+        view.keyboardOwner = keyboardOwner
+    }
+}
+
+/// Board first-responder policy (macOS): while active, any change of the
+/// window's first responder away from the board is corrected one runloop turn
+/// later. Event-driven — KVO on the window's `firstResponder` catches both a
+/// closing sheet restoring its pre-sheet responder and SwiftUI's focus engine
+/// re-asserting after a shortcut-activated button; `didBecomeKey` covers the
+/// window becoming key with a stale responder. Contract: never active while a
+/// same-window KeyCatcher surface is up (title, popups, modals), so claimants
+/// can't fight.
+final class BoardFocusKeeper {  // main-thread-only, like the AppKit it drives
+    private weak var view: NSView?
+    private var responderObservation: NSKeyValueObservation?
+    private var keyObserver: NSObjectProtocol?
+
+    var isActive = false {
+        didSet {
+            if isActive, isActive != oldValue { reclaimSoon() }
         }
+    }
+
+    init(view: NSView) { self.view = view }
+
+    /// Call from `viewDidMoveToWindow` (both directions).
+    func windowChanged(_ window: NSWindow?) {
+        responderObservation = nil
+        if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
+        keyObserver = nil
+        guard let window else { return }
+        responderObservation = window.observe(\.firstResponder) { [weak self] _, _ in
+            DispatchQueue.main.async { self?.reclaim() }
+        }
+        keyObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            DispatchQueue.main.async { self?.reclaim() }
+        }
+        if isActive { reclaimSoon() }
+    }
+
+    deinit {
+        if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
+    }
+
+    /// Deferred one turn, to land after AppKit's own responder churn.
+    private func reclaimSoon() {
+        DispatchQueue.main.async { [weak self] in self?.reclaim() }
+    }
+
+    private func reclaim() {
+        guard isActive, let view, let window = view.window,
+            window.firstResponder !== view
+        else { return }
+        window.makeFirstResponder(view)  // KVO refires; the !== guard terminates it
     }
 }
 
@@ -83,46 +144,20 @@ final class ScrollForwardingSKView: SKView {
         didSet {
             guard boardCursorActive != oldValue else { return }
             refreshCursor()
-            // Becoming the live surface: one more claim AFTER the transition
-            // settles (Home fade, SwiftUI focus engine) — a commit-time claim
-            // alone can be re-overridden by a late focus re-assertion.
-            if boardCursorActive {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
-                    self?.reclaimIfActive()
-                }
-            }
         }
+    }
+    /// Keyboard ownership, delegated to the keeper (separate from the
+    /// pointer cursor: the board keeps the keys while PAUSED so Esc resumes).
+    var keyboardOwner = false {
+        didSet { keeper.isActive = keyboardOwner }
     }
 
     private var pointerInside = false
-    private var keyWindowObserver: Any?
+    private lazy var keeper = BoardFocusKeeper(view: self)
 
-    // Closing a macOS sheet RESTORES the parent window's pre-sheet first
-    // responder, silently overriding the claim updateNSView made when the
-    // game resumed — continuing from the in-progress sheet left the arrows
-    // dead. Reclaim (deferred, to land after the restoration) whenever the
-    // window becomes key while the board is the live surface.
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        if let keyWindowObserver {
-            NotificationCenter.default.removeObserver(keyWindowObserver)
-            self.keyWindowObserver = nil
-        }
-        guard let window else { return }
-        keyWindowObserver = NotificationCenter.default.addObserver(
-            forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main
-        ) { [weak self] _ in
-            DispatchQueue.main.async { self?.reclaimIfActive() }
-        }
-    }
-
-    deinit {
-        if let keyWindowObserver { NotificationCenter.default.removeObserver(keyWindowObserver) }
-    }
-
-    private func reclaimIfActive() {
-        guard boardCursorActive, let window, window.firstResponder !== self else { return }
-        window.makeFirstResponder(self)
+        keeper.windowChanged(window)
     }
 
     // Tracking area + explicit `NSCursor.set()` rather than `addCursorRect`: cursor
@@ -212,7 +247,8 @@ private struct BoardSKView: UIViewRepresentable {
     let scene: BoardScene
     let palette: Palette
     let inputMode: InputMode  // unused on iOS (no pointer cursor)
-    let boardCursorActive: Bool  // gates the hardware-keyboard focus claim
+    let boardCursorActive: Bool  // unused on iOS (no pointer cursor)
+    let keyboardOwner: Bool
     let showMinimap: Bool
     let minimapScale: Double
     let useQuestionMarks: Bool
@@ -220,25 +256,24 @@ private struct BoardSKView: UIViewRepresentable {
     func makeUIView(context: Context) -> KeyForwardingSKView {
         let view = KeyForwardingSKView()
         view.ignoresSiblingOrder = true
-        scene.palette = palette
-        scene.showMinimap = showMinimap
-        scene.minimapScale = CGFloat(minimapScale)
-        scene.useQuestionMarks = useQuestionMarks
+        applyScene(
+            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
+            useQuestionMarks: useQuestionMarks)
+        view.keyboardOwner = keyboardOwner
         view.presentScene(scene)
         return view
     }
 
     func updateUIView(_ view: KeyForwardingSKView, context: Context) {
         if view.scene !== scene { view.presentScene(scene) }
-        scene.palette = palette
-        scene.showMinimap = showMinimap
-        scene.minimapScale = CGFloat(minimapScale)
-        scene.useQuestionMarks = useQuestionMarks
-        // While the board is the live surface, hold first responder so a
-        // hardware keyboard (iPad) drives the cursor. boardCursorActive is
-        // false whenever a modal is up, so a sheet's text field is never
-        // robbed of its keyboard.
-        if boardCursorActive, !view.isFirstResponder, view.window != nil {
+        applyScene(
+            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
+            useQuestionMarks: useQuestionMarks)
+        view.keyboardOwner = keyboardOwner
+        // While the board owns the keyboard, hold first responder so a
+        // hardware keyboard (iPad) drives the cursor. Never under a modal —
+        // a sheet's text field must not be robbed.
+        if keyboardOwner, !view.isFirstResponder, view.window != nil {
             DispatchQueue.main.async { [weak view] in
                 guard let view, view.window != nil, !view.isFirstResponder else { return }
                 view.becomeFirstResponder()
@@ -248,50 +283,45 @@ private struct BoardSKView: UIViewRepresentable {
 }
 
 /// An `SKView` that maps hardware-keyboard presses (iPad, or a paired keyboard
-/// on iPhone) onto the same cursor entry points the Mac's keyDown drives.
+/// on iPhone) onto the same `BoardKeyCommand`s the Mac's keyDown drives.
 final class KeyForwardingSKView: SKView {
+    /// Whether the board owns the hardware keyboard. False on the title and
+    /// under modals: handled keys are dropped and first responder is resigned
+    /// — Esc on the title must NOT resume the hidden game, and arrows must
+    /// not reveal cells blind.
+    var keyboardOwner = false {
+        didSet {
+            guard keyboardOwner != oldValue, !keyboardOwner else { return }
+            if isFirstResponder { resignFirstResponder() }
+        }
+    }
+
     override var canBecomeFirstResponder: Bool { true }
 
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        guard let board = scene as? BoardScene else {
+        guard keyboardOwner, let board = scene as? BoardScene else {
             return super.pressesBegan(presses, with: event)
         }
         var handled = false
         for press in presses {
-            guard let key = press.key else { continue }
-            handled = handle(key.keyCode, on: board) || handled
+            guard let key = press.key, let command = Self.command(for: key) else { continue }
+            board.perform(command)
+            handled = true
         }
         if !handled { super.pressesBegan(presses, with: event) }
     }
 
-    private func handle(_ code: UIKeyboardHIDUsage, on board: BoardScene) -> Bool {
-        if let (dx, dy) = Self.arrowVector(code) {
-            board.moveCursor(dx: dx, dy: dy)
-            return true
-        }
-        switch code {
-        case .keyboardReturnOrEnter, .keypadEnter: board.activateCursor()
-        case .keyboardF: board.flagCursor()
-        case .keyboardSpacebar: board.viewModel.inputMode.toggle()
-        case .keyboardEscape:
-            if board.viewModel.isPaused {
-                board.viewModel.resume()
-            } else {
-                board.viewModel.pause()
-            }
-        default: return false
-        }
-        return true
-    }
-
-    /// Arrow/WASD → cursor step; rows render bottom-up, so up = +y.
-    private static func arrowVector(_ code: UIKeyboardHIDUsage) -> (Int, Int)? {
-        switch code {
-        case .keyboardUpArrow, .keyboardW: return (0, 1)
-        case .keyboardDownArrow, .keyboardS: return (0, -1)
-        case .keyboardLeftArrow, .keyboardA: return (-1, 0)
-        case .keyboardRightArrow, .keyboardD: return (1, 0)
-        default: return nil
+    private static func command(for key: UIKey) -> BoardKeyCommand? {
+        switch key.keyCode {
+        case .keyboardUpArrow: return .move(dx: 0, dy: 1)  // rows render bottom-up
+        case .keyboardDownArrow: return .move(dx: 0, dy: -1)
+        case .keyboardLeftArrow: return .move(dx: -1, dy: 0)
+        case .keyboardRightArrow: return .move(dx: 1, dy: 0)
+        case .keyboardReturnOrEnter, .keypadEnter: return .activate
+        case .keyboardF: return .flag
+        case .keyboardSpacebar: return .toggleMode
+        case .keyboardEscape: return .pauseResume
+        default: return BoardKeyCommand.wasd(key.charactersIgnoringModifiers)
         }
     }
 }

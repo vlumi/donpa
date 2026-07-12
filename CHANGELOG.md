@@ -22,6 +22,12 @@ they merge.
 
 ### Unreleased (next build)
 
+- **Board keyboard hardening.** On iPad with a hardware keyboard, the
+  board now gives up the keys when it isn't the live surface — pressing
+  Esc on the title could silently resume the hidden game's clock, and
+  arrows could reveal cells blind. WASD also follows your keyboard layout
+  on iPad now, matching the Mac. On macOS, the board holds its keyboard
+  focus while paused too, so Esc always resumes.
 - **Keyboard consistency pass.** The Mess hall's Tab skips its list when
   the list is empty (Return there went dead instead of closing), only
   offers the card's share actions while the card actually has a link, and

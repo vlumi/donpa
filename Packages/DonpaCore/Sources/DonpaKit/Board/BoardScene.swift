@@ -114,9 +114,8 @@ public final class BoardScene: SKScene {
     /// Set by the host on appearance change; recolors the background and rebuilds.
     public var palette: Palette = .dark {
         didSet {
-            // BoardView re-assigns on EVERY SwiftUI update; without this guard each
-            // one forced a full board rebuild (twice per reveal, and once per
-            // mouse-move during a minimap drag).
+            // BoardView re-assigns on EVERY SwiftUI update; the guard keeps
+            // that from forcing a full board rebuild each time.
             guard palette != oldValue else { return }
             backgroundColor = palette.sceneBackground
             rebuild()
@@ -154,11 +153,6 @@ public final class BoardScene: SKScene {
         rebuildIfNeeded()
         applyDesiredCameraOrCenter()
         installGestureRecognizers(on: view)
-        #if os(macOS)
-        // Take first responder so the scene receives key events (Space) without
-        // the user having to click the board first.
-        view.window?.makeFirstResponder(view)
-        #endif
     }
 
     // Idle render throttle: a board that isn't animating is a STATIC image, but
@@ -318,13 +312,10 @@ public final class BoardScene: SKScene {
     /// as long as the scene; nil in normal runs. See `installGestureRecognizers`.
     var traceEventMonitor: Any?
     static let dragThreshold: CGFloat = 4
-    // A drag can still END as a click: a Magic Mouse slides a few points under its
-    // own click force, so during rapid play every click travelled past the 4pt
-    // threshold and was eaten as an invisible micro-pan (on a fitting board it even
-    // springs back — nothing visibly happened, and continuous fast clicking stayed
-    // dead until the hand settled). A brief press whose NET down→up travel stays
-    // within the slop is therefore reclassified as a click at mouse-up. Trackpads
-    // never trip this (a physical click doesn't move the pointer).
+    // A drag can still END as a click: a Magic Mouse slides a few points
+    // under its own click force, so a brief press whose NET down→up travel
+    // stays within the slop is reclassified as a click at mouse-up.
+    // Trackpads never trip this (a physical click doesn't move the pointer).
     static let clickSlop: CGFloat = 8
     static let clickMaxDuration: TimeInterval = 0.3
 

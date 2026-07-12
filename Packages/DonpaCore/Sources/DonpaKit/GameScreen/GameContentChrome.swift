@@ -71,10 +71,14 @@ extension GameContent {
         BoardView(
             scene: scene, palette: palette, inputMode: viewModel.inputMode,
             // Custom reveal/flag cursor only during a live, non-paused game with
-            // nothing modal above it; the normal arrow elsewhere. Also gates the
-            // keyboard focus claims, so a sheet's text field is never robbed.
+            // nothing modal above it; the normal arrow elsewhere.
             boardCursorActive: gameInProgress && !navigator.showingTitle
                 && !viewModel.isPaused && !navigator.isModalPresented,
+            // Keyboard ownership INCLUDES paused (Esc must reach the scene to
+            // resume) but never the title or a modal — a sheet's text field
+            // is never robbed, and the KeyCatcher surfaces never fight.
+            keyboardOwner: gameInProgress && !navigator.showingTitle
+                && !navigator.isModalPresented,
             showMinimap: settings.showMinimap,
             minimapScale: settings.minimapScale,
             useQuestionMarks: settings.questionMarks
