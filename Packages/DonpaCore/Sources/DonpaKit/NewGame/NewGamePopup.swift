@@ -252,49 +252,34 @@ struct NewGamePopup: View {
     }
 
     #if os(macOS)
-    /// Cycle the selection in the given row. Row 0 is Family; rows 1+ are the
-    /// preset (Basic), or Density / Size / Edges (Grid/Hive).
     /// Cycle the value in the focused row (family is NOT a row — it's ⌘1/2/3).
     /// Basic: the sole row is the preset. Grid/Hive: 0 = size, 1 = density, 2 = edges
     /// (the hierarchy order, matching the visual rows + in-progress drill-down).
     private func cycleSelection(in row: Int, by step: Int) {
         switch (settings.family, row) {
         case (.basic, _):
-            settings.basicPreset = Self.stepped(settings.basicPreset, by: step)
+            settings.basicPreset = KeyStep.clamped(settings.basicPreset, by: step)
         case (.practice, _):  // size is Drills' only row — clamped to ITS ladder
-            settings.practiceSize = Self.stepped(
+            settings.practiceSize = KeyStep.clamped(
                 settings.practiceSize, by: step,
                 within: GameConfig.practiceSizes.filter(gates.size))
         case (.grid, 0), (.hive, 0):
             let path = Settings.sizePath(settings.family)
-            settings[keyPath: path] = Self.stepped(
+            settings[keyPath: path] = KeyStep.clamped(
                 settings[keyPath: path], by: step,
                 within: BoardSize.allCases.filter(gates.size))
         case (.grid, 1), (.hive, 1):
             let path = Settings.densityPath(settings.family)
-            settings[keyPath: path] = Self.stepped(
+            settings[keyPath: path] = KeyStep.clamped(
                 settings[keyPath: path], by: step,
                 within: Density.allCases.filter(gates.rank))
         case (.grid, _), (.hive, _):  // row 2: edges
             let path = Settings.edgesPath(settings.family)
-            settings[keyPath: path] = Self.stepped(
+            settings[keyPath: path] = KeyStep.clamped(
                 settings[keyPath: path], by: step,
                 within: BoardEdges.allCases.filter(gates.edges))
         }
     }
 
-    /// Next/previous case of a `CaseIterable` enum, clamped at the ends (no
-    /// wrap), matching the chip rows.
-    private static func stepped<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
-        stepped(value, by: step, within: Array(T.allCases))
-    }
-
-    /// The same, over an explicit ladder — for a family whose chips show only a
-    /// slice of the enum (Drills' XS–XL).
-    private static func stepped<T: Equatable>(_ value: T, by step: Int, within all: [T]) -> T {
-        guard let i = all.firstIndex(of: value), !all.isEmpty else { return all.first ?? value }
-        let next = min(max(i + step, 0), all.count - 1)
-        return all[next]
-    }
     #endif
 }

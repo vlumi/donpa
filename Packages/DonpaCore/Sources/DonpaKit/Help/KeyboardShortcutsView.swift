@@ -68,14 +68,19 @@ public struct KeyboardShortcutsView: View {
         #endif
     }
 
+    /// The three content sections, in scroll order — the `.id` anchors and
+    /// the keyboard paging both derive from this, so they can't drift.
+    private enum Section: CaseIterable { case board, lists, anywhere }
+
     #if os(macOS)
     @State private var keySection: Int?
 
     private func stepSection(_ delta: Int, proxy: ScrollViewProxy) {
-        let next = min(max((keySection ?? -1) + delta, 0), 2)
+        let all = Section.allCases
+        guard let next = KeyStep.moved(keySection, by: delta, count: all.count) else { return }
         keySection = next
         withAnimation(.easeOut(duration: 0.15)) {
-            proxy.scrollTo("section-\(next)", anchor: .top)
+            proxy.scrollTo(all[next], anchor: .top)
         }
     }
     #endif
@@ -91,7 +96,7 @@ public struct KeyboardShortcutsView: View {
                 ("Esc", Text("Pause and resume", bundle: .module)),
             ]
         )
-        .id("section-0")
+        .id(Section.board)
     }
 
     private var listsSection: some View {
@@ -108,7 +113,7 @@ public struct KeyboardShortcutsView: View {
                 ("Esc", Text("Close the screen", bundle: .module)),
             ]
         )
-        .id("section-1")
+        .id(Section.lists)
     }
 
     private var anywhereSection: some View {
@@ -126,7 +131,7 @@ public struct KeyboardShortcutsView: View {
                 ("⌘/", Text("This reference", bundle: .module)),
             ]
         )
-        .id("section-2")
+        .id(Section.anywhere)
     }
 
     private func section(_ title: Text, rows: [(String, Text)]) -> some View {

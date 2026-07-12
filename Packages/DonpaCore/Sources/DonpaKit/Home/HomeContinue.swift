@@ -102,7 +102,7 @@ extension HomeScreen {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .modifier(keyFocusRing(index))
+                    .keyFocusRing(keyRowIndex == index)
                 }
             }
             #if os(macOS)
@@ -117,13 +117,6 @@ extension HomeScreen {
     }
 
     /// The keyboard-focus ring for a row (macOS arrows); a no-op elsewhere.
-    private func keyFocusRing(_ index: Int) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyRowIndex == index, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
-    }
 
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
@@ -142,12 +135,7 @@ extension HomeScreen {
     }
 
     private func moveRowFocus(_ delta: Int) {
-        guard !snapshots.isEmpty else { return }
-        guard let current = keyRowIndex else {
-            keyRowIndex = 0
-            return
-        }
-        keyRowIndex = min(max(current + delta, 0), snapshots.count - 1)
+        keyRowIndex = KeyStep.moved(keyRowIndex, by: delta, count: snapshots.count)
     }
     #endif
 

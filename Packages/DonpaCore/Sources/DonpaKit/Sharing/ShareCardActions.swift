@@ -227,13 +227,13 @@ struct QRZoomSheet: View {
             if let qr, let link {
                 Group {
                     ShareImageButton(qr: qr, name: name, linkID: link, activateTick: shareTick)
-                        .modifier(FocusRing(focused: keyIndex == 0, inset: 2))
+                        .keyFocusRing(keyIndex == 0)
                     #if os(macOS)
                     // macOS's share picker has NO save-to-disk service (iOS's
                     // sheet offers "Save to Files"), so saving the card is its
                     // own button + save panel.
                     SaveImageButton(qr: qr, name: name, linkID: link, activateTick: saveTick)
-                        .modifier(FocusRing(focused: keyIndex == 1, inset: 2))
+                        .keyFocusRing(keyIndex == 1)
                     #endif
                 }
                 .buttonStyle(.bordered)
@@ -277,11 +277,7 @@ struct QRZoomSheet: View {
     #if os(macOS)
     private func moveFocus(_ delta: Int) {
         guard qr != nil, link != nil else { return }
-        guard let current = keyIndex else {
-            keyIndex = 0
-            return
-        }
-        keyIndex = (current + delta + 2) % 2
+        keyIndex = KeyStep.moved(keyIndex, by: delta, count: 2)
     }
     #endif
 }

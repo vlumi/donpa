@@ -38,10 +38,10 @@ struct HomeScreen: View {
 
     /// Whether the full in-progress list sheet is presented.
     @State var showAll = false
-    #if os(macOS)
     /// The in-progress sheet's keyboard-focused row (arrow navigation); nil
-    /// until the first arrow press. See HomeContinue.
+    /// until the first arrow press, inert off macOS. See HomeContinue.
     @State var keyRowIndex: Int?
+    #if os(macOS)
     /// The title's keyboard-focused menu item (Tab/arrow navigation); nil
     /// until the first press.
     @State private var keyItem: HomeKeyItem?
