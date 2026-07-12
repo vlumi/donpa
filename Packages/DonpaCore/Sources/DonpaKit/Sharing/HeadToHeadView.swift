@@ -17,14 +17,12 @@ struct HeadToHeadView: View {
     /// The host owns the navigation (dismissing this sheet included).
     var onPlay: ((GameConfig) -> Void)?
     @Environment(\.dismiss) private var dismiss
-    #if os(macOS)
-    /// The keyboard-focused board row (arrow navigation across all groups).
+    /// The keyboard-focused board row (arrow navigation across all groups);
+    /// inert off macOS.
     @State private var keyIndex: Int?
-    #endif
 
-    /// The your/their value columns, grown with Dynamic Type (×1 at the default
-    /// size) — fixed 76/72pt forced grown times to shrink back down via
-    /// `minimumScaleFactor`, defeating the enlargement. Shared by the career
+    /// The your/their value columns, grown with Dynamic Type (×1 at the
+    /// default size) so enlarged times actually enlarge. Shared by the career
     /// rows, the group headers, and the per-board rows so they stay aligned.
     @ScaledMetric(relativeTo: .callout) private var yourColumnWidth: CGFloat = 76
     @ScaledMetric(relativeTo: .callout) private var theirColumnWidth: CGFloat = 72
@@ -56,7 +54,7 @@ struct HeadToHeadView: View {
                                 ForEach(group.rows) { row in
                                     rowView(row)
                                         .id(row.id)
-                                        .modifier(rowRing(row))
+                                        .keyFocusRing(rowFocused(row), inset: 1)
                                 }
                             } header: {
                                 groupHeader(group)
@@ -74,15 +72,9 @@ struct HeadToHeadView: View {
         }
     }
 
-    private func rowRing(_ row: RivalRanking.H2HRow) -> FocusRing {
-        #if os(macOS)
-        let focused =
-            keyIndex.map { result.rows.indices.contains($0) && result.rows[$0].id == row.id }
+    private func rowFocused(_ row: RivalRanking.H2HRow) -> Bool {
+        keyIndex.map { result.rows.indices.contains($0) && result.rows[$0].id == row.id }
             ?? false
-        return FocusRing(focused: focused, inset: 1)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
     }
 
     /// Arrows walk the board rows (following with the scroll); P and Space
@@ -107,12 +99,8 @@ struct HeadToHeadView: View {
 
     #if os(macOS)
     private func moveRowFocus(_ delta: Int, proxy: ScrollViewProxy) {
-        guard !result.rows.isEmpty else { return }
-        let next: Int
-        if let current = keyIndex {
-            next = min(max(current + delta, 0), result.rows.count - 1)
-        } else {
-            next = 0
+        guard let next = KeyStep.moved(keyIndex, by: delta, count: result.rows.count) else {
+            return
         }
         keyIndex = next
         withAnimation(.easeOut(duration: 0.15)) {
@@ -356,16 +344,11 @@ struct HeadToHeadView: View {
             .keyboardShortcut(.defaultAction)
             // Esc closes too (Done carries Return) — dismissal must not depend
             // on the Done button being on-screen.
-            .background(
-                Button("") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                    .opacity(0)
-            )
+            .escDismisses { dismiss() }
         }
         .padding(20)
-        // Ideal, no height floor: the sheet's minimum derives from the content,
-        // so small scaled displays fit; a hard 640 pushed Done off their edge.
-        // (380×420 read cramped over the 600-wide Mess hall, hence the ideal.)
+        // Ideal only, no height floor: the minimum derives from the content
+        // so small scaled displays fit.
         .frame(minWidth: 520, idealHeight: 600)
         #endif
     }

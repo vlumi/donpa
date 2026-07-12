@@ -58,23 +58,31 @@ struct KeyCursor<Zone: Hashable> {
     /// Arrow step within the current zone's list: clamps to `0..<count`,
     /// seeds at 0 on the first press, clears when the list is empty.
     mutating func move(_ delta: Int, count: Int) {
-        guard count > 0 else {
-            index = nil
-            return
-        }
-        guard let current = index else {
-            index = 0
-            return
-        }
-        index = min(max(current + delta, 0), count - 1)
+        index = KeyStep.moved(index, by: delta, count: count)
     }
 }
 
 /// Clamped stepping along an ordered ladder — segmented pickers and other
 /// pick-one controls driven by ←/→.
 enum KeyStep {
+    /// A value not on the ladder (e.g. a locked entry after gating changed)
+    /// steps to the ladder's first entry rather than staying invalid.
     static func clamped<T: Equatable>(_ value: T, by delta: Int, within all: [T]) -> T {
-        guard let i = all.firstIndex(of: value) else { return value }
+        guard !all.isEmpty else { return value }
+        guard let i = all.firstIndex(of: value) else { return all[0] }
         return all[min(max(i + delta, 0), all.count - 1)]
+    }
+
+    /// The same over a full `CaseIterable` ladder.
+    static func clamped<T: CaseIterable & Equatable>(_ value: T, by delta: Int) -> T {
+        clamped(value, by: delta, within: Array(T.allCases))
+    }
+
+    /// Clamped list-focus step: seeds at 0 on the first press, clears when
+    /// the list is empty — the one arrow-walk rule for zone-less lists too.
+    static func moved(_ current: Int?, by delta: Int, count: Int) -> Int? {
+        guard count > 0 else { return nil }
+        guard let current else { return 0 }
+        return min(max(current + delta, 0), count - 1)
     }
 }

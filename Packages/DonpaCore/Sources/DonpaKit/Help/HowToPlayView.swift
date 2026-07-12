@@ -71,17 +71,17 @@ public struct HowToPlayView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    goal.id(0)
-                    modes.id(1)
-                    chording.id(2)
-                    counter.id(3)
-                    endings.id(4)
-                    luck.id(5)
-                    drills.id(6)
+                    goal.id(Section.goal)
+                    modes.id(Section.modes)
+                    chording.id(Section.chording)
+                    counter.id(Section.counter)
+                    endings.id(Section.endings)
+                    luck.id(Section.luck)
+                    drills.id(Section.drills)
                     #if os(macOS)
-                    keyboardPlay.id(7)
+                    keyboardPlay.id(Section.keyboardPlay)
                     #endif
-                    webLink.id(8)
+                    webLink.id(Section.webLink)
                 }
                 .padding(20)
                 .frame(maxWidth: 560)
@@ -104,13 +104,23 @@ public struct HowToPlayView: View {
         }
     }
 
+    /// The content sections, in scroll order — the `.id` anchors and the
+    /// keyboard paging both derive from this, so they can't drift.
+    private enum Section: CaseIterable {
+        case goal, modes, chording, counter, endings, luck, drills
+        #if os(macOS)
+        case keyboardPlay
+        #endif
+        case webLink
+    }
+
     #if os(macOS)
     private func stepSection(_ delta: Int, proxy: ScrollViewProxy) {
-        let last = 8
-        let next = min(max((keySection ?? -1) + delta, 0), last)
+        let all = Section.allCases
+        guard let next = KeyStep.moved(keySection, by: delta, count: all.count) else { return }
         keySection = next
         withAnimation(.easeOut(duration: 0.15)) {
-            proxy.scrollTo(next, anchor: .top)
+            proxy.scrollTo(all[next], anchor: .top)
         }
     }
     #endif

@@ -1,4 +1,5 @@
 import DonpaCore
+import MultipeerConnectivity
 import SwiftUI
 
 /// The Nearby sheet: open it on both devices, tap the other player's name,
@@ -9,10 +10,10 @@ struct NearbyExchangeView: View {
     /// Route the rival's received link into the root classify/confirm path.
     let onReceived: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
-    #if os(macOS)
-    /// The keyboard-focused peer while browsing (arrow navigation).
-    @State private var keyIndex: Int?
-    #endif
+    /// The keyboard-focused peer while browsing — tracked by IDENTITY, not
+    /// list position: peers appear and drop mid-browse, and an index could
+    /// silently retarget Return's invite at someone else.
+    @State private var focusedPeer: MCPeerID?
 
     init(
         displayName: String, payloadURL: URL, identityKey: Data?,
@@ -88,18 +89,18 @@ struct NearbyExchangeView: View {
     #if os(macOS)
     private func movePeerFocus(_ delta: Int) {
         guard case .browsing = exchange.phase, !exchange.peers.isEmpty else { return }
-        guard let current = keyIndex else {
-            keyIndex = 0
+        guard let current = focusedPeer, let i = exchange.peers.firstIndex(of: current) else {
+            focusedPeer = exchange.peers.first
             return
         }
-        keyIndex = min(max(current + delta, 0), exchange.peers.count - 1)
+        focusedPeer = exchange.peers[min(max(i + delta, 0), exchange.peers.count - 1)]
     }
 
     private func activate() {
         switch exchange.phase {
         case .browsing:
-            guard let index = keyIndex, exchange.peers.indices.contains(index) else { return }
-            exchange.invite(exchange.peers[index])
+            guard let peer = focusedPeer, exchange.peers.contains(peer) else { return }
+            exchange.invite(peer)
         case .done:
             guard let url = exchange.receivedURL else { return }
             dismiss()
@@ -133,14 +134,6 @@ struct NearbyExchangeView: View {
         }
     }
 
-    private func peerRing(_ index: Int) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyIndex == index, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
-    }
-
     private var header: some View {
         VStack(spacing: 6) {
             Image(systemName: "person.line.dotted.person.fill")
@@ -164,7 +157,7 @@ struct NearbyExchangeView: View {
             if exchange.peers.isEmpty {
                 status(Text("Looking for nearby players…", bundle: .module), spinner: true)
             } else {
-                ForEach(Array(exchange.peers.enumerated()), id: \.element) { index, peer in
+                ForEach(exchange.peers, id: \.self) { peer in
                     Button {
                         exchange.invite(peer)
                     } label: {
@@ -176,7 +169,7 @@ struct NearbyExchangeView: View {
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .modifier(peerRing(index))
+                    .keyFocusRing(focusedPeer == peer)
                 }
             }
         }

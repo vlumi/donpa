@@ -134,7 +134,18 @@ final class KeyCursorTests: XCTestCase {
         XCTAssertEqual(KeyStep.clamped(2, by: 1, within: [1, 2, 3]), 3)
         XCTAssertEqual(KeyStep.clamped(3, by: 1, within: [1, 2, 3]), 3)
         XCTAssertEqual(KeyStep.clamped(1, by: -1, within: [1, 2, 3]), 1)
-        XCTAssertEqual(KeyStep.clamped(9, by: 1, within: [1, 2, 3]), 9)  // unknown: unchanged
+        // Off-ladder (a gated/locked value): step INTO the ladder, not stay invalid.
+        XCTAssertEqual(KeyStep.clamped(9, by: 1, within: [1, 2, 3]), 1)
+        XCTAssertEqual(KeyStep.clamped(9, by: 1, within: [Int]()), 9)
+    }
+
+    func testKeyStepMovedSeedsClampsAndClears() {
+        XCTAssertEqual(KeyStep.moved(nil, by: 1, count: 3), 0)
+        XCTAssertEqual(KeyStep.moved(nil, by: -1, count: 3), 0)
+        XCTAssertEqual(KeyStep.moved(1, by: 1, count: 3), 2)
+        XCTAssertEqual(KeyStep.moved(2, by: 1, count: 3), 2)
+        XCTAssertEqual(KeyStep.moved(0, by: -1, count: 3), 0)
+        XCTAssertNil(KeyStep.moved(1, by: 1, count: 0))
     }
 
     // MARK: Pulse
