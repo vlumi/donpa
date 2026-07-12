@@ -62,8 +62,8 @@ struct ScoreboardView: View {
     @State var keyZone: KeyZone?
     /// The focused medal while the medals zone is active (←/→ browsing).
     @State var keyMedalIndex: Int?
-    /// Bumped to flip the sync toggle from the keyboard (see SyncFooterControl).
-    @State var syncActivateTick = 0
+    /// Fired to flip the sync toggle from the keyboard (see SyncFooterControl).
+    @State var syncActivate = Pulse()
     #endif
     /// The tapped/keyboard-selected medal whose detail line shows under the
     /// grid. Hoisted from DecorationsSection so the keyboard can drive it.
@@ -121,7 +121,7 @@ struct ScoreboardView: View {
             HStack(spacing: 12) {
                 SyncFooterControl(
                     settings: settings, scoreboard: scoreboard,
-                    keyFocused: keyZone == .sync, activateTick: syncActivateTick)
+                    keyFocused: keyZone == .sync, activate: syncActivate)
                 Spacer()
                 Button {
                     dismiss()

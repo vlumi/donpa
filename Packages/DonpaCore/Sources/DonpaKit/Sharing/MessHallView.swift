@@ -28,31 +28,32 @@ struct MessHallView: View {
         var id: String { url.absoluteString }
     }
 
-    /// The Nearby sheet's payload, built ONCE when the button is tapped —
-    /// building it in the sheet's ViewBuilder published from within a view
-    /// update (refreshFromCloud mutates the scoreboard) and looped forever.
+    /// The Nearby sheet's payload, built ONCE when the button is tapped.
+    /// Building it in the sheet's ViewBuilder instead published from within
+    /// a view update (refreshFromCloud mutates the scoreboard) and looped.
     @State var nearbyURL: NearbyPayload?
     private let identityStore = ShareIdentityStore()
 
     enum Tab: Hashable { case rivals, squads }
     @State var tab: Tab = .rivals
-    #if os(macOS)
-    /// The keyboard-focused row index in the CURRENT tab's list (arrow
-    /// navigation); nil until the first arrow press, reset on tab switch.
-    @State var keyRowIndex: Int?
-    /// Which zone Tab has focused: the list, or one of the header actions.
-    /// The Tab-focused zone; nil until the keyboard enters the sheet.
-    @State var keyZone: KeyZone?
-    /// Bumped to activate the card's focused control (see ShareCardView).
-    @State var cardActivateTick = 0
-    /// Bumped to flip the sync toggle (see SyncFooterControl).
-    @State var syncActivateTick = 0
-    #endif
+    /// The keyboard cursor: the Tab-focused zone plus, in the rows zone, the
+    /// focused row of the CURRENT tab's list (reset on tab switch). Inert off
+    /// macOS.
+    @State var keys = KeyCursor<KeyZone>()
+    /// Fired to activate the card's focused control (see ShareCardView).
+    @State var cardActivate = Pulse()
+    /// Fired to flip the sync toggle (see SyncFooterControl).
+    @State var syncActivate = Pulse()
+    /// Whether the share card has a built link — the card reports it, and the
+    /// card-action zones follow it (no reachable zones for hidden buttons).
+    @State var cardHasLink = false
+    /// The Squads tab's new-squad field (keyboard zone entry starts editing).
+    @FocusState var newSquadFocused: Bool
 
-    /// Tab-cyclable zones, in visual order. The card's action zones only
-    /// exist once a share name has produced a card (matching what's visible).
+    /// Tab-cyclable zones, in visual order. The card's action zones exist
+    /// only while the card has a link; the new-squad field only on Squads.
     enum KeyZone: CaseIterable {
-        case name, career, nearby, shareLink, qr, tabs, addRival, rows, sync
+        case name, career, nearby, shareLink, qr, tabs, addRival, newSquad, rows, sync
     }
 
     /// The rival whose detail (edit) sheet is open, or nil.
@@ -140,7 +141,8 @@ struct MessHallView: View {
             ShareCardView(
                 scoreboard: scoreboard, settings: settings,
                 onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) },
-                keyFocus: messCardFocus, activateTick: messCardTick)
+                keyFocus: cardKeyFocus, activate: cardActivate,
+                hasLink: $cardHasLink)
             HStack(spacing: 10) {
                 tabPicker.modifier(zoneRing(.tabs))
                 Button {
@@ -155,19 +157,10 @@ struct MessHallView: View {
         }
     }
 
-    /// The signed share link, exactly as the share card builds it. Nil when there's
-    /// no name yet (the card gates its own actions the same way) — a "?" card is a
-    /// bad first handshake.
+    /// The signed share link, through the same gate chain the card uses.
     func currentShareURL() -> URL? {
-        if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
-        let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-            let identity = identityStore.identity(),
-            let payload = SharePayloadBuilder.build(
-                from: scoreboard, identity: identity, name: trimmed,
-                includeCareer: settings.shareIncludeCareer, now: Date())
-        else { return nil }
-        return try? ShareLink.url(for: payload)
+        SharePayloadBuilder.currentURL(
+            scoreboard: scoreboard, settings: settings, identityStore: identityStore)
     }
 
     /// Sync lives here too, not only in the Service Record: the Mess hall is where
@@ -250,10 +243,12 @@ struct MessHallView: View {
             HStack(spacing: 8) {
                 TextField(text: $newGroupName) { Text("New squad", bundle: .module) }
                     .textFieldStyle(.roundedBorder)
+                    .focused($newSquadFocused)
                     .onSubmit(createGroup)
                 Button(action: createGroup) { Text("Add", bundle: .module) }
                     .disabled(newGroupName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
+            .modifier(zoneRing(.newSquad))
 
             if friends.groups.isEmpty {
                 Text("No squads yet — create one above.", bundle: .module)
@@ -322,7 +317,7 @@ extension MessHallView {
             HStack(spacing: 12) {
                 SyncFooterControl(
                     settings: settings, scoreboard: scoreboard,
-                    keyFocused: messSyncFocused, activateTick: messSyncTick)
+                    keyFocused: keys.zone == .sync, activate: syncActivate)
                 Spacer()
                 Button {
                     dismiss()
@@ -346,56 +341,26 @@ extension MessHallView {
     }
 }
 
-// Cross-platform accessors for the (macOS-only) keyboard state — the chrome
-// reads them on both platforms, so they can't live in MessHallKeyboard.
 extension MessHallView {
-    /// a no-op ring elsewhere.
+    /// The keyboard-focus ring for a list row (inert off macOS).
     func keyFocusRing(_ index: Int) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == .rows && keyRowIndex == index, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
+        FocusRing(focused: keys.zone == .rows && keys.index == index, inset: 2)
     }
 
-    /// The Tab-focus ring for a header zone; a no-op ring off macOS.
+    /// The Tab-focus ring for a header zone (inert off macOS).
     func zoneRing(_ zone: KeyZone) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyZone == zone, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
+        FocusRing(focused: keys.zone == zone, inset: 2)
     }
 
-    var messSyncFocused: Bool {
-        #if os(macOS)
-        return keyZone == .sync
-        #else
-        return false
-        #endif
-    }
-
-    var messSyncTick: Int {
-        #if os(macOS)
-        return syncActivateTick
-        #else
-        return 0
-        #endif
-    }
-
-    var messCardFocus: ShareCardView.KeyFocus? {
-        #if os(macOS)
-        return cardKeyFocus
-        #else
-        return nil
-        #endif
-    }
-
-    var messCardTick: Int {
-        #if os(macOS)
-        return cardActivateTick
-        #else
-        return 0
-        #endif
+    /// The card control the current zone maps to (ring + activation target).
+    var cardKeyFocus: ShareCardView.KeyFocus? {
+        switch keys.zone {
+        case .name: return .name
+        case .career: return .career
+        case .nearby: return .nearby
+        case .shareLink: return .shareLink
+        case .qr: return .qr
+        default: return nil
+        }
     }
 }

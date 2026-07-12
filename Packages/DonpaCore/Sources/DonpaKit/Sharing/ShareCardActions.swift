@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 /// and the keyboard's Return needs to open the same picker the click does.
 struct SharePickerButton: View {
     let url: URL
-    var activateTick: Int = 0
+    var activate = Pulse()
     @State private var anchor = AnchorView()
 
     var body: some View {
@@ -26,10 +26,7 @@ struct SharePickerButton: View {
             .frame(maxWidth: .infinity)
         }
         .background(AnchorRepresentable(view: anchor))
-        .onChangeCompat(of: activateTick) { _ in
-            guard activateTick > 0 else { return }
-            show()
-        }
+        .onPulse(activate) { show() }
     }
 
     private func show() {
@@ -71,8 +68,8 @@ struct ShareImageButton: View {
     let name: String
     /// Identity that changes with the QR (the share URL) — re-renders on edit.
     let linkID: URL
-    /// Bumped by the host to open the picker from the keyboard (macOS).
-    var activateTick: Int = 0
+    /// Fired by the host to open the picker from the keyboard (macOS).
+    var activate = Pulse()
     /// Rendered card image + its temp-file URL. Rebuilt when `linkID` changes;
     /// rendering on every body pass would be wasteful.
     @State private var rendered: (image: PlatformImage, url: URL)?
@@ -93,10 +90,7 @@ struct ShareImageButton: View {
         .disabled(rendered == nil)
         .background(SharePickerButton.AnchorRepresentable(view: anchor))
         .task(id: linkID) { rendered = await build() }
-        .onChangeCompat(of: activateTick) { _ in
-            guard activateTick > 0 else { return }
-            show()
-        }
+        .onPulse(activate) { show() }
         #else
         Group {
             if let rendered {
@@ -186,8 +180,8 @@ struct QRZoomSheet: View {
     @Environment(\.dismiss) private var dismiss
     /// The keyboard-focused export button (macOS): 0 share, 1 save.
     @State private var keyIndex: Int?
-    @State private var shareTick = 0
-    @State private var saveTick = 0
+    @State private var sharePulse = Pulse()
+    @State private var savePulse = Pulse()
 
     var body: some View {
         VStack(spacing: 20) {
@@ -226,13 +220,13 @@ struct QRZoomSheet: View {
         HStack(spacing: 8) {
             if let qr, let link {
                 Group {
-                    ShareImageButton(qr: qr, name: name, linkID: link, activateTick: shareTick)
+                    ShareImageButton(qr: qr, name: name, linkID: link, activate: sharePulse)
                         .keyFocusRing(keyIndex == 0)
                     #if os(macOS)
                     // macOS's share picker has NO save-to-disk service (iOS's
                     // sheet offers "Save to Files"), so saving the card is its
                     // own button + save panel.
-                    SaveImageButton(qr: qr, name: name, linkID: link, activateTick: saveTick)
+                    SaveImageButton(qr: qr, name: name, linkID: link, activate: savePulse)
                         .keyFocusRing(keyIndex == 1)
                     #endif
                 }
@@ -269,8 +263,8 @@ struct QRZoomSheet: View {
 
     #if os(macOS)
     private func activateFocused() {
-        if keyIndex == 0 { shareTick += 1 }
-        if keyIndex == 1 { saveTick += 1 }
+        if keyIndex == 0 { sharePulse.fire() }
+        if keyIndex == 1 { savePulse.fire() }
     }
     #endif
 
@@ -290,8 +284,8 @@ struct SaveImageButton: View {
     let name: String
     /// Identity that changes with the QR (the share URL) — re-renders on edit.
     let linkID: URL
-    /// Bumped by the host to open the save panel from the keyboard.
-    var activateTick: Int = 0
+    /// Fired by the host to open the save panel from the keyboard.
+    var activate = Pulse()
 
     @State private var png: Data?
     @State private var exporting = false
@@ -308,8 +302,8 @@ struct SaveImageButton: View {
         }
         .disabled(png == nil)
         .task(id: linkID) { png = await render() }
-        .onChangeCompat(of: activateTick) { _ in
-            guard activateTick > 0, png != nil else { return }
+        .onPulse(activate) {
+            guard png != nil else { return }
             exporting = true
         }
         .fileExporter(

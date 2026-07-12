@@ -122,7 +122,7 @@ extension ScoreboardView {
         case .manage:
             onMessHall?()
         case .sync:
-            syncActivateTick += 1
+            syncActivate.fire()
         case .breakdown:
             breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
         case .career, .family, .edges, .rivals, nil:
