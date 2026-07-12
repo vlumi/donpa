@@ -56,9 +56,3 @@ struct ShareCard: View {
         #endif
     }
 }
-
-#if os(iOS)
-typealias PlatformImage = UIImage
-#elseif os(macOS)
-typealias PlatformImage = NSImage
-#endif
