@@ -443,4 +443,4 @@ struct GameContent: View {
     }
 }
 
-// ScoreboardView and SettingsView live in SheetViews.swift.
+// ScoreboardView and SettingsView live in their own files.

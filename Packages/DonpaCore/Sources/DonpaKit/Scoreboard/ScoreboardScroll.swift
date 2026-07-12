@@ -2,7 +2,7 @@ import DonpaCore
 import SwiftUI
 
 /// The Record's anchored scrolling (current-config jump, expansion and
-/// keyboard-focus following) — split from SheetViews for the length budget.
+/// keyboard-focus following) — a sibling-file ScoreboardView extension.
 extension ScoreboardView {
     /// A ScrollView that, when opened in-game (`currentConfigKey` set), jumps the
     /// current config's row into view — so you land on the board you're playing.

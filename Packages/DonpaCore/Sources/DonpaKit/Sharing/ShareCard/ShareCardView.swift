@@ -194,8 +194,8 @@ struct ShareCardView: View {
         .buttonStyle(.bordered)
     }
 
-    /// The trimmed name: stamped on the card, and (when empty) the gate that
-    /// suppresses sharing so no "?" card ever goes out.
+    /// The trimmed name: stamped on the card, and (when empty) the sharing
+    /// gate — see the nudge above for the why.
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
     }

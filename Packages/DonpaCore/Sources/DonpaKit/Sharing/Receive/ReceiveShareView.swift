@@ -186,7 +186,7 @@ private struct ConfirmAddView: View {
             let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty { friends.setAlias(trimmed, for: payload.publicKey) }
             // A squad name typed but never committed with Create still counts —
-            // discarding it silently was how squads "didn't appear".
+            // discarding it silently would lose the squad.
             var selection = groupSelection
             if let pending = friends.createGroup(named: pendingGroupName) {
                 selection.insert(pending.id)

@@ -5,7 +5,7 @@ import SwiftUI
 /// (you + the selected rivals) and picks the rivals set from the friends list, honoring
 /// an optional group filter. `@MainActor` because it reads `Scoreboard`/`FriendsStore`.
 @MainActor
-enum RivalRanking {
+enum FriendRanking {
     /// The friends to compare against: everyone, or just one group's members.
     static func rivals(from friends: FriendsStore, group groupID: String?) -> [Friend] {
         guard let groupID else { return friends.friends }

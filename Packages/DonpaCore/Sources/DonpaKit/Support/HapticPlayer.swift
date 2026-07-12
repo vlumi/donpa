@@ -55,13 +55,4 @@ final class HapticPlayer {
         soft.prepare()
         #endif
     }
-
-    /// Warm the generators when a live game appears, so the first move isn't late.
-    func prepareAll() {
-        #if os(iOS)
-        light.prepare()
-        medium.prepare()
-        soft.prepare()
-        #endif
-    }
 }

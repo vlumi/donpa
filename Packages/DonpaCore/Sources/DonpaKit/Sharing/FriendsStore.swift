@@ -8,6 +8,9 @@ import Foundation
 /// Holds ONLY friend data — never your own stats (the display-merge invariant:
 /// deleting a friend makes their rows vanish with nothing to clean). Atomic writes,
 /// tolerant loads, mirroring `SaveStore`.
+/// NAMING BOUNDARY: code says **Friend/Group** (types, stores, files); UI
+/// strings say **Rival/Squad** (the army vocabulary, localized per concept).
+/// Keep new symbols on the code side of that line.
 @MainActor
 public final class FriendsStore: ObservableObject {
     /// The LIVE friends — tombstones filtered out. What the UI shows.

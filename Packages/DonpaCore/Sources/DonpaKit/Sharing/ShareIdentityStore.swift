@@ -30,10 +30,6 @@ public final class ShareIdentityStore {
         return fresh
     }
 
-    /// Whether an identity has been minted yet (a share has happened). Lets the UI
-    /// avoid minting just to check — e.g. "you haven't shared yet" states.
-    public var exists: Bool { load(account: account) != nil }
-
     /// The share display name — the other half of the identity, kept as a SECOND
     /// synchronizable item so it rides the same iCloud Keychain rail as the key.
     /// Deliberately NOT folded into the key's item: released builds parse that item

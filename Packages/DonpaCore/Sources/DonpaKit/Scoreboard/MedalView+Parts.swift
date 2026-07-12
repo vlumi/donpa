@@ -6,15 +6,6 @@ import SwiftUI
 extension MedalView {
     // MARK: Emblem parts
 
-    static func slash(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
-        var line = Path()
-        line.move(to: CGPoint(x: s * 0.08, y: s * 0.92))
-        line.addLine(to: CGPoint(x: s * 0.92, y: s * 0.08))
-        ctx.stroke(
-            line, with: .color(ink),
-            style: StrokeStyle(lineWidth: s * 0.10, lineCap: .round))
-    }
-
     static func star(
         in ctx: GraphicsContext, at c: CGPoint, radius r: CGFloat, ink: Color
     ) {

@@ -30,9 +30,6 @@ public struct Palette: Equatable {
     var digColor: Color { Color(digTint) }
     var flagColor: Color { Color(flagTint) }
 
-    /// The accent tint for an input mode.
-    func modeTint(for mode: InputMode) -> SKColor { mode == .flag ? flagTint : digTint }
-
     /// Faint, neutral ink for the board mode-glow screentone, so the *pattern*
     /// (not colour) is the cue. Tuned per appearance to read on the tile colour.
     let screentoneInk: SKColor

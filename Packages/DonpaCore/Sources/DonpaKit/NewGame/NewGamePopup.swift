@@ -57,10 +57,9 @@ struct NewGamePopup: View {
                 card(
                     layout: Self.layout(for: geo.size),
                     width: Self.cardWidth(available: geo.size.width - 48),
-                    // Every landscape-phone-height window packs compact (SE proved
-                    // the fit; the 17 Pro clipped without it) — since compact keeps
-                    // the taglines (merged onto the facts line), it's no longer a
-                    // trade-off. iPad/Mac landscape (600pt+) keep two-line captions.
+                    // Every landscape-phone-height window packs compact; since
+                    // compact keeps the taglines (merged onto the facts line),
+                    // nothing is lost. iPad/Mac landscape keep two-line captions.
                     short: geo.size.height < 480
                 )
                 // The X lives on the card (its actual width), so it sits in the
@@ -180,8 +179,7 @@ struct NewGamePopup: View {
     /// the shortest device (iPhone SE) at default text; when accessibility text
     /// outgrows that, the picker body scrolls so the pinned title and Start
     /// never leave the screen. Start sits full-width at the card's BOTTOM in
-    /// both layouts — the confirm belongs at the bottom edge (with Start under
-    /// the family sidebar, the Flat/Round toggle got tapped as Start). `short`
+    /// both layouts — a confirm anywhere else gets mis-tapped. `short`
     /// (landscape phone) compensates for that row via the picker's compact mode.
     private func card(
         layout: BoardSelectionPicker.Layout, width: CGFloat, short: Bool

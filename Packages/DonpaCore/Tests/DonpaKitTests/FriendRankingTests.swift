@@ -3,11 +3,11 @@ import XCTest
 
 @testable import DonpaKit
 
-/// `RivalRanking.ranking` bridges the live stores to the pure `ScoreComparison`
+/// `FriendRanking.ranking` bridges the live stores to the pure `ScoreComparison`
 /// for a board's best-time leaderboard. The rule under test: a rival with no
 /// result on THIS board is left out — a best-time list shouldn't show "—" rows.
 @MainActor
-final class RivalRankingTests: XCTestCase {
+final class FriendRankingTests: XCTestCase {
     private func freshDefaults() -> UserDefaults {
         UserDefaults(suiteName: "test.\(UUID().uuidString)")!
     }
@@ -33,7 +33,7 @@ final class RivalRankingTests: XCTestCase {
         let noEntry = rival("Bob", scores: [])  // never played this board
         let playedNoWin = rival("Cara", scores: [score(key, best: nil)])  // played, never won
 
-        let ranking = RivalRanking.ranking(
+        let ranking = FriendRanking.ranking(
             config: config, scoreboard: scoreboard,
             rivals: [hasTime, noEntry, playedNoWin], yourName: "You")
 
@@ -52,7 +52,7 @@ final class RivalRankingTests: XCTestCase {
         let scoreboard = Scoreboard(defaults: freshDefaults())
         let amy = rival("Amy", scores: [score(config.storageKey, best: 810)])
 
-        let ranking = RivalRanking.ranking(
+        let ranking = FriendRanking.ranking(
             config: config, scoreboard: scoreboard, rivals: [amy], yourName: "You")
         XCTAssertEqual(Set(ranking.entries.map(\.name)), ["You", "Amy"])
     }

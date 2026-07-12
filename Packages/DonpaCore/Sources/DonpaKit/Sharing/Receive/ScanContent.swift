@@ -6,8 +6,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 #endif
 
-/// The QR-scanning surface, reusable on its own or as the "Scan" tab of the Share
-/// sheet. iOS scans live with the camera; macOS imports/drops an image and decodes it.
+/// The QR-scanning surface (hosted by AddFriendSheet). iOS scans live with
+/// the camera; macOS imports/drops an image and decodes it.
 /// A decoded string is handed to `onFound` — the receive flow then verifies and prompts,
 /// exactly as a tapped link does. Knows nothing about signatures.
 struct ScanContent: View {
