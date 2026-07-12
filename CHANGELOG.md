@@ -22,11 +22,14 @@ they merge.
 
 ### Unreleased (next build)
 
-- **Keyboard consistency pass.** Settings' Tab wraps like every other
-  screen and Shift-Tab enters at the last row; the title menu no longer
-  keeps an invisible focus on a Continue card whose save is gone; and P
-  in the Service Record only starts a game while the score list is the
-  focused group (it could fire on an unseen row before).
+- **Keyboard consistency pass.** The Mess hall's Tab skips its list when
+  the list is empty (Return there went dead instead of closing), only
+  offers the card's share actions while the card actually has a link, and
+  now reaches the Squads tab's new-squad field. Settings' Tab wraps like
+  every other screen and Shift-Tab enters at the last row; the title menu
+  no longer keeps an invisible focus on a Continue card whose save is
+  gone; and P in the Service Record only starts a game while the score
+  list is the focused group (it could fire on an unseen row before).
 - **The whole app works from the keyboard.** Full keyboard play and
   navigation on macOS — and on iPad/iPhone with a hardware keyboard, where
   holding ⌘ shows the shortcut overlay and the same commands as the Mac

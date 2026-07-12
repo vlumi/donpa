@@ -18,8 +18,11 @@ struct ShareCardView: View {
     /// The card control the host's Tab-cycling has focused (ring + activation
     /// target), or nil.
     var keyFocus: KeyFocus?
-    /// Bumped by the host to activate the focused control from the keyboard.
-    var activateTick: Int = 0
+    /// Fired by the host to activate the focused control from the keyboard.
+    var activate = Pulse()
+    /// Reports whether a link is currently built — the host's keyboard zones
+    /// follow it (no reachable zones for buttons that aren't rendered).
+    var hasLink: Binding<Bool>?
 
     /// The card's keyboard-focusable controls, in visual order.
     enum KeyFocus { case name, career, nearby, shareLink, qr }
@@ -35,9 +38,9 @@ struct ShareCardView: View {
     @State private var enlarged = false
     /// Keyboard focus for the name field (the host's Return on the name zone).
     @FocusState private var nameFocused: Bool
-    /// Bumped to open the macOS share picker from the keyboard (ShareLink
+    /// Fired to open the macOS share picker from the keyboard (ShareLink
     /// itself can't be invoked programmatically).
-    @State private var sharePickTick = 0
+    @State private var sharePick = Pulse()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -81,10 +84,7 @@ struct ShareCardView: View {
             if name.isEmpty { name = settings.shareName }
             rebuild()
         }
-        .onChangeCompat(of: activateTick) { _ in
-            guard activateTick > 0 else { return }
-            activateFocusedControl()
-        }
+        .onPulse(activate) { activateFocusedControl() }
     }
 
     /// The host's keyboard activation, routed to whichever control its
@@ -94,7 +94,7 @@ struct ShareCardView: View {
         case .name: nameFocused = true
         case .career: settings.shareIncludeCareer.toggle()
         case .nearby: onNearby?()
-        case .shareLink: sharePickTick += 1
+        case .shareLink: sharePick.fire()
         case .qr: enlarged = true
         case nil: break
         }
@@ -171,7 +171,7 @@ struct ShareCardView: View {
     private func remoteButtons(for link: URL) -> some View {
         HStack(spacing: 8) {
             #if os(macOS)
-            SharePickerButton(url: link, activateTick: sharePickTick)
+            SharePickerButton(url: link, activate: sharePick)
                 .modifier(ring(.shareLink))
             #else
             ShareLinkButton(url: link)
@@ -200,26 +200,22 @@ struct ShareCardView: View {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Rebuild the payload → QR + link. Refresh from cloud first when sync is active
-    /// so the shared blob reflects the current cross-device best.
+    /// Rebuild the payload → QR + link, through the ONE shared gate chain
+    /// (SharePayloadBuilder.currentURL — Nearby and the keyboard zones read
+    /// the same one). `settings.shareName` is kept in sync by the field's
+    /// onChange, so the builder's copy is this field's text.
     private func rebuild() {
         failed = false
-        // No name → no card. The QR/buttons stay hidden and the field shows a nudge;
-        // a "?" card is a bad first handshake when the name IS the shared identity.
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
+        defer { hasLink?.wrappedValue = link != nil }
+        // No name → no card. The QR/buttons stay hidden and the field shows a nudge.
+        guard !trimmedName.isEmpty else {
             qr = nil
             link = nil
             return
         }
-        if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
-        // The name is the sharer's own input; the RECEIVER sanitizes on decode
-        // (where it matters for safety). The trim above is just for a tidy payload.
-        guard let identity = identityStore.identity(),
-            let payload = SharePayloadBuilder.build(
-                from: scoreboard, identity: identity, name: trimmed,
-                includeCareer: settings.shareIncludeCareer, now: Date()),
-            let url = try? ShareLink.url(for: payload)
+        guard
+            let url = SharePayloadBuilder.currentURL(
+                scoreboard: scoreboard, settings: settings, identityStore: identityStore)
         else {
             qr = nil
             link = nil

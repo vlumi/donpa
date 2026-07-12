@@ -51,3 +51,26 @@ enum SharePayloadBuilder {
             playtimeCentiseconds: sum { $0.playtimeCentiseconds.total })
     }
 }
+
+extension SharePayloadBuilder {
+    /// The signed share link for the CURRENT settings/scoreboard state — the
+    /// ONE gate chain the share card, Nearby, and the keyboard zones all
+    /// read. Refreshes from cloud first when sync is active (the shared blob
+    /// must reflect the cross-device best). Nil without a trimmed name or an
+    /// identity: a "?" card is a bad first handshake when the name IS the
+    /// shared identity. The name is the sharer's own input; the RECEIVER
+    /// sanitizes on decode, where it matters for safety.
+    static func currentURL(
+        scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore
+    ) -> URL? {
+        if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
+        let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+            let identity = identityStore.identity(),
+            let payload = build(
+                from: scoreboard, identity: identity, name: trimmed,
+                includeCareer: settings.shareIncludeCareer, now: Date())
+        else { return nil }
+        return try? ShareLink.url(for: payload)
+    }
+}
