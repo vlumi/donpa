@@ -159,7 +159,9 @@ extension ScoreboardView {
             expandedKey = nil
             keyRowKey = nil
         case "p":
-            guard let key = keyRowKey,
+            // Only with the rows zone focused — the row ring is invisible
+            // from other zones, and P would start a game on an unseen board.
+            guard keyZone == .rows, let key = keyRowKey,
                 let config = orderedConfigs.first(where: { $0.storageKey == key }),
                 gates.config(config)
             else { return }

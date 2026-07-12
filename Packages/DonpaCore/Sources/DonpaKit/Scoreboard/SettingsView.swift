@@ -25,11 +25,10 @@ struct SettingsView: View {
 
     /// Measured content height, to size the iOS sheet to a compact card.
     @State private var contentHeight: CGFloat = 0
-    #if os(macOS)
-    /// The keyboard-focused settings row (Tab/arrow navigation); nil until the
-    /// first press. ←/→ or Return operate the focused control.
-    @State private var keyRow: SettingsKeyRow?
-    #endif
+    /// The keyboard-focused settings row (Tab/arrow navigation); nil until
+    /// the first press, inert off macOS. ←/→ and Space operate the focused
+    /// control.
+    @State private var keys = KeyCursor<SettingsKeyRow>()
 
     /// The keyboard-walkable rows, in visual order (haptics is iOS-only).
     enum SettingsKeyRow: CaseIterable {
@@ -165,7 +164,7 @@ struct SettingsView: View {
             // Score sync lives in the scoreboard; About on the title screen.
 
             Divider()
-            resetRow.modifier(rowRing(.reset))
+            resetRow.keyFocusRing(keys.zone == .reset, inset: 4)
         }
     }
 
@@ -241,8 +240,8 @@ struct SettingsView: View {
         }
         .padding(24)
         .frame(minWidth: 320)
-        // Tab/arrows move between rows; ←/→ or Return operate the focused
-        // control; Esc closes. (Done keeps Return only until a row is focused.)
+        // Tab/arrows move between rows (wrapping); ←/→ and Space operate the
+        // focused control; Return is Done (or presses Reset); Esc closes.
         .background(KeyCatcher(onKey: handleKey))
         #endif
     }
@@ -250,8 +249,8 @@ struct SettingsView: View {
     #if os(macOS)
     private func handleKey(_ key: KeyCatcher.Key) {
         switch key {
-        case .down, .tab: moveRowFocus(1)
-        case .up, .backTab: moveRowFocus(-1)
+        case .down, .tab: keys.cycle(1, through: SettingsKeyRow.allCases)
+        case .up, .backTab: keys.cycle(-1, through: SettingsKeyRow.allCases)
         case .left: operateFocusedRow(step: -1)
         case .right: operateFocusedRow(step: 1)
         case .space: operateFocusedRow(step: 1)
@@ -259,41 +258,25 @@ struct SettingsView: View {
             // Desktop convention: Return presses the focused control when
             // it's a button (Reset); on the toggles/pickers it's the sheet's
             // default — Done.
-            if keyRow == .reset { confirmingReset = true } else { dismiss() }
+            if keys.zone == .reset { confirmingReset = true } else { dismiss() }
         case .escape: dismiss()
         case .family, .character: break
         }
     }
 
-    private func moveRowFocus(_ delta: Int) {
-        let rows = SettingsKeyRow.allCases
-        guard let current = keyRow, let i = rows.firstIndex(of: current) else {
-            keyRow = rows.first
-            return
-        }
-        keyRow = rows[min(max(i + delta, 0), rows.count - 1)]
-    }
-
-    /// Operate the focused row: pickers cycle by `step`, toggles flip, Reset
+    /// Operate the focused row: pickers cycle by `step` (clamped at the
+    /// ends, matching how the segmented controls read), toggles flip, Reset
     /// asks for its confirmation (never resets directly).
     private func operateFocusedRow(step: Int) {
-        switch keyRow {
-        case .appearance: settings.appearance = cycled(settings.appearance, by: step)
-        case .toggleSide: settings.handedness = cycled(settings.handedness, by: step)
+        switch keys.zone {
+        case .appearance: settings.appearance = KeyStep.clamped(settings.appearance, by: step)
+        case .toggleSide: settings.handedness = KeyStep.clamped(settings.handedness, by: step)
         case .questionMarks: settings.questionMarks.toggle()
         case .sound: settings.sound.toggle()
-        case .language: settings.language = cycled(settings.language, by: step)
+        case .language: settings.language = KeyStep.clamped(settings.language, by: step)
         case .reset: confirmingReset = true
         case nil: break
         }
-    }
-
-    /// The next case in a CaseIterable, clamped at the ends (no wrap — matches
-    /// how the segmented controls read).
-    private func cycled<T: CaseIterable & Equatable>(_ value: T, by step: Int) -> T {
-        let all = Array(T.allCases)
-        guard let i = all.firstIndex(of: value) else { return value }
-        return all[min(max(i + step, 0), all.count - 1)]
     }
     #endif
 
@@ -307,15 +290,7 @@ struct SettingsView: View {
             Text(title, bundle: .module).font(.headline)
             content()
         }
-        .modifier(rowRing(key))
-    }
-
-    private func rowRing(_ key: SettingsKeyRow?) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: key != nil && keyRow == key, inset: 4)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
+        .keyFocusRing(key != nil && keys.zone == key, inset: 4)
     }
 
     /// Reports the content's natural height (for the iOS fit-content detent).

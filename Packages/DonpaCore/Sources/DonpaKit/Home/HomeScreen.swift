@@ -41,11 +41,9 @@ struct HomeScreen: View {
     /// The in-progress sheet's keyboard-focused row (arrow navigation); nil
     /// until the first arrow press, inert off macOS. See HomeContinue.
     @State var keyRowIndex: Int?
-    #if os(macOS)
     /// The title's keyboard-focused menu item (Tab/arrow navigation); nil
-    /// until the first press.
-    @State private var keyItem: HomeKeyItem?
-    #endif
+    /// until the first press, inert off macOS.
+    @State private var keys = KeyCursor<HomeKeyItem>()
 
     /// The title's keyboard-walkable items, in visual order (top-right corner
     /// utilities last).
@@ -135,30 +133,21 @@ struct HomeScreen: View {
     private func handleHomeKey(_ key: KeyCatcher.Key) {
         switch key {
         case .down, .tab, .right:
-            moveItemFocus(1)
+            keys.cycle(1, through: homeKeyItems)
         case .up, .backTab, .left:
-            moveItemFocus(-1)
+            keys.cycle(-1, through: homeKeyItems)
         case .enter, .space:
             activateFocusedItem()
         default:
-            keyItem = key == .escape ? nil : keyItem
+            if key == .escape { keys.enter(nil) }
         }
-    }
-
-    private func moveItemFocus(_ delta: Int) {
-        let items = homeKeyItems
-        guard !items.isEmpty else { return }
-        guard let current = keyItem, let i = items.firstIndex(of: current) else {
-            keyItem = items.first
-            return
-        }
-        // A menu ring: past the last item wraps to the first (and back).
-        let count = items.count
-        keyItem = items[(i + delta + count) % count]
     }
 
     private func activateFocusedItem() {
-        guard let item = keyItem else {
+        // A focused item can vanish under the ring (the Continue card after
+        // its save is gone) — treat it as no focus rather than a dead Return.
+        guard let item = keys.zone, homeKeyItems.contains(item) else {
+            keys.enter(nil)
             // Nothing focused: Return is the title's primary action (the art
             // button) — run it HERE rather than via a .defaultAction shortcut.
             // A shortcut-activated button engages SwiftUI's focus engine,
@@ -191,11 +180,7 @@ struct HomeScreen: View {
 
     /// The keyboard-focus ring for a title item; a no-op ring off macOS.
     func homeRing(_ item: HomeKeyItem) -> FocusRing {
-        #if os(macOS)
-        return FocusRing(focused: keyItem == item, inset: 2)
-        #else
-        return FocusRing(focused: false, inset: 0)
-        #endif
+        FocusRing(focused: keys.zone == item, inset: 2)
     }
 
     // MARK: Layouts
