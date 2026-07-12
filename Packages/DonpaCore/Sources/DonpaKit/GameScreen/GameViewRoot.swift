@@ -6,12 +6,9 @@ import SwiftUI
 /// (which owns all board input natively). `.preferredColorScheme` is applied HERE
 /// so the descendant `GameContent` can read the resolved scheme — a view can't
 /// observe a scheme it forces on itself, so the read must be below the modifier.
-/// Owns the long-lived `BoardScene` so SwiftUI builds it exactly once. `@State`'s
-/// `initialValue:` is EAGER — it ran `BoardScene(viewModel:)` on every `GameView.init`,
-/// and `GameView` re-inits ~10×/s (the timer republishes `elapsedCentiseconds`), so
-/// the app churned out ~one throwaway scene per tick and could leave one leaked,
-/// still rendering. `@StateObject`'s autoclosure is evaluated once, so the scene is
-/// constructed a single time regardless of how often the view re-inits.
+/// Owns the long-lived `BoardScene` so SwiftUI builds it exactly once:
+/// `@State`'s `initialValue:` is EAGER and re-runs on every re-init (~10×/s
+/// from the clock), while `@StateObject`'s autoclosure runs a single time.
 @MainActor
 final class SceneHolder: ObservableObject {
     let scene: BoardScene

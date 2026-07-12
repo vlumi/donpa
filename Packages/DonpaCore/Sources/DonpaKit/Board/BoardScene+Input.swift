@@ -146,10 +146,9 @@ extension BoardScene {
         // events (mouseDown/Dragged/Up below). Only zoom needs a recognizer.
         let pinch = NSMagnificationGestureRecognizer(target: self, action: #selector(handlePinch))
         view.addGestureRecognizer(pinch)
-        // Trace-only app-level tap: a captured repro showed clicks vanishing ABOVE
-        // the scene (no scene mouseDown at all), so log every left-mouse-down the
-        // app dispatches and WHICH view hit-tests it — an invisible overlay eating
-        // clicks names itself here; silence means the events die at window level.
+        // Trace-only app-level tap: logs every left-mouse-down the app
+        // dispatches and WHICH view hit-tests it — an invisible overlay eating
+        // clicks names itself; silence means the events die at window level.
         if InputTrace.enabled, traceEventMonitor == nil {
             traceEventMonitor = NSEvent.addLocalMonitorForEvents(
                 matching: .leftMouseDown
@@ -252,9 +251,8 @@ extension BoardScene {
     }
 
     public override func mouseDown(with event: NSEvent) {
-        // clickCount rises 2, 3, 4… while rapid same-spot clicks stay inside the
-        // system multi-click window (a ~1s pause resets it) — traced to test the
-        // click-escalation hypothesis behind the dead-while-hammering reports.
+        // clickCount rises 2, 3, 4… while rapid same-spot clicks stay inside
+        // the system multi-click window (a ~1s pause resets it).
         InputTrace.log("mouseDown clicks=\(event.clickCount)")
         let p = view?.convert(event.locationInWindow, from: nil) ?? .zero
         lastDragViewPoint = p
@@ -348,46 +346,28 @@ extension BoardScene {
         longPressAction(atScenePoint: event.location(in: self))
     }
 
-    // Key input handled directly: SwiftUI menu shortcuts for bare keys don't fire
-    // reliably, but the scene receives key events via the responder chain. Space
-    // toggles reveal/flag; Esc pauses/resumes mid-play; arrows move the focused-
-    // cell cursor, Return acts on it, F flags it (BoardScene+Cursor).
+    // Key input handled directly: SwiftUI menu shortcuts for bare keys don't
+    // fire reliably, but the scene receives key events via the responder
+    // chain. The raw map translates to BoardKeyCommand, shared with the iPad
+    // key forwarder.
     public override func keyDown(with event: NSEvent) {
-        switch event.keyCode {
-        case 49:  // Space
-            viewModel.inputMode.toggle()
-        case 53:  // Escape
-            if viewModel.isPaused {
-                viewModel.resume()
-            } else {
-                viewModel.pause()
-            }
-        case 123:  // ←
-            moveCursor(dx: -1, dy: 0)
-        case 124:  // →
-            moveCursor(dx: 1, dy: 0)
-        case 125:  // ↓ (rows render bottom-up: visually down = row − 1)
-            moveCursor(dx: 0, dy: -1)
-        case 126:  // ↑
-            moveCursor(dx: 0, dy: 1)
-        case 36, 76:  // Return / keypad Enter
-            activateCursor()
-        case 3:  // F
-            flagCursor()
-        default:
-            handleLetterKey(event)
+        guard let command = Self.command(for: event) else {
+            return super.keyDown(with: event)
         }
+        perform(command)
     }
 
-    /// WASD moves like the arrows (by typed character, so it follows the
-    /// user's layout).
-    private func handleLetterKey(_ event: NSEvent) {
-        switch event.charactersIgnoringModifiers?.lowercased() {
-        case "w": moveCursor(dx: 0, dy: 1)
-        case "s": moveCursor(dx: 0, dy: -1)
-        case "a": moveCursor(dx: -1, dy: 0)
-        case "d": moveCursor(dx: 1, dy: 0)
-        default: super.keyDown(with: event)
+    private static func command(for event: NSEvent) -> BoardKeyCommand? {
+        switch event.keyCode {
+        case 49: return .toggleMode  // Space
+        case 53: return .pauseResume  // Esc
+        case 123: return .move(dx: -1, dy: 0)  // ←
+        case 124: return .move(dx: 1, dy: 0)  // →
+        case 125: return .move(dx: 0, dy: -1)  // ↓ (rows render bottom-up)
+        case 126: return .move(dx: 0, dy: 1)  // ↑
+        case 36, 76: return .activate  // Return / keypad Enter
+        case 3: return .flag  // F
+        default: return BoardKeyCommand.wasd(event.charactersIgnoringModifiers)
         }
     }
     #endif

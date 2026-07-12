@@ -2,9 +2,11 @@
 import AppKit
 import SwiftUI
 
-/// Invisible AppKit view that takes first responder and forwards arrow / Return /
-/// Escape presses. Used by overlays because `@FocusState` can't reliably take it
-/// from the SpriteKit board, especially after a game ends.
+/// Invisible AppKit view that takes first responder and forwards the keyboard
+/// vocabulary: arrows, Return, Esc, Space, Tab/⇧Tab, plain letters, and ⌘1–⌘4.
+/// Used by overlays because `@FocusState` can't reliably take focus from the
+/// SpriteKit board, especially after a game ends. One catcher per window — two
+/// would fight over first responder (both re-claim on every SwiftUI update).
 struct KeyCatcher: NSViewRepresentable {
     /// Arrow / Return / Escape, plus ⌘1–⌘4 (the New Game popup picks the board
     /// family by number — families are a list, not something to arrow through)
