@@ -76,6 +76,26 @@ extension BoardScene {
         viewModel.focusedCell = displayCoord(screen)
     }
 
+    /// A click/tap moves an ACTIVE cursor to the acted-on cell, so the arrows
+    /// resume from where the mouse left off and the ring never lingers where
+    /// the keyboard last was. A dormant cursor stays dormant — mouse-only
+    /// play never summons the ring.
+    func syncCursorToPointer(atScenePoint p: CGPoint) {
+        guard cursorScreenCoord != nil, let screen = screenCoord(atScenePoint: p) else { return }
+        cursorScreenCoord = screen
+        viewModel.focusedCell = displayCoord(screen)
+        view?.preferredFramesPerSecond = 60
+    }
+
+    /// The SCREEN-space cell under a scene point (unfolded on wrapped boards —
+    /// the cursor's coordinate space), or nil off a bounded board.
+    private func screenCoord(atScenePoint p: CGPoint) -> Coord? {
+        guard viewModel.game.board.cellCount > 0 else { return nil }
+        let local = boardLayer.convert(p, from: self)
+        if isWrapped { return layout.unclampedCoord(at: local) }
+        return layout.coord(at: local)
+    }
+
     /// Reset on a new game (the `gameID` branch of `rebuildIfNeeded`): the board
     /// geometry changed under the cursor. The VM clears `focusedCell` itself.
     func resetCursor() {

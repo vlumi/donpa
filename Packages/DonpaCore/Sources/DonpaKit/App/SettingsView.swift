@@ -260,6 +260,7 @@ struct SettingsView: View {
             // default — Done.
             if keys.zone == .reset { confirmingReset = true } else { dismiss() }
         case .escape: dismiss()
+        case .click: keys.enter(nil)  // mouse takes over; the ring stands down
         case .family, .character: break
         }
     }

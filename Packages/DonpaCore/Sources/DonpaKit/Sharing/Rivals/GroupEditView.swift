@@ -87,8 +87,10 @@ struct GroupEditView: View {
         switch key {
         case .tab: cycleZone(1)
         case .backTab: cycleZone(-1)
-        case .down: if keys.zone == .members { keys.move(1, count: rivals.count) }
-        case .up: if keys.zone == .members { keys.move(-1, count: rivals.count) }
+        case .down, .up:
+            if keys.zone == .members {
+                keys.move(key == .down ? 1 : -1, count: rivals.count)
+            }
         case .space:
             activateFocusedZone()
         case .enter:
@@ -96,7 +98,9 @@ struct GroupEditView: View {
         case .escape:
             // The catcher owns keyDown, so Esc routes here too.
             dismiss()
-        default: break
+        default:
+            // Mouse click: the pointer takes over; the ring stands down.
+            if key == .click { keys.enter(nil) }
         }
     }
 
@@ -150,6 +154,9 @@ struct GroupEditView: View {
             ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
                 let member = rival.groups.contains(group.id)
                 Button {
+                    // Click takes the keyboard focus with it.
+                    keys.enter(.members)
+                    keys.index = index
                     friends.setMembership(!member, of: rival.publicKey, in: group.id)
                 } label: {
                     HStack {

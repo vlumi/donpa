@@ -54,6 +54,7 @@ extension BoardScene {
         }
         if handleMinimapNavigation(atScenePoint: p) { return }
         guard let c = coord(atScenePoint: p) else { return }
+        syncCursorToPointer(atScenePoint: p)
         perform(primaryActionAt: c)
     }
 
@@ -79,6 +80,7 @@ extension BoardScene {
     func longPressAction(atScenePoint p: CGPoint) {
         guard !isOverMinimapUI(atScenePoint: p) else { return }
         guard let c = coord(atScenePoint: p) else { return }
+        syncCursorToPointer(atScenePoint: p)
         if viewModel.game.board[c].state == .revealed {
             chordWithSound(c)
         } else {

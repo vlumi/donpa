@@ -130,6 +130,7 @@ struct NewGamePopup: View {
         case .escape: onClose()
         case .character: break  // no letter actions on this surface
         case .space: break  // Space stays the board's mode key, not a commit
+        case .click: focusedRow = nil  // mouse takes over; the ring stands down
         }
     }
 

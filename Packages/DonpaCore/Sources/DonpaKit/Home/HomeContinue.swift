@@ -123,6 +123,7 @@ extension HomeScreen {
         switch key {
         case .down, .tab: moveRowFocus(1)
         case .up, .backTab: moveRowFocus(-1)
+        case .click: keyRowIndex = nil  // mouse takes over; the ring stands down
         case .enter, .space:
             guard let index = keyRowIndex, snapshots.indices.contains(index) else { return }
             showAll = false

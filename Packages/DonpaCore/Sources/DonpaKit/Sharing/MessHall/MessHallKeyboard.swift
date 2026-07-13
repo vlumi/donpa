@@ -15,6 +15,7 @@ extension MessHallView {
         case .enter: confirmOrActivate()
         case .space: activateFocusedZone()
         case .escape: dismiss()
+        case .click: keys.enter(nil)  // mouse takes over; the ring stands down
         case .character(let ch): handleLetter(ch)
         case .family(let n): pickTab(n)
         }

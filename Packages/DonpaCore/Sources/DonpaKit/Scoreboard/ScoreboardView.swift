@@ -180,6 +180,7 @@ struct ScoreboardView: View {
                         keyFocusIndex: medalFocusIndex
                     )
                     .id("zone.medals")
+                    .onChangeCompat(of: selectedMedal) { followMedalSelection($0) }
                 }
                 scoresSection
             }
@@ -317,6 +318,14 @@ struct ScoreboardView: View {
         keys.zone == .medals ? keys.index : nil
     }
 
+    /// A tapped medal takes the keyboard focus with it (selection is set by
+    /// both the tap and the keyboard; re-entering the same zone is harmless).
+    func followMedalSelection(_ id: AchievementID?) {
+        guard let id, let i = AchievementID.allCases.firstIndex(of: id) else { return }
+        keys.enter(.medals)
+        keys.index = i
+    }
+
     private var breakdownKeyFocused: Bool {
         keys.zone == .breakdown
     }
@@ -343,7 +352,13 @@ struct ScoreboardView: View {
                         currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
                         isExpanded: expandedKey == config.storageKey,
                         isKeyFocused: keyFocused(config),
-                        onToggle: { toggleExpanded(config.storageKey) },
+                        onToggle: {
+                            toggleExpanded(config.storageKey)
+                            // Click takes the keyboard focus with it, so the
+                            // arrows resume from the clicked row.
+                            keyRowKey = config.storageKey
+                            keys.enter(.rows)
+                        },
                         onPlay: gates.config(config)
                             ? onPlay.map { play in { play(config) } } : nil,
                         rivals: rivals, yourName: settings.shareName

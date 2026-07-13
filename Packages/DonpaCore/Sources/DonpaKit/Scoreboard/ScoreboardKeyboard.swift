@@ -15,6 +15,7 @@ extension ScoreboardView {
         case .enter: confirmOrActivate()
         case .space: operateOrActivate()
         case .escape: dismiss()
+        case .click: keys.enter(nil)  // mouse takes over; the ring stands down
         case .family(let n): pickFilterFamily(n)
         case .character(let ch): handleLetter(ch)
         }

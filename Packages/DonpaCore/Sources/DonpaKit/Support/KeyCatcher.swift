@@ -16,6 +16,10 @@ struct KeyCatcher: NSViewRepresentable {
         case tab, backTab
         case family(Int)
         case character(Character)
+        /// A mouse-down anywhere in the window (never consumed) — hosts clear
+        /// their keyboard focus ring so it can't linger under mouse use; a
+        /// control that takes focus on click sets it again on mouse-up.
+        case click
     }
     let onKey: (Key) -> Void
     /// When true, never steal first responder from an active text field — for
@@ -41,6 +45,7 @@ struct KeyCatcher: NSViewRepresentable {
         var onKey: ((Key) -> Void)?
         var yieldsToTextFields = false
         private var fieldMonitor: Any?
+        private var mouseMonitor: Any?
 
         override var acceptsFirstResponder: Bool { true }
 
@@ -50,13 +55,31 @@ struct KeyCatcher: NSViewRepresentable {
                 NSEvent.removeMonitor(fieldMonitor)
                 self.fieldMonitor = nil
             }
+            if let mouseMonitor {
+                NSEvent.removeMonitor(mouseMonitor)
+                self.mouseMonitor = nil
+            }
             guard window != nil else { return }
             claimFocus()
             if yieldsToTextFields { installFieldMonitor() }
+            installMouseMonitor()
         }
 
         deinit {
             if let fieldMonitor { NSEvent.removeMonitor(fieldMonitor) }
+            if let mouseMonitor { NSEvent.removeMonitor(mouseMonitor) }
+        }
+
+        /// Any mouse-down in our window clears the host's focus ring (`.click`
+        /// is informational — the event always passes through untouched).
+        private func installMouseMonitor() {
+            guard mouseMonitor == nil else { return }
+            mouseMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.leftMouseDown, .rightMouseDown]
+            ) { [weak self] event in
+                if let self, event.window === self.window { self.onKey?(.click) }
+                return event
+            }
         }
 
         /// While a field editor is typing, Tab and Esc must stay NAVIGATION:

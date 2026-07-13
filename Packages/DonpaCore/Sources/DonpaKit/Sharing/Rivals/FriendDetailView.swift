@@ -59,7 +59,11 @@ struct FriendDetailView: View {
                     pendingName: $pendingGroupName,
                     keyFocusIndex: keys.zone == .groups ? keys.index : nil,
                     fieldKeyFocused: keys.zone == .newGroup,
-                    fieldFocus: newGroupFocus
+                    fieldFocus: newGroupFocus,
+                    onRowTap: { index in
+                        keys.enter(.groups)
+                        keys.index = index
+                    }
                 )
                 .onChangeCompat(of: groupSelection) {
                     friends.setGroups(Array($0), for: friend.publicKey)
@@ -89,8 +93,10 @@ struct FriendDetailView: View {
         switch key {
         case .tab: cycleZone(1)
         case .backTab: cycleZone(-1)
-        case .down: if keys.zone == .groups { keys.move(1, count: friends.groups.count) }
-        case .up: if keys.zone == .groups { keys.move(-1, count: friends.groups.count) }
+        case .down, .up:
+            if keys.zone == .groups {
+                keys.move(key == .down ? 1 : -1, count: friends.groups.count)
+            }
         case .space:
             activateFocusedZone()
         case .enter:
@@ -99,7 +105,9 @@ struct FriendDetailView: View {
             // The catcher owns keyDown, so Esc routes here — same
             // commit-then-close as Done.
             done()
-        default: break
+        default:
+            // Mouse click: the pointer takes over; the ring stands down.
+            if key == .click { keys.enter(nil) }
         }
     }
 
