@@ -8,6 +8,19 @@ import SwiftUI
 /// design — family glyphs, rank-insignia difficulty, map/globe edges. Binds
 /// directly to `Settings`; the host decides when to start. macOS is keyboard-
 /// drivable: up/down move rows, left/right cycle the focused row (row 0 = family).
+/// How a family switch animates: the sliding pager on iOS wants the motion;
+/// on the Mac a clicked tab expects an INSTANT swap — the whole-card
+/// cross-animation read as ghosting/lag there (user report, b23 testing).
+enum FamilySwitch {
+    static var animation: Animation? {
+        #if os(macOS)
+        return nil
+        #else
+        return .snappy
+        #endif
+    }
+}
+
 struct BoardSelectionPicker: View {
     /// A tapped locked option's teaser, shown briefly in a fixed caption slot
     /// (0 = the size row's, 1 = the density row's — edges borrows the density
@@ -23,9 +36,6 @@ struct BoardSelectionPicker: View {
     /// Keyboard-focused row, or nil when not keyboard-driven (iOS, or before the
     /// first arrow press).
     var focusedRow: Int?
-    /// Ask the host to move keyboard focus to a row. nil on iOS.
-    var onFocusRow: ((Int) -> Void)?
-
     /// Which layout to render — the host picks by viewport shape (narrow portrait
     /// phone → pager; anything wider → sidebar). Not a platform/size-class split.
     enum Layout { case pager, sidebar }
@@ -172,7 +182,7 @@ struct BoardSelectionPicker: View {
         let all = BoardFamily.allCases
         guard let i = all.firstIndex(of: settings.family) else { return }
         let next = min(max(i + delta, 0), all.count - 1)
-        withAnimation(.snappy) { settings.family = all[next] }
+        withAnimation(FamilySwitch.animation) { settings.family = all[next] }
     }
 
     // MARK: Sliding pager

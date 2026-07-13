@@ -8,9 +8,8 @@ extension BoardSelectionPicker {
     func familySidebarItem(_ family: BoardFamily) -> some View {
         let selected = settings.family == family
         return Button {
-            withAnimation(.snappy) { settings.family = family }
+            withAnimation(FamilySwitch.animation) { settings.family = family }
             lockedHint = nil  // don't carry a stale teaser onto the new page
-            onFocusRow?(0)
         } label: {
             HStack(spacing: 10) {
                 BoardGlyph(kind: .family(family), size: 24)
@@ -39,9 +38,8 @@ extension BoardSelectionPicker {
     func familyTab(_ family: BoardFamily) -> some View {
         let selected = settings.family == family
         return Button {
-            withAnimation(.snappy) { settings.family = family }
+            withAnimation(FamilySwitch.animation) { settings.family = family }
             lockedHint = nil  // don't carry a stale teaser onto the new page
-            onFocusRow?(0)
         } label: {
             VStack(spacing: 3) {
                 BoardGlyph(kind: .family(family), size: 26)

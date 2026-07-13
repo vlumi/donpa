@@ -73,7 +73,12 @@ entries land under Unreleased as they merge.
   Settings opens every size, difficulty, and shape at once — for
   experienced sweepers who just want to try a huge Hive without earning
   their way up. Freely reversible: switch it off and the boards you've
-  actually won at decide what's open, exactly as before.
+  actually won at decide what's open, exactly as before.- **Family switching is instant on the Mac.** The New Game pages swapped
+  with the same slide-and-settle the iPhone pager uses — on a desktop click
+  it read as ghosting and lag. Clicks now swap immediately (the iOS swipe
+  keeps its motion), and the keyboard focus ring no longer jumps in on
+  mouse clicks — like a text field, it appears only once the keyboard is
+  actually used.
 ### build 23 — 2026-07-12
 
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the

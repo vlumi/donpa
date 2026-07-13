@@ -23,7 +23,6 @@ extension BoardSelectionPicker {
         let selected = settings.basicPreset == preset
         return Button {
             settings.basicPreset = preset
-            onFocusRow?(0)  // Basic's presets are its only row
         } label: {
             VStack(spacing: 2) {
                 Text(verbatim: preset.label)
@@ -116,7 +115,6 @@ extension BoardSelectionPicker {
             }
             settings[keyPath: densityPath] = density
             lockedHint = nil  // a real selection dismisses the teaser (user call)
-            onFocusRow?(1)
         } label: {
             DensityInsignia.markImage(density)
                 .resizable()
@@ -190,7 +188,6 @@ extension BoardSelectionPicker {
             }
             settings[keyPath: sizePath] = size
             lockedHint = nil  // a real selection dismisses the teaser (user call)
-            onFocusRow?(0)  // size is row 0 (family stopped being a row long ago)
         } label: {
             Text(verbatim: size.label)
                 .font(.subheadline.weight(.semibold))
@@ -288,7 +285,6 @@ extension BoardSelectionPicker {
             glyph: { .edges($0) }, label: { $0.label },
             onChange: {
                 lockedHint = nil  // a real selection dismisses the teaser
-                onFocusRow?(2)  // edges is row 2 — 3 left the ring dark
             },
             // Edges is the leaf: filtered by the full path above (family + size + density).
             badge: { index.edgesHasSave($0, family: family, size: size, density: density) },
