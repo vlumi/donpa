@@ -117,9 +117,7 @@ struct GameContent: View {
     var palette: Palette { .resolved(for: scheme) }
 
     /// A live game (not yet won/lost) — the only time the board takes input.
-    var gameInProgress: Bool {
-        viewModel.status == .notStarted || viewModel.status == .playing
-    }
+    var gameInProgress: Bool { viewModel.status.isLive }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -177,7 +175,7 @@ struct GameContent: View {
         // stopping the clock); auto-resume on dismiss only if WE paused.
         .onChangeCompat(of: navigator.showingScores) { showing in
             if showing {
-                if viewModel.game.status == .playing && !viewModel.isPaused {
+                if viewModel.playState == .playing {
                     pausedForScores = true
                     viewModel.pause()
                 }
@@ -193,7 +191,7 @@ struct GameContent: View {
         // resume() here no-ops on them (it guards on isPaused).
         .onChangeCompat(of: navigator.showingNewGame) { showing in
             if showing {
-                if viewModel.game.status == .playing && !viewModel.isPaused {
+                if viewModel.playState == .playing {
                     pausedForNewGame = true
                     viewModel.pause()
                 }

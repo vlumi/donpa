@@ -34,19 +34,6 @@ gates.
       blob. Deferred (a dead reinstall looks like an offline device; blobs are
       tiny). Revisit only near KVS storage limits.
 
-**Code cleanup (next refactor round):**
-
-- [ ] **Pause as a UI play-state.** `isPaused` is a UI-only flag on
-      `GameViewModel` while `GameStatus` (Core) stays pure (`notStarted/playing/
-      won/lost`, also Codable-saved + used by the `Solver`). The smell is the
-      scattered `status == .playing && !isPaused` checks. Fold them into one
-      view-model computed enum (e.g. `playState` with a `.paused` case) the UI
-      reads — without pushing a UI concept into Core/solver/save. Decide during a
-      later refactor pass.
-- [ ] **`GameStatus` convenience accessors.** Replace the repeated
-      `status == .notStarted || status == .playing` with computed properties on
-      the enum (`isLive` / `isFinished` / `isPlaying`). Pure readability; no
-      behaviour change.
 
 ## v0.6.0 — Keyboard & accessibility (in beta)
 

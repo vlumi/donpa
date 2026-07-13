@@ -231,7 +231,7 @@ extension GameContent {
             // Pause/Resume toggle: shows Play while paused. Enabled while live
             // (playing or paused), dimmed otherwise.
             let paused = viewModel.isPaused
-            let live = viewModel.status == .playing
+            let live = viewModel.status.isPlaying
             actionButton(
                 paused ? .play : .pause, help: paused ? "Resume" : "Pause"
             ) {

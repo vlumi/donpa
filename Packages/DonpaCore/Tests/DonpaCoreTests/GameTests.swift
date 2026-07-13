@@ -6,6 +6,21 @@ final class GameTests: XCTestCase {
 
     // MARK: First-click safety + flood-fill
 
+    func testStatusConvenienceAccessors() {
+        XCTAssertTrue(GameStatus.notStarted.isLive)
+        XCTAssertTrue(GameStatus.playing.isLive)
+        XCTAssertFalse(GameStatus.won.isLive)
+        XCTAssertFalse(GameStatus.lost.isLive)
+
+        XCTAssertTrue(GameStatus.won.isFinished)
+        XCTAssertTrue(GameStatus.lost.isFinished)
+        XCTAssertFalse(GameStatus.notStarted.isFinished)
+        XCTAssertFalse(GameStatus.playing.isFinished)
+
+        XCTAssertTrue(GameStatus.playing.isPlaying)
+        XCTAssertFalse(GameStatus.notStarted.isPlaying)
+    }
+
     func testFirstClickAlwaysOpensARegion() {
         // The clicked cell must end up revealed and be a 0 (so a region opens).
         for seed in UInt64(0)..<100 {

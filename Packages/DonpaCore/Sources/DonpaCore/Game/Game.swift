@@ -4,6 +4,12 @@ public enum GameStatus: String, Sendable, Equatable, Codable {
     case playing
     case won
     case lost
+
+    /// Still accepting play (not yet won or lost).
+    public var isLive: Bool { self == .notStarted || self == .playing }
+    /// Decided, one way or the other.
+    public var isFinished: Bool { self == .won || self == .lost }
+    public var isPlaying: Bool { self == .playing }
 }
 
 /// Drives the rules: first-click mine placement, flood-fill reveal, flagging,
@@ -148,7 +154,7 @@ public struct Game: Sendable {
     }
 
     public mutating func reveal<R: RandomNumberGenerator>(_ c: Coord, using rng: inout R) {
-        guard status == .notStarted || status == .playing else { return }
+        guard status.isLive else { return }
         // Shadow with the FOLDED coord: on a wrapped topology normalize never fails,
         // and using the raw coord past this point would read/write phantom off-board
         // cells (silent no-op writes, and a first-click safe zone around the wrong
@@ -223,7 +229,7 @@ public struct Game: Sendable {
     /// plain hidden ↔ flagged toggle. A "?" is a note, not a claim — it never
     /// counts as a flag anywhere (counter, chord, over-flag).
     public mutating func toggleFlag(_ c: Coord, useQuestionMarks: Bool = false) {
-        guard status == .playing || status == .notStarted else { return }
+        guard status.isLive else { return }
         // Folded coord, same as `reveal`: a raw wrapped coord would pass the check
         // but write to a phantom cell.
         guard let c = topology.normalize(c) else { return }
