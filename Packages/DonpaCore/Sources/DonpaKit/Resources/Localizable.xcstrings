@@ -1483,6 +1483,28 @@
         }
       }
     },
+    "Best pace" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best pace"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paras tahti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ベストペース"
+          }
+        }
+      }
+    },
     "Best times" : {
       "localizations" : {
         "fi" : {

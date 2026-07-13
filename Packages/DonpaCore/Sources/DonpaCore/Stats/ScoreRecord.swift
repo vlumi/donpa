@@ -55,6 +55,10 @@ public struct ScoreRecord: Equatable, Sendable {
     /// display merge unions across devices by date. Optional-by-decode so old
     /// records load.
     public var recentWins: [RecentWin]
+    /// This device's fastest-pace win (whole entry, so the pace and its date
+    /// stay paired — the BestTime pattern). Display merge projects the
+    /// cross-device max.
+    public var bestPace: RecentWin?
 
     /// How many top times to retain per config, per device.
     public static let topTimeLimit = 5
@@ -75,7 +79,7 @@ public struct ScoreRecord: Equatable, Sendable {
         best: BestTime? = nil, topTimes: [BestTime] = [], bestLossProgress: Double? = nil,
         luckiestGuess: LuckiestGuess? = nil,
         firstPlayed: Date? = nil, lastPlayed: Date? = nil,
-        recentWins: [RecentWin] = []
+        recentWins: [RecentWin] = [], bestPace: RecentWin? = nil
     ) {
         self.wins = wins
         self.gamesPlayed = gamesPlayed
@@ -97,6 +101,7 @@ public struct ScoreRecord: Equatable, Sendable {
         self.firstPlayed = firstPlayed
         self.lastPlayed = lastPlayed
         self.recentWins = recentWins
+        self.bestPace = bestPace
     }
 }
 
@@ -106,6 +111,7 @@ extension ScoreRecord: Codable {
         case playtimeCentiseconds, chordsUsed, noFlagWins, noChordWins
         case forcedGuesses, guessesSurvived, luckiestGuess
         case best, topTimes, bestLossProgress, firstPlayed, lastPlayed, recentWins
+        case bestPace
         // Legacy: a pre-`best` record stored the scalar `bestCentiseconds`.
         case legacyBestCentiseconds = "bestCentiseconds"
     }
@@ -135,6 +141,7 @@ extension ScoreRecord: Codable {
         // `try?` on `decode` yields nil for a missing/mistyped key (no `?? nil`).
         topTimes = (try? c.decode([BestTime].self, forKey: .topTimes)) ?? []
         recentWins = (try? c.decode([RecentWin].self, forKey: .recentWins)) ?? []
+        bestPace = try? c.decode(RecentWin.self, forKey: .bestPace)
         bestLossProgress = try? c.decode(Double.self, forKey: .bestLossProgress)
         luckiestGuess = try? c.decode(LuckiestGuess.self, forKey: .luckiestGuess)
         firstPlayed = try? c.decode(Date.self, forKey: .firstPlayed)
@@ -173,6 +180,7 @@ extension ScoreRecord: Codable {
         try c.encodeIfPresent(best, forKey: .best)
         try c.encode(topTimes, forKey: .topTimes)
         try c.encode(recentWins, forKey: .recentWins)
+        try c.encodeIfPresent(bestPace, forKey: .bestPace)
         try c.encodeIfPresent(bestLossProgress, forKey: .bestLossProgress)
         try c.encodeIfPresent(luckiestGuess, forKey: .luckiestGuess)
         try c.encodeIfPresent(firstPlayed, forKey: .firstPlayed)

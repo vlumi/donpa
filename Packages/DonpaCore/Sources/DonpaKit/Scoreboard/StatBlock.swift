@@ -27,6 +27,8 @@ struct StatFigures {
     /// pace isn't comparable across families/densities, so the career scope
     /// never aggregates it.
     var recentPace: Double?
+    /// Fastest-pace win (per-config only, like recentPace).
+    var bestPace: Double?
 
     /// One config's figures, straight off its merged record.
     init(record: ScoreRecord) {
@@ -46,6 +48,7 @@ struct StatFigures {
         topTimes = record.topTimes
         firstPlayed = record.firstPlayed
         recentPace = Pace.medianPace(of: record.recentWins)
+        bestPace = record.bestPace?.pace
     }
 
     /// The global career: sum every displayed config. No top-times list at this scope.
@@ -155,6 +158,9 @@ struct StatBlock: View {
         // median 3BV/s over the recent-wins window, weighted by board size.
         if let pace = figures.recentPace {
             pairs.append(("Recent pace", Self.paceDisplay(pace)))
+        }
+        if let pace = figures.bestPace {
+            pairs.append(("Best pace", Self.paceDisplay(pace)))
         }
         // The luck line — only once the board has actually forced a guess (a row
         // of "0/0" would just be noise), and the record only with it.
