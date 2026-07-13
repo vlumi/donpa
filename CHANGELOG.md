@@ -22,36 +22,25 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- The Service Record also keeps your best pace per board, beside the
-  recent pace — synced across devices like best times.
 - **Pace: how fast you actually sweep.** Every win now shows its pace —
   the board's minimum moves (3BV) per second, a number board luck can't
   inflate the way a lucky layout inflates raw time. The win panel gets a
-  quiet pace chip beside the luck pill, the Service Record's expanded
-  rows show your recent pace (median of your last ten wins, bigger
-  boards weighing more), and the career Breakdown gains an Edges bar so
-  Round play finally shows up there. Recent wins sync across devices
-  like everything else.
-- Expert Sweep is one badge now — clear Expert in under three minutes —
-  instead of a 180/120/90 ladder: chasing faster times is the
-  scoreboard's job (your best times live there), and a tiered time
-  ladder was skill tracking dressed as decorations. Anyone who reached a
-  faster rung keeps the badge, of course.
-- The Service Record's Decorations block folds away — and STAYS folded
-  across launches. Achievements are an exploration on-ramp; once they've
-  served their purpose the scores get the room, with the earned count
-  still on the folded header. Tab still reaches it (Return/Space
-  unfolds).
-- One luck decoration instead of three: Coin flip (survive a forced
-  50/50) stays; Long Shot and A MIRACLE retire — degrees of pure luck
-  aren't degrees of merit, and a ≤1-in-4 forced guess practically never
-  occurs on real boards (the in-game toasts and the luckiest-escape stat
-  still track them). Anyone who already earned them keeps nothing lost —
-  the grid simply no longer shows slots almost no one could fill.
-- Restarting (or replaying) the same board keeps your zoom level,
-  re-centred — it re-fit to the default zoom before, throwing away a
-  hand-tuned view on every ⌘R. A different board still opens at the
-  default fit.
+  quiet pace chip beside the luck pill, and the Service Record's expanded
+  rows show your recent pace (median of your last ten wins, bigger boards
+  weighing more) and your best pace per board. The career Breakdown gains
+  an Edges bar so Round play finally shows up there. All of it syncs
+  across devices like best times.
+- **Decorations are milestones, not progress trackers.** The Decorations
+  block folds away — and stays folded across launches — with the earned
+  count still on the folded header (achievements are an exploration
+  on-ramp; once they've served their purpose the scores get the room).
+  The set itself is recalibrated to match: one luck decoration (Coin
+  flip — survive a forced 50/50) instead of a three-rung luck ladder,
+  and Expert Sweep is one badge (clear Expert in under three minutes)
+  instead of a 180/120/90 time ladder — chasing rarer luck or faster
+  times is the scoreboard's job, and anyone who earned the retired rungs
+  keeps their badge. Winning several decorations at once now stamps
+  "DECORATIONS · 3 new" instead of a singular header over a plural line.
 - **The mouse and the keyboard share one focus.** Clicking anywhere
   stands the keyboard focus ring down, and clicking something focusable
   moves the focus there — on the board, a click hides the cursor ring
@@ -62,9 +51,10 @@ entries land under Unreleased as they merge.
   gentle nudge, not the old jump after it had already walked out of
   sight. Score rows, medals, rival/squad rows, and checkboxes take the
   focus with them when clicked.
-- Winning several decorations at once stamps "DECORATIONS · 3 new"
-  instead of a singular header over a plural line (FI read as
-  "KUNNIAMERKKI / Uusia kunniamerkkejä").
+- **Restarting keeps your zoom.** Replaying the same board keeps the
+  zoom level you set, re-centred — it re-fit to the default zoom before,
+  throwing away a hand-tuned view on every ⌘R. A different board still
+  opens at the default fit.
 
 ### build 23 — 2026-07-12
 
