@@ -210,14 +210,17 @@ always playable — an invitation is the discovery moment. Established players
 pass every gate automatically: the gates read your existing records, nothing is
 stored, and a stats reset locks the ladder again.
 
-**Decorations** — 22 achievements in the Service Record, each with its own
+**Decorations** — 20 achievements in the Service Record, each with its own
 hand-drawn medal: starters, skill feats with real floors (no farming Bare Hands
-on a tiny board), luck feats that read your recorded forced guesses
-retroactively, tiered milestones (bronze/silver/gold), and four hidden gags
-shown as **?** until you stumble into them. Earning one stamps a gold
-**DECORATION** sticker on the result panel. Decorations sync across your
-devices under the same iCloud toggle as scores — and unlike scores, they
-survive a stats reset: they're history, not statistics.
+on a tiny board), a luck feat that reads your recorded forced guesses
+retroactively, tiered volume milestones (bronze/silver/gold), and four hidden
+gags shown as **?** until you stumble into them. Decorations are journey
+milestones, not progress trackers — chasing faster times or rarer luck is the
+scoreboard's job — and the whole block folds away (and stays folded) once it's
+served its purpose. Earning one stamps a gold **DECORATION** sticker on the
+result panel. Decorations sync across your devices under the same iCloud
+toggle as scores — and unlike scores, they survive a stats reset: they're
+history, not statistics.
 
 ## Rivals — the Mess hall
 
@@ -303,6 +306,12 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 - **Changed:** the Mess hall header is compact everywhere (the rivals list
   gets the room) and **Nearby** is the share card's headline action, with the
   QR code full-size behind a button beside Share link.
+- **New:** **pace** — every win shows its 3BV/s sweep rate (a number board
+  luck can't inflate), with recent and best pace per board in the Service
+  Record; the raw material for a future skill rank.
+- **Changed:** decorations recalibrated as **milestones, not progress
+  trackers** — the block folds away and stays folded, one luck badge and one
+  Expert speed badge replace the luck/time ladders (20 total).
 
 ### 0.5.0 — progression
 
