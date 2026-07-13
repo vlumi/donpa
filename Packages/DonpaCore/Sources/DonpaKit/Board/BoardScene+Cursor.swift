@@ -18,6 +18,7 @@ extension BoardScene {
     /// the row index), so the up arrow passes dy = +1.
     func moveCursor(dx: Int, dy: Int) {
         guard cursorLive else { return }
+        showCursorRing()
         if let current = cursorScreenCoord {
             if isWrapped {
                 // Screen space tiles infinitely; the logical cell folds via
@@ -41,12 +42,14 @@ extension BoardScene {
     /// (revealed chords; hidden follows the input mode).
     func activateCursor() {
         guard cursorLive, let screen = cursorScreenCoord else { return }
+        showCursorRing()
         perform(primaryActionAt: displayCoord(screen))
     }
 
     /// Toggle a flag (or "?") on the focused cell, regardless of input mode.
     func flagCursor() {
         guard cursorLive, let screen = cursorScreenCoord else { return }
+        showCursorRing()
         toggleFlagWithSound(displayCoord(screen))
     }
 
@@ -58,22 +61,44 @@ extension BoardScene {
             isWrapped ? mid : viewModel.game.board.topology.normalize(mid) ?? Coord(0, 0)
     }
 
-    /// Mirror the logical cell to the VM and keep the cursor on-screen: when it
-    /// steps out of the viewport, centre the camera on it (folding a wrapped
-    /// cursor back onto the base board first — the camera clamps there).
+    /// Mirror the logical cell to the VM and keep the cursor comfortably
+    /// on-screen: the camera follows AS the cursor reaches the viewport edge
+    /// (a one-cell margin), panning just enough — not after it has already
+    /// left, and no centring jump.
     private func syncFocusAndCamera() {
-        guard var screen = cursorScreenCoord else {
+        guard let screen = cursorScreenCoord else {
             viewModel.focusedCell = nil
             return
         }
-        if !visibleRange().contains(screen) {
-            if isWrapped {
-                screen = displayCoord(screen)
-                cursorScreenCoord = screen
-            }
-            cameraNode.position = clampedCameraPosition(layout.center(of: screen))
-        }
+        followCursor(screen)
         viewModel.focusedCell = displayCoord(screen)
+    }
+
+    /// Pan the camera the minimal distance that keeps the cursor at least a
+    /// cell inside the viewport, per axis. A far-off cursor (the player
+    /// panned away) re-enters at the nearest edge rather than re-centring.
+    private func followCursor(_ screen: Coord) {
+        let target = layout.center(of: screen)
+        let scale = cameraNode.xScale
+        let halfW = size.width / 2 * scale
+        let halfH = size.height / 2 * scale
+        // One cell plus breathing room; never more than half the viewport.
+        let marginX = min(layout.columnPitch * 1.5, halfW / 2)
+        let marginY = min(layout.rowPitch * 1.5, halfH / 2)
+        var cam = cameraNode.position
+        if target.x < cam.x - halfW + marginX {
+            cam.x = target.x + halfW - marginX
+        } else if target.x > cam.x + halfW - marginX {
+            cam.x = target.x - halfW + marginX
+        }
+        if target.y < cam.y - halfH + marginY {
+            cam.y = target.y + halfH - marginY
+        } else if target.y > cam.y + halfH - marginY {
+            cam.y = target.y - halfH + marginY
+        }
+        if cam != cameraNode.position {
+            cameraNode.position = clampedCameraPosition(cam)
+        }
     }
 
     /// A click/tap moves an ACTIVE cursor to the acted-on cell, so the arrows
@@ -84,7 +109,16 @@ extension BoardScene {
         guard cursorScreenCoord != nil, let screen = screenCoord(atScenePoint: p) else { return }
         cursorScreenCoord = screen
         viewModel.focusedCell = displayCoord(screen)
+        // The pointer is doing the pointing — the ring stands down until a
+        // cursor key shows it again (the position keeps following underneath).
+        cursorRingHidden = true
+        cursorNode?.isHidden = true
         view?.preferredFramesPerSecond = 60
+    }
+
+    /// Keyboard use makes the ring visible again (and keeps renders prompt).
+    private func showCursorRing() {
+        cursorRingHidden = false
     }
 
     /// The SCREEN-space cell under a scene point (unfolded on wrapped boards —
@@ -100,12 +134,13 @@ extension BoardScene {
     /// geometry changed under the cursor. The VM clears `focusedCell` itself.
     func resetCursor() {
         cursorScreenCoord = nil
+        cursorRingHidden = false
         cursorNode?.isHidden = true
     }
 
     /// Per-frame: position/show the single ring node (one node — cheap).
     func refreshCursor() {
-        guard let screen = cursorScreenCoord, cursorLive else {
+        guard let screen = cursorScreenCoord, cursorLive, !cursorRingHidden else {
             cursorNode?.isHidden = true
             return
         }
