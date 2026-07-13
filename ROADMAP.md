@@ -238,11 +238,20 @@ with sparse windows; implied precision the data can't carry):
 - Basic presets rank within the Grid reference table (they ARE square
   boards); **Drills is the purest rank** — no-guess boards make it the one
   luck-free skill certificate.
-- **Round is the open calibration question**: a torus removes the easy
-  edge regions, so pace runs lower — whether it needs its own reference
-  column or fits the family table is answered by the collected data, not
-  guessed. Band tables ship calibrated from real distributions (the
-  owner's own logs first), and stay tunable until the UI ships.
+- **Round = VIRTUAL families (decided 2026-07-13)**: the rank layer keys
+  its tables and chips by family × edges — Grid, Grid·Round, Hive,
+  Hive·Round, Basic, Drills (the last two are inherently flat) — chips
+  shown only where played. NOT real families: the Flat/Round toggle in
+  New Game stays as shipped, family-scoped feats untouched, and nothing
+  migrates (storageKey already includes edges — the data was always
+  separate). A torus removes the easy edge regions, so a Round specialist
+  is a different kind of good; a separate certificate says so instead of
+  averaging it away. Band tables ship calibrated from real distributions
+  (the owner's own logs first), and stay tunable until the UI ships.
+- **Breakdown gains an Edges bar** (fold into the pace-collection PR):
+  the career Breakdown's axes are family/size/density today, so Round
+  play is invisible there — the entries already carry the config, so the
+  bar is nearly free (Basic/Drills count as Flat).
 
 **Display:** family-rank chips in the Record's career block (raw pace
 behind them); a PROMOTION toast when the rolling median crosses a band up
