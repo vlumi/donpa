@@ -19,10 +19,17 @@ extension BoardScene {
             boardLayer.position = .zero  // clear any leftover shake offset
             resetCursor()  // board geometry changed under the cursor
             // A resumed game adopts its saved view as the sticky restore target
-            // (consuming the VM's one-shot hand-off); a fresh game clears it and
-            // falls back to the default fit.
+            // (consuming the VM's one-shot hand-off). A fresh game on the SAME
+            // board keeps the player's zoom, re-centred — re-fitting threw away
+            // a hand-tuned zoom on every restart. A different board gets the
+            // default fit.
             restoreCameraTarget = viewModel.pendingCameraRestore
             viewModel.pendingCameraRestore = nil
+            if restoreCameraTarget == nil, viewModel.config.storageKey == lastConfigKey {
+                restoreCameraTarget = CameraView(
+                    centerX: 0.5, centerY: 0.5, scale: Double(cameraNode.xScale))
+            }
+            lastConfigKey = viewModel.config.storageKey
             applyDesiredCameraOrCenter()
         }
         if viewModel.revision != lastRevision {

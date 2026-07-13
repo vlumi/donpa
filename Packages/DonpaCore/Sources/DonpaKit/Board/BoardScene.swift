@@ -30,6 +30,9 @@ public final class BoardScene: SKScene {
     // Render state — read/written by BoardScene+Render.
     var lastRevision = -1
     var lastGameID = -1
+    /// The previous game's config key — a restart/replay of the SAME board
+    /// keeps the player's zoom (see rebuildIfNeeded).
+    var lastConfigKey: String?
     var lastAnimatedResultID = -1
     /// Built cell nodes under `boardLayer`, keyed by coord. Only **visible** cells
     /// (camera rect + margin) are built, so the live node count stays ~one

@@ -22,6 +22,10 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- Restarting (or replaying) the same board keeps your zoom level,
+  re-centred — it re-fit to the default zoom before, throwing away a
+  hand-tuned view on every ⌘R. A different board still opens at the
+  default fit.
 - **The mouse and the keyboard share one focus.** Clicking anywhere
   stands the keyboard focus ring down, and clicking something focusable
   moves the focus there — on the board, a click hides the cursor ring
