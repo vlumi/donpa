@@ -164,7 +164,8 @@ Remaining for 0.6.0 (b23 is out with testers; these ride a later build):
       harmless; when enabling would wipe that device's local scores (a wipe
       tombstone exists), it surfaces the existing confirm instead of
       flipping silently — the destructive transition always keeps its
-      per-device consent. Remote OFF applies silently.
+      per-device consent. Remote OFF applies silently. The synced intent
+      merges LWW by decision timestamp (same rule as the GC flag).
 
 **Cut from 0.6.0 (decided 2026-07-12, free-app test: no revenue and no DAU
 target, so a feature must make the game better for someone who already likes
@@ -225,6 +226,11 @@ The features are in by 0.5; 1.0 makes them ship-shape for the public App Store.
       asked-and-answer state syncs via KVS OUTSIDE the syncScores gate (the
       shareName-Keychain precedent for small preference state), so one answer
       covers all devices — GC auth itself stays per-device and lazy.
+      **Merge rules (decided 2026-07-13):** "asked" merges OR (asked anywhere
+      = asked; a no-iCloud device may re-ask once — fine); "enabled" merges
+      LWW by decision timestamp — OR would be a ratchet where the OPT-OUT
+      loses every conflict to a stale true, the one direction this design
+      can't afford. Newest human decision wins, both directions.
       **Timestamp caveat:** GC cannot be backdated (`lastReportedDate` is
       server-stamped at report time), so retroactive reports carry the
       enable date; the local store's earned dates (synced) remain the true
