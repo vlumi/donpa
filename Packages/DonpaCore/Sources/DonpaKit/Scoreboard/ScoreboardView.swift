@@ -178,6 +178,7 @@ struct ScoreboardView: View {
                         achievements: achievements, records: scoreboard.displayRecords,
                         rowInset: Self.rowInset, selected: $selectedMedal,
                         keyFocusIndex: medalFocusIndex,
+                        headerKeyFocused: keys.zone == .medals && keys.index == nil,
                         collapsed: $settings.medalsCollapsed
                     )
                     .id("zone.medals")

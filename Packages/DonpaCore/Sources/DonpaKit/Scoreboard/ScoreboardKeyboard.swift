@@ -43,11 +43,12 @@ extension ScoreboardView {
         }
     }
 
-    /// The medals zone is a disclosure button while collapsed: activating it
-    /// unfolds the grid and seeds the browse focus; folded state persists.
+    /// The medals HEADER is the zone's landing spot and a real disclosure
+    /// button: Return/Space toggles the fold either way (persisted); the
+    /// focus stays on the header so Return can immediately toggle back.
     private func toggleMedalsCollapse() {
         settings.medalsCollapsed.toggle()
-        keys.index = settings.medalsCollapsed ? nil : 0
+        keys.index = nil
     }
 
     /// Space toggles/steps the focused control: segmented zones step forward
@@ -86,18 +87,30 @@ extension ScoreboardView {
         if keys.zone == .rows, keyRowKey == nil { seedRowFocus() }
     }
 
+    /// Medals land on the HEADER (ring there; ↓ enters the grid) — the one
+    /// zone whose landing spot is a control of its own.
     private func entry(_ zone: ScoreboardView.KeyZone) -> KeyCursor<KeyZone>.Entry {
-        zone == .medals && !settings.medalsCollapsed ? .list(seed: 0) : .plain
+        .plain
     }
 
     private func moveWithinZone(_ delta: Int) {
         switch keys.zone {
         case .rows: moveRowFocus(delta)
         case .medals:
-            guard !settings.medalsCollapsed else { return }
-            keys.move(delta, count: AchievementID.allCases.count)
+            moveMedalFocus(delta)
         default: break
         }
+    }
+
+    /// ↓ from the header enters the grid; ↑ from the first medal returns to
+    /// the header (folded: the focus stays on the header).
+    private func moveMedalFocus(_ delta: Int) {
+        guard !settings.medalsCollapsed else { return }
+        if keys.index == 0, delta < 0 {
+            keys.index = nil
+            return
+        }
+        keys.move(delta, count: AchievementID.allCases.count)
     }
 
     private func operateZone(_ step: Int) {
@@ -106,8 +119,7 @@ extension ScoreboardView {
         case .breakdown:
             breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
         case .medals:
-            guard !settings.medalsCollapsed else { return }
-            keys.move(step, count: AchievementID.allCases.count)
+            moveMedalFocus(step)
         case .rivals:
             // ←/→ walk the comparison scope: All rivals, then each squad.
             let options: [String?] = [nil] + friends.groups.map(\.id)
@@ -129,9 +141,8 @@ extension ScoreboardView {
         case .rows:
             if let key = keyRowKey { toggleExpanded(key) }
         case .medals:
-            guard !settings.medalsCollapsed else { return toggleMedalsCollapse() }
             guard let i = keys.index, AchievementID.allCases.indices.contains(i)
-            else { return }
+            else { return toggleMedalsCollapse() }  // header focused: fold/unfold
             let id = AchievementID.allCases[i]
             selectedMedal = selectedMedal == id ? nil : id
         case .manage:
