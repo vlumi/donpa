@@ -1,7 +1,7 @@
 import DonpaCore
 import Foundation
 
-/// The feats' user-facing names (spec: ROADMAP "Progression spec" — titles
+/// The feats' user-facing names (spec: DECISIONS.md "Progression" — titles
 /// locked there with the IDs). Descriptions join with the Decorations grid.
 extension AchievementID {
     var title: String {

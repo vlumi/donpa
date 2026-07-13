@@ -308,10 +308,13 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
   QR code full-size behind a button beside Share link.
 - **New:** **pace** — every win shows its 3BV/s sweep rate (a number board
   luck can't inflate), with recent and best pace per board in the Service
-  Record; the raw material for a future skill rank.
+  Record; the raw skill reading the scoreboard builds on.
 - **Changed:** decorations recalibrated as **milestones, not progress
   trackers** — the block folds away and stays folded, one luck badge and one
   Expert speed badge replace the luck/time ladders (20 total).
+- **New:** strictly **opt-in Game Center** reporting of decorations — off by
+  default, Game Center untouched until enabled, and a late opt-in reports
+  everything already earned; the toggle lives under the decorations.
 
 ### 0.5.0 — progression
 
