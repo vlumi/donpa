@@ -16,6 +16,9 @@ struct DecorationsSection: View {
     @Binding var selected: AchievementID?
     /// The HOST's keyboard-focused medal (Tab-zone browsing ring), or nil.
     var keyFocusIndex: Int?
+    /// The header is the zone's LANDING spot (keyboard): ringed when focused,
+    /// Return/Space there toggles the fold, ↓ steps into the grid.
+    var headerKeyFocused: Bool = false
     /// Folded away (persisted): achievements are an exploration on-ramp — a
     /// veteran can collapse the block and it STAYS collapsed; the header keeps
     /// the earned count so it never goes fully dark.
@@ -61,6 +64,7 @@ struct DecorationsSection: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .keyFocusRing(headerKeyFocused)
         .padding(.horizontal, rowInset)
         .accessibilityLabel(Text("Decorations", bundle: .module))
         .accessibilityValue(collapsedA11yValue)
