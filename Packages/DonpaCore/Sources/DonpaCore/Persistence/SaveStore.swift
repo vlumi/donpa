@@ -132,9 +132,6 @@ public struct SaveStore {
             .sorted { $0.updatedAt > $1.updatedAt }
     }
 
-    /// The most-recently-played saved game, for auto-resume. nil if there are none.
-    public func latest() -> GameSnapshot? { all().first }
-
     /// A lightweight view of one saved game, for lists and cues — everything the
     /// Home card / New Game dots need, WITHOUT retaining the board's coord sets
     /// (an XXXL snapshot holds ~1M coords; a list of those is a memory trap).
