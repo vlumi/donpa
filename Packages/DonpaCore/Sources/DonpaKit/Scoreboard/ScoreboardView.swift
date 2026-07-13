@@ -177,7 +177,8 @@ struct ScoreboardView: View {
                     DecorationsSection(
                         achievements: achievements, records: scoreboard.displayRecords,
                         rowInset: Self.rowInset, selected: $selectedMedal,
-                        keyFocusIndex: medalFocusIndex
+                        keyFocusIndex: medalFocusIndex,
+                        collapsed: $settings.medalsCollapsed
                     )
                     .id("zone.medals")
                     .onChangeCompat(of: selectedMedal) { followMedalSelection($0) }
