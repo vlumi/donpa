@@ -647,10 +647,9 @@ Still open:
   card) — character names, not marks on game titles; no meaning in the big
   storefront languages. Bonus: ドンパ is HOKKAIDO DIALECT for "same
   age / same cohort" — an accidental perfect fit for a squads-and-rivals
-  game. Residual (5 min at bundle-ID registration): a manual USPTO
-  Trademark Center + J-PlatPat query — the registries can't be queried
-  from a web sweep, though zero web evidence of a games-class mark
-  surfaced anywhere.
+  game. USPTO queried manually 2026-07-13: nothing found for "donpa".
+  Residual (5 min at bundle-ID registration): the J-PlatPat query —
+  though zero web evidence of a games-class mark surfaced anywhere.
 
 ## Distribution & extras (later)
 
