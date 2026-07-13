@@ -2474,6 +2474,28 @@
         }
       }
     },
+    "collapsed, %lld of %lld earned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "collapsed, %lld of %lld earned"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "supistettu, %lld/%lld ansaittu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折りたたみ中、%lld/%lld獲得"
+          }
+        }
+      }
+    },
     "e.g. %@" : {
       "localizations" : {
         "en" : {
@@ -2716,6 +2738,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "種類"
+          }
+        }
+      }
+    },
+    "expanded" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "expanded"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "laajennettu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開中"
           }
         }
       }
