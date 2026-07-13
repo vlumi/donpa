@@ -640,9 +640,17 @@ dropped — revisit only with a genuinely different treatment).
 
 Still open:
 
-- **Name native-check** — **Donpa Squad / ドンパ隊** is settled (repo + types +
-  docs renamed), but worth a JP-native gut-check **before registering bundle IDs
-  with Apple** (store name + bundle ID are painful to change post-registration).
+- **Name native-check — DONE 2026-07-13.** JP-native gut-check passed (owner
+  confirmed). Web sweep: no "Donpa" app on the App Store (nearest: CAVE's
+  DoDonPachi shooters — clearly distinct); existing "Donpa" uses are all
+  in-universe fiction (a Golden Sun NPC, Sonic's Donpa Motors, a Yu-Gi-Oh
+  card) — character names, not marks on game titles; no meaning in the big
+  storefront languages. Bonus: ドンパ is HOKKAIDO DIALECT for "same
+  age / same cohort" — an accidental perfect fit for a squads-and-rivals
+  game. Residual (5 min at bundle-ID registration): a manual USPTO
+  Trademark Center + J-PlatPat query — the registries can't be queried
+  from a web sweep, though zero web evidence of a games-class mark
+  surfaced anywhere.
 
 ## Distribution & extras (later)
 
