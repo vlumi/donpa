@@ -50,9 +50,16 @@ public struct ScoreRecord: Equatable, Sendable {
     /// First and most-recent time this config was played (min / max merge).
     public var firstPlayed: Date?
     public var lastPlayed: Date?
+    /// The pace window: this device's newest wins (date, time, 3BV), newest
+    /// first, capped at `recentWinLimit`. Device-owned like `topTimes`; the
+    /// display merge unions across devices by date. Optional-by-decode so old
+    /// records load.
+    public var recentWins: [RecentWin]
 
     /// How many top times to retain per config, per device.
     public static let topTimeLimit = 5
+    /// How many recent wins the pace window retains per config, per device.
+    public static let recentWinLimit = 10
 
     /// Fastest winning centiseconds (compat shim over `best`), for existing callers.
     public var bestCentiseconds: Int? { best?.centiseconds }
@@ -67,7 +74,8 @@ public struct ScoreRecord: Equatable, Sendable {
         forcedGuesses: DeviceCounter = .init(), guessesSurvived: DeviceCounter = .init(),
         best: BestTime? = nil, topTimes: [BestTime] = [], bestLossProgress: Double? = nil,
         luckiestGuess: LuckiestGuess? = nil,
-        firstPlayed: Date? = nil, lastPlayed: Date? = nil
+        firstPlayed: Date? = nil, lastPlayed: Date? = nil,
+        recentWins: [RecentWin] = []
     ) {
         self.wins = wins
         self.gamesPlayed = gamesPlayed
@@ -88,6 +96,7 @@ public struct ScoreRecord: Equatable, Sendable {
         self.luckiestGuess = luckiestGuess
         self.firstPlayed = firstPlayed
         self.lastPlayed = lastPlayed
+        self.recentWins = recentWins
     }
 }
 
@@ -96,7 +105,7 @@ extension ScoreRecord: Codable {
         case wins, gamesPlayed, losses, tilesOpened, flagsPlaced, minesHit, minesDisarmed
         case playtimeCentiseconds, chordsUsed, noFlagWins, noChordWins
         case forcedGuesses, guessesSurvived, luckiestGuess
-        case best, topTimes, bestLossProgress, firstPlayed, lastPlayed
+        case best, topTimes, bestLossProgress, firstPlayed, lastPlayed, recentWins
         // Legacy: a pre-`best` record stored the scalar `bestCentiseconds`.
         case legacyBestCentiseconds = "bestCentiseconds"
     }
@@ -125,6 +134,7 @@ extension ScoreRecord: Codable {
         guessesSurvived = counter(.guessesSurvived)
         // `try?` on `decode` yields nil for a missing/mistyped key (no `?? nil`).
         topTimes = (try? c.decode([BestTime].self, forKey: .topTimes)) ?? []
+        recentWins = (try? c.decode([RecentWin].self, forKey: .recentWins)) ?? []
         bestLossProgress = try? c.decode(Double.self, forKey: .bestLossProgress)
         luckiestGuess = try? c.decode(LuckiestGuess.self, forKey: .luckiestGuess)
         firstPlayed = try? c.decode(Date.self, forKey: .firstPlayed)
@@ -162,6 +172,7 @@ extension ScoreRecord: Codable {
         try c.encode(guessesSurvived, forKey: .guessesSurvived)
         try c.encodeIfPresent(best, forKey: .best)
         try c.encode(topTimes, forKey: .topTimes)
+        try c.encode(recentWins, forKey: .recentWins)
         try c.encodeIfPresent(bestLossProgress, forKey: .bestLossProgress)
         try c.encodeIfPresent(luckiestGuess, forKey: .luckiestGuess)
         try c.encodeIfPresent(firstPlayed, forKey: .firstPlayed)

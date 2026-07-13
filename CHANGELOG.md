@@ -22,6 +22,14 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Pace: how fast you actually sweep.** Every win now shows its pace —
+  the board's minimum moves (3BV) per second, a number board luck can't
+  inflate the way a lucky layout inflates raw time. The win panel gets a
+  quiet pace chip beside the luck pill, the Service Record's expanded
+  rows show your recent pace (median of your last ten wins, bigger
+  boards weighing more), and the career Breakdown gains an Edges bar so
+  Round play finally shows up there. Recent wins sync across devices
+  like everything else.
 - Expert Sweep is one badge now — clear Expert in under three minutes —
   instead of a 180/120/90 ladder: chasing faster times is the
   scoreboard's job (your best times live there), and a tiered time

@@ -59,7 +59,7 @@ public enum PlayDistribution {
     /// The three bars. Size/density apply to Grid+Hive only (Basic's presets have
     /// no tier on those axes), so those bars describe the configurable families.
     public enum Axis: CaseIterable, Sendable {
-        case family, size, density
+        case family, size, density, edges
 
         /// The axis's canonical bucket labels, in display order.
         var buckets: [String] {
@@ -67,15 +67,19 @@ public enum PlayDistribution {
             case .family: return BoardFamily.allCases.map(\.label)
             case .size: return BoardSize.allCases.map(\.label)
             case .density: return Density.allCases.map(\.label)
+            case .edges: return BoardEdges.allCases.map(\.label)
             }
         }
 
         /// The bucket a config contributes to, or nil when the axis doesn't apply.
+        /// Edges: every config buckets (Basic/Drills are inherently Flat), so the
+        /// bar shows how much of ALL play wraps.
         func bucket(for config: GameConfig) -> String? {
             switch self {
             case .family: return config.family.label
             case .size: return config.size?.label
             case .density: return config.density?.label
+            case .edges: return config.edges.label
             }
         }
     }

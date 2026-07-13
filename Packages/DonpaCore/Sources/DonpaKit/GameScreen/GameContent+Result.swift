@@ -31,6 +31,7 @@ extension GameContent {
                     earnedFeatTitles: panelFeats,
                     reduceMotion: reduceMotion,
                     guess: panelGuess,
+                    pace: panelPace,
                     onContinue: { dismissPanel() }
                 )
                 .transition(.opacity)
@@ -92,25 +93,7 @@ extension GameContent {
         let isWin = result.isWin
         switch result {
         case .won(let centiseconds, let config):
-            // Capture the prior best BEFORE submit() overwrites it, so the panel can
-            // show how much faster this clear was rather than the (already-on-timer)
-            // final time. No prior best → a first-ever clear (improvedBy nil).
-            let priorBest = scoreboard.best(for: config)
-            let isRecord = scoreboard.submit(
-                centiseconds, for: config,
-                noFlag: !viewModel.usedFlagEver, noChord: !viewModel.usedChordEver)
-            if isRecord {
-                // The pill shows how much the DISPLAYED best changed (times truncate
-                // to tenths) — a raw delta could read "improved by 0.0s" when both
-                // times show the same tenth, or overstate by a tenth. nil (no pill)
-                // when the visible value didn't move, even though the record stands.
-                let improvedBy = priorBest.flatMap {
-                    TimeFormat.displayedImprovement(from: $0, to: centiseconds)
-                }
-                kind = .record(centiseconds: centiseconds, improvedBy: improvedBy)
-            } else {
-                kind = .win
-            }
+            kind = submitWin(centiseconds: centiseconds, config: config)
         case .lost:
             // Record cleared % as a consolation score; the "new best %" pill shows
             // only when this loss beat the prior best, and by how much.
@@ -128,6 +111,7 @@ extension GameContent {
                 best = .first
             }
             kind = .loss(progress: progress, safeRemaining: safeRemaining, best: best)
+            panelPace = nil
         }
         // The finished game's OUTCOME: games-played + the mine tally (activity
         // already accrued live via flushes). minesHit = the single loss detonation;
@@ -151,6 +135,34 @@ extension GameContent {
             restartPop = true
             withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) { restartPop = false }
         }
+    }
+
+    /// The win-side bookkeeping (submit + pace + panel kind), extracted from
+    /// `handleResult` for the function-length cap.
+    private func submitWin(centiseconds: Int, config: GameConfig) -> MangaPanelView.Kind {
+        // Capture the prior best BEFORE submit() overwrites it, so the panel can
+        // show how much faster this clear was rather than the (already-on-timer)
+        // final time. No prior best → a first-ever clear (improvedBy nil).
+        let priorBest = scoreboard.best(for: config)
+        let threeBV = viewModel.lastEndEvent?.threeBV
+        let isRecord = scoreboard.submit(
+            centiseconds, for: config,
+            noFlag: !viewModel.usedFlagEver, noChord: !viewModel.usedChordEver,
+            threeBV: threeBV)
+        panelPace = threeBV.map {
+            RecentWin(date: Date(), centiseconds: centiseconds, threeBV: $0).pace
+        }
+        if isRecord {
+            // The pill shows how much the DISPLAYED best changed (times truncate
+            // to tenths) — a raw delta could read "improved by 0.0s" when both
+            // times show the same tenth, or overstate by a tenth. nil (no pill)
+            // when the visible value didn't move, even though the record stands.
+            let improvedBy = priorBest.flatMap {
+                TimeFormat.displayedImprovement(from: $0, to: centiseconds)
+            }
+            return .record(centiseconds: centiseconds, improvedBy: improvedBy)
+        }
+        return .win
     }
 
     /// Slam the result screen in after a short beat so the board's detonation / win

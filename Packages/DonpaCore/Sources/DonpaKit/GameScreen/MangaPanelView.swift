@@ -147,10 +147,16 @@ struct MangaPanelView: View {
     /// ("coin flip", "miracle"…) and stamps "forced guess" on a loss. Arrives
     /// async (computed off-thread), so the host passes it reactively.
     var guess: (odds: String, label: LocalizedStringKey)?
+    /// This win's pace (3BV/s), or nil (losses, or a pre-pace record). A
+    /// quiet caption chip, not a pill — it shows on EVERY win, and shouting
+    /// every time would cheapen the event pills around it.
+    var pace: Double?
     /// Dismiss to inspect the finished board (X / tap / Esc).
     let onContinue: () -> Void
 
-    @State private var appeared = false
+    // Internal (not `private`): the corner overlays live in
+    // MangaPanelView+Overlays.swift — Swift `private` is file-scoped.
+    @State var appeared = false
     #if os(macOS)
     @FocusState private var focused: Bool
     #endif
@@ -206,7 +212,12 @@ struct MangaPanelView: View {
             // area outside its border is transparent, so the corners show through.
             .overlay(alignment: .topLeading) { recordBadge }
             .overlay(alignment: .topLeading) { bestLossPill }
-            .overlay(alignment: .bottomLeading) { guessPill }
+            .overlay(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: 6) {
+                    guessPill
+                    paceChip
+                }
+            }
             .overlay(alignment: .bottomTrailing) {
                 // Both progression stickers share the corner, stacked — a game
                 // can unlock a board AND pin a decoration.
@@ -224,183 +235,12 @@ struct MangaPanelView: View {
             .onTapGesture { onContinue() }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(
-                kind.a11yLabel(hexCells: hexCells) + guessA11ySuffix
+                kind.a11yLabel(hexCells: hexCells) + guessA11ySuffix + paceA11ySuffix
                     + (Self.unlockSpoken(unlockedLabels).map { " " + $0 + "." } ?? "")
             )
             .accessibilityAddTraits(.isImage)
     }
 
-    /// The guess pill folded into the spoken label (overlays are ignored children).
-    private var guessA11ySuffix: String {
-        guard let odds = guess?.odds else { return "" }
-        return " "
-            + (kind.isWin
-                ? String(localized: "Won on a forced guess (\(odds)).", bundle: .module)
-                : String(localized: "That was a forced guess (\(odds)).", bundle: .module))
-    }
-
-    /// The ending action was a genuine forced guess: its odds, corner-stamped on
-    /// the result. On a loss this is the consolation ("fate, not error"); on a win,
-    /// the brag. Bottom corner — the top corners belong to the record/best pills.
-    @ViewBuilder private var guessPill: some View {
-        if let guess {
-            VStack(spacing: 0) {
-                Text(verbatim: guess.odds)
-                    .font(.system(.body, design: .rounded).weight(.black))
-                Text(guess.label, bundle: .module)
-                    .font(.system(.caption2, design: .rounded).weight(.heavy))
-                    .textCase(.uppercase)
-            }
-            .modifier(PillStamp(accent: kind.accent))
-            .rotationEffect(.degrees(6))
-            .padding(.bottom, 12)
-            .padding(.leading, 10)
-            .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomLeading)
-        }
-    }
-
-    /// A win that opened new content: the gating celebration, corner-stamped in
-    /// the same sticker dress as the other pills. One name reads verbatim;
-    /// several collapse to the generic line.
-    @ViewBuilder private var unlockSticker: some View {
-        if let headline = Self.unlockHeadline(unlockedLabels) {
-            VStack(spacing: 0) {
-                Text("UNLOCKED", bundle: .module)
-                    .font(.system(.caption2, design: .rounded).weight(.heavy))
-                    .textCase(.uppercase)
-                Text(verbatim: headline)
-                    .font(.system(.body, design: .rounded).weight(.black))
-            }
-            .modifier(PillStamp(accent: Color.accentColor))
-            .rotationEffect(.degrees(-6))
-            .padding(.bottom, 12)
-            .padding(.trailing, 10)
-            .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomTrailing)
-        }
-    }
-
-    /// A decoration earned this game — the same sticker dress, gold border.
-    @ViewBuilder private var featSticker: some View {
-        if let sticker = Self.featSticker(earnedFeatTitles) {
-            VStack(spacing: 0) {
-                Text(verbatim: sticker.eyebrow)
-                    .font(.system(.caption2, design: .rounded).weight(.heavy))
-                    .textCase(.uppercase)
-                Text(verbatim: sticker.body)
-                    .font(.system(.body, design: .rounded).weight(.black))
-            }
-            .modifier(PillStamp(accent: MedalView.gold))
-            .rotationEffect(.degrees(-6))
-            .padding(.bottom, 12)
-            .padding(.trailing, 10)
-            .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomTrailing)
-        }
-    }
-
-    /// The VoiceOver announcement for an unlock (nil when nothing opened).
-    static func unlockSpoken(_ labels: [String]) -> String? {
-        guard !labels.isEmpty else { return nil }
-        return String(
-            localized: "Unlocked: \(labels.joined(separator: ", "))", bundle: .module)
-    }
-
-    /// Top-right X to dismiss the panel (also tap-anywhere or Esc).
-    private var closeButton: some View {
-        Button(action: onContinue) {
-            Image(systemName: "xmark.circle.fill")
-                .font(.title)
-                .symbolRenderingMode(.palette)
-                .foregroundStyle(.white, .black.opacity(0.4))
-                .padding(8)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("Close", bundle: .module))
-    }
-
-    /// "New record" flourish — a tilted corner ribbon stamp. Shows how much faster
-    /// than the prior best (the final time is already on the timer); a first-ever
-    /// clear has no prior to beat, so it reads as the first record instead.
-    @ViewBuilder private var recordBadge: some View {
-        if kind.recordCentiseconds != nil {
-            VStack(spacing: 0) {
-                // Kana headline verbatim in all languages — a manga flourish.
-                Text(verbatim: "新記録")
-                    .font(.system(.callout, design: .rounded).weight(.black))
-                if let improved = kind.recordImprovedBy {
-                    Text(verbatim: Kind.timeImprovement(improved))
-                        .font(.system(.caption, design: .monospaced).weight(.heavy))
-                } else {
-                    Text("first clear", bundle: .module)
-                        .font(.system(.caption2, design: .rounded).weight(.heavy))
-                        .textCase(.uppercase)
-                }
-            }
-            .modifier(PillStamp(accent: kind.accent))
-            .rotationEffect(.degrees(-8))
-            .padding(.top, 10)
-            .padding(.leading, 8)
-            .scaleEffect(appeared ? 1 : 0.5, anchor: .topLeading)
-        }
-    }
-
-    /// On a loss that beat the prior best %, a red corner pill mirroring the record
-    /// badge. Leads with how much further than the prior best you got (+N%); the
-    /// headline % / "N left" stays as the secondary line. A first-ever run has no
-    /// prior to beat, so it just shows the headline. A plain loss shows nothing.
-    @ViewBuilder private var bestLossPill: some View {
-        if let headline = kind.bestLossHeadline {
-            VStack(spacing: 0) {
-                if let improved = kind.lossImprovedBy {
-                    Text(verbatim: Kind.progressImprovement(improved))
-                        .font(.system(.body, design: .rounded).weight(.black))
-                    Text(verbatim: headline)
-                        .font(.system(.caption, design: .monospaced).weight(.heavy))
-                } else {
-                    Text(verbatim: headline)
-                        .font(.system(.body, design: .rounded).weight(.black))
-                    Text("best", bundle: .module)
-                        .font(.system(.caption2, design: .rounded).weight(.heavy))
-                        .textCase(.uppercase)
-                }
-            }
-            .modifier(PillStamp(accent: Color.red))
-            .rotationEffect(.degrees(-8))
-            .padding(.top, 10)
-            .padding(.leading, 8)
-            .scaleEffect(appeared ? 1 : 0.5, anchor: .topLeading)
-        }
-    }
-
-    /// Slam-in overshoot: starts large, settles to 1.0. Reduce Motion pins scale to 1.
-    private var scale: CGFloat {
-        if reduceMotion { return 1 }
-        return appeared ? 1 : 1.4
-    }
-
-    private func animateIn() {
-        if reduceMotion {
-            withAnimation(.easeOut(duration: 0.25)) { appeared = true }
-        } else {
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.6)) { appeared = true }
-        }
-    }
-}
-
-/// The corner pills' shared dress: a manga sticker — paper fill, ink text, a
-/// thick accent border. Ink-on-paper is ~21:1 in either appearance (the old
-/// white-on-accent fills measured 2.2:1 on the win green); the accent moves to
-/// the border, where it flags win/loss without carrying the text.
-private struct PillStamp: ViewModifier {
-    let accent: Color
-    func body(content: Content) -> some View {
-        content
-            .foregroundStyle(.black)
-            .padding(.horizontal, 11)
-            .padding(.vertical, 5)
-            .background(Capsule().fill(.white))
-            .overlay(Capsule().stroke(accent, lineWidth: 2.5))
-            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
-    }
 }
 
 // MARK: Sticker headlines
@@ -429,5 +269,37 @@ extension MangaPanelView {
         case 1: return labels[0]
         default: return String(localized: "New boards", bundle: .module)
         }
+    }
+
+    private var scale: CGFloat {
+        if reduceMotion { return 1 }
+        return appeared ? 1 : 1.4
+    }
+
+    private func animateIn() {
+        if reduceMotion {
+            withAnimation(.easeOut(duration: 0.25)) { appeared = true }
+        } else {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.6)) { appeared = true }
+        }
+    }
+}
+
+/// The corner pills' shared dress: a manga sticker — paper fill, ink text, a
+/// thick accent border. Ink-on-paper is ~21:1 in either appearance (the old
+/// white-on-accent fills measured 2.2:1 on the win green); the accent moves to
+/// the border, where it flags win/loss without carrying the text.
+/// Internal (not `private`): the corner overlays in MangaPanelView+Overlays
+/// wear the same stamp — Swift `private` is file-scoped.
+struct PillStamp: ViewModifier {
+    let accent: Color
+    func body(content: Content) -> some View {
+        content
+            .foregroundStyle(.black)
+            .padding(.horizontal, 11)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(.white))
+            .overlay(Capsule().stroke(accent, lineWidth: 2.5))
+            .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
     }
 }

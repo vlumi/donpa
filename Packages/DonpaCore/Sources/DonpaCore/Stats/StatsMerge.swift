@@ -33,6 +33,14 @@ enum StatsMerge {
 
     /// Merge one config's record: this device's own record against the other
     /// devices' records for the same config.
+    /// Union of pace-window entries (dedup by whole entry, so a blob that
+    /// already contains own entries collapses), newest first, capped.
+    static func mergedRecent(_ own: [RecentWin], _ others: [[RecentWin]]) -> [RecentWin] {
+        var all = Set(own)
+        for list in others { all.formUnion(list) }
+        return Array(all.sorted { $0.date > $1.date }.prefix(ScoreRecord.recentWinLimit))
+    }
+
     private static func mergeOne(own: ScoreRecord, others: [ScoreRecord]) -> ScoreRecord {
         var out = own
 
@@ -66,6 +74,10 @@ enum StatsMerge {
         out.topTimes = own.topTimes.mergedTop(
             with: others.map(\.topTimes), limit: ScoreRecord.topTimeLimit)
         out.best = out.topTimes.first ?? own.best
+
+        // The pace window: union across devices (whole entries, deduped),
+        // newest first, same cap — the display view of every device's log.
+        out.recentWins = Self.mergedRecent(own.recentWins, others.map(\.recentWins))
 
         // Loss progress: idempotent max across all devices.
         out.bestLossProgress = ([own] + others).compactMap(\.bestLossProgress).max()
@@ -119,6 +131,8 @@ enum StatsMerge {
             out.topTimes = (own[key]?.topTimes ?? []).mergedTop(
                 with: [last?.topTimes ?? []], limit: ScoreRecord.topTimeLimit)
             out.best = out.topTimes.first ?? out.best
+            out.recentWins = Self.mergedRecent(
+                own[key]?.recentWins ?? [], [last?.recentWins ?? []])
             out.bestLossProgress =
                 [own[key]?.bestLossProgress, last?.bestLossProgress].compactMap { $0 }.max()
             out.firstPlayed = [own[key]?.firstPlayed, last?.firstPlayed].compactMap { $0 }.min()
