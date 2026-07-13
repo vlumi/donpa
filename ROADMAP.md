@@ -253,6 +253,30 @@ with sparse windows; implied precision the data can't carry):
   play is invisible there — the entries already carry the config, so the
   bar is nearly free (Basic/Drills count as Flat).
 
+**Aggregation model — how pace trickles up (decided 2026-07-13):**
+
+- Two safe operations only: RECENT figures aggregate by unioning the
+  underlying windows and taking ONE 3BV-weighted median over the union
+  (never median-of-medians); BEST figures are max-of-maxes. Everything is
+  read-time computation over the per-config logs — no new storage at any
+  level.
+- The semantic gate: SIZE is the one axis that folds honestly (pace is a
+  rate; the 3BV weighting absorbs XS noise). DENSITY doesn't fold raw
+  (Easy is flood-clicking, Lunatic is dense deduction — a raw family
+  median measures your density diet, not skill); crossing it requires the
+  normalization/band machinery. FAMILY/EDGES never fold — the career
+  level gets per-virtual-family display, never a scalar.
+- So the one honest raw mid-level is family × edges × density, across
+  sizes — and it carries a value ONLY when every size in that ladder has
+  at least one logged win (the full-clear-line idiom, transposed): the
+  aggregate is a demonstrated claim, not a diet artifact, and an unlit
+  line is a chase. Applies to Grid/Hive (per edges) and Drills (its
+  XS–XL ladder, one line); Basic is exempt (presets vary size and
+  density together). "Has a result" = an entry in the pace LOG — pre-pace
+  wins carry no 3BV, so the lines light from fresh play only.
+- BEST pace never trickles above per-config: a folded best is just the
+  easiest cell's outlier (a 0.00 s XS tap would own the whole row).
+
 **Display:** family-rank chips in the Record's career block (raw pace
 behind them); a PROMOTION toast when the rolling median crosses a band up
 (an event worth a moment); demotions are silent — the display just quietly
