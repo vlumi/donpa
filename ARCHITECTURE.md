@@ -113,6 +113,34 @@ but the view model never references the scene. (Audited leak-free — the Combin
 timer uses `[weak self]`, effects are declarative `SKAction`s, and gesture
 recognizers hold their target weakly by framework convention.)
 
+## Keyboard: one vocabulary, one cursor engine, one focus keeper
+
+The whole app is keyboard-drivable behind ONE settled vocabulary — Tab wraps
+through a screen's visible control zones (first Tab enters at the start,
+Shift-Tab at the end), arrows move within a zone, Return presses the focused
+button (or the sheet's default — Done/confirm — when the focus isn't on one),
+Space toggles the focused control, Esc backs out, and text fields start
+editing the moment they're focused. Three shared pieces implement it, so a
+new surface writes only its zone list, its entry mapping, and its activation
+switch:
+
+- **`KeyCursor`** (`Support/`) — the zone/index math as a pure, unit-tested
+  value type; **`KeyStep`** for clamped ladders; **`Pulse`** for keyboard
+  activation across a view boundary. Zone *visibility* must derive from the
+  same predicates that render the controls — that single rule is what keeps
+  "Tab reaches a hidden thing" impossible.
+- **`KeyCatcher`** — an invisible AppKit first-responder that forwards raw
+  keys to the host's handler. ONE per window (two would fight over first
+  responder). It also reports mouse-downs (`.click`, never consumed): the
+  pointer and the keyboard share one focus, so a click stands the ring down
+  and a clicked focusable control takes the focus with it.
+- **`BoardFocusKeeper`** — the board's first-responder policy (macOS): KVO on
+  the window's `firstResponder` corrects any drift one runloop later while
+  the board owns the keys. Ownership INCLUDES paused (Esc must reach the
+  scene to resume) but never the title or a modal — that contract is why
+  keepers and catchers never fight. Both platforms translate raw key events
+  to a shared `BoardKeyCommand`, so the Mac and iPad maps can't drift.
+
 ## Two native app targets — *not* Mac Catalyst
 
 The Mac app is a separate native AppKit/SwiftUI target, not Catalyst — for the

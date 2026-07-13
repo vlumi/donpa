@@ -14,11 +14,11 @@ build's heading and opens a fresh empty one. Keep that heading immediately
 followed by its list items (no prose between), so the release script can promote
 it with a one-line edit.
 
-## [0.6.0] — Finishing touches
+## [0.6.0] — Keyboard & accessibility
 
-**The last pre-store polish: keyboard & VoiceOver board play, and the platform
-extras** (see ROADMAP.md). In development — entries land under Unreleased as
-they merge.
+**The last pre-store polish: full keyboard play and navigation, VoiceOver
+board play, and the large-text pass** (see ROADMAP.md). In development —
+entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 

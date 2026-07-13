@@ -15,7 +15,7 @@ touching the game logic.
 home-screen redesign, per-board saves, forced-guess luck tracking, and the
 Lunatic tier), and **v0.5.0** (progression — achievements, unlockable boards,
 Drills, how-to-play, Nearby exchange, sound & haptics) have shipped to
-TestFlight; **v0.6.0** (finishing touches) is in development. See
+TestFlight; **v0.6.0** (keyboard & accessibility) is in development. See
 [CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md) for
 the path to v1.0, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
 decisions.
