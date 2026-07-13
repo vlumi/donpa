@@ -197,8 +197,21 @@ The features are in by 0.5; 1.0 makes them ship-shape for the public App Store.
       the Progression spec (sandbox from day one; they only go LIVE — and
       permanent — with the first App Store release), a GKAchievement reporter
       behind the store, graceful degradation when auth is declined. **Every ASC
-      definition needs its own 1024×1024 image (29 after tier-flattening)** —
+      definition needs its own 1024×1024 image (26 after tier-flattening)** —
       export them from `MedalView` (the MedalGalleryRender harness is the seam).
+      **Opt-in by design (decided 2026-07-13; some players dislike achievements
+      and the choice is respected):** a toggle INSIDE the Decorations block's
+      footer (the sync-toggle placement principle — where the feature's
+      questions arise; a collapsed block hides it entirely), OFF by default;
+      `authenticate` is called only when enabled, so GC's sign-in sheet can
+      only appear as a consequence of the player's own choice; enabling
+      reports retroactively (the engine is derivable, so late opt-in loses
+      nothing); GC's own banners suppressed (`showsCompletionBanner = false` —
+      the in-game pill is the celebration) and no `GKAccessPoint`; toggling
+      off just stops reporting — never wire GC's all-or-nothing reset (local
+      decorations are permanent; wipes don't touch them, GC shouldn't either).
+      Keyboard: the toggle joins the medals zone (keyFocused + Pulse, like
+      sync).
 - [ ] Real-device test pass — older/slower devices, iPad, small screens; profile
       huge boards on hardware; XXXL memory/leaks in Instruments
 - [ ] Settings, theming, polish sweep across all modes
