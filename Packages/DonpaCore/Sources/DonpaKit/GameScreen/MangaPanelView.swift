@@ -297,31 +297,6 @@ struct MangaPanelView: View {
         }
     }
 
-    /// One feat reads verbatim under the singular eyebrow; several become a
-    /// count under the plural one — a singular eyebrow over a plural body
-    /// ("KUNNIAMERKKI / Uusia kunniamerkkejä") read as a number mismatch.
-    static func featSticker(_ titles: [String]) -> (eyebrow: String, body: String)? {
-        switch titles.count {
-        case 0: return nil
-        case 1:
-            return (String(localized: "Decoration", bundle: .module), titles[0])
-        default:
-            return (
-                String(localized: "Decorations", bundle: .module),
-                String(localized: "\(titles.count) new", bundle: .module)
-            )
-        }
-    }
-
-    /// The sticker's second line: the one opened name, or the generic plural.
-    static func unlockHeadline(_ labels: [String]) -> String? {
-        switch labels.count {
-        case 0: return nil
-        case 1: return labels[0]
-        default: return String(localized: "New boards", bundle: .module)
-        }
-    }
-
     /// The VoiceOver announcement for an unlock (nil when nothing opened).
     static func unlockSpoken(_ labels: [String]) -> String? {
         guard !labels.isEmpty else { return nil }
@@ -425,5 +400,34 @@ private struct PillStamp: ViewModifier {
             .background(Capsule().fill(.white))
             .overlay(Capsule().stroke(accent, lineWidth: 2.5))
             .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+    }
+}
+
+// MARK: Sticker headlines
+
+extension MangaPanelView {
+    /// One feat reads verbatim under the singular eyebrow; several become a
+    /// count under the plural one — a singular eyebrow over a plural body
+    /// ("KUNNIAMERKKI / Uusia kunniamerkkejä") read as a number mismatch.
+    static func featSticker(_ titles: [String]) -> (eyebrow: String, body: String)? {
+        switch titles.count {
+        case 0: return nil
+        case 1:
+            return (String(localized: "Decoration", bundle: .module), titles[0])
+        default:
+            return (
+                String(localized: "Decorations", bundle: .module),
+                String(localized: "\(titles.count) new", bundle: .module)
+            )
+        }
+    }
+
+    /// The sticker's second line: the one opened name, or the generic plural.
+    static func unlockHeadline(_ labels: [String]) -> String? {
+        switch labels.count {
+        case 0: return nil
+        case 1: return labels[0]
+        default: return String(localized: "New boards", bundle: .module)
+        }
     }
 }
