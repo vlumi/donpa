@@ -62,8 +62,21 @@ permanent, exempt from the wipe (see the store note below).
 playable — head-to-head "play this board", a share/deep link, and resuming any
 in-progress save all bypass gates (an invitation from a rival IS the discovery
 moment; blocking it would punish the social loop). Such play earns unlock credit
-normally. There is NO unlock-all setting: every gate opens in one sitting for a
-player who's simply good, and veterans derive-pass anyway.
+normally.
+
+**Unlock-all toggle — REVERSED 2026-07-13 (originally "no unlock-all
+setting").** The original claim — every gate opens in one sitting for a
+player who's simply good — holds for ranks and family gates but not the size
+ladder's top: a fresh-install veteran wanting hex XXXL needs sequential wins
+at M/L/XL/XXL, and an XXL hex win is a real time investment. The toggle
+("Unlock all boards", in Settings) is pure display-layer bypass: gates still
+derive from records, nothing is stored, flipping it off returns to whatever
+the wins say (play while unlocked earns credit normally, per the
+escape-hatch precedent). DEVICE-scoped like other Settings toggles — the
+records already sync; a shared iPad is a real case for independence. Unlock
+stickers stay silent while it's on (celebrating an imperceptible gate is
+noise). Gates remain the default; the discovery arc is untouched for
+newcomers.
 
 **Teaser UI** (locked = visible, never hidden):
 

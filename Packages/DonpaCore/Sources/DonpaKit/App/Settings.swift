@@ -218,6 +218,14 @@ public final class Settings: ObservableObject {
     /// Add a "?" step to the flag cycle (hidden → flag → "?" → clear). Opt-in, off
     /// by default: the third state taxes the common flag→clear tap, so only players
     /// who want the classic maybe-mark pay for it.
+    /// Bypass progressive gating: the picker offers everything, no wins needed.
+    /// Freely reversible — gates derive from records, so turning this off just
+    /// returns to whatever the wins say (including any earned while it was on).
+    /// DEVICE-scoped like the other toggles (the records themselves sync).
+    @Published public var unlockAll: Bool {
+        didSet { defaults.set(unlockAll, forKey: unlockAllKey) }
+    }
+
     @Published public var questionMarks: Bool {
         didSet { defaults.set(questionMarks, forKey: questionMarksKey) }
     }
@@ -268,6 +276,7 @@ public final class Settings: ObservableObject {
     private let showMinimapKey = "donpa.showMinimap"
     private let medalsCollapsedKey = "donpa.medalsCollapsed"
     private let minimapScaleKey = "donpa.minimapScale"
+    private let unlockAllKey = "donpa.unlockAll"
     private let questionMarksKey = "donpa.questionMarks"
     private let soundKey = "donpa.sound"
     private let hapticsKey = "donpa.haptics"
@@ -328,6 +337,7 @@ public final class Settings: ObservableObject {
         // Default 1.0 (base size); a stored value restores the player's last size.
         minimapScale = defaults.object(forKey: minimapScaleKey) as? Double ?? 1.0
         // Off by default — the "?" step is opt-in.
+        unlockAll = defaults.bool(forKey: unlockAllKey)
         questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
         // On by default — the ringer switch is the quick mute on iOS.
         sound = defaults.object(forKey: soundKey) as? Bool ?? true

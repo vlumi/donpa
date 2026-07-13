@@ -32,7 +32,7 @@ struct SettingsView: View {
 
     /// The keyboard-walkable rows, in visual order (haptics is iOS-only).
     enum SettingsKeyRow: CaseIterable {
-        case appearance, toggleSide, questionMarks, sound, language, reset
+        case appearance, toggleSide, questionMarks, unlockAll, sound, language, reset
     }
 
     var body: some View {
@@ -112,6 +112,21 @@ struct SettingsView: View {
                 }
                 Text(
                     "Adds a ? step after the flag — flag, then ?, then clear — for marking a maybe.",
+                    bundle: .module
+                )
+                .font(.caption).foregroundStyle(.secondary)
+            }
+
+            settingRow("Unlocking", key: .unlockAll) {
+                Toggle(isOn: $settings.unlockAll) {
+                    Text("Unlock all boards", bundle: .module)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(
+                    """
+                    Every size, difficulty, and shape at once — turn off to go \
+                    back to earning them with wins.
+                    """,
                     bundle: .module
                 )
                 .font(.caption).foregroundStyle(.secondary)
@@ -273,6 +288,7 @@ struct SettingsView: View {
         case .appearance: settings.appearance = KeyStep.clamped(settings.appearance, by: step)
         case .toggleSide: settings.handedness = KeyStep.clamped(settings.handedness, by: step)
         case .questionMarks: settings.questionMarks.toggle()
+        case .unlockAll: settings.unlockAll.toggle()
         case .sound: settings.sound.toggle()
         case .language: settings.language = KeyStep.clamped(settings.language, by: step)
         case .reset: confirmingReset = true

@@ -18,11 +18,6 @@ all shipped to TestFlight; **v0.6.0 (keyboard & accessibility) is in beta**.
 Polish and smaller features that can land in any release — not milestone
 gates.
 
-**Navigation / UX:**
-
-- [ ] **Minimap opener while hidden** — the hide toggle leaves no affordance to
-      bring the minimap back mid-game; wire one.
-
 **Keyboard follow-ons:**
 
 - [ ] **Game controllers** — the cursor seam is ready.

@@ -12,6 +12,10 @@ struct UnlockGates {
     /// only wins EARNED THIS SESSION count, so a veteran tester experiences the
     /// gates (and the unlock moments) without touching their real records.
     var winsBaseline: [String: Int] = [:]
+    /// The Settings "Unlock all boards" bypass: predicates read true and teasers
+    /// vanish, but nothing is stored — flipping it off returns to what the
+    /// records derive (wins earned meanwhile still counted normally).
+    var bypassAll = false
 
     static let open = UnlockGates(records: nil)
 
@@ -20,8 +24,9 @@ struct UnlockGates {
         ProcessInfo.processInfo.arguments.contains("-donpa.gates.fresh")
     }
 
-    /// The records the predicates actually see (baseline-adjusted).
+    /// The records the predicates actually see (baseline-adjusted; nil = open).
     private var effective: [String: ScoreRecord]? {
+        if bypassAll { return nil }
         guard let records, !winsBaseline.isEmpty else { return records }
         return records.filter { key, record in
             record.wins.total - (winsBaseline[key] ?? 0) > 0

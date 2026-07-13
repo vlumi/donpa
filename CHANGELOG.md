@@ -69,7 +69,11 @@ entries land under Unreleased as they merge.
 - **The minimap sides with your thumb.** On big boards the minimap now pins
   to the same top corner as the control strip (the "Toggle side" setting),
   keeping the other side of the board clear for the playing hand; its
-  resize grip mirrors along.
+  resize grip mirrors along.- **Skip the ladder, if you like.** A new "Unlock all boards" toggle in
+  Settings opens every size, difficulty, and shape at once — for
+  experienced sweepers who just want to try a huge Hive without earning
+  their way up. Freely reversible: switch it off and the boards you've
+  actually won at decide what's open, exactly as before.
 ### build 23 — 2026-07-12
 
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the

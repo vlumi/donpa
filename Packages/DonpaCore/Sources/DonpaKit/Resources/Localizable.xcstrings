@@ -2779,6 +2779,23 @@
         }
       }
     },
+    "Every size, difficulty, and shape at once — turn off to go back to earning them with wins." : {
+      "comment" : "Settings: unlock-all caption",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaikki koot, vaikeudet ja muodot heti käytössä — pois päältä palataan avaamaan voitoilla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてのサイズ・難易度・形状をすぐに利用可能に。オフにすると勝利による解放に戻ります。"
+          }
+        }
+      }
+    },
     "Expert Sweep" : {
       "comment" : "Achievement title (see ROADMAP Progression spec)",
       "localizations" : {
@@ -6083,6 +6100,23 @@
         }
       }
     },
+    "Unlock all boards" : {
+      "comment" : "Settings: unlock-all toggle label",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa kaikki kentät"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべての盤面を解放"
+          }
+        }
+      }
+    },
     "Unlocked: %@" : {
       "comment" : "VoiceOver announcement; %@ = the opened names",
       "localizations" : {
@@ -6096,6 +6130,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "解放：%@"
+          }
+        }
+      }
+    },
+    "Unlocking" : {
+      "comment" : "Settings: unlock-all section title",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avautuminen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解放"
           }
         }
       }

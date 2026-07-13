@@ -154,7 +154,8 @@ public struct GameView: View {
                     index: InProgressIndex(savedConfigs: saveSummaries.map(\.config)),
                     onResume: { resume($0) },
                     gates: UnlockGates(
-                        records: scoreboard.displayRecords, winsBaseline: winsBaseline)
+                        records: scoreboard.displayRecords, winsBaseline: winsBaseline,
+                        bypassAll: settings.unlockAll)
                 )
                 .transition(.opacity)
                 .zIndex(2)
