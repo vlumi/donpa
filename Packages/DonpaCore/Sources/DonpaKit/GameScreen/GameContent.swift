@@ -26,7 +26,9 @@ struct GameContent: View {
 
     /// Live gating view over the merged records (baseline-adjusted).
     var gates: UnlockGates {
-        UnlockGates(records: scoreboard.displayRecords, winsBaseline: winsBaseline)
+        UnlockGates(
+            records: scoreboard.displayRecords, winsBaseline: winsBaseline,
+            bypassAll: settings.unlockAll)
     }
 
     // Non-private (like restartPop/showProcessing): used by the GameContent+Result

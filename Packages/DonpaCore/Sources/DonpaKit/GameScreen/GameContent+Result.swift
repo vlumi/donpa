@@ -88,9 +88,11 @@ extension GameContent {
 
     /// Gates only open on wins: diff the records around the submits, stamp the
     /// result panel's sticker, and tell VoiceOver (the sticker is transient).
+    /// Silent under "Unlock all boards" — celebrating a gate the player can't
+    /// perceive is noise (the diff resumes if they untoggle with gates closed).
     private func celebrateUnlocks(isWin: Bool, before: [String: ScoreRecord]) {
         panelUnlocks =
-            isWin
+            isWin && !settings.unlockAll
             ? UnlockGates.newlyUnlocked(
                 before: before, after: scoreboard.displayRecords,
                 winsBaseline: winsBaseline)
