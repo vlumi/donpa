@@ -21,6 +21,9 @@ AI coding agents working in this repo.
 The load-bearing design decisions and their rationale live in
 [ARCHITECTURE.md](ARCHITECTURE.md) (module split, state model, why native
 SpriteKit input, no-Catalyst, persistence format, the deliberate UI workarounds).
+Settled PRODUCT design and scrapped ideas are recorded in
+[DECISIONS.md](DECISIONS.md); [ROADMAP.md](ROADMAP.md) holds only open future
+work.
 The essentials:
 
 Two seams isolate all "epic" variation; everything else is written once.

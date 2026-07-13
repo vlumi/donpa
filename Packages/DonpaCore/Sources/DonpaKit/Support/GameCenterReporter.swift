@@ -9,7 +9,7 @@ import UIKit
 import AppKit
 #endif
 
-/// Reports decorations to Game Center — strictly OPT-IN (the ROADMAP spec):
+/// Reports decorations to Game Center — strictly OPT-IN (the DECISIONS.md spec):
 /// authentication happens only after the player enables it, so GC's sign-in
 /// sheet can only ever appear as a consequence of their own choice; GC's
 /// banners stay off (the in-game pill is the celebration); no access point;

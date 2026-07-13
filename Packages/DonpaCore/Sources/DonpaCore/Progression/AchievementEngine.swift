@@ -3,7 +3,7 @@ import Foundation
 /// The curated feat list — IDs are PERMANENT once shipped (they become Game
 /// Center definitions and sync-blob keys), so add but never rename. The full
 /// content design — titles, floors, the one-sitting cap, what's deliberately
-/// absent — lives in ROADMAP's "Progression spec".
+/// absent — lives in DECISIONS.md ("Progression — gating & achievements").
 public enum AchievementID: String, CaseIterable, Sendable {
     // Starters & identity
     case winFirst = "win.first"

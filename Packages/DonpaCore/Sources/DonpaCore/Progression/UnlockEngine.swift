@@ -4,7 +4,7 @@ import Foundation
 /// A pure predicate over the merged score records — no stored unlock set, no
 /// event feed, no migration: veterans auto-pass because their records already
 /// hold the wins, and sync is free because the records already sync. (See
-/// ROADMAP "Progression spec" for the design; gates are ACCESS, not goals.)
+/// DECISIONS.md "Progression" for the design; gates are ACCESS, not goals.)
 ///
 /// Win credit: any won config credits its SIZE (Basic maps
 /// Beginner/Intermediate/Expert → XS/S/M; Drills counts — the practice range
