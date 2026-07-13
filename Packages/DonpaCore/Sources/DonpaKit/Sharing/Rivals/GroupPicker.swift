@@ -22,6 +22,8 @@ struct GroupPicker: View {
     var fieldKeyFocused: Bool = false
     /// Fired by the host to put the caret in the new-squad field.
     var fieldFocus = Pulse()
+    /// A tapped checkbox reports its row, so the host moves key focus there.
+    var onRowTap: ((Int) -> Void)?
     @FocusState private var fieldFocused: Bool
 
     var body: some View {
@@ -32,6 +34,7 @@ struct GroupPicker: View {
             } else {
                 ForEach(Array(friends.groups.enumerated()), id: \.element.id) { index, group in
                     Button {
+                        onRowTap?(index)
                         toggle(group.id)
                     } label: {
                         HStack {

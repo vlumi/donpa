@@ -89,6 +89,7 @@ struct QRZoomSheet: View {
             case .enter:
                 if keyIndex == nil { dismiss() } else { activateFocused() }
             case .escape: dismiss()
+            case .click: keyIndex = nil  // mouse takes over
             default: break
             }
         }

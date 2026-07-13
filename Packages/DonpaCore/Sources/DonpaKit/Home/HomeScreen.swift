@@ -139,7 +139,9 @@ struct HomeScreen: View {
         case .enter, .space:
             activateFocusedItem()
         default:
-            if key == .escape { keys.enter(nil) }
+            // Esc clears deliberately; a mouse click clears because the
+            // pointer took over (a clicked card re-navigates anyway).
+            if key == .escape || key == .click { keys.enter(nil) }
         }
     }
 

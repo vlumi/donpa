@@ -98,6 +98,7 @@ private struct ConfirmAddView: View {
                         confirm()
                     }
                 case .escape: finish()
+                case .click: keys.enter(nil)  // mouse takes over
                 default: break
                 }
             }, yieldsToTextFields: true)
@@ -173,7 +174,11 @@ private struct ConfirmAddView: View {
                             pendingName: $pendingGroupName,
                             keyFocusIndex: keys.zone == .groups ? keys.index : nil,
                             fieldKeyFocused: keys.zone == .newGroup,
-                            fieldFocus: newGroupFocus)
+                            fieldFocus: newGroupFocus,
+                            onRowTap: { index in
+                                keys.enter(.groups)
+                                keys.index = index
+                            })
                     }
                 }
             }

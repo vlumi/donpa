@@ -24,6 +24,13 @@ they merge.
 
 ### build 23 — 2026-07-12
 
+- **The mouse and the keyboard share one focus.** Clicking anywhere
+  stands the keyboard focus ring down, and clicking something focusable
+  moves the focus there — on the board, a click walks the cursor to the
+  clicked cell (when it's active), so the next arrow press continues
+  from where the mouse left off instead of where the keyboard last was.
+  Score rows, medals, rival/squad rows, and checkboxes take the focus
+  with them when clicked.
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the
   board now gives up the keys when it isn't the live surface — pressing
   Esc on the title could silently resume the hidden game's clock, and

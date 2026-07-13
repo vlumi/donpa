@@ -219,7 +219,14 @@ struct MessHallView: View {
                 ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
                     // Tap = compare (the primary action); trailing pencil = edit.
                     CompareEditRow(
-                        compare: { comparingRival = rival }, edit: { editingRival = rival }
+                        compare: {
+                            focusRow(index)
+                            comparingRival = rival
+                        },
+                        edit: {
+                            focusRow(index)
+                            editingRival = rival
+                        }
                     ) {
                         FriendRow(friend: rival, groupNames: groupNames(for: rival))
                     }
@@ -259,8 +266,14 @@ struct MessHallView: View {
                 ForEach(Array(friends.groups.enumerated()), id: \.element.id) { index, group in
                     // Tap = compare vs the group's best; pencil = edit (name/members/delete).
                     CompareEditRow(
-                        compare: { comparingGroup = group },
-                        edit: { editingGroup = group },
+                        compare: {
+                            focusRow(index)
+                            comparingGroup = group
+                        },
+                        edit: {
+                            focusRow(index)
+                            editingGroup = group
+                        },
                         compareDisabled: friends.members(of: group.id).isEmpty
                     ) {
                         HStack {
@@ -352,6 +365,13 @@ extension MessHallView {
     /// The Tab-focus ring for a header zone (inert off macOS).
     func zoneRing(_ zone: KeyZone) -> FocusRing {
         FocusRing(focused: keys.zone == zone, inset: 2)
+    }
+
+    /// A tapped row takes the keyboard focus with it, so the arrows resume
+    /// from the clicked row when the sheet closes.
+    func focusRow(_ index: Int) {
+        keys.enter(.rows)
+        keys.index = index
     }
 
     /// The card control the current zone maps to (ring + activation target).

@@ -80,6 +80,7 @@ struct NearbyExchangeView: View {
             case .up, .backTab: movePeerFocus(-1)
             case .enter, .space: activate()
             case .escape: close()
+            case .click: focusedPeer = nil  // mouse takes over
             default: break
             }
         }
