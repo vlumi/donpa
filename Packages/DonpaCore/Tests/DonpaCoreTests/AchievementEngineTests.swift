@@ -105,23 +105,17 @@ final class AchievementEngineTests: XCTestCase {
         XCTAssertNil(earned()[.speedExpert])  // exactly 180 s misses "under"
     }
 
-    // MARK: Luck (exact-boundary tiers, matching the in-game toast cuts)
+    // MARK: Luck (exact boundary, matching the in-game toast cut)
 
-    func testLuckLadderBoundaries() {
+    func testCoinFlipBoundary() {
+        mutate(.grid(.m, .normal, .flat)) {
+            $0.luckiestGuess = LuckiestGuess(survival: 0.51, achievedAt: .init())
+        }
+        XCTAssertNil(earned()[.luckCoinFlip])
         mutate(.grid(.m, .normal, .flat)) {
             $0.luckiestGuess = LuckiestGuess(survival: 0.5, achievedAt: .init())
         }
         XCTAssertEqual(earned()[.luckCoinFlip], 1)
-        XCTAssertNil(earned()[.luckLongShot])
-        mutate(.grid(.m, .normal, .flat)) {
-            $0.luckiestGuess = LuckiestGuess(survival: 1.0 / 3.0, achievedAt: .init())
-        }
-        XCTAssertEqual(earned()[.luckLongShot], 1)
-        XCTAssertNil(earned()[.luckMiracle])
-        mutate(.grid(.m, .normal, .flat)) {
-            $0.luckiestGuess = LuckiestGuess(survival: 0.25, achievedAt: .init())
-        }
-        XCTAssertEqual(earned()[.luckMiracle], 1)
     }
 
     // MARK: Full-clear tie-ins
@@ -260,7 +254,7 @@ final class AchievementEngineTests: XCTestCase {
     func testIDsAreStableAndUnique() {
         let raw = AchievementID.allCases.map(\.rawValue)
         XCTAssertEqual(raw.count, Set(raw).count)
-        XCTAssertEqual(AchievementID.allCases.count, 22)
+        XCTAssertEqual(AchievementID.allCases.count, 20)
         // Exactly the four gags hide until earned.
         XCTAssertEqual(
             AchievementID.allCases.filter(\.isHidden),

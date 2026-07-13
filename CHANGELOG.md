@@ -22,6 +22,12 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- One luck decoration instead of three: Coin flip (survive a forced
+  50/50) stays; Long Shot and A MIRACLE retire — degrees of pure luck
+  aren't degrees of merit, and a ≤1-in-4 forced guess practically never
+  occurs on real boards (the in-game toasts and the luckiest-escape stat
+  still track them). Anyone who already earned them keeps nothing lost —
+  the grid simply no longer shows slots almost no one could fill.
 - Restarting (or replaying) the same board keeps your zoom level,
   re-centred — it re-fit to the default zoom before, throwing away a
   hand-tuned view on every ⌘R. A different board still opens at the

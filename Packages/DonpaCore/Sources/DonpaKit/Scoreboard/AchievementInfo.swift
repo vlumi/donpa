@@ -16,8 +16,6 @@ extension AchievementID {
         case .insaneWin: return String(localized: "Stuff of Legends", bundle: .module)
         case .lunaticWin: return String(localized: "Full Moon", bundle: .module)
         case .luckCoinFlip: return String(localized: "Coin Flip", bundle: .module)
-        case .luckLongShot: return String(localized: "Long Shot", bundle: .module)
-        case .luckMiracle: return String(localized: "A MIRACLE", bundle: .module)
         case .fullClearSize: return String(localized: "Sector Secure", bundle: .module)
         case .trifecta: return String(localized: "The Classics", bundle: .module)
         case .trifectaTime: return String(localized: "Hat Trick", bundle: .module)

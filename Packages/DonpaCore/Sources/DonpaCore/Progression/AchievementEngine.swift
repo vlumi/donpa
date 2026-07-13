@@ -18,8 +18,6 @@ public enum AchievementID: String, CaseIterable, Sendable {
     case lunaticWin = "lunatic.win"
     // Luck (retroactive via the luckiest-guess record)
     case luckCoinFlip = "luck.coinflip"
-    case luckLongShot = "luck.longshot"
-    case luckMiracle = "luck.miracle"
     // Full-clear tie-ins
     case fullClearSize = "fullclear.size"
     case trifecta = "trifecta"
@@ -104,13 +102,13 @@ public enum AchievementEngine {
         award(.purityNoFlag, facts.noFlagWinAtFloor)
         award(.insaneWin, facts.won { $0.density == .insane && $0.size ?? .xs >= .m })
         award(.lunaticWin, facts.won { $0.density == .lunatic })
-        // The luck ladder reads the merged luckiest-guess record; the same
-        // epsilon as the in-game tiers, so exactly-1/2 counts as a coin flip.
+        // ONE luck decoration — surviving the canonical 50/50 (the toast tiers
+        // and the luckiest-escape stat track anything rarer; degrees of luck
+        // aren't degrees of merit). Same epsilon as the toasts, so exactly-1/2
+        // counts.
         let eps = 1e-9
         if let luckiest = facts.luckiestSurvival {
             award(.luckCoinFlip, luckiest <= 0.5 + eps)
-            award(.luckLongShot, luckiest <= 1.0 / 3.0 + eps)
-            award(.luckMiracle, luckiest <= 0.25 + eps)
         }
         award(.fullClearSize, facts.anyFullClearedSize)
         award(.trifecta, facts.trifectaDone)
@@ -163,7 +161,7 @@ public enum AchievementEngine {
             return facts.expertBestCentiseconds.map {
                 AchievementProgress(metric: .bestSeconds, current: $0)
             }
-        case .luckCoinFlip, .luckLongShot, .luckMiracle:
+        case .luckCoinFlip:
             // Your luckiest survival so far, as a whole-percent (lower = luckier).
             return facts.luckiestSurvival.map {
                 AchievementProgress(metric: .luckPercent, current: Int(($0 * 100).rounded()))

@@ -33,12 +33,6 @@ extension AchievementID {
         case .luckCoinFlip:
             return String(
                 localized: "Survive a forced guess at even odds or worse.", bundle: .module)
-        case .luckLongShot:
-            return String(
-                localized: "Survive a forced guess at one-in-three or worse.", bundle: .module)
-        case .luckMiracle:
-            return String(
-                localized: "Survive a forced guess at one-in-four or worse.", bundle: .module)
         case .fullClearSize:
             return String(
                 localized: "Win every rank of one size.", bundle: .module)

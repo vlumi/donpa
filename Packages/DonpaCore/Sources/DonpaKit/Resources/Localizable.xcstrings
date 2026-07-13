@@ -1079,23 +1079,6 @@
         }
       }
     },
-    "A MIRACLE" : {
-      "comment" : "Achievement title (see ROADMAP Progression spec)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "IHME"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "奇跡"
-          }
-        }
-      }
-    },
     "A MIRACLE! (%@)" : {
       "comment" : "Guess toast, top tier (survival ≤ 1\/4) — intensity peak, caps intended",
       "localizations" : {
@@ -3401,23 +3384,6 @@
         }
       }
     },
-    "Long Shot" : {
-      "comment" : "Achievement title (see ROADMAP Progression spec)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kaukolaukaus"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "一か八か"
-          }
-        }
-      }
-    },
     "Long shot! (%@)" : {
       "comment" : "Guess toast, long-shot tier (survival ≤ 1\/3)",
       "localizations" : {
@@ -5220,40 +5186,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "五分五分以下の強制推測を生き延びる。"
-          }
-        }
-      }
-    },
-    "Survive a forced guess at one-in-four or worse." : {
-      "comment" : "Achievement description (Decorations grid + future ASC)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selviä korkeintaan 1\/4-kertoimen pakkoarvauksesta."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4分の1以下の強制推測を生き延びる。"
-          }
-        }
-      }
-    },
-    "Survive a forced guess at one-in-three or worse." : {
-      "comment" : "Achievement description (Decorations grid + future ASC)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selviä korkeintaan 1\/3-kertoimen pakkoarvauksesta."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3分の1以下の強制推測を生き延びる。"
           }
         }
       }
