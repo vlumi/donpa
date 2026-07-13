@@ -281,12 +281,12 @@ struct MangaPanelView: View {
 
     /// A decoration earned this game — the same sticker dress, gold border.
     @ViewBuilder private var featSticker: some View {
-        if let headline = Self.featHeadline(earnedFeatTitles) {
+        if let sticker = Self.featSticker(earnedFeatTitles) {
             VStack(spacing: 0) {
-                Text("Decoration", bundle: .module)
+                Text(verbatim: sticker.eyebrow)
                     .font(.system(.caption2, design: .rounded).weight(.heavy))
                     .textCase(.uppercase)
-                Text(verbatim: headline)
+                Text(verbatim: sticker.body)
                     .font(.system(.body, design: .rounded).weight(.black))
             }
             .modifier(PillStamp(accent: MedalView.gold))
@@ -297,12 +297,19 @@ struct MangaPanelView: View {
         }
     }
 
-    /// One feat reads verbatim; several collapse to the generic line.
-    static func featHeadline(_ titles: [String]) -> String? {
+    /// One feat reads verbatim under the singular eyebrow; several become a
+    /// count under the plural one — a singular eyebrow over a plural body
+    /// ("KUNNIAMERKKI / Uusia kunniamerkkejä") read as a number mismatch.
+    static func featSticker(_ titles: [String]) -> (eyebrow: String, body: String)? {
         switch titles.count {
         case 0: return nil
-        case 1: return titles[0]
-        default: return String(localized: "New decorations", bundle: .module)
+        case 1:
+            return (String(localized: "Decoration", bundle: .module), titles[0])
+        default:
+            return (
+                String(localized: "Decorations", bundle: .module),
+                String(localized: "\(titles.count) new", bundle: .module)
+            )
         }
     }
 

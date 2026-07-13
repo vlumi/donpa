@@ -854,6 +854,28 @@
         }
       }
     },
+    "%lld new" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld new"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld uutta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新たに%lld個"
+          }
+        }
+      }
+    },
     "%lld wins" : {
       "localizations" : {
         "en" : {
@@ -2253,6 +2275,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「%@」を削除しますか？"
+          }
+        }
+      }
+    },
+    "Decorations" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decorations"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunniamerkit"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勲章"
           }
         }
       }
@@ -3788,23 +3832,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新しい盤面"
-          }
-        }
-      }
-    },
-    "New decorations" : {
-      "comment" : "Sticker line when several feats earned at once",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uusia kunniamerkkejä"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新しい勲章"
           }
         }
       }
