@@ -22,6 +22,11 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- The Service Record's Decorations block folds away — and STAYS folded
+  across launches. Achievements are an exploration on-ramp; once they've
+  served their purpose the scores get the room, with the earned count
+  still on the folded header. Tab still reaches it (Return/Space
+  unfolds).
 - One luck decoration instead of three: Coin flip (survive a forced
   50/50) stays; Long Shot and A MIRACLE retire — degrees of pure luck
   aren't degrees of merit, and a ≤1-in-4 forced guess practically never

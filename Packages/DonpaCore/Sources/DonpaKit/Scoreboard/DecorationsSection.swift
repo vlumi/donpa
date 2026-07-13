@@ -16,21 +16,65 @@ struct DecorationsSection: View {
     @Binding var selected: AchievementID?
     /// The HOST's keyboard-focused medal (Tab-zone browsing ring), or nil.
     var keyFocusIndex: Int?
+    /// Folded away (persisted): achievements are an exploration on-ramp — a
+    /// veteran can collapse the block and it STAYS collapsed; the header keeps
+    /// the earned count so it never goes fully dark.
+    @Binding var collapsed: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Decorations", bundle: .module)
-                .font(.title3.bold())
-                .padding(.horizontal, rowInset)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 6)], spacing: 10) {
-                ForEach(Array(AchievementID.allCases.enumerated()), id: \.element) { index, id in
-                    cell(id)
-                        .modifier(FocusRing(focused: keyFocusIndex == index, inset: 1))
+            header
+            if !collapsed {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 64), spacing: 6)], spacing: 10
+                ) {
+                    ForEach(
+                        Array(AchievementID.allCases.enumerated()), id: \.element
+                    ) { index, id in
+                        cell(id)
+                            .modifier(FocusRing(focused: keyFocusIndex == index, inset: 1))
+                    }
                 }
+                .padding(.horizontal, rowInset)
+                if let selected { detail(selected) }
             }
-            .padding(.horizontal, rowInset)
-            if let selected { detail(selected) }
         }
+    }
+
+    private var header: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.15)) { collapsed.toggle() }
+        } label: {
+            HStack(spacing: 8) {
+                Text("Decorations", bundle: .module)
+                    .font(.title3.bold())
+                if collapsed {
+                    Text(verbatim: "\(earnedCount)/\(AchievementID.allCases.count)")
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(collapsed ? 0 : 90))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, rowInset)
+        .accessibilityLabel(Text("Decorations", bundle: .module))
+        .accessibilityValue(collapsedA11yValue)
+    }
+
+    private var collapsedA11yValue: Text {
+        guard collapsed else { return Text("expanded", bundle: .module) }
+        return Text(
+            "collapsed, \(earnedCount) of \(AchievementID.allCases.count) earned",
+            bundle: .module)
+    }
+
+    private var earnedCount: Int {
+        AchievementID.allCases.filter { achievements.earnedTier($0) > 0 }.count
     }
 
     private func cell(_ id: AchievementID) -> some View {

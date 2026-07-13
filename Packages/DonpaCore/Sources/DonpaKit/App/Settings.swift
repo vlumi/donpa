@@ -204,6 +204,12 @@ public final class Settings: ObservableObject {
     @Published public var showMinimap: Bool {
         didSet { defaults.set(showMinimap, forKey: showMinimapKey) }
     }
+    /// The Record's Decorations block, folded away — achievements are an
+    /// exploration on-ramp, and a veteran can put them (and keep them) out of
+    /// the way once they've outlived their usefulness.
+    @Published public var medalsCollapsed: Bool {
+        didSet { defaults.set(medalsCollapsed, forKey: medalsCollapsedKey) }
+    }
     /// Minimap size multiplier over its base size, persisted so a resize survives
     /// new game / restart / save-restore. The scene clamps it to a sane range.
     @Published public var minimapScale: Double {
@@ -260,6 +266,7 @@ public final class Settings: ObservableObject {
     private let handednessKey = "donpa.handedness"
     private let languageKey = "donpa.language"
     private let showMinimapKey = "donpa.showMinimap"
+    private let medalsCollapsedKey = "donpa.medalsCollapsed"
     private let minimapScaleKey = "donpa.minimapScale"
     private let questionMarksKey = "donpa.questionMarks"
     private let soundKey = "donpa.sound"
@@ -317,6 +324,7 @@ public final class Settings: ObservableObject {
         // Default ON: check presence explicitly, since `bool(forKey:)` is false when
         // the key is missing.
         showMinimap = defaults.object(forKey: showMinimapKey) as? Bool ?? true
+        medalsCollapsed = defaults.object(forKey: medalsCollapsedKey) as? Bool ?? false
         // Default 1.0 (base size); a stored value restores the player's last size.
         minimapScale = defaults.object(forKey: minimapScaleKey) as? Double ?? 1.0
         // Off by default — the "?" step is opt-in.

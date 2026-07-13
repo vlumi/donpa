@@ -43,6 +43,13 @@ extension ScoreboardView {
         }
     }
 
+    /// The medals zone is a disclosure button while collapsed: activating it
+    /// unfolds the grid and seeds the browse focus; folded state persists.
+    private func toggleMedalsCollapse() {
+        settings.medalsCollapsed.toggle()
+        keys.index = settings.medalsCollapsed ? nil : 0
+    }
+
     /// Space toggles/steps the focused control: segmented zones step forward
     /// (like Settings), buttons and rows activate.
     private func operateOrActivate() {
@@ -73,20 +80,22 @@ extension ScoreboardView {
     }
 
     private func cycleZone(_ delta: Int) {
-        keys.cycle(delta, through: visibleZones, entering: Self.entry)
+        keys.cycle(delta, through: visibleZones, entering: entry)
         // Rows keep STRING-keyed satellite focus (self-heals across filter
         // changes) — seed it the same way the first arrow press would.
         if keys.zone == .rows, keyRowKey == nil { seedRowFocus() }
     }
 
-    private static func entry(_ zone: ScoreboardView.KeyZone) -> KeyCursor<KeyZone>.Entry {
-        zone == .medals ? .list(seed: 0) : .plain
+    private func entry(_ zone: ScoreboardView.KeyZone) -> KeyCursor<KeyZone>.Entry {
+        zone == .medals && !settings.medalsCollapsed ? .list(seed: 0) : .plain
     }
 
     private func moveWithinZone(_ delta: Int) {
         switch keys.zone {
         case .rows: moveRowFocus(delta)
-        case .medals: keys.move(delta, count: AchievementID.allCases.count)
+        case .medals:
+            guard !settings.medalsCollapsed else { return }
+            keys.move(delta, count: AchievementID.allCases.count)
         default: break
         }
     }
@@ -96,7 +105,9 @@ extension ScoreboardView {
         case .career, .manage, .rows, .sync, nil: break
         case .breakdown:
             breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
-        case .medals: keys.move(step, count: AchievementID.allCases.count)
+        case .medals:
+            guard !settings.medalsCollapsed else { return }
+            keys.move(step, count: AchievementID.allCases.count)
         case .rivals:
             // ←/→ walk the comparison scope: All rivals, then each squad.
             let options: [String?] = [nil] + friends.groups.map(\.id)
@@ -118,6 +129,7 @@ extension ScoreboardView {
         case .rows:
             if let key = keyRowKey { toggleExpanded(key) }
         case .medals:
+            guard !settings.medalsCollapsed else { return toggleMedalsCollapse() }
             guard let i = keys.index, AchievementID.allCases.indices.contains(i)
             else { return }
             let id = AchievementID.allCases[i]
