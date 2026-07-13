@@ -22,6 +22,8 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 24 — 2026-07-13
+
 - **Game Center, strictly opt-in.** A new toggle at the foot of the
   Decorations gallery reports your medals to Game Center — off by default,
   and Game Center is never even contacted until you turn it on. The first
