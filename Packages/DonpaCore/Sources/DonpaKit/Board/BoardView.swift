@@ -16,27 +16,32 @@ struct BoardView: View {
     /// under the title or a modal — that's the no-fight contract with the
     /// KeyCatcher surfaces.
     var keyboardOwner: Bool = true
-    var showMinimap: Bool = true
-    var minimapScale: Double = 1
+    var minimap: MinimapPrefs = MinimapPrefs(show: true, onRight: false, scale: 1)
     var useQuestionMarks: Bool = false
 
     var body: some View {
         BoardSKView(
             scene: scene, palette: palette, inputMode: inputMode,
             boardCursorActive: boardCursorActive, keyboardOwner: keyboardOwner,
-            showMinimap: showMinimap,
-            minimapScale: minimapScale, useQuestionMarks: useQuestionMarks)
+            minimap: minimap, useQuestionMarks: useQuestionMarks)
     }
+}
+
+/// The minimap prefs a host pushes to the scene, bundled (they travel together).
+struct MinimapPrefs: Equatable {
+    let show: Bool
+    let onRight: Bool
+    let scale: Double
 }
 
 /// The scene-property pushes shared by both platform representables.
 private func applyScene(
-    _ scene: BoardScene, palette: Palette, showMinimap: Bool, minimapScale: Double,
-    useQuestionMarks: Bool
+    _ scene: BoardScene, palette: Palette, minimap: MinimapPrefs, useQuestionMarks: Bool
 ) {
     scene.palette = palette
-    scene.showMinimap = showMinimap
-    scene.minimapScale = CGFloat(minimapScale)
+    scene.showMinimap = minimap.show
+    scene.minimapOnRight = minimap.onRight
+    scene.minimapScale = CGFloat(minimap.scale)
     scene.useQuestionMarks = useQuestionMarks
 }
 
@@ -47,16 +52,13 @@ private struct BoardSKView: NSViewRepresentable {
     let inputMode: InputMode
     let boardCursorActive: Bool
     let keyboardOwner: Bool
-    let showMinimap: Bool
-    let minimapScale: Double
+    let minimap: MinimapPrefs
     let useQuestionMarks: Bool
 
     func makeNSView(context: Context) -> ScrollForwardingSKView {
         let view = ScrollForwardingSKView()
         view.ignoresSiblingOrder = true
-        applyScene(
-            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
-            useQuestionMarks: useQuestionMarks)
+        applyScene(scene, palette: palette, minimap: minimap, useQuestionMarks: useQuestionMarks)
         view.inputMode = inputMode
         view.boardCursorActive = boardCursorActive
         view.keyboardOwner = keyboardOwner
@@ -66,9 +68,7 @@ private struct BoardSKView: NSViewRepresentable {
 
     func updateNSView(_ view: ScrollForwardingSKView, context: Context) {
         if view.scene !== scene { view.presentScene(scene) }
-        applyScene(
-            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
-            useQuestionMarks: useQuestionMarks)
+        applyScene(scene, palette: palette, minimap: minimap, useQuestionMarks: useQuestionMarks)
         view.inputMode = inputMode
         view.boardCursorActive = boardCursorActive
         view.keyboardOwner = keyboardOwner
@@ -249,16 +249,13 @@ private struct BoardSKView: UIViewRepresentable {
     let inputMode: InputMode  // unused on iOS (no pointer cursor)
     let boardCursorActive: Bool  // unused on iOS (no pointer cursor)
     let keyboardOwner: Bool
-    let showMinimap: Bool
-    let minimapScale: Double
+    let minimap: MinimapPrefs
     let useQuestionMarks: Bool
 
     func makeUIView(context: Context) -> KeyForwardingSKView {
         let view = KeyForwardingSKView()
         view.ignoresSiblingOrder = true
-        applyScene(
-            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
-            useQuestionMarks: useQuestionMarks)
+        applyScene(scene, palette: palette, minimap: minimap, useQuestionMarks: useQuestionMarks)
         view.keyboardOwner = keyboardOwner
         view.presentScene(scene)
         return view
@@ -266,9 +263,7 @@ private struct BoardSKView: UIViewRepresentable {
 
     func updateUIView(_ view: KeyForwardingSKView, context: Context) {
         if view.scene !== scene { view.presentScene(scene) }
-        applyScene(
-            scene, palette: palette, showMinimap: showMinimap, minimapScale: minimapScale,
-            useQuestionMarks: useQuestionMarks)
+        applyScene(scene, palette: palette, minimap: minimap, useQuestionMarks: useQuestionMarks)
         view.keyboardOwner = keyboardOwner
         // While the board owns the keyboard, hold first responder so a
         // hardware keyboard (iPad) drives the cursor. Never under a modal —

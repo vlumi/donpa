@@ -62,7 +62,10 @@ entries land under Unreleased as they merge.
   zoom level you set, re-centred — it re-fit to the default zoom before,
   throwing away a hand-tuned view on every ⌘R. A different board still
   opens at the default fit.
-
+- **The minimap sides with your thumb.** On big boards the minimap now pins
+  to the same top corner as the control strip (the "Toggle side" setting),
+  keeping the other side of the board clear for the playing hand; its
+  resize grip mirrors along.
 ### build 23 — 2026-07-12
 
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the

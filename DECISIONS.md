@@ -426,13 +426,22 @@ the game better for someone who already likes it:
   real-time co-play ever happens it's its own release.
 - **TipKit** — How to play + Drills already teach.
 
+### Minimap drag-to-reposition (2026-07-13)
+
+Parked: no good UX presents itself. A drag handle on the tiny HUD collides
+with the drag-to-navigate gesture the minimap interior already owns, a
+long-press-then-drag is undiscoverable, and edit-mode chrome is heavy
+machinery for "it's in my way" — which the hide toggle plus the
+handedness-aware corner (shipped: same side as the control strip) already
+cover. A speculative higher-contrast-shading polish note died with it
+(never user-reported; reads fine on real boards).
+
 ### Evaluated, not parked
 
 Recorded so the next review doesn't redo it: Live Activities (the game is
 foreground by nature), CloudKit save-sync (KVS is too
 small for board blobs; per-device saves were a deliberate call), Spotlight
-indexing beyond App Intents, minimap drag-to-reposition/resize (the hide
-toggle covers the pain — stays in the backlog).
+indexing beyond App Intents.
 
 ### Inked-paper board theme (dropped)
 
