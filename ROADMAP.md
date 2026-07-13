@@ -148,7 +148,7 @@ pass, and the Mess hall redesign with Nearby promoted — plus the 2026-07-12
 tech-debt cleanup (shared KeyCursor/Pulse keyboard core with unit tests, one
 board focus keeper, Sharing reorganization, dead-code/catalog sweep).
 
-Remaining before the b23 cut:
+Remaining for 0.6.0 (b23 is out with testers; these ride a later build):
 
 - [ ] **Review prompt** (`SKStoreReviewController`) — ask after a new best
       time, never after a loss. Small, and it matters for a small app's store
@@ -318,8 +318,8 @@ player who's simply good, and veterans derive-pass anyway.
   unlock"); its tab renders dimmed with the padlock badge. The pager still
   swipes to it (teaser = seeing the next rung).
 - Locked **Round segment**: dimmed + padlock in the segmented toggle; tap shows
-  the requirement caption. Keyboard ←/→ skips locked entries (`stepped(within:)`
-  over the unlocked slice — the Drills-ladder helper generalizes).
+  the requirement caption. Keyboard ←/→ skips locked entries
+  (`KeyStep.clamped(within:)` over the unlocked slice).
 - Requirement copy (localize EN/FI/JA at build): "Win an M board to unlock" /
   "Win any board to unlock the Hive" / "Win an M board to unlock Round edges" /
   "Win a Sapper board (S or larger) to unlock".
@@ -516,8 +516,6 @@ dropped — revisit only with a genuinely different treatment).
 
 Still open:
 
-- **Sounds** — moved to the v0.6.0 tentative list (the "ドーン!" sting + mute
-  toggle).
 - **Name native-check** — **Donpa Squad / ドンパ隊** is settled (repo + types +
   docs renamed), but worth a JP-native gut-check **before registering bundle IDs
   with Apple** (store name + bundle ID are painful to change post-registration).
