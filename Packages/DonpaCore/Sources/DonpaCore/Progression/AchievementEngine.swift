@@ -34,12 +34,11 @@ public enum AchievementID: String, CaseIterable, Sendable {
 
     /// Tier thresholds for the tiered feats (bronze/silver/gold laurels in the
     /// Decorations grid; one Game Center definition per tier). nil = one-shot.
+    /// Only VOLUME counts tier — journey chapters any invested player reaches
+    /// by playing. Skill thresholds don't ladder (that's the scoreboard's
+    /// job): speed.expert is a single rite-of-passage badge.
     public var tierThresholds: [Int]? {
         switch self {
-        // Seconds, descending bars. Tuned to sit with the rest of the set ("skilled
-        // but attainable"), not world-record: <3 min = you can win Expert, <90 s =
-        // genuinely fast — no world-class speedrun tier that towered over the others.
-        case .speedExpert: return [180, 120, 90]
         case .milesWins: return [10, 100, 1000]
         case .milesTiles: return [10_000, 100_000, 1_000_000]
         case .milesDisarmed: return [1000, 10_000, 100_000]
@@ -115,11 +114,10 @@ public enum AchievementEngine {
         if let total = facts.trifectaTotalCentiseconds {
             award(.trifectaTime, facts.trifectaDone && total < 30_000)  // under 5:00
         }
-        // speed.expert: tier bars are "under N seconds" on the classic Expert best.
+        // speed.expert: ONE rite-of-passage bar — you've genuinely learned
+        // Expert (honest on any device; elite speed lives in the scoreboard).
         if let best = facts.expertBestCentiseconds {
-            let count = (AchievementID.speedExpert.tierThresholds ?? [])
-                .filter { best < $0 * 100 }.count
-            if count > 0 { earned[.speedExpert] = count }
+            award(.speedExpert, best < 180 * 100)
         }
         tiers(.milesWins, value: facts.totalWins)
         tiers(.milesTiles, value: facts.totalTiles)

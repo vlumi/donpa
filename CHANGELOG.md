@@ -22,6 +22,11 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- Expert Sweep is one badge now — clear Expert in under three minutes —
+  instead of a 180/120/90 ladder: chasing faster times is the
+  scoreboard's job (your best times live there), and a tiered time
+  ladder was skill tracking dressed as decorations. Anyone who reached a
+  faster rung keeps the badge, of course.
 - The Service Record's Decorations block folds away — and STAYS folded
   across launches. Achievements are an exploration on-ramp; once they've
   served their purpose the scores get the room, with the earned count

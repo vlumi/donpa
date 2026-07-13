@@ -94,13 +94,11 @@ final class AchievementEngineTests: XCTestCase {
         XCTAssertEqual(earned()[.lunaticWin], 1)
     }
 
-    func testExpertSpeedLadderTiers() {
+    func testExpertSpeedSingleRung() {
         mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 17_900, achievedAt: .init()) }
         XCTAssertEqual(earned()[.speedExpert], 1)  // < 180 s
-        mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 11_900, achievedAt: .init()) }
-        XCTAssertEqual(earned()[.speedExpert], 2)  // < 120 s
         mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 8_999, achievedAt: .init()) }
-        XCTAssertEqual(earned()[.speedExpert], 3)  // < 90 s
+        XCTAssertEqual(earned()[.speedExpert], 1)  // faster is still ONE badge
         mutate(.basic(.expert)) { $0.best = BestTime(centiseconds: 18_000, achievedAt: .init()) }
         XCTAssertNil(earned()[.speedExpert])  // exactly 180 s misses "under"
     }
@@ -262,7 +260,7 @@ final class AchievementEngineTests: XCTestCase {
         // The wire values the ASC definitions will be built from — locked.
         XCTAssertEqual(AchievementID.winFirst.rawValue, "win.first")
         XCTAssertEqual(AchievementID.hiveInsane.rawValue, "hive.insane")
-        XCTAssertEqual(AchievementID.speedExpert.tierThresholds, [180, 120, 90])
+        XCTAssertNil(AchievementID.speedExpert.tierThresholds)  // single rung (2026-07-13)
     }
 
     func testFreshRecordsEarnNothing() {

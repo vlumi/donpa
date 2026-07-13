@@ -347,8 +347,8 @@ the reporter FLATTENS our tiers: one-shot feats map 1:1
 (`fi.misaki.donpa.<id>`), each tier of a tiered feat becomes its own ASC entry
 (`fi.misaki.donpa.miles.wins.10` / `.100` / `.1000`), and the reporter feeds
 `percentComplete` on the next unearned tier so GC shows live progress
-("470/1000 wins = 47 %"). 20 internal IDs = 16 one-shots + 11 tier steps →
-**27 ASC definitions**; assign the point budget across them when building the
+("470/1000 wins = 47 %"). 20 internal IDs = 17 one-shots + 3×3 tier steps →
+**26 ASC definitions**; assign the point budget across them when building the
 reporter.
 
 **Two evaluation modes, one engine:**
@@ -415,10 +415,12 @@ freely; IDs lock at build.
   no-chord — "bare hands" was the same feat twice — and no-chord alone (flag
   freely, click one by one) is slower play, not harder play. Resumed games
   can't earn it (the purity bit defaults to violated on restore — decided).
-- `speed.expert` (tiers 180/120/90) — **Expert Sweep** · *Salamaraivaus* ·
-  *エキスパート速攻* — "Clear Basic Expert in under 180 / 120 / 90 seconds."
-  (Retuned from 100/60/40 pre-release: even bronze was near-world-class,
-  towering over the rest of the set; thresholds are tunable, only IDs lock.)
+- `speed.expert` (single rung, <180 s) — **Expert Sweep** · *Salamaraivaus* ·
+  *エキスパート速攻* — "Clear Expert in under three minutes." (Collapsed from a
+  180/120/90 ladder 2026-07-13: tiered SKILL thresholds are progress tracking
+  in badge costume — that's the scoreboard's job (best times, pace later);
+  the single rung is the rite of passage "you've genuinely learned Expert,"
+  honest on any device. Only VOLUME milestones keep tiers.)
   Derivable from the Expert best time.
 - `insane.win` — **Stuff of Legends** · *Legendojen ainesta* · *生ける伝説* —
   "Win a Legend board, M or larger." (XS Legend is a lottery.) Renamed from
