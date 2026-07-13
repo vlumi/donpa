@@ -141,8 +141,6 @@ struct MedalView: View {
         // A FULL moon (the feat's name): disc + craters, not a crescent.
         .lunaticWin: { fullMoon(in: $0, side: $1, ink: $2) },
         .luckCoinFlip: { coin(in: $0, side: $1, label: "1/2", ink: $2) },
-        .luckLongShot: { coin(in: $0, side: $1, label: "1/3", ink: $2) },
-        .luckMiracle: { coin(in: $0, side: $1, label: "1/4", ink: $2) },
         .fullClearSize: { BoardGlyph.draw(.grid, in: $0, side: $1, color: $2) },
         .trifecta: { BoardGlyph.draw(.basic, in: $0, side: $1, color: $2) },
         .trifectaTime: { ctx, s, ink in

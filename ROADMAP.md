@@ -347,8 +347,8 @@ the reporter FLATTENS our tiers: one-shot feats map 1:1
 (`fi.misaki.donpa.<id>`), each tier of a tiered feat becomes its own ASC entry
 (`fi.misaki.donpa.miles.wins.10` / `.100` / `.1000`), and the reporter feeds
 `percentComplete` on the next unearned tier so GC shows live progress
-("470/1000 wins = 47 %"). 22 internal IDs = 18 one-shots + 11 tier steps →
-**29 ASC definitions**; assign the point budget across them when building the
+("470/1000 wins = 47 %"). 20 internal IDs = 16 one-shots + 11 tier steps →
+**27 ASC definitions**; assign the point budget across them when building the
 reporter.
 
 **Two evaluation modes, one engine:**
@@ -383,7 +383,7 @@ unearned = silhouette + requirement, hidden = "?" until earned, tiers as
 bronze/silver/gold laurels. Earn moment = result-panel sticker + VoiceOver
 announcement (same slot as the unlock sticker; queue if both fire).
 
-### The achievement list (22 IDs; tiers noted)
+### The achievement list (20 IDs; tiers noted)
 
 Floors write as "≥ M Sapper" = size M or larger AND rank Sapper or denser
 (rank floor structurally excludes Drills/Basic). Titles EN · FI · JA — tune
@@ -432,12 +432,10 @@ freely; IDs lock at build.
 match the in-game toasts)
 
 - `luck.coinflip` — **Coin Flip** · *Kolikonheitto* · *コイントス* — "Survive a
-  forced guess at even odds or worse."
-- `luck.longshot` — **Long Shot** · *Kaukolaukaus* · *一か八か* — "…at 1-in-3
-  or worse."
-- `luck.miracle` — **A MIRACLE** · *IHME* · *奇跡* — "…at 1-in-4 or worse."
-  (Worse exists but is rare; the ladder stops here. Farming bad odds mostly
-  kills you — self-balancing.)
+  forced guess at even odds or worse." (The ONE luck decoration — decided
+  2026-07-13: the ladder's Long Shot/Miracle rungs were degrees of pure RNG,
+  and Miracle's ≤1/4 trigger practically never occurs on real boards. The
+  toast tiers and the luckiest-escape stat keep tracking anything rarer.)
 
 **Full-clear tie-ins** (derivable from the Record's standings)
 
