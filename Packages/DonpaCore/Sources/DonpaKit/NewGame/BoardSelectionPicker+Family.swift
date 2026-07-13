@@ -10,7 +10,6 @@ extension BoardSelectionPicker {
         return Button {
             withAnimation(FamilySwitch.animation) { settings.family = family }
             lockedHint = nil  // don't carry a stale teaser onto the new page
-            onFocusRow?(0)
         } label: {
             HStack(spacing: 10) {
                 BoardGlyph(kind: .family(family), size: 24)
@@ -41,7 +40,6 @@ extension BoardSelectionPicker {
         return Button {
             withAnimation(FamilySwitch.animation) { settings.family = family }
             lockedHint = nil  // don't carry a stale teaser onto the new page
-            onFocusRow?(0)
         } label: {
             VStack(spacing: 3) {
                 BoardGlyph(kind: .family(family), size: 26)

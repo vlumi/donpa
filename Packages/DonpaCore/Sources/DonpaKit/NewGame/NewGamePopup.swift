@@ -228,7 +228,7 @@ struct NewGamePopup: View {
         #if os(macOS)
         BoardSelectionPicker(
             settings: settings, focusedRow: focusedRow,
-            onFocusRow: { focusedRow = $0 }, layout: layout, onStart: onStart,
+            layout: layout, onStart: onStart,
             index: index, gates: gates, onResume: onResume, compact: compact)
         #else
         BoardSelectionPicker(

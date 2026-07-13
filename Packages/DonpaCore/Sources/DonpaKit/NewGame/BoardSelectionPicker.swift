@@ -36,9 +36,6 @@ struct BoardSelectionPicker: View {
     /// Keyboard-focused row, or nil when not keyboard-driven (iOS, or before the
     /// first arrow press).
     var focusedRow: Int?
-    /// Ask the host to move keyboard focus to a row. nil on iOS.
-    var onFocusRow: ((Int) -> Void)?
-
     /// Which layout to render — the host picks by viewport shape (narrow portrait
     /// phone → pager; anything wider → sidebar). Not a platform/size-class split.
     enum Layout { case pager, sidebar }
