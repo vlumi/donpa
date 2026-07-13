@@ -36,6 +36,8 @@ struct GameContent: View {
     @State var panelUnlocks: [String] = []
     /// Feat titles this game just earned (the decoration sticker).
     @State var panelFeats: [String] = []
+    /// The finished win's pace (3BV/s) for the panel's caption chip.
+    @State var panelPace: Double?
     /// The transient survived-guess toast (see GameContent+GuessFeedback.swift).
     @State var guessToast: ForcedGuessEvent?
     @State var guessToastTask: Task<Void, Never>?

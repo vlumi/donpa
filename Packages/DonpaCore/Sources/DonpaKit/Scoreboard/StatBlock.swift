@@ -23,6 +23,10 @@ struct StatFigures {
     /// config's expansion — the global career has no meaningful "top times" list.
     var topTimes: [BestTime] = []
     var firstPlayed: Date?
+    /// Median pace (3BV/s) over the recent-wins window; per-config only —
+    /// pace isn't comparable across families/densities, so the career scope
+    /// never aggregates it.
+    var recentPace: Double?
 
     /// One config's figures, straight off its merged record.
     init(record: ScoreRecord) {
@@ -41,6 +45,7 @@ struct StatFigures {
         luckiestGuess = record.luckiestGuess
         topTimes = record.topTimes
         firstPlayed = record.firstPlayed
+        recentPace = Pace.medianPace(of: record.recentWins)
     }
 
     /// The global career: sum every displayed config. No top-times list at this scope.
@@ -146,6 +151,11 @@ struct StatBlock: View {
             ("Mines hit", grouped(figures.minesHit)),
             ("Time played", ScoreboardView.durationLabel(figures.playtimeCentiseconds)),
         ]
+        // The pace line — the luck line's sibling (how skilled / how lucky):
+        // median 3BV/s over the recent-wins window, weighted by board size.
+        if let pace = figures.recentPace {
+            pairs.append(("Recent pace", Self.paceDisplay(pace)))
+        }
         // The luck line — only once the board has actually forced a guess (a row
         // of "0/0" would just be noise), and the record only with it.
         if figures.forcedGuesses > 0 {
@@ -166,6 +176,11 @@ struct StatBlock: View {
     /// A whole-number locale percentage ("33 %" in FI, "33%" in EN).
     static func percent(_ fraction: Double) -> String {
         fraction.formatted(.percent.precision(.fractionLength(0)))
+    }
+
+    /// A pace as "0.62/s" (locale decimal separator; the unit stays verbatim).
+    static func paceDisplay(_ pace: Double) -> String {
+        pace.formatted(.number.precision(.fractionLength(2))) + "/s"
     }
 
     private func statRow(_ label: LocalizedStringKey, _ value: String) -> some View {

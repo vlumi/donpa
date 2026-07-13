@@ -24,11 +24,15 @@ extension GameViewModel {
         return (applyResult: live, releaseGate: live || latestStarted != current)
     }
 
-    /// The momentary end-of-game facts for the achievement layer.
+    /// The momentary end-of-game facts for the achievement layer. 3BV is
+    /// computed here on wins only — one linear pass at the game-end instant,
+    /// imperceptible next to the end-game effects even on huge boards.
     func event(finalCentiseconds: Int) -> GameEndEvent {
-        GameEndEvent(
-            config: config, won: game.status == .won,
+        let won = game.status == .won
+        return GameEndEvent(
+            config: config, won: won,
             timeCentiseconds: finalCentiseconds, progress: game.progress,
-            revealActions: revealActionsThisGame, date: Date())
+            revealActions: revealActionsThisGame, date: Date(),
+            threeBV: won ? Pace.threeBV(of: game.board) : nil)
     }
 }

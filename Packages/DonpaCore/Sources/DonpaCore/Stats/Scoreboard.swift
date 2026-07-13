@@ -220,7 +220,8 @@ public final class Scoreboard: ObservableObject {
     @discardableResult
     public func submit(
         _ centiseconds: Int, for config: GameConfig,
-        at achievedAt: Date = Date(), noFlag: Bool = false, noChord: Bool = false
+        at achievedAt: Date = Date(), noFlag: Bool = false, noChord: Bool = false,
+        threeBV: Int? = nil
     ) -> Bool {
         var record = records[config.storageKey] ?? ScoreRecord()
         record.wins.add(1)
@@ -239,6 +240,12 @@ public final class Scoreboard: ObservableObject {
             record.best = time
         }
         record.topTimes.insertTop(time, limit: ScoreRecord.topTimeLimit)
+        // The pace window: newest first, capped (the skill-rank raw material).
+        if let threeBV {
+            record.recentWins.insert(
+                RecentWin(date: achievedAt, centiseconds: centiseconds, threeBV: threeBV), at: 0)
+            record.recentWins = Array(record.recentWins.prefix(ScoreRecord.recentWinLimit))
+        }
         if isCrossDeviceBest { recentRecord = config.storageKey }
 
         records[config.storageKey] = record

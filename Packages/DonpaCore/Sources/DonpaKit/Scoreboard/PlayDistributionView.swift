@@ -82,6 +82,7 @@ struct PlayDistributionView: View {
         case .family: return "Family"
         case .size: return "Size"
         case .density: return "Density"
+        case .edges: return "Edges"
         }
     }
 

@@ -16,10 +16,13 @@ public struct GameEndEvent: Equatable, Sendable {
     /// count, so momentary feats can never false-fire on it.
     public let revealActions: Int
     public let date: Date
+    /// The board's 3BV (see `Pace.threeBV`) — computed on WINS only (pace of
+    /// an unfinished board is undefined), nil on losses.
+    public let threeBV: Int?
 
     public init(
         config: GameConfig, won: Bool, timeCentiseconds: Int, progress: Double,
-        revealActions: Int, date: Date
+        revealActions: Int, date: Date, threeBV: Int? = nil
     ) {
         self.config = config
         self.won = won
@@ -27,5 +30,6 @@ public struct GameEndEvent: Equatable, Sendable {
         self.progress = progress
         self.revealActions = revealActions
         self.date = date
+        self.threeBV = threeBV
     }
 }
