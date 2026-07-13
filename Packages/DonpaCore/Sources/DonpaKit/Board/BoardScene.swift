@@ -58,6 +58,10 @@ public final class BoardScene: SKScene {
     var cursorScreenCoord: Coord?
     /// The single ring node marking the cursor, on its own layer above the glow.
     var cursorNode: SKSpriteNode?
+    /// Ring visibility tracks the INPUT SOURCE: a mouse click hides it (the
+    /// position still follows, so arrows resume from the click), any cursor
+    /// key shows it again.
+    var cursorRingHidden = false
 
     // Minimap — corner thumbnail of the whole board with a viewport rectangle,
     // shown only when the board exceeds the view. Lives in BoardScene+Minimap;

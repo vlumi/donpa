@@ -356,6 +356,9 @@ extension BoardScene {
         guard let command = Self.command(for: event) else {
             return super.keyDown(with: event)
         }
+        // Keyboard play hides the pointer (it reappears on the next mouse
+        // move) — the ring is doing the pointing now.
+        NSCursor.setHiddenUntilMouseMoves(true)
         perform(command)
     }
 

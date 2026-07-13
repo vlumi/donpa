@@ -26,11 +26,14 @@ they merge.
 
 - **The mouse and the keyboard share one focus.** Clicking anywhere
   stands the keyboard focus ring down, and clicking something focusable
-  moves the focus there — on the board, a click walks the cursor to the
-  clicked cell (when it's active), so the next arrow press continues
-  from where the mouse left off instead of where the keyboard last was.
-  Score rows, medals, rival/squad rows, and checkboxes take the focus
-  with them when clicked.
+  moves the focus there — on the board, a click hides the cursor ring
+  and walks its position to the clicked cell, so the next arrow press
+  shows it again right where the mouse left off. Keyboard play hides
+  the mouse pointer over the board (it's back on the next mouse move),
+  and the view now scrolls along AS the cursor reaches the edge — a
+  gentle nudge, not the old jump after it had already walked out of
+  sight. Score rows, medals, rival/squad rows, and checkboxes take the
+  focus with them when clicked.
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the
   board now gives up the keys when it isn't the live surface — pressing
   Esc on the title could silently resume the hidden game's clock, and
