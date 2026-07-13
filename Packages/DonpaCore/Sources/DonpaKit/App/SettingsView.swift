@@ -123,10 +123,7 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Text(
-                    """
-                    Every size, difficulty, and shape at once — turn off to go \
-                    back to earning them with wins.
-                    """,
+                    "Every size, difficulty, and shape at once.",
                     bundle: .module
                 )
                 .font(.caption).foregroundStyle(.secondary)

@@ -2779,19 +2779,19 @@
         }
       }
     },
-    "Every size, difficulty, and shape at once — turn off to go back to earning them with wins." : {
+    "Every size, difficulty, and shape at once." : {
       "comment" : "Settings: unlock-all caption",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaikki koot, vaikeudet ja muodot heti käytössä — pois päältä palataan avaamaan voitoilla."
+            "value" : "Kaikki koot, vaikeudet ja muodot heti käytössä."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "すべてのサイズ・難易度・形状をすぐに利用可能に。オフにすると勝利による解放に戻ります。"
+            "value" : "すべてのサイズ・難易度・形状をすぐに利用可能に。"
           }
         }
       }
