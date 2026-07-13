@@ -157,6 +157,14 @@ Remaining for 0.6.0 (b23 is out with testers; these ride a later build):
       Drills" from Spotlight and Siri. ONLY if it stays ~a day of work; drop
       without guilt otherwise (expected usage is honestly rare — the case is
       platform citizenship at low cost).
+- [ ] **The sync flag syncs** (decided 2026-07-13): enabling score sync on one
+      device carries the intent to the others via KVS (the flag is exempt
+      from its own gate, like the share name — otherwise OFF could never
+      propagate). **Consent guard:** remote ON auto-applies only when
+      harmless; when enabling would wipe that device's local scores (a wipe
+      tombstone exists), it surfaces the existing confirm instead of
+      flipping silently — the destructive transition always keeps its
+      per-device consent. Remote OFF applies silently.
 
 **Cut from 0.6.0 (decided 2026-07-12, free-app test: no revenue and no DAU
 target, so a feature must make the game better for someone who already likes
@@ -211,7 +219,16 @@ The features are in by 0.5; 1.0 makes them ship-shape for the public App Store.
       off just stops reporting — never wire GC's all-or-nothing reset (local
       decorations are permanent; wipes don't touch them, GC shouldn't either).
       Keyboard: the toggle joins the medals zone (keyFocused + Pulse, like
-      sync).
+      sync). **The ask happens at the FIRST DECORATION EARNED** (decided
+      2026-07-13), not first launch — the first moment the question means
+      anything, and early enough that GC dates barely suffer; the
+      asked-and-answer state syncs via KVS OUTSIDE the syncScores gate (the
+      shareName-Keychain precedent for small preference state), so one answer
+      covers all devices — GC auth itself stays per-device and lazy.
+      **Timestamp caveat:** GC cannot be backdated (`lastReportedDate` is
+      server-stamped at report time), so retroactive reports carry the
+      enable date; the local store's earned dates (synced) remain the true
+      record, shown in the app's own grid.
 - [ ] Real-device test pass — older/slower devices, iPad, small screens; profile
       huge boards on hardware; XXXL memory/leaks in Instruments
 - [ ] Settings, theming, polish sweep across all modes
