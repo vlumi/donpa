@@ -86,6 +86,53 @@ final class SharingTests: XCTestCase {
         }
     }
 
+    // MARK: Pace fields (envelope v2)
+
+    func testPaceFieldsRoundTrip() throws {
+        let id = ShareIdentity()
+        let scores = [
+            SharedConfigScore(
+                key: "v2|grid|flat|16x16|m31", best: 4200, wins: 3, bestProgress: nil,
+                recentPace: 1.84, bestPace: 2.31)
+        ]
+        let payload = try id.makePayload(name: "Ville", scores: scores, career: nil, issuedAt: t0)
+        let back = try ShareCodec.decode(fromString: try ShareCodec.encodeToString(payload))
+        XCTAssertEqual(back.body.scores.first?.recentPace, 1.84)
+        XCTAssertEqual(back.body.scores.first?.bestPace, 2.31)
+    }
+
+    func testV1PayloadWithoutPaceStillDecodes() throws {
+        // An old sender: envelope v1, no pace fields. Must decode and verify —
+        // absent optionals re-encode identically, so the v1 signature holds.
+        let p = try makeShare()
+        let v1 = SharePayload(
+            version: 1, publicKey: p.publicKey, signature: p.signature, body: p.body)
+        let back = try ShareCodec.decode(try ShareCodec.encode(v1))
+        XCTAssertNil(back.body.scores.first?.recentPace)
+    }
+
+    func testNegativePaceRejected() throws {
+        let bad: [[SharedConfigScore]] = [
+            [
+                SharedConfigScore(
+                    key: "v2|basic|beginner", best: 780, wins: 1, bestProgress: nil,
+                    recentPace: -0.1)
+            ],
+            [
+                SharedConfigScore(
+                    key: "v2|basic|beginner", best: 780, wins: 1, bestProgress: nil,
+                    bestPace: -1)
+            ],
+        ]
+        for scores in bad {
+            let payload = try ShareIdentity().makePayload(
+                name: "V", scores: scores, career: nil, issuedAt: t0)
+            XCTAssertThrowsError(try ShareCodec.decode(try ShareCodec.encode(payload))) {
+                XCTAssertEqual($0 as? ShareCodec.DecodeError, .malformed)
+            }
+        }
+    }
+
     func testGarbageRejected() {
         XCTAssertThrowsError(try ShareCodec.decode(fromString: "not-a-share!!"))
         XCTAssertThrowsError(try ShareCodec.decode(Data([0xFF, 0x00, 0x13])))
