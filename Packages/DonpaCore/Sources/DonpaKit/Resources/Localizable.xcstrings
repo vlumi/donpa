@@ -1783,6 +1783,28 @@
         }
       }
     },
+    "Clear Expert in under three minutes." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Expert in under three minutes."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selvitä Expert alle kolmessa minuutissa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エキスパートを3分以内にクリア。"
+          }
+        }
+      }
+    },
     "Clear all high scores?" : {
       "comment" : "Confirmation dialog title before resetting scores",
       "localizations" : {
@@ -1796,23 +1818,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "すべての記録を消去しますか？"
-          }
-        }
-      }
-    },
-    "Clear Expert in under 180 \/ 120 \/ 90 seconds." : {
-      "comment" : "Achievement description (Decorations grid + future ASC)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selvitä asiantuntija 180 \/ 120 \/ 90 sekunnissa."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上級を180 \/ 120 \/ 90秒未満でクリアする。"
           }
         }
       }
