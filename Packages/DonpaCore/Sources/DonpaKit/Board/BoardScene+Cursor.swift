@@ -9,8 +9,7 @@ import SpriteKit
 extension BoardScene {
     /// True while cursor input is meaningful: a live, unpaused game.
     private var cursorLive: Bool {
-        !viewModel.isPaused
-            && (viewModel.status == .notStarted || viewModel.status == .playing)
+        !viewModel.isPaused && viewModel.status.isLive
     }
 
     /// Move the cursor one cell; the first move seeds it at the viewport centre.

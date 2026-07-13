@@ -225,7 +225,7 @@ public final class GameViewModel: ObservableObject {
     public func reveal(_ c: Coord) {
         InputTrace.log(
             "reveal \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
-        guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
+        guard canTakeInput, game.status.isLive else { return }
         let wasNotStarted = game.status == .notStarted
         // Count only reveals that can DO something (a tap on a revealed cell is
         // routed to chord by the UI; off-board taps no-op) — the action clock
@@ -266,7 +266,7 @@ public final class GameViewModel: ObservableObject {
         InputTrace.log(
             "flag \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
         // O(1), so synchronous — but still gated mid-compute / paused / finished.
-        guard canTakeInput, game.status == .notStarted || game.status == .playing else { return }
+        guard canTakeInput, game.status.isLive else { return }
         let before = game.board[c].state
         game.toggleFlag(c, useQuestionMarks: useQuestionMarks)
         let after = game.board[c].state
@@ -421,7 +421,7 @@ public final class GameViewModel: ObservableObject {
 
     /// Stop the clock, capture a win, and publish the outcome.
     private func finishIfEnded() {
-        guard game.status == .won || game.status == .lost else { return }
+        guard game.status.isFinished else { return }
         let finalCentiseconds = currentCentiseconds()
         timer?.cancel()
         timer = nil

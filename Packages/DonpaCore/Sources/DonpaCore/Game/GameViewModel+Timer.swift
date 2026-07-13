@@ -7,9 +7,23 @@ import Foundation
 /// the timer state it drives lives on the class (internal, not `private`, which
 /// is file-scoped).
 extension GameViewModel {
+    /// The UI's ONE answer to "what is the game doing right now" — folds the
+    /// engine's pure `GameStatus` with the UI-only pause flag, so views stop
+    /// hand-combining `status == .playing && !isPaused`. `.paused` outranks
+    /// `.playing` (a paused game is playable-but-frozen); a finished game can't
+    /// be paused (`pause()` guards on live).
+    public enum PlayState: Equatable, Sendable {
+        case notStarted, playing, paused, finished
+    }
+    public var playState: PlayState {
+        if game.status.isFinished { return .finished }
+        if isPaused { return .paused }
+        return game.status == .playing ? .playing : .notStarted
+    }
+
     /// Pause the clock mid-game (game stays playable-but-frozen). No-op unless live.
     public func pause() {
-        guard game.status == .playing, !isPaused else { return }
+        guard playState == .playing else { return }
         // Flush while the clock is still live, so the scoreboard (opened via a
         // pause) shows current tiles/flags/time.
         flushActivity()
