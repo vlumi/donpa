@@ -30,6 +30,34 @@ final class GameViewModelTests: XCTestCase {
         return Coord(0, 0)
     }
 
+    // MARK: Play state
+
+    /// playState folds the pure GameStatus with the UI pause flag: paused
+    /// outranks playing, finished outranks paused (pause() guards on live,
+    /// so a finished game can never report .paused).
+    func testPlayStateFoldsStatusAndPause() async {
+        let vm = GameViewModel(config: .beginner)
+        XCTAssertEqual(vm.playState, .notStarted)
+
+        vm.reveal(Coord(0, 0))
+        await vm.awaitPendingWork()
+        XCTAssertEqual(vm.playState, .playing)
+
+        vm.pause()
+        XCTAssertEqual(vm.playState, .paused)
+        vm.resume()
+        XCTAssertEqual(vm.playState, .playing)
+
+        // Lose the game: dig a hidden mine.
+        for c in vm.game.board.allCoords
+        where vm.game.board[c].state == .hidden && vm.game.board[c].isMine {
+            vm.reveal(c)
+            break
+        }
+        await vm.awaitPendingWork()
+        XCTAssertEqual(vm.playState, .finished)
+    }
+
     // MARK: Primed placeholder
 
     /// The primed-board lifecycle: a board the player never asked for (the initial
