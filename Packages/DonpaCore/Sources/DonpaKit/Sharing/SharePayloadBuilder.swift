@@ -23,7 +23,9 @@ enum SharePayloadBuilder {
                 key: key,
                 best: rec.best?.centiseconds,
                 wins: rec.wins.total,
-                bestProgress: rec.bestLossProgress)
+                bestProgress: rec.bestLossProgress,
+                recentPace: Pace.medianPace(of: rec.recentWins),
+                bestPace: rec.bestPace?.pace)
         }
         .sorted { $0.key < $1.key }  // stable order → deterministic payload/QR
 
