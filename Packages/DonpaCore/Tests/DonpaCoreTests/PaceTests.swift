@@ -70,6 +70,13 @@ final class PaceTests: XCTestCase {
         XCTAssertEqual(win.pace, 0.5, accuracy: 1e-9)  // 50 taps / 100 s
     }
 
+    /// A 0.00 s clear (single-tap XS, clock truncated to zero) clamps to one
+    /// centisecond — the FASTEST reading, never a zero that ranks slowest.
+    func testInstantWinClampsUpNotDown() {
+        let instant = RecentWin(date: .init(), centiseconds: 0, threeBV: 1)
+        XCTAssertEqual(instant.pace, 100, accuracy: 1e-9)
+    }
+
     /// Weighted median: the big board's pace dominates the tiny one's noise.
     func testMedianPaceWeightsByThreeBV() {
         let noisy = RecentWin(date: .init(), centiseconds: 100, threeBV: 2)  // 2.0/s
@@ -105,6 +112,26 @@ final class PaceTests: XCTestCase {
         board.submit(10_000, for: GameConfig.beginner)
         XCTAssertTrue(
             board.displayRecords[GameConfig.beginner.storageKey]!.recentWins.isEmpty)
+    }
+
+    // MARK: Best pace
+
+    @MainActor func testBestPaceKeepsTheFastest() {
+        let board = freshBoard()
+        board.submit(10_000, for: GameConfig.beginner, threeBV: 50)  // 0.5/s
+        board.submit(5_000, for: GameConfig.beginner, threeBV: 40)  // 0.8/s
+        board.submit(10_000, for: GameConfig.beginner, threeBV: 40)  // 0.4/s — slower
+        let best = board.displayRecords[GameConfig.beginner.storageKey]!.bestPace
+        XCTAssertEqual(best?.pace ?? 0, 0.8, accuracy: 1e-9)
+    }
+
+    func testBestPaceMergesCrossDeviceMax() {
+        var own = ScoreRecord()
+        own.bestPace = RecentWin(date: .init(), centiseconds: 10_000, threeBV: 50)  // 0.5
+        var other = ScoreRecord()
+        other.bestPace = RecentWin(date: .init(), centiseconds: 5_000, threeBV: 40)  // 0.8
+        let merged = StatsMerge.merge(mine: ["k": own], others: ["dev2": ["k": other]])
+        XCTAssertEqual(merged["k"]?.bestPace?.pace ?? 0, 0.8, accuracy: 1e-9)
     }
 
     // MARK: Merge

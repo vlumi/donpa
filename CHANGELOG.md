@@ -22,6 +22,8 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- The Service Record also keeps your best pace per board, beside the
+  recent pace — synced across devices like best times.
 - **Pace: how fast you actually sweep.** Every win now shows its pace —
   the board's minimum moves (3BV) per second, a number board luck can't
   inflate the way a lucky layout inflates raw time. The win panel gets a

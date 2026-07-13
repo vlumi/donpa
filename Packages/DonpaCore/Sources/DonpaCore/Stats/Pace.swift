@@ -17,10 +17,11 @@ public struct RecentWin: Equatable, Hashable, Sendable, Codable {
     }
 
     /// Pace in 3BV per second — the luck-normalized sweep rate: a lucky
-    /// low-3BV board gives a fast TIME but a normal PACE.
+    /// low-3BV board gives a fast TIME but a normal PACE. A clock that
+    /// truncated to 0 (a single-tap instant clear) clamps to one centisecond —
+    /// "faster than measurable", never a zero that would read as the slowest.
     public var pace: Double {
-        guard centiseconds > 0 else { return 0 }
-        return Double(threeBV) * 100 / Double(centiseconds)
+        Double(threeBV) * 100 / Double(max(centiseconds, 1))
     }
 }
 

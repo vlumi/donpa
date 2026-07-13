@@ -78,6 +78,8 @@ enum StatsMerge {
         // The pace window: union across devices (whole entries, deduped),
         // newest first, same cap — the display view of every device's log.
         out.recentWins = Self.mergedRecent(own.recentWins, others.map(\.recentWins))
+        // Best pace: cross-device max, whole entry (pace and date stay paired).
+        out.bestPace = ([own] + others).compactMap(\.bestPace).max { $0.pace < $1.pace }
 
         // Loss progress: idempotent max across all devices.
         out.bestLossProgress = ([own] + others).compactMap(\.bestLossProgress).max()
@@ -133,6 +135,8 @@ enum StatsMerge {
             out.best = out.topTimes.first ?? out.best
             out.recentWins = Self.mergedRecent(
                 own[key]?.recentWins ?? [], [last?.recentWins ?? []])
+            out.bestPace = [own[key]?.bestPace, last?.bestPace]
+                .compactMap { $0 }.max { $0.pace < $1.pace }
             out.bestLossProgress =
                 [own[key]?.bestLossProgress, last?.bestLossProgress].compactMap { $0 }.max()
             out.firstPlayed = [own[key]?.firstPlayed, last?.firstPlayed].compactMap { $0 }.min()

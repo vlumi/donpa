@@ -240,11 +240,13 @@ public final class Scoreboard: ObservableObject {
             record.best = time
         }
         record.topTimes.insertTop(time, limit: ScoreRecord.topTimeLimit)
-        // The pace window: newest first, capped (the skill-rank raw material).
+        // The pace window: newest first, capped (the skill-rank raw material) —
+        // and the fastest-pace win, kept whole like `best`.
         if let threeBV {
-            record.recentWins.insert(
-                RecentWin(date: achievedAt, centiseconds: centiseconds, threeBV: threeBV), at: 0)
+            let win = RecentWin(date: achievedAt, centiseconds: centiseconds, threeBV: threeBV)
+            record.recentWins.insert(win, at: 0)
             record.recentWins = Array(record.recentWins.prefix(ScoreRecord.recentWinLimit))
+            if win.pace > (record.bestPace?.pace ?? 0) { record.bestPace = win }
         }
         if isCrossDeviceBest { recentRecord = config.storageKey }
 
