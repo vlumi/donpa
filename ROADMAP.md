@@ -157,6 +157,15 @@ Remaining for 0.6.0 (b23 is out with testers; these ride a later build):
       Drills" from Spotlight and Siri. ONLY if it stays ~a day of work; drop
       without guilt otherwise (expected usage is honestly rare — the case is
       platform citizenship at low cost).
+- [ ] **Pace data collection** (phase 1 of the skill-rank spec below —
+      START EARLY, decided 2026-07-13; the LOG format is what locks, the
+      rank UI stays tunable): compute 3BV on every win (one flood-labeling
+      pass over the solved board, off-main like reveals); append to a
+      per-config rolling log (newest ~10 wins: date, time, 3BV — additive
+      optional ScoreRecord field per the forward-compat rules, synced via
+      the per-device blobs, union-by-timestamp merge); show the raw pace
+      caption on the win panel beside the luck line (its sibling: how lucky
+      / how skilled) and per-config recent pace in the Record.
 - [ ] **The sync flag syncs** (decided 2026-07-13): enabling score sync on one
       device carries the intent to the others via KVS (the flag is exempt
       from its own gate, like the share name — otherwise OFF could never
@@ -195,6 +204,57 @@ Activities (the game is foreground by nature), CloudKit save-sync (KVS is too
 small for board blobs; per-device saves were a deliberate call), Spotlight
 indexing beyond App Intents, minimap drag-to-reposition/resize (the hide
 toggle covers the pain — stays in the backlog).
+
+## v0.7.0 — Skill & social play (spec)
+
+**The pillar sketch (2026-07-13): the daily challenge (parked above) + the
+skill rank.** Decorations are journey milestones and the scoreboard tracks
+bests; the RANK answers "how good am I NOW" — a live reading that drifts
+down with rust and back up with form, never a trophy.
+
+**Metric — pace (3BV/s), the luck-normalized rate.** 3BV = a board's
+minimum taps (one per opening flood + one per non-flood safe cell; well-
+defined on hex/wrapped via the board's own adjacency). A lucky low-3BV
+board gives a fast TIME but a normal PACE, so the number stays honest.
+Losses don't log (pace of an unfinished board is undefined).
+
+**Data — log per config, finest grain** (phase 1, in 0.6.0 above): rolling
+newest-~10 wins per storageKey. Collecting at the finest grain keeps every
+grouping decision below reversible.
+
+**Rank — per FAMILY, not per combo** (a per-combo rank is fragmentation
+with sparse windows; implied precision the data can't carry):
+
+- Each logged win's raw pace converts to a BAND via a per-(family ×
+  density) reference table — density can't be averaged away (Easy is
+  flood-clicking, Lunatic is dense deduction; achievable pace differs
+  several-fold).
+- The family rank = the MEDIAN band over the recent window across sizes
+  and densities, each entry WEIGHTED BY ITS 3BV (a big board is more
+  evidence; XS quantization noise washes out instead of being excluded).
+- Eight bands, army-themed to match the Barracks/Mess-hall vocabulary:
+  Recruit → Private → Corporal → Sergeant → Lieutenant → Captain → Major →
+  General (FI/JA localize per concept, as usual).
+- Basic presets rank within the Grid reference table (they ARE square
+  boards); **Drills is the purest rank** — no-guess boards make it the one
+  luck-free skill certificate.
+- **Round is the open calibration question**: a torus removes the easy
+  edge regions, so pace runs lower — whether it needs its own reference
+  column or fits the family table is answered by the collected data, not
+  guessed. Band tables ship calibrated from real distributions (the
+  owner's own logs first), and stay tunable until the UI ships.
+
+**Display:** family-rank chips in the Record's career block (raw pace
+behind them); a PROMOTION toast when the rolling median crosses a band up
+(an event worth a moment); demotions are silent — the display just quietly
+reads lower. NO decoration per rank (tiered skill badges are settled out),
+no rank-gated content, no XP points (volume is the miles.* ladders' job).
+
+**Social projection:** rank chips as an optional share-payload field
+(additive, forward-compatible) so the rivals list can compare Sergeant vs
+Captain instead of raw-time tables that discourage mixed-skill circles.
+Pairs with the daily challenge (same board, so the comparison is fair).
+Not hack-resistant — nothing here is, by design; it's between friends.
 
 ## v1.0.0 — The store release
 
