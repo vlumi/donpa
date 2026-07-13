@@ -15,16 +15,27 @@ public struct SharedConfigScore: Codable, Equatable, Sendable {
     public var wins: Int
     /// Best cleared fraction (0…1) from a loss, or nil. A win implies 100%.
     public var bestProgress: Double?
+    /// Recent pace (3BV/s, the weighted median of the sharer's rolling win log),
+    /// or nil where nothing is logged. Envelope v2+.
+    public var recentPace: Double?
+    /// Best pace (3BV/s) ever logged on this config, or nil. Envelope v2+.
+    public var bestPace: Double?
 
-    public init(key: String, best: Int?, wins: Int, bestProgress: Double?) {
+    public init(
+        key: String, best: Int?, wins: Int, bestProgress: Double?,
+        recentPace: Double? = nil, bestPace: Double? = nil
+    ) {
         self.key = key
         self.best = best
         self.wins = wins
         self.bestProgress = bestProgress
+        self.recentPace = recentPace
+        self.bestPace = bestPace
     }
 
     enum CodingKeys: String, CodingKey {
         case key = "k", best = "b", wins = "w", bestProgress = "p"
+        case recentPace = "rp", bestPace = "bp"
     }
 }
 
@@ -122,7 +133,10 @@ public struct RotationEndorsement: Codable, Equatable, Sendable {
 /// what gets compressed → base64url → embedded in the Universal Link / QR.
 public struct SharePayload: Codable, Equatable, Sendable {
     /// Envelope format version. A receiver rejects a version it doesn't understand
-    /// (graceful, not a crash). Bump only on a breaking shape change.
+    /// (graceful, not a crash). ANY new body field needs a bump — verification
+    /// re-encodes the decoded body, so an older app would drop the unknown field
+    /// and read a legitimate share as tampered instead of merely too new.
+    /// v2 (2026-07): per-config `recentPace`/`bestPace`.
     public var version: Int
     /// The sharer's Curve25519 signing public key (32 B) — their share identity.
     public var publicKey: Data
@@ -131,7 +145,7 @@ public struct SharePayload: Codable, Equatable, Sendable {
     /// The signed body.
     public var body: ShareBody
 
-    public static let currentVersion = 1
+    public static let currentVersion = 2
 
     public init(version: Int = currentVersion, publicKey: Data, signature: Data, body: ShareBody) {
         self.version = version

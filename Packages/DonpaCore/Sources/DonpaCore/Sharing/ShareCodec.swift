@@ -98,6 +98,9 @@ public enum ShareCodec {
             }
             guard s.wins >= 0, (s.best ?? 0) >= 0 else { throw DecodeError.malformed }
             if let p = s.bestProgress, !(0...1).contains(p) { throw DecodeError.malformed }
+            for pace in [s.recentPace, s.bestPace] {
+                if let pace, !(pace.isFinite && pace >= 0) { throw DecodeError.malformed }
+            }
             scores.append(s)
         }
         if let c = body.career, !careerNonNegative(c) { throw DecodeError.malformed }
