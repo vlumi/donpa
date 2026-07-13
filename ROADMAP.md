@@ -647,9 +647,12 @@ Still open:
   card) — character names, not marks on game titles; no meaning in the big
   storefront languages. Bonus: ドンパ is HOKKAIDO DIALECT for "same
   age / same cohort" — an accidental perfect fit for a squads-and-rivals
-  game. USPTO queried manually 2026-07-13: nothing found for "donpa".
-  Residual (5 min at bundle-ID registration): the J-PlatPat query —
-  though zero web evidence of a games-class mark surfaced anywhere.
+  game. USPTO queried 2026-07-13: nothing. J-PlatPat queried 2026-07-13:
+  closest is 登録4936269 "DonPa／ドンパ" (岸本吉二商店, Amagasaki) — a SAKE-
+  BARREL maker, classes 20/42 (packaging containers + their rental,
+  similarity codes 18C03/06/09/13, 42X90): no overlap with a game's
+  classes 9/41 codes, no confusion, no famous-mark concern. NAME CHECK
+  CLOSED — nothing gates bundle-ID registration.
 
 ## Distribution & extras (later)
 
