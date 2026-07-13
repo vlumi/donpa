@@ -229,8 +229,10 @@ public final class Scoreboard: ObservableObject {
         stampPlayed(&record, at: achievedAt)
 
         // "New record" is judged against the cross-device best (a faster time on
-        // another device already counts); the value is stored device-owned regardless.
-        let isCrossDeviceBest = best(for: config).map { centiseconds < $0 } ?? true
+        // another device already counts); the value is stored device-owned
+        // regardless. ONE rule — isNewRecord is the tested source (incl. its
+        // ties-don't-count edge), read before this win is folded in below.
+        let isCrossDeviceBest = isNewRecord(centiseconds, for: config)
         let time = BestTime(centiseconds: centiseconds, achievedAt: achievedAt)
         // Our OWN best: keep the faster of ours and this clear (independent of others).
         if record.best.map({ centiseconds < $0.centiseconds }) ?? true {

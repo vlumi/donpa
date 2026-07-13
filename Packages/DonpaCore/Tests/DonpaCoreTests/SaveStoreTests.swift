@@ -77,7 +77,6 @@ final class SaveStoreTests: XCTestCase {
         // Newest-played first: expert (+300), intermediate (+60), beginner (0).
         XCTAssertEqual(
             store.all().map(\.config), [.basic(.expert), .basic(.intermediate), .basic(.beginner)])
-        XCTAssertEqual(store.latest()?.config, .basic(.expert))
     }
 
     /// Summaries mirror all(): same gating, same order, plus the derived progress —
@@ -98,8 +97,7 @@ final class SaveStoreTests: XCTestCase {
             store.load(config: .basic(.beginner))?.revealedSafeCount)
     }
 
-    func testLatestIsNilWhenNoSaves() {
-        XCTAssertNil(store.latest())
+    func testAllIsEmptyWhenNoSaves() {
         XCTAssertTrue(store.all().isEmpty)
     }
 
@@ -284,7 +282,8 @@ final class SaveStoreTests: XCTestCase {
     // MARK: UI-test isolation
 
     func testEphemeralStoreStartsEmpty() {
-        XCTAssertNil(SaveStore.ephemeral().latest(), "a fresh ephemeral store has no saved game")
+        XCTAssertTrue(
+            SaveStore.ephemeral().all().isEmpty, "a fresh ephemeral store has no saved game")
     }
 
     func testUITestCleanLaunchFlagFalseInUnitTests() {
@@ -292,11 +291,11 @@ final class SaveStoreTests: XCTestCase {
     }
 
     /// Exercise the production factory (resolves the real App Support dir) with a
-    /// READ-ONLY call — `latest()` just lists, never writes, so it can't disturb a real
+    /// READ-ONLY call — `all()` just lists, never writes, so it can't disturb a real
     /// save. Covers the `appSupport()` / `appSupportDirectory` path.
     func testAppSupportFactoryResolves() {
         // Doesn't assert a value (the machine may or may not have saves); the point is
         // the factory + dir resolution run without crashing.
-        _ = SaveStore.appSupport().latest()
+        _ = SaveStore.appSupport().all()
     }
 }
