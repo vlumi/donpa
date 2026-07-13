@@ -37,6 +37,10 @@ entries land under Unreleased as they merge.
   weighing more) and your best pace per board. The career Breakdown gains
   an Edges bar so Round play finally shows up there. All of it syncs
   across devices like best times.
+- **Your pace travels with your shares.** Score cards (QR, link, Nearby)
+  now carry each board's recent and best pace alongside the best time, so
+  rival comparisons can grow past raw-time tables. Older app versions
+  politely ask for an update when scanning a new card.
 - **Decorations are milestones, not progress trackers.** The Decorations
   block folds away — and stays folded across launches — with the earned
   count still on the folded header (achievements are an exploration
