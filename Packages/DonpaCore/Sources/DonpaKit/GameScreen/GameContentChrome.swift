@@ -79,8 +79,10 @@ extension GameContent {
             // is never robbed, and the KeyCatcher surfaces never fight.
             keyboardOwner: gameInProgress && !navigator.showingTitle
                 && !navigator.isModalPresented,
-            showMinimap: settings.showMinimap,
-            minimapScale: settings.minimapScale,
+            minimap: MinimapPrefs(
+                show: settings.showMinimap,
+                onRight: settings.handedness == .right,
+                scale: settings.minimapScale),
             useQuestionMarks: settings.questionMarks
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -20,10 +20,8 @@ gates.
 
 **Navigation / UX:**
 
-- [ ] **Minimap drag-to-reposition** — move the HUD out of the way (the toggle
-      hides it; dragging relocates it). Also wire an opener for when it's hidden.
-- [ ] **Minimap polish** — higher-contrast revealed shading; handedness-aware
-      corner.
+- [ ] **Minimap opener while hidden** — the hide toggle leaves no affordance to
+      bring the minimap back mid-game; wire one.
 
 **Keyboard follow-ons:**
 
@@ -80,11 +78,11 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       (same board, same day) instead of best-of-N-attempts. Needs
       deterministic seeded generation, first-attempt-counts rules, and a
       share-payload field — a real pillar, not filler.
-- [ ] **Pace in the share payload** (additive, forward-compatible) — rivals
-      compare paces, not just raw-time tables that discourage mixed-skill
-      circles. Pairs with the daily challenge (same board, so the comparison
-      is fair). Not hack-resistant — nothing here is, by design; it's between
-      friends.
+- [ ] **Pace comparison in the rival UI** — the share payload already carries
+      recent/best pace (shipped with the v2 envelope); surface it in the
+      head-to-head and per-config rankings, not just raw-time tables that
+      discourage mixed-skill circles. Pairs with the daily challenge (same
+      board, so the comparison is fair).
 
 ## v1.0.0 — The store release
 

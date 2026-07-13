@@ -81,6 +81,13 @@ public final class BoardScene: SKScene {
     var lastMinimapBoard: CGSize = .zero
     /// Show the minimap when the board exceeds the viewport (user preference).
     var showMinimap = true
+    /// Which top corner the minimap pins to — the SAME side as the control strip
+    /// (Settings.handedness): chrome clusters on the holding-thumb side so the
+    /// play hand sweeps an unobstructed board. The resize caret bakes its side
+    /// into its path, so flipping tears the minimap down for a rebuild.
+    var minimapOnRight = false {
+        didSet { if minimapOnRight != oldValue { recolorMinimap() } }
+    }
     /// Whether the flag cycle includes the "?" step (Settings.questionMarks), pushed
     /// from the host like `showMinimap`. Read by the flag input paths.
     var useQuestionMarks = false
