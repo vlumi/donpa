@@ -157,15 +157,13 @@ Remaining for 0.6.0 (b23 is out with testers; these ride a later build):
       Drills" from Spotlight and Siri. ONLY if it stays ~a day of work; drop
       without guilt otherwise (expected usage is honestly rare — the case is
       platform citizenship at low cost).
-- [ ] **Pace data collection** (phase 1 of the skill-rank spec below —
-      START EARLY, decided 2026-07-13; the LOG format is what locks, the
-      rank UI stays tunable): compute 3BV on every win (one flood-labeling
-      pass over the solved board, off-main like reveals); append to a
-      per-config rolling log (newest ~10 wins: date, time, 3BV — additive
-      optional ScoreRecord field per the forward-compat rules, synced via
-      the per-device blobs, union-by-timestamp merge); show the raw pace
-      caption on the win panel beside the luck line (its sibling: how lucky
-      / how skilled) and per-config recent pace in the Record.
+- [x] **Pace data collection** — SHIPPED 2026-07-13 (phase 1 of the
+      skill-rank spec below): 3BV on every win, the per-config rolling log
+      (+ best pace, the BestTime pattern), the win-panel pace chip, recent
+      and best pace in the Record's expanded rows, and the Breakdown's
+      Edges bar. Collection is live; the log format is locked. Still
+      buildable on top without new data: the GATED family×density pace
+      lines (see the aggregation model below).
 - [ ] **The sync flag syncs** (decided 2026-07-13): enabling score sync on one
       device carries the intent to the others via KVS (the flag is exempt
       from its own gate, like the share name — otherwise OFF could never
@@ -248,10 +246,8 @@ with sparse windows; implied precision the data can't carry):
   is a different kind of good; a separate certificate says so instead of
   averaging it away. Band tables ship calibrated from real distributions
   (the owner's own logs first), and stay tunable until the UI ships.
-- **Breakdown gains an Edges bar** (fold into the pace-collection PR):
-  the career Breakdown's axes are family/size/density today, so Round
-  play is invisible there — the entries already carry the config, so the
-  bar is nearly free (Basic/Drills count as Flat).
+- **Breakdown Edges bar — SHIPPED** with the pace collection: Round play
+  shows in the career Breakdown (Basic/Drills count as Flat).
 
 **Aggregation model — how pace trickles up (decided 2026-07-13):**
 
