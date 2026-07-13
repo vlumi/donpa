@@ -88,9 +88,16 @@ public struct GameView: View {
         let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false
         // Earned feats: local always, synced under the same gate. PERMANENT —
         // the stats wipe never touches this store (decided semantics).
-        _achievements = StateObject(
-            wrappedValue: AchievementStore(
-                cloud: UbiquitousAchievementsStore(), syncEnabled: syncOn))
+        let achievementStore = AchievementStore(
+            cloud: UbiquitousAchievementsStore(), syncEnabled: syncOn)
+        _achievements = StateObject(wrappedValue: achievementStore)
+        // Game Center: strictly opt-in (see the reporter); created here so it
+        // observes the stores for the app's lifetime, but it touches GameKit
+        // only after the player enables it.
+        _gameCenter = StateObject(
+            wrappedValue: GameCenterReporter(
+                prefs: GameCenterPrefs(), achievements: achievementStore,
+                scoreboard: scoreboard))
         _friends = StateObject(
             wrappedValue: FriendsStore(
                 cloud: UbiquitousFriendsStore(),
@@ -107,12 +114,14 @@ public struct GameView: View {
 
     /// See init: non-empty only under `-donpa.gates.fresh`.
     private let winsBaseline: [String: Int]
+    @StateObject private var gameCenter: GameCenterReporter
 
     public var body: some View {
         ZStack {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator, friends: friends, achievements: achievements,
+                gameCenter: gameCenter,
                 scene: scene, winsBaseline: winsBaseline, saveStore: saveStore)
             // Home fade scoped to this overlay via `.animation(_:value:)` — an
             // imperative `withAnimation` would also animate the chrome's first

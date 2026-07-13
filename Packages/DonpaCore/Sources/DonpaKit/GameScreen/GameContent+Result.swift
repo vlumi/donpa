@@ -38,6 +38,29 @@ extension GameContent {
             }
         }
         .allowsHitTesting(panel != nil)
+        // The one-time Game Center ask, at the first decoration (see the
+        // reporter: strictly opt-in, and "Not now" is never asked again).
+        .alert(
+            Text("Report decorations to Game Center?", bundle: .module),
+            isPresented: $showGCAsk
+        ) {
+            Button {
+                gameCenter.setEnabled(true)
+            } label: {
+                Text("Enable", bundle: .module)
+            }
+            Button(role: .cancel) {
+                gameCenter.prefs.markAsked()
+            } label: {
+                Text("Not now", bundle: .module)
+            }
+        } message: {
+            Text(
+                """
+                Optional — decorations stay in the app either way. You can \
+                change this later under Decorations in the Service Record.
+                """, bundle: .module)
+        }
     }
 
     /// The feats pass, AFTER the submits so the records include this game: the
@@ -55,6 +78,9 @@ extension GameContent {
             derivable: AchievementEngine.derivable(records: scoreboard.displayRecords))
         panelFeats = fresh.map(\.id.title)
         guard !fresh.isEmpty else { return }
+        // The FIRST decoration is the moment the Game Center question means
+        // anything — arm the ask (it shows after the celebration dismisses).
+        if !gameCenter.prefs.asked { pendingGCAsk = true }
         let titles = fresh.map(\.id.title).joined(separator: ", ")
         A11yAnnounce.post(
             String(localized: "Decoration earned: \(titles)", bundle: .module))
@@ -182,6 +208,10 @@ extension GameContent {
         InputTrace.log("panel dismissed (was \(panel == nil ? "nil" : "shown"))")
         panelTask?.cancel()
         withAnimation(.easeIn(duration: 0.25)) { panel = nil }
+        if pendingGCAsk {
+            pendingGCAsk = false
+            showGCAsk = true
+        }
     }
 
     private func fireHaptic(for result: GameResult) {
@@ -190,5 +220,26 @@ extension GameContent {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(result.isWin ? .success : .error)
         #endif
+    }
+}
+
+extension GameContent {
+    /// The Service Record sheet, extracted to keep the body chain within the
+    /// type-checker's budget. From the title (browsing) there's no current
+    /// board → no "you are here" marker; in-game, mark the played config.
+    var scoreboardSheet: some View {
+        ScoreboardView(
+            scoreboard: scoreboard, settings: settings,
+            achievements: achievements, available: windowSize,
+            gates: gates,
+            currentConfig: navigator.showingTitle ? nil : viewModel.config,
+            onPlay: { navigator.playConfigRequested = $0 },
+            // "Manage rivals": swap to the Mess hall at root (deferred a tick —
+            // the scoreboard is dismissing; two sheet swaps in one runloop race).
+            onMessHall: {
+                navigator.showingScores = false
+                Task { @MainActor in navigator.showingMessHall = true }
+            },
+            friends: friends, gameCenter: gameCenter)
     }
 }
