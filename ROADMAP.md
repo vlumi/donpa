@@ -164,15 +164,14 @@ Remaining for 0.6.0 (b23 is out with testers; these ride a later build):
       Edges bar. Collection is live; the log format is locked. Still
       buildable on top without new data: the GATED family×density pace
       lines (see the aggregation model below).
-- [ ] **The sync flag syncs** (decided 2026-07-13): enabling score sync on one
-      device carries the intent to the others via KVS (the flag is exempt
-      from its own gate, like the share name — otherwise OFF could never
-      propagate). **Consent guard:** remote ON auto-applies only when
-      harmless; when enabling would wipe that device's local scores (a wipe
-      tombstone exists), it surfaces the existing confirm instead of
-      flipping silently — the destructive transition always keeps its
-      per-device consent. Remote OFF applies silently. The synced intent
-      merges LWW by decision timestamp (same rule as the GC flag).
+- **Sync flag does NOT sync — reversed 2026-07-13** (same day, on
+  reflection): the toggle is a statement about A DEVICE ("this device
+  participates in the score mesh"), not about the player — a deliberately
+  un-synced device (shared iPad, test machine) would fight an LWW-synced
+  flag forever, and the flag-exempt-from-its-own-gate wrinkle was the
+  design smelling wrong. Per-device enablement stays. The line: DEVICE-
+  scoped settings don't sync; PLAYER-scoped ones (the GC flag, the GC
+  asked-state) do.
 
 **Cut from 0.6.0 (decided 2026-07-12, free-app test: no revenue and no DAU
 target, so a feature must make the game better for someone who already likes
