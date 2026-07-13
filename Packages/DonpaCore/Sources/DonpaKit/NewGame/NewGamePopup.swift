@@ -68,7 +68,7 @@ struct NewGamePopup: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 .padding(.horizontal, 24)
                 .padding(.vertical, Self.outerVMargin)
-                .animation(.snappy, value: settings.family)
+                .animation(FamilySwitch.animation, value: settings.family)
             }
             // Ignore the safe area so the card centres in the same full-screen space
             // the backdrop covers; an asymmetric inset would otherwise push it below
