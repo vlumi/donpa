@@ -1,0 +1,74 @@
+import Foundation
+
+/// The tier-flattening bridge to Game Center: the 20 internal achievement
+/// IDs become 26 ASC definitions — one per one-shot, one per tier step of
+/// the volume ladders. The wire IDs are what the ASC records register under,
+/// so they are LOCKED once the store release goes live; everything else
+/// (thresholds shown, copy, images) stays tunable on the ASC side.
+public enum GameCenterMapping {
+    /// The ASC achievement-ID prefix (the app's bundle-ID namespace).
+    public static let prefix = "fi.misaki.donpa."
+
+    /// The wire ID for a one-shot (`tier` nil) or one tier step of a tiered
+    /// feat — the step is named by its THRESHOLD ("miles.wins.100"), not its
+    /// index, so the ID stays self-describing in ASC.
+    public static func wireID(_ id: AchievementID, tier: Int? = nil) -> String {
+        guard let tier, let thresholds = id.tierThresholds,
+            thresholds.indices.contains(tier - 1)
+        else { return prefix + id.rawValue }
+        return prefix + id.rawValue + ".\(thresholds[tier - 1])"
+    }
+
+    /// Every ASC definition's wire ID, in registration order (one-shots in
+    /// declaration order, each ladder's steps ascending).
+    public static var allWireIDs: [String] {
+        AchievementID.allCases.flatMap { id -> [String] in
+            guard let thresholds = id.tierThresholds else { return [wireID(id)] }
+            return (1...thresholds.count).map { wireID(id, tier: $0) }
+        }
+    }
+
+    /// One achievement's report line: a wire ID and its percentComplete.
+    public struct Report: Equatable, Sendable {
+        public let wireID: String
+        public let percent: Double
+
+        public init(wireID: String, percent: Double) {
+            self.wireID = wireID
+            self.percent = percent
+        }
+    }
+
+    /// The FULL snapshot to report: earned one-shots and earned tier steps
+    /// at 100; the next unearned tier at its live progress ("470/1000 wins =
+    /// 47 %"). Zero-progress lines are omitted — Game Center treats
+    /// unreported as 0, and reporting nothing keeps first-launch traffic nil.
+    /// Reporting the full snapshot is idempotent: GC ignores reports that
+    /// don't increase percentComplete, so retroactive opt-in just works.
+    public static func snapshot(
+        earned: [AchievementID: Int], records: [String: ScoreRecord]
+    ) -> [Report] {
+        var reports: [Report] = []
+        for id in AchievementID.allCases {
+            let earnedTier = earned[id] ?? 0
+            guard let thresholds = id.tierThresholds else {
+                if earnedTier > 0 { reports.append(Report(wireID: wireID(id), percent: 100)) }
+                continue
+            }
+            for tier in 1...thresholds.count where tier <= earnedTier {
+                reports.append(Report(wireID: wireID(id, tier: tier), percent: 100))
+            }
+            let next = earnedTier + 1
+            if next <= thresholds.count,
+                let progress = AchievementEngine.progress(for: id, records: records)
+            {
+                let percent = min(
+                    99, Double(progress.current) / Double(thresholds[next - 1]) * 100)
+                if percent > 0 {
+                    reports.append(Report(wireID: wireID(id, tier: next), percent: percent))
+                }
+            }
+        }
+        return reports
+    }
+}
