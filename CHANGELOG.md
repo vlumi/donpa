@@ -22,8 +22,6 @@ they merge.
 
 ### Unreleased (next build)
 
-### build 23 — 2026-07-12
-
 - **The mouse and the keyboard share one focus.** Clicking anywhere
   stands the keyboard focus ring down, and clicking something focusable
   moves the focus there — on the board, a click hides the cursor ring
@@ -34,6 +32,12 @@ they merge.
   gentle nudge, not the old jump after it had already walked out of
   sight. Score rows, medals, rival/squad rows, and checkboxes take the
   focus with them when clicked.
+- Winning several decorations at once stamps "DECORATIONS · 3 new"
+  instead of a singular header over a plural line (FI read as
+  "KUNNIAMERKKI / Uusia kunniamerkkejä").
+
+### build 23 — 2026-07-12
+
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the
   board now gives up the keys when it isn't the live surface — pressing
   Esc on the title could silently resume the hidden game's clock, and

@@ -281,12 +281,12 @@ struct MangaPanelView: View {
 
     /// A decoration earned this game — the same sticker dress, gold border.
     @ViewBuilder private var featSticker: some View {
-        if let headline = Self.featHeadline(earnedFeatTitles) {
+        if let sticker = Self.featSticker(earnedFeatTitles) {
             VStack(spacing: 0) {
-                Text("Decoration", bundle: .module)
+                Text(verbatim: sticker.eyebrow)
                     .font(.system(.caption2, design: .rounded).weight(.heavy))
                     .textCase(.uppercase)
-                Text(verbatim: headline)
+                Text(verbatim: sticker.body)
                     .font(.system(.body, design: .rounded).weight(.black))
             }
             .modifier(PillStamp(accent: MedalView.gold))
@@ -294,24 +294,6 @@ struct MangaPanelView: View {
             .padding(.bottom, 12)
             .padding(.trailing, 10)
             .scaleEffect(appeared ? 1 : 0.5, anchor: .bottomTrailing)
-        }
-    }
-
-    /// One feat reads verbatim; several collapse to the generic line.
-    static func featHeadline(_ titles: [String]) -> String? {
-        switch titles.count {
-        case 0: return nil
-        case 1: return titles[0]
-        default: return String(localized: "New decorations", bundle: .module)
-        }
-    }
-
-    /// The sticker's second line: the one opened name, or the generic plural.
-    static func unlockHeadline(_ labels: [String]) -> String? {
-        switch labels.count {
-        case 0: return nil
-        case 1: return labels[0]
-        default: return String(localized: "New boards", bundle: .module)
         }
     }
 
@@ -418,5 +400,34 @@ private struct PillStamp: ViewModifier {
             .background(Capsule().fill(.white))
             .overlay(Capsule().stroke(accent, lineWidth: 2.5))
             .shadow(color: .black.opacity(0.4), radius: 4, y: 2)
+    }
+}
+
+// MARK: Sticker headlines
+
+extension MangaPanelView {
+    /// One feat reads verbatim under the singular eyebrow; several become a
+    /// count under the plural one — a singular eyebrow over a plural body
+    /// ("KUNNIAMERKKI / Uusia kunniamerkkejä") read as a number mismatch.
+    static func featSticker(_ titles: [String]) -> (eyebrow: String, body: String)? {
+        switch titles.count {
+        case 0: return nil
+        case 1:
+            return (String(localized: "Decoration", bundle: .module), titles[0])
+        default:
+            return (
+                String(localized: "Decorations", bundle: .module),
+                String(localized: "\(titles.count) new", bundle: .module)
+            )
+        }
+    }
+
+    /// The sticker's second line: the one opened name, or the generic plural.
+    static func unlockHeadline(_ labels: [String]) -> String? {
+        switch labels.count {
+        case 0: return nil
+        case 1: return labels[0]
+        default: return String(localized: "New boards", bundle: .module)
+        }
     }
 }
