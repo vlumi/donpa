@@ -103,14 +103,15 @@ extension ScoreboardView {
     }
 
     /// ↓ from the header enters the grid; ↑ from the first medal returns to
-    /// the header (folded: the focus stays on the header).
+    /// the header (folded: the focus stays on the header). One stop past the
+    /// last medal is the Game Center toggle in the footer.
     private func moveMedalFocus(_ delta: Int) {
         guard !settings.medalsCollapsed else { return }
         if keys.index == 0, delta < 0 {
             keys.index = nil
             return
         }
-        keys.move(delta, count: AchievementID.allCases.count)
+        keys.move(delta, count: AchievementID.allCases.count + 1)
     }
 
     private func operateZone(_ step: Int) {
@@ -141,8 +142,10 @@ extension ScoreboardView {
         case .rows:
             if let key = keyRowKey { toggleExpanded(key) }
         case .medals:
-            guard let i = keys.index, AchievementID.allCases.indices.contains(i)
-            else { return toggleMedalsCollapse() }  // header focused: fold/unfold
+            guard let i = keys.index else { return toggleMedalsCollapse() }  // header
+            guard AchievementID.allCases.indices.contains(i) else {
+                return gameCenter.setEnabled(!gameCenter.enabled)  // the footer stop
+            }
             let id = AchievementID.allCases[i]
             selectedMedal = selectedMedal == id ? nil : id
         case .manage:

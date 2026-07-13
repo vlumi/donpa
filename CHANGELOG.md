@@ -22,6 +22,13 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Game Center, strictly opt-in.** A new toggle at the foot of the
+  Decorations gallery reports your medals to Game Center — off by default,
+  and Game Center is never even contacted until you turn it on. The first
+  medal you earn asks once (per iCloud account, across devices); enabling
+  later reports everything already earned, so nothing is lost by deciding
+  slowly. No Game Center banners, no floating widget — the in-game
+  celebration stays the only celebration.
 - **Pace: how fast you actually sweep.** Every win now shows its pace —
   the board's minimum moves (3BV) per second, a number board luck can't
   inflate the way a lucky layout inflates raw time. The win panel gets a

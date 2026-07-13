@@ -7,6 +7,11 @@
 	     pinned EXPLICITLY and is identical on iOS + macOS so the two apps share
 	     one KVS store — without this they'd derive separate stores from their
 	     (now shared) bundle id and never see each other's scores. -->
+	<!-- Game Center, for the strictly opt-in decorations reporter (see
+	     GameCenterReporter): GameKit is never touched until the player enables
+	     it in the Decorations footer. -->
+	<key>com.apple.developer.game-center</key>
+	<true/>
 	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
 	<string>$(TeamIdentifierPrefix)fi.misaki.donpa</string>
 	<!-- Universal Links for score sharing: a shared link/QR (donpa.app/s/<blob>)

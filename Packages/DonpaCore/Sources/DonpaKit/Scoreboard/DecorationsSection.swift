@@ -23,6 +23,11 @@ struct DecorationsSection: View {
     /// veteran can collapse the block and it STAYS collapsed; the header keeps
     /// the earned count so it never goes fully dark.
     @Binding var collapsed: Bool
+    /// The Game Center opt-in, living where its questions arise (the sync-
+    /// toggle placement principle); hidden with the folded block.
+    var gcEnabled: Binding<Bool>?
+    /// The footer toggle is the medals zone's LAST keyboard stop.
+    var gcKeyFocused = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -40,8 +45,34 @@ struct DecorationsSection: View {
                 }
                 .padding(.horizontal, rowInset)
                 if let selected { detail(selected) }
+                if let gcEnabled { gameCenterFooter(gcEnabled) }
             }
         }
+    }
+
+    /// Opt-in reporting — GC never hears about the app until this is on
+    /// (see GameCenterReporter). One quiet row; the folded block hides it.
+    private func gameCenterFooter(_ binding: Binding<Bool>) -> some View {
+        HStack(spacing: 8) {
+            Toggle(isOn: binding) {
+                Text("Game Center", bundle: .module)
+                    .font(.subheadline.weight(.medium))
+            }
+            .toggleStyle(.switch)
+            #if os(iOS)
+            .controlSize(.mini)
+            #endif
+            .fixedSize()
+            Text(
+                binding.wrappedValue
+                    ? "Reporting to Game Center" : "Not reporting", bundle: .module
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .lineLimit(1)
+        .keyFocusRing(gcKeyFocused)
+        .padding(.horizontal, rowInset)
     }
 
     private var header: some View {

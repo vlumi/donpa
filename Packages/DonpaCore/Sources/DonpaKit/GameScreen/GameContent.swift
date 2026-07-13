@@ -18,6 +18,7 @@ struct GameContent: View {
     @ObservedObject var navigator: Navigator
     @ObservedObject var friends: FriendsStore
     @ObservedObject var achievements: AchievementStore
+    @ObservedObject var gameCenter: GameCenterReporter
     let scene: BoardScene
     /// The `-donpa.gates.fresh` launch baseline (empty in normal runs) — win
     /// counts at launch, subtracted so gates/celebrations see session wins only.
@@ -36,6 +37,10 @@ struct GameContent: View {
     @State var panelUnlocks: [String] = []
     /// Feat titles this game just earned (the decoration sticker).
     @State var panelFeats: [String] = []
+    /// The first-decoration Game Center ask: armed by recordFeats, shown
+    /// after the result panel dismisses (never over the celebration).
+    @State var pendingGCAsk = false
+    @State var showGCAsk = false
     /// The finished win's pace (3BV/s) for the panel's caption chip.
     @State var panelPace: Double?
     /// The transient survived-guess toast (see GameContent+GuessFeedback.swift).
@@ -52,7 +57,7 @@ struct GameContent: View {
     @State var showProcessing = false
     @State private var processingTask: Task<Void, Never>?
     @State private var processingShownAt: Date?
-    @State private var windowSize: CGSize = .zero
+    @State var windowSize: CGSize = .zero
     /// True when WE paused to show the scoreboard — used to auto-resume on dismiss,
     /// but only if the player hadn't already paused it themselves.
     @State private var pausedForScores = false
@@ -85,6 +90,7 @@ struct GameContent: View {
     init(
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
         navigator: Navigator, friends: FriendsStore, achievements: AchievementStore,
+        gameCenter: GameCenterReporter,
         scene: BoardScene, winsBaseline: [String: Int] = [:], saveStore: SaveStore
     ) {
         self.viewModel = viewModel
@@ -93,6 +99,7 @@ struct GameContent: View {
         self.navigator = navigator
         self.friends = friends
         self.achievements = achievements
+        self.gameCenter = gameCenter
         self.scene = scene
         self.winsBaseline = winsBaseline
         // The store is owned by GameViewRoot and shared in, so the New Game popup's
@@ -165,23 +172,7 @@ struct GameContent: View {
             autosaveBlocking()  // exiting; the write must finish inline
         }
         #endif
-        .sheet(isPresented: $navigator.showingScores) {
-            // From the title (browsing) there's no current board → no "you are here"
-            // marker. In-game, mark the row for the config being played.
-            ScoreboardView(
-                scoreboard: scoreboard, settings: settings,
-                achievements: achievements, available: windowSize,
-                gates: gates,
-                currentConfig: navigator.showingTitle ? nil : viewModel.config,
-                onPlay: { navigator.playConfigRequested = $0 },
-                // "Manage rivals": swap to the Mess hall at root (deferred a tick —
-                // the scoreboard is dismissing; two sheet swaps in one runloop race).
-                onMessHall: {
-                    navigator.showingScores = false
-                    Task { @MainActor in navigator.showingMessHall = true }
-                },
-                friends: friends)
-        }
+        .sheet(isPresented: $navigator.showingScores) { scoreboardSheet }
         // Opening the scoreboard pauses a live game (flushing career activity and
         // stopping the clock); auto-resume on dismiss only if WE paused.
         .onChangeCompat(of: navigator.showingScores) { showing in

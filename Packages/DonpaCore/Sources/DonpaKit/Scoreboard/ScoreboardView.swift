@@ -41,6 +41,8 @@ struct ScoreboardView: View {
     // (Keyboard/Toolbar/Rivals/Scroll) is internal, not `private` — Swift
     // `private` is file-scoped.
 
+    /// Game Center reporting (the Decorations footer's toggle drives it).
+    @ObservedObject var gameCenter: GameCenterReporter
     /// The group to compare against, or nil for all friends (the group filter).
     @State var rivalGroupID: String?
     @Environment(\.dismiss) var dismiss
@@ -179,7 +181,12 @@ struct ScoreboardView: View {
                         rowInset: Self.rowInset, selected: $selectedMedal,
                         keyFocusIndex: medalFocusIndex,
                         headerKeyFocused: keys.zone == .medals && keys.index == nil,
-                        collapsed: $settings.medalsCollapsed
+                        collapsed: $settings.medalsCollapsed,
+                        gcEnabled: Binding(
+                            get: { gameCenter.enabled },
+                            set: { gameCenter.setEnabled($0) }),
+                        gcKeyFocused: keys.zone == .medals
+                            && keys.index == AchievementID.allCases.count
                     )
                     .id("zone.medals")
                     .onChangeCompat(of: selectedMedal) { followMedalSelection($0) }
