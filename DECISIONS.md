@@ -344,11 +344,14 @@ figure says so instead of averaging it away.
   normalization/band machinery. FAMILY/EDGES never fold — the career
   level gets per-virtual-family display, never a scalar.
 - So the one honest raw mid-level is family × edges × density, across
-  sizes — and it carries a value ONLY when every size in that ladder has
-  at least one logged win (the full-clear-line idiom, transposed): the
-  aggregate is a demonstrated claim, not a diet artifact, and an unlit
-  line is a chase. Applies to Grid/Hive (per edges) and Drills (its
-  XS–XL ladder, one line); Basic is exempt (presets vary size and
+  sizes — and it carries a value ONLY when every GATE size has at least
+  one logged win (the full-clear-line idiom, transposed): the aggregate
+  is a demonstrated claim, not a diet artifact, and an unlit line is a
+  chase. **The gate is XS–L (refined 2026-07-14)** — requiring XXXL made
+  lines effectively unreachable, violating the nothing-REQUIRES-big-boards
+  principle; XL+ wins feed the median when logged but are never required.
+  Applies to Grid/Hive (per edges); Drills gates on its own XS–XL ladder
+  (all one-sitting boards); Basic is exempt (presets vary size and
   density together). "Has a result" = an entry in the pace LOG — pre-pace
   wins carry no 3BV, so the lines light from fresh play only.
 - BEST pace never trickles above per-config: a folded best is just the

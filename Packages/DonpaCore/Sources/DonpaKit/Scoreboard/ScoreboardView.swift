@@ -232,6 +232,8 @@ struct ScoreboardView: View {
                 )
                 .padding(.top, 8)
                 .id("zone.breakdown")
+                PaceLinesView(scoreboard: scoreboard, rowInset: Self.rowInset)
+                    .padding(.top, 8)
             } else {
                 Text("Play a game to start your career stats.", bundle: .module)
                     .font(.callout)

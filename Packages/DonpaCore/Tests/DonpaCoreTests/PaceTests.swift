@@ -77,6 +77,78 @@ final class PaceTests: XCTestCase {
         XCTAssertEqual(instant.pace, 100, accuracy: 1e-9)
     }
 
+    // MARK: Ladder lines
+
+    private func recordWithWin(pace: Double, threeBV: Int = 100) -> ScoreRecord {
+        var record = ScoreRecord()
+        record.wins.add(1)
+        record.recentWins = [
+            RecentWin(
+                date: Date(timeIntervalSince1970: 0),
+                centiseconds: Int(Double(threeBV) * 100 / pace), threeBV: threeBV)
+        ]
+        return record
+    }
+
+    func testLadderLightsOnlyWithEveryGateSizeLogged() {
+        var records: [String: ScoreRecord] = [:]
+        for size in [BoardSize.xs, .s, .m] {
+            records[GameConfig.grid(size, .normal, .flat).storageKey] =
+                recordWithWin(pace: 2)
+        }
+        // L missing → dark, even with an XL win logged.
+        records[GameConfig.grid(.xl, .normal, .flat).storageKey] = recordWithWin(pace: 3)
+        XCTAssertNil(
+            Pace.ladderPace(records: records, family: .grid, density: .normal, edges: .flat))
+
+        records[GameConfig.grid(.l, .normal, .flat).storageKey] = recordWithWin(pace: 2)
+        XCTAssertNotNil(
+            Pace.ladderPace(records: records, family: .grid, density: .normal, edges: .flat))
+    }
+
+    func testLadderUnionIncludesUnrequiredBigBoards() {
+        var records: [String: ScoreRecord] = [:]
+        for size in Pace.gateSizes {
+            records[GameConfig.grid(size, .normal, .flat).storageKey] =
+                recordWithWin(pace: 2, threeBV: 10)
+        }
+        // A heavy XXXL win dominates the 3BV-weighted median.
+        records[GameConfig.grid(.xxxl, .normal, .flat).storageKey] =
+            recordWithWin(pace: 5, threeBV: 10_000)
+        let pace = Pace.ladderPace(
+            records: records, family: .grid, density: .normal, edges: .flat)
+        XCTAssertEqual(pace ?? 0, 5, accuracy: 0.01)
+    }
+
+    func testLadderScopesByEdgesAndDensity() {
+        var records: [String: ScoreRecord] = [:]
+        for size in Pace.gateSizes {
+            records[GameConfig.grid(size, .normal, .flat).storageKey] =
+                recordWithWin(pace: 2)
+        }
+        XCTAssertNil(
+            Pace.ladderPace(records: records, family: .grid, density: .normal, edges: .round))
+        XCTAssertNil(
+            Pace.ladderPace(records: records, family: .grid, density: .easy, edges: .flat))
+    }
+
+    func testDrillsLadderGatesOnItsFullRange() {
+        var records: [String: ScoreRecord] = [:]
+        for size in [BoardSize.xs, .s, .m, .l] {
+            records[GameConfig.practice(size).storageKey] = recordWithWin(pace: 2)
+        }
+        XCTAssertNil(
+            Pace.ladderPace(records: records, family: .practice, density: nil, edges: .flat))
+        records[GameConfig.practice(.xl).storageKey] = recordWithWin(pace: 2)
+        XCTAssertNotNil(
+            Pace.ladderPace(records: records, family: .practice, density: nil, edges: .flat))
+    }
+
+    func testBasicHasNoLadder() {
+        XCTAssertNil(
+            Pace.ladderPace(records: [:], family: .basic, density: nil, edges: .flat))
+    }
+
     /// Weighted median: the big board's pace dominates the tiny one's noise.
     func testMedianPaceWeightsByThreeBV() {
         let noisy = RecentWin(date: .init(), centiseconds: 100, threeBV: 2)  // 2.0/s
