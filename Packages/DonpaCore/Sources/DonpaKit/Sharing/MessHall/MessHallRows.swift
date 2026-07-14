@@ -1,8 +1,6 @@
 import DonpaCore
 import SwiftUI
 
-/// A Mess hall list row whose body taps to compare, with a trailing pencil to
-/// edit. Compare can be disabled (an empty group has nothing to compare).
 struct CompareEditRow<Content: View>: View {
     let compare: () -> Void
     let edit: () -> Void
@@ -23,7 +21,6 @@ struct CompareEditRow<Content: View>: View {
     }
 }
 
-/// A tab's empty state: icon, headline, and a how-to-fill-me hint.
 struct ListEmptyState: View {
     let icon: String
     let title: LocalizedStringKey

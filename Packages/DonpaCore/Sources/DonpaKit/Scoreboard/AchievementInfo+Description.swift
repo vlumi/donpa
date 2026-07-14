@@ -1,9 +1,8 @@
 import DonpaCore
 import Foundation
 
-/// The feats' rule lines, shown in the Decorations grid (and, at A6, the ASC
-/// definitions). Wording uses the app's REAL tier vocabulary — the spec's
-/// early drafts said "Insane", but that rank's shipped name is Legend.
+/// The feats' rule lines. Wording uses the shipped rank name "Legend" — the
+/// `insane` case names predate the rename.
 extension AchievementID {
     var featDescription: String {
         switch self {

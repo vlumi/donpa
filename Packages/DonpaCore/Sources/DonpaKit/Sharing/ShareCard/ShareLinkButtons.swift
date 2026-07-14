@@ -1,11 +1,9 @@
 import DonpaCore
 import SwiftUI
 
-// The share-LINK buttons: the system share sheet, per platform.
 #if os(macOS)
-/// The share-link button, macOS: drives `NSSharingServicePicker` from an
-/// anchored view — SwiftUI's `ShareLink` can't be invoked programmatically,
-/// and the keyboard's Return needs to open the same picker the click does.
+/// Drives `NSSharingServicePicker` from an anchored view — `ShareLink` can't be
+/// invoked programmatically, and the keyboard's Return must open the same picker.
 struct SharePickerButton: View {
     let url: URL
     var activate = Pulse()
@@ -40,9 +38,6 @@ struct SharePickerButton: View {
 }
 #endif
 
-/// A thin wrapper over SwiftUI's `ShareLink` (the system share sheet) so the call
-/// site stays clean and cross-platform. Stretches to fill its slot in the
-/// share-actions row.
 struct ShareLinkButton: View {
     let url: URL
     var body: some View {

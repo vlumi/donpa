@@ -1,10 +1,9 @@
 import DonpaCore
 import SwiftUI
 
-/// A friend's detail: rename them locally (your alias, which survives their own
-/// renames), tag them into groups, or remove them. Edits go straight to
-/// `FriendsStore`; there's no Save button — the store persists on each change, and
-/// Done just closes.
+/// A friend's detail: your local alias (which survives their own renames), squad
+/// membership, and removal. There is no Save button — every edit persists
+/// immediately via `FriendsStore`; Done just closes.
 struct FriendDetailView: View {
     let friend: Friend
     @ObservedObject var friends: FriendsStore
@@ -13,8 +12,6 @@ struct FriendDetailView: View {
     @State private var alias: String
     @State private var groupSelection: Set<String>
     @State private var confirmingRemove = false
-    /// Tab-cyclable zones: the alias field, the squad checkboxes, the
-    /// new-squad field, then the Remove button.
     private enum KeyZone: CaseIterable { case alias, groups, newGroup, remove }
     @State private var keys = KeyCursor<KeyZone>()
     @FocusState private var aliasFocused: Bool
@@ -36,8 +33,8 @@ struct FriendDetailView: View {
 
     @ViewBuilder private var content: some View {
         VStack(alignment: .leading, spacing: 18) {
-            // Their own name is fixed (it comes from their signed share); your alias
-            // is the editable one.
+            // Their shared name is fixed (it comes from their signed share); only
+            // your alias is editable.
             VStack(alignment: .leading, spacing: 4) {
                 Text("Shared name", bundle: .module).font(.caption).foregroundStyle(.secondary)
                 Text(friend.sharedName).font(.body)
@@ -102,17 +99,13 @@ struct FriendDetailView: View {
         case .enter:
             confirmOrActivate()
         case .escape:
-            // The catcher owns keyDown, so Esc routes here — same
-            // commit-then-close as Done.
-            done()
+            done()  // same commit-then-close as Done
         default:
-            // Mouse click: the pointer takes over; the ring stands down.
-            if key == .click { keys.enter(nil) }
+            if key == .click { keys.enter(nil) }  // mouse takes over
         }
     }
 
-    /// Tab wraps through the zones, skipping the checkboxes when there are
-    /// none; landing on a field starts editing.
+    /// Tab wraps through the zones, skipping the checkboxes when there are none.
     private func cycleZone(_ delta: Int) {
         var zones = KeyZone.allCases
         if friends.groups.isEmpty { zones.removeAll { $0 == .groups } }
@@ -131,9 +124,8 @@ struct FriendDetailView: View {
         }
     }
 
-    /// Desktop convention: Return presses the focused control when it's a
-    /// button (or enters a field); on the checkboxes — or before any focus —
-    /// it's the sheet's default — Done (commit-then-close).
+    /// Return presses the focused button (or enters a field); on the checkboxes,
+    /// or before any focus, it's the sheet's default — Done.
     private func confirmOrActivate() {
         if keys.zone == .groups || keys.zone == nil { done() } else { activateFocusedZone() }
     }
@@ -160,8 +152,8 @@ struct FriendDetailView: View {
         dismiss()
     }
 
-    /// Done: commit a squad name typed but never committed with Create (silently
-    /// discarding it loses the squad), then close.
+    /// Commit a squad name typed but never created (silently discarding it would
+    /// lose the squad), then close.
     private func done() {
         if let pending = friends.createGroup(named: pendingGroupName) {
             groupSelection.insert(pending.id)
@@ -173,9 +165,6 @@ struct FriendDetailView: View {
     @ViewBuilder private var chrome: some View {
         #if os(iOS)
         NavigationStack {
-            // Scrolls when the squad checklist + big text outgrow the sheet
-            // (GroupEditView scrolls the same way); Done stays pinned
-            // in the toolbar.
             ScrollView {
                 content.padding(20)
             }
@@ -196,9 +185,6 @@ struct FriendDetailView: View {
         #else
         VStack(spacing: 16) {
             Text(friend.displayName).font(.title2.bold())
-            // Scroll fallback for short windows / large text (ViewThatFits so
-            // the sheet hugs its natural height when the checklist fits); the
-            // title and Done stay pinned outside the scroller.
             ViewThatFits(in: .vertical) {
                 content
                 ScrollView { content }
@@ -210,8 +196,7 @@ struct FriendDetailView: View {
         }
         .padding(24)
         .frame(minWidth: 340)
-        // Tab: alias → checkboxes → new squad → Remove; Space toggles, Return
-        // presses buttons/enters fields (else Done); yields while typing.
+        // yieldsToTextFields: typing in the fields must never be hijacked.
         .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
         .confirmationDialog(
             Text("Remove \(friend.displayName)?", bundle: .module),

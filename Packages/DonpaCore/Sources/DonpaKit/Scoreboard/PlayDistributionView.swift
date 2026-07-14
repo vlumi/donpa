@@ -1,18 +1,14 @@
 import DonpaCore
 import SwiftUI
 
-/// The career's Breakdown block: how play spreads across family / size / density,
-/// as proportion bars, toggling between playtime and game count. A view over
-/// `PlayDistribution` — no new collection, just the per-config records re-sliced.
-/// Single-accent segments (an opacity ramp) with the legend carrying the labels
-/// and percentages, so color never carries information alone.
+/// The career's Breakdown block: play spread across family / size / density as
+/// proportion bars, toggling between playtime and games. The legend carries the
+/// labels and percentages, so color never carries information alone.
 struct PlayDistributionView: View {
     @ObservedObject var scoreboard: Scoreboard
-    /// Shared horizontal inset (matches the stat rows).
     let rowInset: CGFloat
-    /// Hoisted so the host's keyboard zone can flip it (←/→ or Space).
+    /// Hoisted so the host's keyboard zone can flip it.
     @Binding var metric: PlayDistribution.Metric
-    /// The host's Tab focus (ring on the metric picker).
     var keyFocused: Bool = false
 
     var body: some View {
@@ -47,7 +43,7 @@ struct PlayDistributionView: View {
         }
     }
 
-    /// Whether the block renders at all — the host's keyboard ring skips its
+    /// Whether the block renders at all — the host's keyboard cycling skips its
     /// zone when it doesn't.
     static func hasData(_ scoreboard: Scoreboard) -> Bool {
         let entries = entries(from: scoreboard)
@@ -56,12 +52,10 @@ struct PlayDistributionView: View {
         }
     }
 
-    /// Every config's games + playtime off its record (unplayed configs contribute
-    /// nothing and are dropped by the aggregation).
     static func entries(from scoreboard: Scoreboard) -> [PlayDistribution.Entry] {
-        // The FULL family sweep, deduped by key (Basic and Drills ignore edges,
-        // so the edges loop yields them twice) — a hardcoded family list here is
-        // exactly how Drills went missing from the bars when it shipped.
+        // Full family × edges sweep, deduped by key (Basic and Drills ignore
+        // edges, so the loop yields them twice) — a hardcoded family list
+        // silently drops families.
         var seen = Set<String>()
         let configs = BoardFamily.allCases.flatMap { family in
             BoardEdges.allCases.flatMap { edges in
@@ -86,7 +80,6 @@ struct PlayDistributionView: View {
         }
     }
 
-    /// One axis: caption label, the proportion bar, and the legend line.
     private func bar(label: LocalizedStringKey, shares: [PlayDistribution.Share]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label, bundle: .module)
@@ -102,7 +95,6 @@ struct PlayDistributionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 4))
             }
             .frame(height: 10)
-            // The legend carries the actual information; the bar is the shape of it.
             Text(verbatim: legend(shares))
                 .font(.caption2).foregroundStyle(.secondary)
                 .lineLimit(2)
@@ -112,8 +104,8 @@ struct PlayDistributionView: View {
         .accessibilityLabel(Text(verbatim: legend(shares)))
     }
 
-    /// Whole-percent legend: "Grid 52% · Hive 31% · Basic 17%", axis order. A real
-    /// but sub-half-percent share reads "<1%", never a dishonest "0%".
+    /// Whole-percent legend in axis order. A real but sub-half-percent share
+    /// reads "<1%", never a dishonest "0%".
     private func legend(_ shares: [PlayDistribution.Share]) -> String {
         shares.map { share in
             let percent = share.fraction * 100
@@ -122,8 +114,7 @@ struct PlayDistributionView: View {
         }.joined(separator: " · ")
     }
 
-    /// Opacity ramp for the single-accent segments — distinct steps, first (leading)
-    /// strongest. Labels, not color, carry the meaning.
+    /// Opacity ramp for the single-accent segments — distinct steps, leading strongest.
     private static func ramp(_ index: Int, of count: Int) -> Double {
         guard count > 1 else { return 0.85 }
         let step = 0.7 / Double(count - 1)

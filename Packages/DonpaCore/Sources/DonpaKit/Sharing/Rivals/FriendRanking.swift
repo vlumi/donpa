@@ -1,26 +1,20 @@
 import DonpaCore
 import SwiftUI
 
-/// Bridges the live stores to the pure `ScoreComparison`: builds a per-config ranking
-/// (you + the selected rivals) and picks the rivals set from the friends list, honoring
-/// an optional group filter. `@MainActor` because it reads `Scoreboard`/`FriendsStore`.
+/// Bridges the live stores to the pure `ScoreComparison`.
 @MainActor
 enum FriendRanking {
-    /// The friends to compare against: everyone, or just one group's members.
     static func rivals(from friends: FriendsStore, group groupID: String?) -> [Friend] {
         guard let groupID else { return friends.friends }
         return friends.members(of: groupID)
     }
 
-    /// Rank you + the given rivals on one config, by best time. `yourName` falls back to
-    /// a generic label when you haven't set a share name.
+    /// Rank you + the given rivals on one config, by best time.
     static func ranking(
         config: GameConfig, scoreboard: Scoreboard, rivals: [Friend], yourName: String
     ) -> ScoreComparison.Ranking {
         let key = config.storageKey
-        // A best-time leaderboard only lists rivals who actually have a time here —
-        // a rival who never won this board adds no ranking, only "—" clutter. (You
-        // always appear, even without a time, so you can see where you stand.)
+        // Only rivals with a time on this board rank; you always appear, even without one.
         let rivalPairs = rivals.compactMap { friend -> (name: String, best: Int?)? in
             guard let best = friend.scores.first(where: { $0.key == key })?.best else {
                 return nil
@@ -33,18 +27,15 @@ enum FriendRanking {
 
     // MARK: Head-to-head
 
-    /// Every config across families/edges, keyed by `storageKey` — the label source for
-    /// head-to-head rows and the universe of boards to consider.
+    /// Every config across families/edges — the universe of boards to consider.
     static let allConfigs: [GameConfig] = BoardFamily.allCases.flatMap { family in
         BoardEdges.allCases.flatMap { edges in GameConfig.configs(family: family, edges: edges) }
     }
     private static let configByKey: [String: GameConfig] = Dictionary(
         allConfigs.map { ($0.storageKey, $0) }, uniquingKeysWith: { first, _ in first })
 
-    /// A labeled head-to-head row: carries the full `GameConfig` so the sheet can
-    /// render the board like the Service Record does (insignia + names) and start a
-    /// game on it. `holderName` names who on the other side holds `theirBest` (group
-    /// compare only); `gap` is your signed delta vs. theirs (negative = you faster).
+    /// A labeled head-to-head row. `holderName` names who on the other side holds
+    /// `theirBest` (group compare only); `gap` is your signed delta (negative = faster).
     struct H2HRow: Identifiable {
         let key: String
         let config: GameConfig
@@ -62,9 +53,7 @@ enum FriendRanking {
         let theyLead: Int
     }
 
-    /// One family+edges run of the head-to-head, for the sheet's sticky sub-section
-    /// titles — the group carries the family/edge identity so the rows can stay as
-    /// slim as the Service Record's (insignia + size).
+    /// One family+edges run of the head-to-head, for the sheet's sticky sub-sections.
     struct H2HGroup: Identifiable {
         let family: BoardFamily
         let edges: BoardEdges
@@ -72,9 +61,8 @@ enum FriendRanking {
         var id: String { "\(family.rawValue)|\(edges.rawValue)" }
     }
 
-    /// Chunk canonical-ordered rows into their family+edges groups. Rows arrive
-    /// already contiguous per group (the canonical config order is family-outer,
-    /// edges-inner), so this is a single pass.
+    /// Chunk rows into family+edges groups. Rows arrive contiguous per group (the
+    /// canonical config order is family-outer, edges-inner), so this is a single pass.
     static func grouped(_ rows: [H2HRow]) -> [H2HGroup] {
         var out: [H2HGroup] = []
         for row in rows {
@@ -90,7 +78,6 @@ enum FriendRanking {
         return out
     }
 
-    /// Your best time per config key (only boards you've won).
     private static func yourBests(_ scoreboard: Scoreboard) -> [String: Int] {
         var out: [String: Int] = [:]
         for config in allConfigs where scoreboard.best(for: config) != nil {
@@ -107,7 +94,6 @@ enum FriendRanking {
         return out
     }
 
-    /// Head-to-head against a single friend.
     static func headToHead(
         with friend: Friend, scoreboard: Scoreboard
     ) -> H2H {
@@ -117,8 +103,7 @@ enum FriendRanking {
                 yourBests: yourBests(scoreboard), theirBests: bests(of: friend)))
     }
 
-    /// Head-to-head against a group's best (fastest member per board), naming who holds
-    /// each board's best so it isn't anonymous.
+    /// Head-to-head against a group's best (fastest member per board).
     static func headToHead(
         withGroup members: [Friend], scoreboard: Scoreboard
     ) -> H2H {
@@ -131,8 +116,8 @@ enum FriendRanking {
                 theirHolders: group.holders))
     }
 
-    /// Attach board configs + keep the tally; drop rows whose key we can't resolve
-    /// (unknown/legacy configs), then order by the app's canonical config order.
+    /// Attach board configs, dropping rows whose key can't resolve (unknown/legacy
+    /// configs), in the app's canonical config order.
     private static func labeled(_ h: ScoreComparison.HeadToHead) -> H2H {
         let order = Dictionary(
             allConfigs.enumerated().map { ($0.element.storageKey, $0.offset) },

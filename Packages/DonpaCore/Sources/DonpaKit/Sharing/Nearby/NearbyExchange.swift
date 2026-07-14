@@ -2,13 +2,10 @@ import DonpaCore
 import Foundation
 import MultipeerConnectivity
 
-/// Two-way local score exchange over MultipeerConnectivity — the serverless
-/// answer to "one-way sharing is clunky": both players open the Nearby sheet,
-/// one taps the other's name, and BOTH share payloads cross in a single
-/// handshake (each side still confirms the import through the normal receive
-/// flow). Works iPhone ↔ iPad ↔ Mac over local Wi-Fi/Bluetooth; nothing
-/// leaves the room and no server exists. (NFC was the wish, but iOS offers
-/// third-party apps no phone-to-phone NFC — and the Mac has none at all.)
+/// Two-way local score exchange over MultipeerConnectivity: both players open the
+/// Nearby sheet, one taps the other's name, and BOTH share payloads cross in a
+/// single handshake. Each side still confirms the import through the normal
+/// receive flow.
 @MainActor
 final class NearbyExchange: NSObject, ObservableObject {
     enum Phase: Equatable {
@@ -22,8 +19,8 @@ final class NearbyExchange: NSObject, ObservableObject {
 
     @Published private(set) var phase: Phase = .browsing
     @Published private(set) var peers: [MCPeerID] = []
-    /// The rival's payload link, once received — the host routes it into the
-    /// same classify/confirm path a scanned QR takes.
+    /// The rival's payload link, once received — routed into the same
+    /// classify/confirm path a scanned QR takes.
     @Published private(set) var receivedURL: URL?
 
     /// Bonjour service type (≤15 chars, lowercase/digits/hyphen).
@@ -36,11 +33,9 @@ final class NearbyExchange: NSObject, ObservableObject {
     private let payload: Data
     private var sent = false
 
-    /// A short tag of the local signing key, advertised so the browser can hide
-    /// the player's OWN other devices (same synchronizable identity) from the
-    /// list — swapping with yourself is never right. A prefix suffices: this is
-    /// self-recognition, not authentication (the receive path re-checks the
-    /// full key anyway).
+    /// A short tag of the local signing key, advertised so the browser can hide the
+    /// player's OWN other devices (same synchronizable identity). A prefix suffices:
+    /// self-recognition, not authentication — the receive path checks the full key.
     private let selfTag: String
 
     init(displayName: String, payloadURL: URL, identityKey: Data?) {
@@ -61,8 +56,7 @@ final class NearbyExchange: NSObject, ObservableObject {
     }
 
     /// Advertise AND browse: every open sheet sees every other open sheet, and
-    /// whoever taps first becomes the inviter (the other side auto-accepts —
-    /// both players opted in by opening the sheet).
+    /// whoever taps first becomes the inviter (the other side auto-accepts).
     func start() {
         advertiser.startAdvertisingPeer()
         browser.startBrowsingForPeers()
@@ -83,7 +77,6 @@ final class NearbyExchange: NSObject, ObservableObject {
 
     private func connected(to peer: MCPeerID) {
         phase = .exchanging(peer.displayName)
-        // Both sides push their card the moment the pipe opens.
         guard !sent else { return }
         sent = true
         try? session.send(payload, toPeers: [peer], with: .reliable)
@@ -112,7 +105,7 @@ extension NearbyExchange: MCSessionDelegate {
             switch state {
             case .connected: self.connected(to: peerID)
             case .notConnected:
-                // A drop before both directions completed is a failure; after,
+                // A drop before both directions completed is a failure; after .done,
                 // it's just the other side closing their sheet.
                 if case .done = self.phase { return }
                 if case .browsing = self.phase { return }
@@ -148,8 +141,8 @@ extension NearbyExchange: MCNearbyServiceAdvertiserDelegate {
         didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?,
         invitationHandler: @escaping (Bool, MCSession?) -> Void
     ) {
-        // Auto-accept: presence in this session IS the consent gesture (the
-        // import still runs through the normal confirm sheet).
+        // Auto-accept: opening the sheet IS the consent gesture (the import
+        // still runs through the normal confirm sheet).
         Task { @MainActor in
             invitationHandler(true, self.session)
             self.phase = .connecting(peerID.displayName)
@@ -163,7 +156,6 @@ extension NearbyExchange: MCNearbyServiceBrowserDelegate {
         withDiscoveryInfo info: [String: String]?
     ) {
         Task { @MainActor in
-            // Hide the player's own other devices — same identity tag.
             guard info?["k"] != self.selfTag else { return }
             if !self.peers.contains(peerID) { self.peers.append(peerID) }
         }

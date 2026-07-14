@@ -1,8 +1,6 @@
 import DonpaCore
 import SwiftUI
 
-/// A rival's list row: display name (your alias wins), their share date, groups, and a
-/// compact score summary (wins · boards), right-aligned.
 struct FriendRow: View {
     let friend: Friend
     let groupNames: [String]
@@ -19,16 +17,14 @@ struct FriendRow: View {
                     Text(friend.sharedName).font(.caption).foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
-                // Their share's own timestamp — makes plain these are a SNAPSHOT that
-                // only changes when they re-share, not something that updates itself.
+                // The share's own timestamp — the data is a snapshot that only changes on re-share.
                 Text(
                     "Updated \(friend.lastIssuedAt.formatted(date: .abbreviated, time: .omitted))",
                     bundle: .module
                 )
                 .font(.caption2).foregroundStyle(.secondary)
                 if !groupNames.isEmpty {
-                    // .secondary, not .tertiary: squad membership is real info,
-                    // and tertiary caption2 sat near-invisible for low vision.
+                    // .secondary, not .tertiary: tertiary caption2 sat near-invisible for low vision.
                     Text(groupNames.joined(separator: " · "))
                         .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                 }
@@ -43,8 +39,6 @@ struct FriendRow: View {
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
-        // One row, one utterance — six separate texts read as disjointed
-        // fragments under VoiceOver.
         .accessibilityElement(children: .combine)
     }
 }

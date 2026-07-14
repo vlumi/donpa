@@ -1,16 +1,12 @@
 import DonpaCore
 import SwiftUI
 
-/// Everything for one group in a single view — rename, add/remove members (a rival
-/// checklist), and delete — no nested popups. Opened by the pencil on a group row, and
-/// automatically right after creating a group so you can name it and add rivals in one
-/// flow. All edits persist immediately via `FriendsStore`.
+/// Rename, add/remove members, and delete for one group. There is no Save button —
+/// every edit persists immediately via `FriendsStore`; Done just closes.
 struct GroupEditView: View {
     let group: FriendGroup
     @ObservedObject var friends: FriendsStore
     @Environment(\.dismiss) private var dismiss
-    /// Tab-cyclable zones: the name field, the member checkboxes, then the
-    /// Delete button.
     private enum KeyZone: CaseIterable { case name, members, delete }
     @State private var keys = KeyCursor<KeyZone>()
     @FocusState private var nameFocused: Bool
@@ -24,7 +20,6 @@ struct GroupEditView: View {
         _name = State(initialValue: group.name)
     }
 
-    /// Rivals A–Z (matches the rivals list order), so a specific one is easy to find.
     private var rivals: [Friend] {
         friends.friends.sorted {
             $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
@@ -59,7 +54,6 @@ struct GroupEditView: View {
                 Text("Squad name", bundle: .module).font(.caption).foregroundStyle(.secondary)
                 nameField
                     .textFieldStyle(.roundedBorder)
-                    // Persist on each edit (blank is ignored by the store).
                     .onChangeCompat(of: name) { friends.renameGroup(group.id, to: $0) }
             }
 
@@ -96,16 +90,13 @@ struct GroupEditView: View {
         case .enter:
             confirmOrActivate()
         case .escape:
-            // The catcher owns keyDown, so Esc routes here too.
             dismiss()
         default:
-            // Mouse click: the pointer takes over; the ring stands down.
-            if key == .click { keys.enter(nil) }
+            if key == .click { keys.enter(nil) }  // mouse takes over
         }
     }
 
-    /// Tab wraps through the zones, skipping the checkboxes when there are
-    /// none; landing on the field starts editing.
+    /// Tab wraps through the zones, skipping the checkboxes when there are none.
     private func cycleZone(_ delta: Int) {
         var zones = KeyZone.allCases
         if rivals.isEmpty { zones.removeAll { $0 == .members } }
@@ -122,9 +113,8 @@ struct GroupEditView: View {
         }
     }
 
-    /// Desktop convention: Return presses the focused control when it's a
-    /// button (or enters the field); on the checkboxes — or before any
-    /// focus — it's the sheet's default — Done.
+    /// Return presses the focused button (or enters the field); on the checkboxes,
+    /// or before any focus, it's the sheet's default — Done.
     private func confirmOrActivate() {
         if keys.zone == .members || keys.zone == nil { dismiss() } else { activateFocusedZone() }
     }
@@ -154,14 +144,11 @@ struct GroupEditView: View {
             ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
                 let member = rival.groups.contains(group.id)
                 Button {
-                    // Click takes the keyboard focus with it.
                     keys.enter(.members)
                     keys.index = index
                     friends.setMembership(!member, of: rival.publicKey, in: group.id)
                 } label: {
                     HStack {
-                        // Square (checkbox) not circle — membership is multi-select; a
-                        // round check reads as a single-choice radio button.
                         Image(systemName: member ? "checkmark.square.fill" : "square")
                             .foregroundStyle(member ? Color.accentColor : .secondary)
                         Text(rival.displayName)
@@ -204,8 +191,7 @@ struct GroupEditView: View {
         }
         .padding(20)
         .frame(minWidth: 340, minHeight: 380)
-        // Tab: name → checkboxes → Delete; Space toggles, Return presses
-        // buttons/enters the field (else Done); yields while typing.
+        // yieldsToTextFields: typing in the name field must never be hijacked.
         .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
         #endif
     }

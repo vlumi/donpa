@@ -1,11 +1,9 @@
 import DonpaCore
 import SwiftUI
 
-/// The emblem drawing parts (split from the medal for the type-length budget):
-/// shared shapes the per-feat drawers in `MedalView.emblems` compose.
+/// Shared emblem shapes the per-feat drawers in `MedalView.emblems` compose
+/// (split from the medal for the type-length budget).
 extension MedalView {
-    // MARK: Emblem parts
-
     static func star(
         in ctx: GraphicsContext, at c: CGPoint, radius r: CGFloat, ink: Color
     ) {
@@ -20,15 +18,11 @@ extension MedalView {
         ctx.fill(path, with: .color(ink))
     }
 
-    /// The toggle's high-res BootPrint template asset, tinted and placed —
-    /// portrait ~1:2, so it's sized by HEIGHT; `mirrored` = the left foot.
     /// Test seam: headless XCTest/ImageRenderer can't resolve SwiftPM asset
-    /// catalogs (in-app resolution is fine — the mode toggle proves it), so
-    /// the gallery harness injects the asset loaded straight from its file.
+    /// catalogs, so the gallery harness injects the asset loaded from its file.
     static var bootImageOverride: Image?
 
-    /// Where a print sits: centre, height (portrait asset — sized by height),
-    /// lean, and which foot.
+    /// Where a print sits. The asset is portrait (~1:2), so it's sized by height.
     struct PrintPlacement {
         var center: CGPoint
         var height: CGFloat
@@ -49,16 +43,16 @@ extension MedalView {
         let resolved = inner.resolve(image)
         let width = height * 0.52
         let rect = CGRect(x: -width / 2, y: -height / 2, width: width, height: height)
-        // Tint by MASKING: fill ink through the image's alpha. Template-mode
-        // shading proved unreliable across resolve paths (the boot stayed the
-        // asset's own white on light backgrounds — user report); a mask can't.
+        // Tint by masking (fill ink through the image's alpha) — template-mode
+        // shading is unreliable across resolve paths and can leave the asset's
+        // own white on light backgrounds.
         inner.clipToLayer { mask in
             mask.draw(resolved, in: rect)
         }
         inner.fill(Path(rect), with: .color(ink))
     }
 
-    /// A pointy-top hexagon outline (one big cell).
+    /// A pointy-top hexagon outline.
     static func hexagon(
         in ctx: GraphicsContext, at c: CGPoint, radius r: CGFloat, ink: Color
     ) {
@@ -72,7 +66,6 @@ extension MedalView {
             path, with: .color(ink), style: StrokeStyle(lineWidth: r * 0.22, lineJoin: .round))
     }
 
-    /// A minimal flag: pole + filled pennant (reads where the swallowtail can't).
     static func pennant(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
         var pole = Path()
         pole.move(to: CGPoint(x: s * 0.30, y: s * 0.12))
@@ -87,17 +80,14 @@ extension MedalView {
         ctx.fill(flag, with: .color(ink))
     }
 
-    /// The full moon: a disc with craters (a plain ball reads as a ball).
     static func fullMoon(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
         let inset = s * 0.10
         let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
-        // A soft ink-tint fill makes the moon LUMINOUS in dark mode (white glow
-        // behind the white outline — user call); in light mode it's a faint
-        // wash and the outline carries the shape.
+        // The faint fill makes the moon luminous in dark mode (glow behind the
+        // outline); in light mode it's a wash and the outline carries the shape.
         ctx.fill(Path(ellipseIn: rect), with: .color(ink.opacity(0.25)))
         ctx.stroke(
             Path(ellipseIn: rect), with: .color(ink), style: StrokeStyle(lineWidth: s * 0.08))
-        // Craters as FILLED light circles (user call) — maria, not ring outlines.
         for (x, y, r) in [(0.38, 0.36, 0.09), (0.60, 0.52, 0.12), (0.42, 0.66, 0.07)] {
             let crater = CGRect(
                 x: s * x - s * r, y: s * y - s * r, width: s * r * 2, height: s * r * 2)
@@ -105,9 +95,9 @@ extension MedalView {
         }
     }
 
-    /// The universal no-sign: bold ring + diagonal, drawn OVER a faded subject.
+    /// The universal no-sign, drawn over a faded subject.
     static func noSign(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
-        let inset = s * 0.05  // a touch bigger, so subjects clear it (user call)
+        let inset = s * 0.05
         let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
         var path = Path(ellipseIn: rect)
         path.move(to: CGPoint(x: s * 0.22, y: s * 0.22))
@@ -116,7 +106,6 @@ extension MedalView {
             path, with: .color(ink), style: StrokeStyle(lineWidth: s * 0.09, lineCap: .round))
     }
 
-    /// A comic explosion burst (jagged outline).
     static func burst(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
         let c = CGPoint(x: s / 2, y: s / 2)
         var path = Path()
@@ -131,7 +120,7 @@ extension MedalView {
             path, with: .color(ink), style: StrokeStyle(lineWidth: s * 0.06, lineJoin: .round))
     }
 
-    /// A drawn lemniscate: two circles, optically centred (the ∞ glyph isn't).
+    /// A drawn lemniscate — the ∞ glyph doesn't centre optically.
     static func infinity(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
         let r = s * 0.19
         var path = Path()
@@ -143,8 +132,7 @@ extension MedalView {
     static func stopwatch(
         in ctx: GraphicsContext, side s: CGFloat, at c: CGPoint? = nil, ink: Color
     ) {
-        // Centre the FACE on the box (the crown pokes above) — anchored at
-        // 0.56 the dial read as sitting below the midpoint (user report).
+        // Centre the face on the box; the crown pokes above.
         let center = c ?? CGPoint(x: s / 2, y: s * 0.50)
         let r = s * 0.34
         let lw = s * 0.08

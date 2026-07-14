@@ -2,10 +2,8 @@ import DonpaCore
 import SwiftUI
 import UniformTypeIdentifiers
 
-// The branded-card IMAGE exports (share / save-to-disk).
-/// Shares the branded QR card as a PNG. The rendered image is written to a temp file
-/// once and shared by URL — reliable on both iOS and macOS share sheets (sharing a
-/// bare in-memory image is fiddlier cross-platform).
+/// Shares the branded QR card as a PNG — written to a temp file and shared by URL,
+/// which both platforms' share sheets handle reliably (a bare in-memory image isn't).
 struct ShareImageButton: View {
     let qr: Image
     let name: String
@@ -13,17 +11,14 @@ struct ShareImageButton: View {
     let linkID: URL
     /// Fired by the host to open the picker from the keyboard (macOS).
     var activate = Pulse()
-    /// Rendered card image + its temp-file URL. Rebuilt when `linkID` changes;
-    /// rendering on every body pass would be wasteful.
     @State private var rendered: (image: PlatformImage, url: URL)?
     #if os(macOS)
     @State private var anchor = SharePickerButton.AnchorView()
     #endif
 
     var body: some View {
-        // macOS drives NSSharingServicePicker instead of ShareLink so the
-        // keyboard's Space opens the same picker the click does (ShareLink
-        // can't be invoked programmatically).
+        // macOS drives NSSharingServicePicker instead of ShareLink so the keyboard
+        // can open the same picker the click does (ShareLink isn't programmatic).
         #if os(macOS)
         Button {
             show()
@@ -67,9 +62,6 @@ struct ShareImageButton: View {
         }
     }
 
-    /// Render the branded card once, then write its PNG to a temp file. The card's date
-    /// is "now" — the moment of sharing (matches the payload's `issuedAt` closely enough
-    /// for a human-readable day stamp).
     @MainActor
     private func build() async -> (PlatformImage, URL)? {
         guard let image = ShareCard.render(qr: qr, name: name, date: Date()),
@@ -90,7 +82,6 @@ struct ShareImageButton: View {
         #endif
     }
 
-    /// PNG bytes for the platform image → a temp file the share sheet can hand off.
     private static func writePNG(_ image: PlatformImage) -> URL? {
         guard let data = pngData(image) else { return nil }
         let url = FileManager.default.temporaryDirectory
@@ -110,8 +101,8 @@ struct ShareImageButton: View {
     }
 }
 #if os(macOS)
-/// Saves the branded QR card as a PNG via the system save panel — macOS's share
-/// picker offers no save-to-disk service, so the affordance must be the app's own.
+/// Saves the branded QR card as a PNG — macOS's share picker offers no save-to-disk
+/// service, so the affordance must be the app's own.
 struct SaveImageButton: View {
     let qr: Image
     let name: String
@@ -157,7 +148,6 @@ struct SaveImageButton: View {
     }
 }
 
-/// A PNG payload for `fileExporter`.
 struct PNGDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.png] }
     var data: Data

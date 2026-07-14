@@ -2,13 +2,12 @@
 import DonpaCore
 import SwiftUI
 
-// The Mess hall's keyboard driving — split from MessHallView because Swift
-// `private` is file-scoped: the state this drives stays internal there.
+// Split from MessHallView, which is why the @State it drives is internal there
+// (Swift `private` is file-scoped).
 
 extension MessHallView {
-    /// The Record's vocabulary on the social lists; ⌘1/⌘2 arrive here because
-    /// the KeyCatcher consumes number equivalents (they mirror the hidden tab
-    /// buttons).
+    /// ⌘1/⌘2 arrive here because the KeyCatcher consumes number equivalents
+    /// (they mirror the hidden tab buttons).
     func handleKey(_ key: KeyCatcher.Key) {
         switch key {
         case .tab, .backTab, .down, .up, .left, .right: handleMove(key)
@@ -32,8 +31,7 @@ extension MessHallView {
         }
     }
 
-    /// The zones actually rendered right now — the skip logic and the render
-    /// predicates share these gates, so Tab can't reach a hidden control.
+    /// Mirrors the render predicates, so Tab can't reach a hidden control.
     private var visibleZones: [KeyZone] {
         var zones = KeyZone.allCases
         if !cardHasLink { zones.removeAll { [.nearby, .shareLink, .qr].contains($0) } }
@@ -58,9 +56,8 @@ extension MessHallView {
         }
     }
 
-    /// Return presses the focused control when it's a button (or enters a
-    /// field); on the toggles and the tab strip it's the sheet's default —
-    /// Done. Space always operates the focused control.
+    /// Return presses the focused control when it's a button (or enters a field);
+    /// on the toggles and the tab strip it's the sheet's default — Done.
     private func confirmOrActivate() {
         switch keys.zone {
         case .career, .tabs, .sync, nil: dismiss()
@@ -88,7 +85,6 @@ extension MessHallView {
         }
     }
 
-    /// E edits the focused row; A opens the scanner; N starts Nearby.
     private func handleLetter(_ ch: Character) {
         switch ch {
         case "e": if keys.zone == .rows { activateFocusedRow(edit: true) }
@@ -98,7 +94,6 @@ extension MessHallView {
         }
     }
 
-    /// ⌘1/⌘2 mirror the hidden tab buttons.
     private func pickTab(_ n: Int) {
         switch n {
         case 1: tab = .rivals
@@ -113,7 +108,6 @@ extension MessHallView {
         keys.index = nil
     }
 
-    /// Same gate as the card's button: no name → no card to swap.
     private func startNearby() {
         nearbyURL = currentShareURL().map(NearbyPayload.init)
     }
@@ -122,7 +116,6 @@ extension MessHallView {
         tab == .rivals ? rivals.count : friends.groups.count
     }
 
-    /// Return = the row's tap (compare); E = its pencil (edit).
     private func activateFocusedRow(edit: Bool) {
         guard let index = keys.index else { return }
         switch tab {

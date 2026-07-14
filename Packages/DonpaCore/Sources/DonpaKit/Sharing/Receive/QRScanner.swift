@@ -4,13 +4,9 @@ import SwiftUI
 #if os(iOS)
 import AVFoundation
 
-/// A live camera QR scanner (iOS). Wraps an `AVCaptureSession` in a UIView and
-/// reports the first machine-readable string it sees; the caller decides whether
-/// it's a Donpa share. The session is discarded when the view goes away — no frame
-/// is recorded or stored (see `NSCameraUsageDescription`).
+/// Live camera QR scanner (iOS). No frame is recorded or stored (see
+/// `NSCameraUsageDescription`); the caller decides whether the string is a Donpa share.
 struct CameraScanner: UIViewRepresentable {
-    /// Called on the main actor with each decoded payload string. The caller
-    /// debounces / dismisses; we keep firing until torn down.
     let onFound: (String) -> Void
 
     func makeUIView(context: Context) -> ScannerView {
@@ -26,15 +22,11 @@ struct CameraScanner: UIViewRepresentable {
         uiView.stop()
     }
 
-    /// The backing view: owns the capture session + preview layer and forwards
-    /// decoded metadata objects. A plain UIView (not the SwiftUI layer) so the
-    /// preview layer resizes with `layoutSubviews`.
     final class ScannerView: UIView, AVCaptureMetadataOutputObjectsDelegate {
         var onFound: ((String) -> Void)?
         private let session = AVCaptureSession()
         private var preview: AVCaptureVideoPreviewLayer?
-        /// Fire once per presentation — a QR sits in frame for many frames, and we
-        /// don't want to re-route the same link dozens of times.
+        /// Fire once per presentation — a QR sits in frame for many frames.
         private var handled = false
 
         func start() {
@@ -56,7 +48,7 @@ struct CameraScanner: UIViewRepresentable {
             self.layer.addSublayer(layer)
             preview = layer
 
-            // Capture I/O off the main thread; the delegate still hops back to main.
+            // startRunning blocks — keep capture I/O off the main thread.
             Task.detached { [session] in session.startRunning() }
         }
 

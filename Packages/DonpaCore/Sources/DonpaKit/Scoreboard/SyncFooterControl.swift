@@ -8,27 +8,23 @@ import AppKit
 #endif
 
 /// Compact iCloud-sync control for the stats sheet footer: a toggle plus inline
-/// status. Opt-in (off by default). The toggle refuses to turn on while iCloud is
-/// unavailable (signed out) — there'd be nothing to sync with — and the status then
-/// tells the player to sign in. KVS has no in-app permission prompt to surface.
+/// status. Opt-in; the toggle refuses to turn on while iCloud is unavailable
+/// (signed out), and the status then tells the player to sign in.
 struct SyncFooterControl: View {
     @ObservedObject var settings: Settings
     @ObservedObject var scoreboard: Scoreboard
-    /// The host's Tab-focus ring (keyboard zone cycling).
     var keyFocused: Bool = false
     /// Fired by the host to flip the toggle from the keyboard — routed through
     /// `syncBinding`, so the enable path keeps its wipe-confirm and
     /// iCloud-availability guards.
     var activate = Pulse()
 
-    /// Asking the player to confirm enabling sync when a global wipe happened while
-    /// sync was off — enabling would honor the tombstone and clear this device too.
+    /// Confirming enable after a global wipe happened while sync was off —
+    /// enabling honors the tombstone and clears this device too.
     @State private var confirmingEnable = false
 
-    /// Turning sync ON only sticks when iCloud is actually reachable; otherwise the
-    /// switch snaps back off (the status row explains why). If a wipe happened while
-    /// sync was off, enabling clears this device's local scores — confirm first.
-    /// Turning OFF always works.
+    /// The guarded enable path — never bypass it: ON requires iCloud reachable,
+    /// and confirms first when it would wipe local scores. OFF always works.
     private var syncBinding: Binding<Bool> {
         Binding(
             get: { settings.syncScores },
@@ -53,7 +49,7 @@ struct SyncFooterControl: View {
             }
             .toggleStyle(.switch)
             #if os(iOS)
-            .controlSize(.mini)  // a quieter switch; the footer bar shouldn't shout
+            .controlSize(.mini)
             #endif
             .fixedSize()
             .confirmationDialog(
@@ -89,17 +85,16 @@ struct SyncFooterControl: View {
         .onPulse(activate) { syncBinding.wrappedValue = !settings.syncScores }
     }
 
-    /// The enable-after-wipe warning, extracted so the long localized key fits the
-    /// line cap.
+    /// Extracted so the long localized key fits the line cap.
     private var wipeWarningMessage: Text {
         Text(
             "Scores were erased everywhere while sync was off. Turning sync on will reset this device too.",
             bundle: .module)
     }
 
-    /// How the player gets iCloud signed in. macOS can deep-link straight to the
-    /// Apple-ID pane; iOS can't (the only public URL opens THIS app's settings, not
-    /// iCloud sign-in), so there it's plain guidance text, not a misleading button.
+    /// macOS deep-links to the Apple-ID pane; iOS has no public URL to iCloud
+    /// sign-in (the only one opens THIS app's settings), so it gets guidance
+    /// text, not a misleading button.
     @ViewBuilder private var signInPrompt: some View {
         #if os(macOS)
         Button {
@@ -114,8 +109,6 @@ struct SyncFooterControl: View {
         .buttonStyle(.plain)
         .foregroundStyle(Color.accentColor)
         #else
-        // iOS has no public deep link to iCloud sign-in (the only settings URL
-        // opens THIS app's pane), so point the way in words instead of a dead button.
         Text("Sign into iCloud in Settings to sync.", bundle: .module)
             .font(.caption)
             .foregroundStyle(.secondary)

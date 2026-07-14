@@ -1,12 +1,9 @@
 import DonpaCore
 import SwiftUI
 
-/// The scanner-only sheet behind the Mess hall's "Add rival" — `ScanContent` under
-/// its own chrome. Scan-only by design: showing YOUR code lives on the Mess hall's
-/// inline share card, so this sheet has one job and no mode toggle.
+/// Scan-only by design: showing your own code lives on the Mess hall's inline
+/// share card, so this sheet has no mode toggle.
 struct AddFriendSheet: View {
-    /// A decoded rival URL; the host closes everything and routes it through the
-    /// same receive path as a tapped link.
     let onFound: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
 
