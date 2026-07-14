@@ -84,6 +84,10 @@ entries land under Unreleased as they merge.
   mouse clicks — like a text field, it appears only once the keyboard is
   actually used.
 
+- **A well-timed review ask.** Setting a new best time may now — at most
+  once per app version, and only once you're ten wins in — bring up the
+  standard App Store review prompt. Never after a loss, never over the
+  celebration, and the system caps it a few times a year at most.
 ### build 23 — 2026-07-12
 
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the

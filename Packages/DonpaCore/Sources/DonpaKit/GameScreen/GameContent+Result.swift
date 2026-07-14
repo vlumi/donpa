@@ -161,6 +161,14 @@ extension GameContent {
         panelPace = threeBV.map {
             RecentWin(date: Date(), centiseconds: centiseconds, threeBV: $0).pace
         }
+        let totalWins = scoreboard.displayRecords.values.reduce(0) { $0 + $1.wins.total }
+        if ReviewPrompt.shouldAsk(
+            newBest: isRecord, totalWins: totalWins,
+            promptedVersion: settings.reviewPromptedVersion,
+            version: ReviewPrompt.currentVersion)
+        {
+            pendingReviewAsk = true
+        }
         if isRecord {
             // Delta of the DISPLAYED (tenth-truncated) bests — a raw delta could
             // read "improved by 0.0s". nil = record stands but the shown value
@@ -192,6 +200,10 @@ extension GameContent {
         if pendingGCAsk {
             pendingGCAsk = false
             showGCAsk = true
+        } else if pendingReviewAsk {
+            pendingReviewAsk = false
+            settings.reviewPromptedVersion = ReviewPrompt.currentVersion
+            requestReview()
         }
     }
 

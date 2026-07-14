@@ -35,9 +35,6 @@ gates.
 The release's substance shipped (see CHANGELOG); remaining before the final
 cut:
 
-- [ ] **Review prompt** (`SKStoreReviewController`) — ask after a new best
-      time, never after a loss. Small, and it matters for a small app's store
-      trajectory.
 - [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
       Drills" from Spotlight and Siri. ONLY if it stays ~a day of work; drop
       without guilt otherwise (expected usage is honestly rare — the case is
