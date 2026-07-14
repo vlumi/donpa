@@ -1,20 +1,17 @@
 import Foundation
 
-/// The "full clear" meta-score: the summed best times across a GROUP of configs —
-/// a size's densities, or Basic's three presets. Comparable only when every config
-/// in the group has a winning time (a sum with holes would reward playing less),
-/// so `sumCentiseconds` stays nil until the group is fully cleared. Grouping by
-/// size keeps the terms comparable — summing across sizes would make XXXL dwarf
-/// everything else into a rounding error.
+/// Summed best times across a group of configs (a size's densities, or Basic's
+/// presets). `sumCentiseconds` stays nil until every config in the group is won —
+/// a sum with holes would reward playing less. Grouped by size so the terms stay
+/// comparable (XXXL would dwarf everything summed across sizes).
 public enum FullClear {
     public struct Standing: Equatable, Sendable {
         public let cleared: Int
         public let total: Int
-        /// The full-clear sum, present only once EVERY config in the group is won.
         public let sumCentiseconds: Int?
     }
 
-    /// One group's standing from its configs' best times (nil = not won yet).
+    /// `bests`: one entry per config in the group, nil = not won yet.
     public static func standing(bests: [Int?]) -> Standing {
         let cleared = bests.compactMap { $0 }
         let complete = !bests.isEmpty && cleared.count == bests.count

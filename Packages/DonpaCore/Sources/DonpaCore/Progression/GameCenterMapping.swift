@@ -1,17 +1,14 @@
 import Foundation
 
-/// The tier-flattening bridge to Game Center: the 20 internal achievement
-/// IDs become 26 ASC definitions — one per one-shot, one per tier step of
-/// the volume ladders. The wire IDs are what the ASC records register under,
-/// so they are LOCKED once the store release goes live; everything else
-/// (thresholds shown, copy, images) stays tunable on the ASC side.
+/// Flattens the internal achievement IDs to ASC definitions: one per one-shot,
+/// one per tier step. Wire IDs are LOCKED once the store release goes live;
+/// thresholds shown, copy, and images stay tunable on the ASC side.
 public enum GameCenterMapping {
     /// The ASC achievement-ID prefix (the app's bundle-ID namespace).
     public static let prefix = "fi.misaki.donpa."
 
-    /// The wire ID for a one-shot (`tier` nil) or one tier step of a tiered
-    /// feat — the step is named by its THRESHOLD ("miles.wins.100"), not its
-    /// index, so the ID stays self-describing in ASC.
+    /// Tier steps are named by THRESHOLD ("miles.wins.100"), not index, so the
+    /// ID stays self-describing in ASC.
     public static func wireID(_ id: AchievementID, tier: Int? = nil) -> String {
         guard let tier, let thresholds = id.tierThresholds,
             thresholds.indices.contains(tier - 1)
@@ -19,8 +16,6 @@ public enum GameCenterMapping {
         return prefix + id.rawValue + ".\(thresholds[tier - 1])"
     }
 
-    /// Every ASC definition's wire ID, in registration order (one-shots in
-    /// declaration order, each ladder's steps ascending).
     public static var allWireIDs: [String] {
         AchievementID.allCases.flatMap { id -> [String] in
             guard let thresholds = id.tierThresholds else { return [wireID(id)] }
@@ -28,7 +23,6 @@ public enum GameCenterMapping {
         }
     }
 
-    /// One achievement's report line: a wire ID and its percentComplete.
     public struct Report: Equatable, Sendable {
         public let wireID: String
         public let percent: Double
@@ -39,12 +33,10 @@ public enum GameCenterMapping {
         }
     }
 
-    /// The FULL snapshot to report: earned one-shots and earned tier steps
-    /// at 100; the next unearned tier at its live progress ("470/1000 wins =
-    /// 47 %"). Zero-progress lines are omitted — Game Center treats
-    /// unreported as 0, and reporting nothing keeps first-launch traffic nil.
-    /// Reporting the full snapshot is idempotent: GC ignores reports that
-    /// don't increase percentComplete, so retroactive opt-in just works.
+    /// Earned lines at 100, the next unearned tier at its live progress;
+    /// zero-progress lines omitted (GC treats unreported as 0). Idempotent: GC
+    /// ignores reports that don't increase percentComplete, so retroactive
+    /// opt-in just works.
     public static func snapshot(
         earned: [AchievementID: Int], records: [String: ScoreRecord]
     ) -> [Report] {

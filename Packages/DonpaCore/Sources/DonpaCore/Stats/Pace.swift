@@ -1,8 +1,6 @@
 import Foundation
 
-/// One logged win for the pace window: when, how long, and the board's 3BV.
-/// The rolling per-config log of these is the raw material for pace displays
-/// and the (later) skill rank — collected at the finest grain so every
+/// One logged win for the pace window — collected at the finest grain so every
 /// grouping decision stays reversible.
 public struct RecentWin: Equatable, Hashable, Sendable, Codable {
     public let date: Date
@@ -16,22 +14,19 @@ public struct RecentWin: Equatable, Hashable, Sendable, Codable {
         self.threeBV = threeBV
     }
 
-    /// Pace in 3BV per second — the luck-normalized sweep rate: a lucky
-    /// low-3BV board gives a fast TIME but a normal PACE. A clock that
-    /// truncated to 0 (a single-tap instant clear) clamps to one centisecond —
-    /// "faster than measurable", never a zero that would read as the slowest.
+    /// 3BV per second — the luck-normalized sweep rate: a lucky low-3BV board
+    /// gives a fast TIME but a normal PACE. A clock truncated to 0 clamps to one
+    /// centisecond ("faster than measurable"), never a zero that reads slowest.
     public var pace: Double {
         Double(threeBV) * 100 / Double(max(centiseconds, 1))
     }
 }
 
 public enum Pace {
-    /// 3BV: a board's minimum number of taps — one per OPENING (a connected
-    /// region of zero-adjacency cells opens, with its numbered border, from a
-    /// single tap) plus one per safe numbered cell not adjacent to any zero.
-    /// Uses the board's own adjacency, so it's equally defined on square,
-    /// hex, and wrapped boards. One linear pass; a dense visited buffer keeps
-    /// even a million-cell board cheap.
+    /// 3BV: a board's minimum number of taps — one per OPENING (a connected zero
+    /// region plus its numbered border) plus one per safe numbered cell not
+    /// adjacent to any zero. Uses the board's own adjacency, so it's equally
+    /// defined on square, hex, and wrapped boards.
     public static func threeBV(of board: Board) -> Int {
         let topology = board.topology
         var visited = [Bool](repeating: false, count: topology.width * topology.height)
@@ -42,8 +37,6 @@ public enum Pace {
             guard let i = idx(c), !visited[i] else { continue }
             let cell = board[c]
             guard !cell.isMine, cell.adjacentMines == 0 else { continue }
-            // One tap opens this whole zero region; its numbered border
-            // comes along for free.
             taps += 1
             visited[i] = true
             var stack = [c]
@@ -64,9 +57,8 @@ public enum Pace {
         return taps
     }
 
-    /// The median pace over a window of wins, each entry WEIGHTED BY ITS 3BV —
-    /// a big board is more evidence than an XS one, so quantization noise
-    /// washes out instead of being excluded. Nil for an empty window.
+    /// Median pace, each win WEIGHTED BY ITS 3BV — a big board is more evidence
+    /// than an XS one. Nil for an empty window.
     public static func medianPace(of wins: [RecentWin]) -> Double? {
         guard !wins.isEmpty else { return nil }
         let sorted = wins.sorted { $0.pace < $1.pace }

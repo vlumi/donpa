@@ -1,18 +1,11 @@
 import Foundation
 
-/// Progressive gating: which parts of the New Game matrix a player has opened.
-/// A pure predicate over the merged score records — no stored unlock set, no
-/// event feed, no migration: veterans auto-pass because their records already
-/// hold the wins, and sync is free because the records already sync. (See
-/// DECISIONS.md "Progression" for the design; gates are ACCESS, not goals.)
-///
-/// Win credit: any won config credits its SIZE (Basic maps
-/// Beginner/Intermediate/Expert → XS/S/M; Drills counts — the practice range
-/// training you up is the point), its RANK when it has one and the board is
-/// ≥ S, the Hive gate when it's a square family, and the Round gate when it's
-/// ≥ M. Ladders are monotone on "or above": a win that arrives from higher up
-/// (a rival's board via head-to-head, a share link) opens every rung at or
-/// below it, so escape-hatch play can never wedge the ladder.
+/// Progressive gating: which parts of the New Game matrix are open. A pure
+/// predicate over the merged score records — no stored unlock set, no
+/// migration: veterans auto-pass, and sync is free because records already
+/// sync. Ladders are monotone on "or above": a win arriving from higher up (a
+/// rival's board, a share link) opens every rung at or below it, so
+/// escape-hatch play can never wedge the ladder. See DECISIONS.md "Progression".
 public enum UnlockEngine {
     /// What a locked option needs — the teaser's copy source.
     public enum Requirement: Equatable, Sendable {
@@ -28,7 +21,7 @@ public enum UnlockEngine {
 
     // MARK: Axis predicates
 
-    /// XS/S/M are open; each later rung opens on a credited win at (or above)
+    /// XS/S/M are open; each later rung opens on a credited win at or above
     /// the rung below it.
     public static func sizeUnlocked(_ size: BoardSize, records: [String: ScoreRecord]) -> Bool {
         guard let gate = sizeGate(size) else { return true }
@@ -36,25 +29,25 @@ public enum UnlockEngine {
     }
 
     /// Trainee/Sapper are open; each denser rank opens on a credited (≥ S) win
-    /// at (or above) the rank below it.
+    /// at or above the rank below it.
     public static func rankUnlocked(_ rank: Density, records: [String: ScoreRecord]) -> Bool {
         guard let gate = rankGate(rank) else { return true }
         return credit(records).ranks.contains { $0 >= gate.index }
     }
 
-    /// Only Hive gates: it opens on the first credited square-family win.
+    /// Only Hive gates: opens on the first credited square-family win.
     public static func familyUnlocked(_ family: BoardFamily, records: [String: ScoreRecord])
         -> Bool
     {
         family != .hive || credit(records).wonSquare
     }
 
-    /// Only Round gates: it opens on the first credited win at ≥ M.
+    /// Only Round gates: opens on the first credited win at ≥ M.
     public static func edgesUnlocked(_ edges: BoardEdges, records: [String: ScoreRecord]) -> Bool {
         edges != .round || credit(records).wonAtLeastM
     }
 
-    /// The whole config: every axis it actually has must be open.
+    /// Every axis the config actually has must be open.
     public static func unlocked(_ config: GameConfig, records: [String: ScoreRecord]) -> Bool {
         familyUnlocked(config.family, records: records)
             && edgesUnlocked(config.edges, records: records)
@@ -64,22 +57,20 @@ public enum UnlockEngine {
 
     // MARK: Requirements (teaser copy)
 
-    /// What opens this size — nil for the always-open starting rungs.
+    /// nil for the always-open starting rungs.
     public static func requirement(size: BoardSize) -> Requirement? {
         sizeGate(size).map { .winSize($0.rung) }
     }
 
-    /// What opens this rank — nil for the always-open starting rungs.
+    /// nil for the always-open starting rungs.
     public static func requirement(rank: Density) -> Requirement? {
         rankGate(rank).map { .winRank($0.rung) }
     }
 
-    /// What opens this family — nil unless it's the Hive.
     public static func requirement(family: BoardFamily) -> Requirement? {
         family == .hive ? .winAnySquare : nil
     }
 
-    /// What opens these edges — nil unless they're Round.
     public static func requirement(edges: BoardEdges) -> Requirement? {
         edges == .round ? .winAtLeastM : nil
     }
@@ -94,7 +85,6 @@ public enum UnlockEngine {
         var wonAtLeastM = false
     }
 
-    /// One pass over the config universe: collect what every won board credits.
     private static func credit(_ records: [String: ScoreRecord]) -> Credit {
         var credit = Credit()
         for config in universe where (records[config.storageKey]?.wins.total ?? 0) > 0 {
@@ -112,9 +102,8 @@ public enum UnlockEngine {
         return credit
     }
 
-    /// The size a win credits: the config's own, or the Basic preset mapping
-    /// (declared, geometry-spirited: Beginner = XS, Intermediate = S — exact
-    /// geometry — Expert = M).
+    /// The config's own size, or the Basic preset mapping (Beginner = XS,
+    /// Intermediate = S, Expert = M).
     private static func creditedSize(of config: GameConfig) -> BoardSize? {
         if case .basic(let preset) = config {
             switch preset {
@@ -126,8 +115,8 @@ public enum UnlockEngine {
         return config.size
     }
 
-    /// Every config a record key could describe (the same sweep head-to-head
-    /// uses): all families × both edges, deduped by key.
+    /// Every config a record key could describe: all families × both edges,
+    /// deduped by key.
     private static let universe: [GameConfig] = {
         var seen = Set<String>()
         return BoardFamily.allCases.flatMap { family in
@@ -139,7 +128,7 @@ public enum UnlockEngine {
 
     // MARK: The ladders
 
-    /// The rung a locked size needs a win at (or above): the size below it.
+    /// The rung a locked size needs a win at or above: the size below it.
     /// XS/S/M are open (nil).
     private static func sizeGate(_ size: BoardSize) -> (rung: BoardSize, index: Int)? {
         let all = BoardSize.allCases
@@ -147,7 +136,7 @@ public enum UnlockEngine {
         return (all[i - 1], i - 1)
     }
 
-    /// The rung a locked rank needs a (≥ S) win at (or above): the rank below.
+    /// The rung a locked rank needs a (≥ S) win at or above: the rank below.
     /// Trainee/Sapper are open (nil).
     private static func rankGate(_ rank: Density) -> (rung: Density, index: Int)? {
         let all = Density.allCases

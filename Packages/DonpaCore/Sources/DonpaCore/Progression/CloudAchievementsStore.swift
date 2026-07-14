@@ -1,18 +1,14 @@
 import Foundation
 
-/// The iCloud transport for the earned-achievement set — same per-device-blob
-/// scheme as the scoreboard and friends stacks, own key namespace. Union-only
-/// data (achievements never delete), so the merge needs no tombstones and no
-/// reset-epoch: feats are PERMANENT by decision (the stats wipe must not touch
-/// them — hidden feats can't be re-derived and Game Center can't un-report).
+/// iCloud transport for earned achievements — the same per-device-blob scheme
+/// as the stats stack. Union-only data: no tombstones and deliberately no
+/// reset-epoch (feats are permanent; the stats wipe must not touch them).
 public protocol CloudAchievementsStore: AnyObject {
-    /// Whether iCloud is available; when false, reads/writes are no-ops.
+    /// When false, reads/writes are no-ops.
     var isAvailable: Bool { get }
 
-    /// Write this device's encoded earned blob to its own slot.
     func writeOwnBlob(_ data: Data, deviceID: String)
 
-    /// Remove this device's own slot (on sync-off) so it stops contributing.
     /// Other slots — and the local store — are untouched.
     func deleteOwnBlob(deviceID: String)
 
@@ -22,13 +18,11 @@ public protocol CloudAchievementsStore: AnyObject {
     /// Hint the store to push/pull now (best-effort).
     func synchronize()
 
-    /// Called on external cloud change, so the host re-merges and refreshes.
     var onExternalChange: (() -> Void)? { get set }
 }
 
-/// `NSUbiquitousKeyValueStore`-backed achievements store. Per-device blobs live
-/// under keys prefixed `donpa.ach.blob.` — a separate namespace from the
-/// scoreboard's and friends' blobs, on the same KVS.
+/// `NSUbiquitousKeyValueStore`-backed. `donpa.ach.blob.` is a separate namespace
+/// from the scoreboard's and friends' blobs on the same KVS.
 @MainActor
 public final class UbiquitousAchievementsStore: CloudAchievementsStore {
     private static let blobPrefix = "donpa.ach.blob."
