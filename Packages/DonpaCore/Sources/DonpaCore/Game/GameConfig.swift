@@ -1,38 +1,22 @@
 /// A fully-specified, playable board configuration — the single source of
 /// dimensions, mine count, topology, display label, and the stable persistence
 /// key used by the scoreboard.
-///
-/// Three **board families** — the one vocabulary the New Game pages, storage
-/// keys, scoreboard filters, and gating all speak:
-/// - **Basic**: the three original presets (Beginner / Intermediate / Expert).
-/// - **Grid**: square cells (8 neighbours), `Size × Density`, Flat or Round edges.
-/// - **Hive**: hex cells (6 neighbours), same axes, denser per tier (see `Density`).
-///
-/// **Edges** are Flat (a map you can fall off) or Round (the world curves back —
-/// a torus that scrolls forever). Every axis is encoded explicitly in the storage
-/// key, which also carries concrete geometry (`WxH|mN`) — so re-tuning a tier
-/// produces a new key (new scoreboard entry) rather than re-pointing old scores.
 
 import Foundation
 
-/// Board width/height/mine-count, computed from a `GameConfig`.
 public struct BoardDimensions: Equatable, Sendable {
     public let width: Int
     public let height: Int
     public let mines: Int
 }
 
-/// The top-level board family — one page each in the New Game picker, and the
-/// first axis of every storage key.
 public enum BoardFamily: String, CaseIterable, Sendable, Codable, Identifiable {
     case basic, grid, hive
-    /// Drills (FI Soha, JA 演習): guaranteed no-guess practice
-    /// boards at 12%, XS–XL — see `PracticeBoard`.
+    /// Drills: guaranteed no-guess practice boards — see `PracticeBoard`.
     case practice
 
-    /// Explicit order = every family-enumerating surface's order (New Game
-    /// pager, scoreboard filters, head-to-head, breakdowns): Drills sits
-    /// leftmost as the warm-up before the real families.
+    /// Explicit order — the display order of every family-enumerating surface;
+    /// Drills sits leftmost as the warm-up.
     public static var allCases: [BoardFamily] { [.practice, .basic, .grid, .hive] }
 
     public var id: String { rawValue }
@@ -66,7 +50,6 @@ public enum BasicPreset: String, CaseIterable, Sendable, Codable {
         }
     }
 
-    /// Board dimensions and mine count, shown under the picker carousel.
     public var detail: String {
         let d = dimensions
         return String(
@@ -74,7 +57,6 @@ public enum BasicPreset: String, CaseIterable, Sendable, Codable {
             comment: "Basic preset detail: WIDTH×HEIGHT · N mines")
     }
 
-    /// A short, playful tagline shown under the picker carousel.
     public var tagline: String {
         switch self {
         case .beginner: return String(localized: "Boots on, recruit", bundle: .module)
@@ -84,11 +66,9 @@ public enum BasicPreset: String, CaseIterable, Sendable, Codable {
     }
 }
 
-/// Grid/Hive board sizes, shirt-sized XS…XXXL. Side lengths are powers of two
-/// (8…256, then 1024), so every board is even-sided — the property a hex torus
-/// needs for consistent wrap-around (odd height breaks hex adjacency symmetry). The
-/// top rung jumps ×4 to 1024² (~1M cells): the effectively-unwinnable stress case
-/// for viewport culling. XS–XXL are the playable tiers.
+/// Grid/Hive board sizes. Side lengths are powers of two, so every board is
+/// even-sided — required for consistent hex wrap-around. XS–XXL are the
+/// playable tiers; XXXL (1024², ~1M cells) is the viewport-culling stress case.
 public enum BoardSize: String, CaseIterable, Sendable, Codable {
     case xs, s, m, l, xl, xxl, xxxl
 
@@ -116,14 +96,12 @@ public enum BoardSize: String, CaseIterable, Sendable, Codable {
         }
     }
 
-    /// Board dimensions, shown under the picker carousel.
     public var detail: String {
         String(
             localized: "\(side)×\(side)", bundle: .module,
             comment: "Board size detail: SIDE×SIDE")
     }
 
-    /// A short, playful tagline shown under the picker carousel.
     public var tagline: String {
         switch self {
         case .xs: return String(localized: "Over before your coffee", bundle: .module)
@@ -137,25 +115,14 @@ public enum BoardSize: String, CaseIterable, Sendable, Codable {
     }
 }
 
-/// Grid/Hive difficulty = mine density (fraction of cells). Even 2-point steps,
-/// from fair (easy) to near-unsolvable-by-logic (insane), chosen via solver
-/// analysis on the power-of-two size ladder: bigger boards saturate to ~100%
-/// forced-guess sooner, so the (original) top tier stays modest to keep the
-/// tiers distinct on the boards people actually play. **Lunatic (20%, classic
-/// Expert's density) sits deliberately past that line**: essentially every game
-/// demands forced gambles (XS 90% / S 98% solver guess-rate vs Legend's
-/// 81%/91%) — the tier where the luck tracking is the game's texture.
-///
-/// **Hive runs +2 points denser than Grid** (12/14/16/18/20% vs 10/12/14/16/18%):
-/// a hex cell has 6 neighbours vs 8, so the same mine% cascades more and plays
-/// noticeably easier (the small/sparse boards were near one-tap). The bump matches
-/// hex difficulty back to square roughly tier-for-tier. See the TierAnalysis dev
-/// tool, which measures both topologies.
+/// Grid/Hive difficulty = mine density (fraction of cells), tuned via solver
+/// analysis (see the TierAnalysis dev tool). Lunatic (20%) deliberately sits
+/// past the point where essentially every game demands forced gambles. Hive
+/// runs +2 points denser than Grid: hex cells have 6 neighbours instead of 8,
+/// so the same fraction cascades more and plays noticeably easier.
 public enum Density: String, CaseIterable, Sendable, Codable {
     case easy, normal, hard, brutal, insane, lunatic
 
-    /// Mine fraction for a given family. Grid is the base ladder; Hive adds two
-    /// points per tier to offset its gentler 6-neighbour cascades.
     func fraction(hex: Bool) -> Double {
         base + (hex ? 0.02 : 0)
     }
@@ -171,8 +138,7 @@ public enum Density: String, CaseIterable, Sendable, Codable {
         }
     }
 
-    /// Sapper-themed skill tiers (ascending). Display-only — the `rawValue`
-    /// (easy/normal/…) is unchanged, so scoreboard keys are unaffected.
+    /// Display-only — scoreboard keys use the unchanged `rawValue`.
     public var label: String {
         switch self {
         case .easy: return String(localized: "Trainee", bundle: .module)
@@ -184,15 +150,12 @@ public enum Density: String, CaseIterable, Sendable, Codable {
         }
     }
 
-    /// Mine density as a whole percent for the family being picked, shown under
-    /// the picker carousel — a Hive tier honestly shows its denser number.
     public func detail(hex: Bool) -> String {
         String(
             localized: "\(Int((fraction(hex: hex) * 100).rounded()))% mines", bundle: .module,
             comment: "Difficulty detail: N% mines")
     }
 
-    /// A short, playful tagline shown under the picker carousel.
     public var tagline: String {
         switch self {
         case .easy: return String(localized: "Easy does it", bundle: .module)
@@ -204,8 +167,7 @@ public enum Density: String, CaseIterable, Sendable, Codable {
         }
     }
 
-    /// Ascending rank insignia, shown language-free in the compact difficulty
-    /// picker; `label` stays the accessibility name.
+    /// Language-free rank marks; `label` stays the accessibility name.
     public enum Insignia: Sendable {
         case chevrons(Int)  // N stacked stripes
         case star  // single officer star
@@ -224,17 +186,14 @@ public enum Density: String, CaseIterable, Sendable, Codable {
     }
 }
 
-/// The board's edge behaviour. **Flat** is a map with edges you can fall off;
-/// **Round** is a world that curves back on itself (a torus — pan off one side
-/// and the other flows in). Basic boards are always Flat.
+/// **Flat**: bounded edges. **Round**: the board wraps into a torus. Basic
+/// boards are always Flat.
 public enum BoardEdges: String, Sendable, Codable, CaseIterable, Identifiable {
     case flat
-    /// Edges wrap (torus) — `Wrapped{Square,Hex}Topology`. Grid/Hive only.
     case round
 
     public var id: String { rawValue }
 
-    /// Whether the board wraps into a torus — the mechanic behind the name.
     public var wraps: Bool { self == .round }
 
     public var label: String {
@@ -249,11 +208,9 @@ public enum GameConfig: Hashable, Sendable {
     case basic(BasicPreset)
     case grid(BoardSize, Density, BoardEdges)
     case hive(BoardSize, Density, BoardEdges)
-    /// Drills: a square no-guess board (see `PracticeBoard`) — size is the
-    /// only axis; density is fixed at `PracticeBoard.mineFraction`, edges Flat.
+    /// Drills: density fixed at `PracticeBoard.mineFraction`, edges always Flat.
     case practice(BoardSize)
 
-    /// The board family — the page this config lives on.
     public var family: BoardFamily {
         switch self {
         case .basic: return .basic
@@ -263,7 +220,6 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// Flat for Basic and Drills; the chosen edges for Grid/Hive.
     public var edges: BoardEdges {
         switch self {
         case .basic, .practice: return .flat
@@ -271,10 +227,8 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// Hexagonal cells (the Hive family)?
     public var isHex: Bool { family == .hive }
 
-    /// The board size, or nil for a Basic config.
     public var size: BoardSize? {
         switch self {
         case .basic: return nil
@@ -283,7 +237,6 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// The Grid/Hive difficulty tier, or nil for Basic and Drills.
     public var density: Density? {
         switch self {
         case .basic, .practice: return nil
@@ -291,13 +244,10 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// Drills' size ladder: XS–XL. The huge boards stay out — their
-    /// endgames defeat the no-guess generator, and the mode's audience doesn't
-    /// need a million cells to learn or speedrun on.
+    /// XS–XL only: the huge boards' endgames defeat the no-guess generator.
     public static let practiceSizes: [BoardSize] = [.xs, .s, .m, .l, .xl]
 
-    /// Build a Grid/Hive config from its axes; nil for `.basic` (presets carry no
-    /// axes — construct those with `.basic(preset)` directly).
+    /// nil for families that don't carry the size/density/edges axes.
     public static func custom(
         _ family: BoardFamily, _ size: BoardSize, _ density: Density, _ edges: BoardEdges
     ) -> GameConfig? {
@@ -327,10 +277,8 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// The board geometry to play on, the full family × edges matrix (all
-    /// `RectangularTopology`, which `Board` requires for flat storage). Every
-    /// Grid/Hive size is even-sided (powers of two), so the wrapped-hex torus is
-    /// always valid.
+    /// All cases are `RectangularTopology` (`Board` requires flat storage).
+    /// Grid/Hive sides are even, so the wrapped-hex torus is always valid.
     public var topology: any RectangularTopology {
         switch (isHex, edges.wraps) {
         case (false, false): return BoundedSquareTopology(width: width, height: height)
@@ -340,15 +288,12 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// The pixel layout matching the family — the `CellLayout` the renderer
-    /// positions and hit-tests with. Pairs with `topology`; changes when a new game
-    /// switches family, so the scene reads it from the live config rather than
-    /// caching it.
+    /// Pairs with `topology`; family-dependent, so callers must not cache it
+    /// across games.
     public func layout(cellSize: CGFloat = 32) -> any CellLayout {
         isHex ? HexLayout(cellSize: cellSize) : SquareLayout(cellSize: cellSize)
     }
 
-    /// Human-facing label; Grid/Hive configs read as "Size · Density".
     public var label: String {
         switch self {
         case .basic(let preset):
@@ -360,9 +305,8 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// Context-free label naming every distinguishing axis, for lists that mix
-    /// families and edges in one flat table (head-to-head) where `label` alone
-    /// is ambiguous. Flat is the unmarked default; Round is called out.
+    /// Names every distinguishing axis, for flat lists that mix families and
+    /// edges where `label` alone is ambiguous. Flat is the unmarked default.
     public var fullLabel: String {
         switch self {
         case .basic(let preset):
@@ -375,10 +319,9 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// Stable, versioned, geometry-bearing persistence key. Encodes every axis
-    /// explicitly so keys never become ambiguous. `v2` = the family vocabulary
-    /// (v1 spoke classic/modern + a shape axis; v1 keys are orphaned by the 0.3.0
-    /// score reset, not migrated).
+    /// Stable, versioned persistence key, encoding every axis plus concrete
+    /// geometry — re-tuning a tier mints a new key (new scoreboard entry)
+    /// rather than re-pointing old scores.
     ///
     ///   basic:    v2|basic|beginner
     ///   grid:     v2|grid|flat|16x16|m31
@@ -396,10 +339,7 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    /// The configs a family offers, in display order. Basic ignores `edges` (its
-    /// presets are always Flat); Grid/Hive enumerate size × density at the given
-    /// edges — the scoreboard's Family + Edges filters narrow to exactly one such
-    /// list.
+    /// A family's configs in display order; Basic ignores `edges`.
     public static func configs(family: BoardFamily, edges: BoardEdges = .flat) -> [GameConfig] {
         switch family {
         case .basic:
@@ -413,7 +353,6 @@ public enum GameConfig: Hashable, Sendable {
         }
     }
 
-    // Convenience shortcuts for the basic presets.
     public static let beginner = GameConfig.basic(.beginner)
     public static let intermediate = GameConfig.basic(.intermediate)
     public static let expert = GameConfig.basic(.expert)

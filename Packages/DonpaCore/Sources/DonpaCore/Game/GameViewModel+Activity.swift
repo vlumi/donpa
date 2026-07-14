@@ -1,11 +1,8 @@
 import Foundation
 
-/// Activity flushing: pushing the unflushed tiles/flags/time DELTA to the lifetime
-/// totals so they accrue without a per-tile write storm. Split from `GameViewModel`
-/// for the file-length budget (see also +Timer / +Snapshot / +Guess).
 extension GameViewModel {
-    /// Flush this game's activity delta via `onActivityFlush`. Idempotent — a flush
-    /// with nothing new to report does nothing.
+    /// Push the unflushed tiles/flags/time delta to the lifetime totals via
+    /// `onActivityFlush`; a flush with nothing new to report does nothing.
     public func flushActivity() {
         let tiles = game.revealedSafeCount
         let flags = flagsPlacedThisGame

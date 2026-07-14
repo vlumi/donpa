@@ -1,11 +1,9 @@
 import Foundation
 
-/// The camera view to restore with a saved game, stored window-independently so
-/// it restores sensibly on another window size or device:
-/// - `centerX` / `centerY` are the camera centre as a normalized board point
-///   (0…1), re-clamped to the new viewport by the renderer.
-/// - `scale` is world-units-per-point (bigger = more zoomed out), a window-size-
-///   independent ratio, so it restores as-is.
+/// The camera view saved with a game, stored window-independently so it
+/// restores on another window size or device: `centerX`/`centerY` are the
+/// centre as a normalized board point (0…1); `scale` is world-units-per-point
+/// (bigger = more zoomed out).
 public struct CameraView: Codable, Sendable, Equatable {
     public let centerX: Double
     public let centerY: Double
@@ -18,16 +16,11 @@ public struct CameraView: Codable, Sendable, Equatable {
     }
 }
 
-/// A compact, `Codable` capture of an in-progress game. Stores the *config*
-/// (carrying topology kind + params, so `any Topology` is never encoded) plus the
-/// mine layout and revealed/flagged cells as coordinate sets — far smaller than
-/// the full cell dictionary on huge boards.
-///
-/// Format is **additive**: new fields are optional-with-default, so an older save
-/// still restores (`SaveStore.load` accepts `version <= currentVersion`). Only
-/// `config` and `mines` are required; without them decode throws and the save is
-/// discarded. Bump `currentVersion` only for a *breaking* change, so older apps
-/// then refuse a newer save rather than mis-read it.
+/// A compact, `Codable` capture of an in-progress game. The format is
+/// **additive**: new fields are optional-with-default so older saves still
+/// restore; only `config` and `mines` are required. Bump `currentVersion` only
+/// for a *breaking* change — older apps then refuse the newer save rather than
+/// mis-read it.
 public struct GameSnapshot: Codable, Sendable {
     public static let currentVersion = 1
 
@@ -36,26 +29,16 @@ public struct GameSnapshot: Codable, Sendable {
     public let mines: Set<Coord>
     public let revealed: Set<Coord>
     public let flagged: Set<Coord>
-    /// "?" marks (opt-in question-mark cycle); additive, so older saves decode to
-    /// empty and older apps simply ignore the field.
     public let questioned: Set<Coord>
     public let status: GameStatus
     public let revealedSafeCount: Int
     public let lossCoord: Coord?
-    /// Banked play time; the live span is always folded in before saving.
     public let elapsedCentiseconds: Int
-    /// The camera view to restore, or nil if none was captured (older saves, or a
-    /// board that fits the viewport).
     public let camera: CameraView?
-    /// The dig/flag input mode the player left on, so a resumed game keeps it
-    /// (defaults to `.reveal` for older saves).
     public let inputMode: InputMode
-    /// When this save was last written — the last-played stamp. Sorts the in-progress
-    /// list and picks the auto-resume game. Old saves (pre per-config) decode to
-    /// `distantPast`, so they sort last if one ever lingers.
+    /// The last-played stamp: sorts the in-progress list, picks auto-resume.
     public let updatedAt: Date
 
-    /// Tolerant decode: `config` + `mines` required; everything else defaults.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         version = try c.decodeIfPresent(Int.self, forKey: .version) ?? Self.currentVersion
@@ -74,7 +57,7 @@ public struct GameSnapshot: Codable, Sendable {
         updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .distantPast
     }
 
-    /// Capture a snapshot of a live game; nil unless it's genuinely in progress.
+    /// nil unless the game is genuinely in progress.
     public init?(
         game: Game, config: GameConfig, elapsedCentiseconds: Int, camera: CameraView? = nil,
         inputMode: InputMode = .reveal, updatedAt: Date = Date()
@@ -95,8 +78,8 @@ public struct GameSnapshot: Codable, Sendable {
         self.updatedAt = updatedAt
     }
 
-    /// Build from captured inputs — used to construct the snapshot OFF the main
-    /// actor (the board scan is heavy on a huge board). `SnapshotInputs` is Sendable.
+    /// Builds from captured inputs so the heavy board scan can run off the
+    /// main actor.
     public init?(inputs: GameViewModel.SnapshotInputs) {
         self.init(
             game: inputs.game, config: inputs.config,
@@ -104,17 +87,13 @@ public struct GameSnapshot: Codable, Sendable {
             inputMode: inputs.inputMode)
     }
 
-    /// Rebuild the `Game` this snapshot describes (topology from the config).
     public func makeGame() -> Game {
         Game.restored(from: self)
     }
 
-    /// Whether this snapshot still matches what its `config` MEANS in this build.
-    /// The config is stored symbolically (size/density tiers), so a between-builds
-    /// retune changes its dimensions or mine count out from under an old save —
-    /// restoring one would drop out-of-bounds coords and skew win detection into a
-    /// mangled, unwinnable (or instantly-won) board. Loaders discard such saves and
-    /// start fresh instead.
+    /// Whether the snapshot still matches what its symbolic `config` means in
+    /// this build — a between-builds retune would otherwise restore a mangled,
+    /// unwinnable board. Loaders discard inconsistent saves.
     public var isConsistent: Bool {
         guard !mines.isEmpty, mines.count == config.mineCount else { return false }
         let width = config.width
@@ -127,9 +106,7 @@ public struct GameSnapshot: Codable, Sendable {
             && (lossCoord.map(inBounds) ?? true)
     }
 
-    /// Migration seam for a future *breaking* change: when `currentVersion` is
-    /// bumped, transform an older-`version` snapshot up to the current shape here.
-    /// Identity today.
+    /// Migration seam for a future `currentVersion` bump; identity today.
     public func migrated() -> GameSnapshot {
         self
     }

@@ -1,4 +1,3 @@
-/// A board configuration: dimensions plus mine count.
 public struct Difficulty: Hashable, Sendable {
     public let name: String
     public let width: Int
@@ -16,7 +15,6 @@ public struct Difficulty: Hashable, Sendable {
         self.mineCount = mineCount
     }
 
-    // Classic Minesweeper presets.
     public static let beginner = Difficulty(name: "Beginner", width: 9, height: 9, mineCount: 10)
     public static let intermediate = Difficulty(
         name: "Intermediate", width: 16, height: 16, mineCount: 40)
