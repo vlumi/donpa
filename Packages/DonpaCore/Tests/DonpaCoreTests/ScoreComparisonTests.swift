@@ -8,7 +8,7 @@ final class ScoreComparisonTests: XCTestCase {
     func testMixedLeaderboardInterleavesYouByTime() {
         let r = ScoreComparison.rank(
             yourName: "You", yourBest: 940,
-            rivals: [("Amy", 810), ("Bob", 1170)])
+            rivals: [.init(name: "Amy", best: 810), .init(name: "Bob", best: 1170)])
         // Fastest first: Amy 8.1, You 9.4, Bob 11.7 — you slotted in, not appended.
         XCTAssertEqual(r.entries.map(\.name), ["Amy", "You", "Bob"])
         XCTAssertEqual(r.yourRank, 2)
@@ -19,7 +19,7 @@ final class ScoreComparisonTests: XCTestCase {
     func testUnwonTimesSinkAndDontRank() {
         let r = ScoreComparison.rank(
             yourName: "You", yourBest: nil,
-            rivals: [("Amy", 810), ("Bob", nil)])
+            rivals: [.init(name: "Amy", best: 810), .init(name: "Bob", best: nil)])
         // Winners first (Amy), then the unwon in name order (Bob, You).
         XCTAssertEqual(r.entries.map(\.name), ["Amy", "Bob", "You"])
         XCTAssertNil(r.yourRank)  // you haven't won → no rank
@@ -28,7 +28,7 @@ final class ScoreComparisonTests: XCTestCase {
 
     func testTiesBreakByNameDeterministically() {
         let r = ScoreComparison.rank(
-            yourName: "You", yourBest: 500, rivals: [("Amy", 500)])
+            yourName: "You", yourBest: 500, rivals: [.init(name: "Amy", best: 500)])
         XCTAssertEqual(r.entries.map(\.name), ["Amy", "You"])  // equal time → name order
         XCTAssertEqual(r.yourRank, 2)
     }
@@ -36,7 +36,9 @@ final class ScoreComparisonTests: XCTestCase {
     func testYourEntryLocatableWhenOutsideTopFive() throws {
         // Six rivals all faster than you → you rank 7th; the UI shows top-5 then your
         // row below. Assert the data supports that: your rank + a findable entry.
-        let rivals = (1...6).map { (name: "R\($0)", best: 100 + $0 * 10) }
+        let rivals = (1...6).map {
+            ScoreComparison.RivalStanding(name: "R\($0)", best: 100 + $0 * 10)
+        }
         let r = ScoreComparison.rank(yourName: "You", yourBest: 1000, rivals: rivals)
         XCTAssertEqual(r.yourRank, 7)
         XCTAssertEqual(r.rankedCount, 7)

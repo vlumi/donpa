@@ -8,11 +8,14 @@ public enum ScoreComparison {
     public struct Entry: Equatable, Sendable {
         public let name: String
         public let best: Int?
+        /// Best pace (3BV/s), or nil where never logged (pre-pace cards).
+        public let bestPace: Double?
         public let isYou: Bool
 
-        public init(name: String, best: Int?, isYou: Bool) {
+        public init(name: String, best: Int?, bestPace: Double? = nil, isYou: Bool) {
             self.name = name
             self.best = best
+            self.bestPace = bestPace
             self.isYou = isYou
         }
     }
@@ -26,11 +29,29 @@ public enum ScoreComparison {
         public let rankedCount: Int
     }
 
+    /// One rival's shared figures on a board, as fed to `rank`.
+    public struct RivalStanding: Sendable {
+        public let name: String
+        public let best: Int?
+        public let bestPace: Double?
+
+        public init(name: String, best: Int?, bestPace: Double? = nil) {
+            self.name = name
+            self.best = best
+            self.bestPace = bestPace
+        }
+    }
+
     public static func rank(
-        yourName: String, yourBest: Int?, rivals: [(name: String, best: Int?)]
+        yourName: String, yourBest: Int?, yourBestPace: Double? = nil,
+        rivals: [RivalStanding]
     ) -> Ranking {
-        var entries = [Entry(name: yourName, best: yourBest, isYou: true)]
-        entries += rivals.map { Entry(name: $0.name, best: $0.best, isYou: false) }
+        var entries = [
+            Entry(name: yourName, best: yourBest, bestPace: yourBestPace, isYou: true)
+        ]
+        entries += rivals.map {
+            Entry(name: $0.name, best: $0.best, bestPace: $0.bestPace, isYou: false)
+        }
         entries.sort(by: fasterFirst)
 
         let ranked = entries.filter { $0.best != nil }
@@ -47,6 +68,9 @@ public enum ScoreComparison {
         public let configKey: String
         public let yourBest: Int?
         public let theirBest: Int?
+        /// Best paces (3BV/s), nil where never logged (pre-pace data).
+        public let yourBestPace: Double?
+        public let theirBestPace: Double?
         public let lead: Lead
         public let holderName: String?
         public let gap: Int?
@@ -62,6 +86,7 @@ public enum ScoreComparison {
     /// a board was WON — an absent key means unwon.
     public static func headToHead(
         configKeys: [String], yourBests: [String: Int], theirBests: [String: Int],
+        yourPaces: [String: Double] = [:], theirPaces: [String: Double] = [:],
         theirHolders: [String: String] = [:]
     ) -> HeadToHead {
         var rows: [HeadToHeadRow] = []
@@ -77,8 +102,9 @@ public enum ScoreComparison {
             let gap: Int? = (mine != nil && theirs != nil) ? mine! - theirs! : nil
             rows.append(
                 HeadToHeadRow(
-                    configKey: key, yourBest: mine, theirBest: theirs, lead: lead,
-                    holderName: theirHolders[key], gap: gap))
+                    configKey: key, yourBest: mine, theirBest: theirs,
+                    yourBestPace: yourPaces[key], theirBestPace: theirPaces[key],
+                    lead: lead, holderName: theirHolders[key], gap: gap))
         }
         return HeadToHead(rows: rows, youLead: youLead, theyLead: theyLead)
     }
@@ -97,6 +123,18 @@ public enum ScoreComparison {
             }
         }
         return (best, holder)
+    }
+
+    /// The group's best pace per board — max across members, independent of
+    /// who holds the best TIME (pace and time are separate records).
+    public static func groupBestPaces(_ members: [[String: Double]]) -> [String: Double] {
+        var best: [String: Double] = [:]
+        for paces in members {
+            for (key, pace) in paces where pace > (best[key] ?? 0) {
+                best[key] = pace
+            }
+        }
+        return best
     }
 
     /// Fastest first; missing times sort last; ties break by name for determinism.
