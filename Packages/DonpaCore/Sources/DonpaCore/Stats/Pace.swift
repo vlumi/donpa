@@ -59,6 +59,42 @@ public enum Pace {
 
     /// Median pace, each win WEIGHTED BY ITS 3BV — a big board is more evidence
     /// than an XS one. Nil for an empty window.
+    /// The one honest raw mid-level: family × edges × density, across sizes.
+    /// Lights ONLY when every gate size has a logged win (a demonstrated
+    /// claim, not a size-diet artifact); larger sizes feed the median when
+    /// logged but are never required — nothing REQUIRES the big boards.
+    /// One 3BV-weighted median over the UNION of windows, never a
+    /// median-of-medians. Basic is exempt (presets vary size and density
+    /// together); Drills has no density axis.
+    public static let gateSizes: [BoardSize] = [.xs, .s, .m, .l]
+
+    public static func ladderPace(
+        records: [String: ScoreRecord], family: BoardFamily, density: Density?,
+        edges: BoardEdges
+    ) -> Double? {
+        let configs: [GameConfig]
+        let gate: [GameConfig]
+        switch family {
+        case .basic:
+            return nil
+        case .practice:
+            configs = GameConfig.practiceSizes.map { .practice($0) }
+            gate = configs
+        case .grid, .hive:
+            guard let density else { return nil }
+            let make: (BoardSize) -> GameConfig =
+                family == .grid
+                ? { .grid($0, density, edges) } : { .hive($0, density, edges) }
+            configs = BoardSize.allCases.map(make)
+            gate = gateSizes.map(make)
+        }
+        let wins = { (config: GameConfig) -> [RecentWin] in
+            records[config.storageKey]?.recentWins ?? []
+        }
+        guard gate.allSatisfy({ !wins($0).isEmpty }) else { return nil }
+        return medianPace(of: configs.flatMap(wins))
+    }
+
     public static func medianPace(of wins: [RecentWin]) -> Double? {
         guard !wins.isEmpty else { return nil }
         let sorted = wins.sorted { $0.pace < $1.pace }

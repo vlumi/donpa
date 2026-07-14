@@ -22,6 +22,11 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Pace lines light up in your career.** The Tour of Duty now shows a pace
+  figure per board type and difficulty — earned by winning every size up to
+  L on that ladder (bigger boards count once you play them, but are never
+  required). One honest number per ladder, from your recent wins.
+
 - **Spotlight and Siri shortcuts.** "Continue my board" resumes your most
   recent game in progress and "Start drills" opens a fresh practice board —
   from Spotlight, Siri, or the Shortcuts app, no setup needed.

@@ -6534,6 +6534,23 @@
         }
       }
     },
+    "Win every size up to L on one board type to light its pace line." : {
+      "comment" : "Career pace-lines caption while none are lit",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voita jokainen koko L:ään asti yhdellä kenttätyypillä, niin sen tahtirivi syttyy."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同じ盤面タイプでLまでの全サイズをクリアすると、そのペース行が表示されます。"
+          }
+        }
+      }
+    },
     "Win with a final time of 13.x seconds." : {
       "comment" : "Achievement description (Decorations grid + future ASC)",
       "localizations" : {
