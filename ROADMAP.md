@@ -32,16 +32,9 @@ gates.
 
 ## v0.6.0 — Keyboard & accessibility (in beta)
 
-The release's substance shipped (see CHANGELOG); remaining before the final
-cut:
-
-- [ ] **App Intents / App Shortcuts** (iOS 16+) — "Continue my board" / "Start
-      Drills" from Spotlight and Siri. ONLY if it stays ~a day of work; drop
-      without guilt otherwise (expected usage is honestly rare — the case is
-      platform citizenship at low cost).
-
-The scope cuts (widgets, App Clip, SharePlay, TipKit) and the sync-flag
-scope rule are recorded in DECISIONS.md.
+Code complete — the substance shipped (see CHANGELOG). The scope cuts
+(widgets, App Clip, SharePlay, TipKit) and the sync-flag scope rule are
+recorded in DECISIONS.md.
 
 ## v0.7.0 — Skill & social play
 
