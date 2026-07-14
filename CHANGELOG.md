@@ -22,6 +22,14 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Spotlight and Siri shortcuts.** "Continue my board" resumes your most
+  recent game in progress and "Start drills" opens a fresh practice board —
+  from Spotlight, Siri, or the Shortcuts app, no setup needed.
+- **A well-timed review ask.** Setting a new best time may now — at most
+  once per app version, and only once you're ten wins in — bring up the
+  standard App Store review prompt. Never after a loss, never over the
+  celebration, and the system caps it a few times a year at most.
+
 ### build 24 — 2026-07-13
 
 - **Game Center, strictly opt-in.** A new toggle at the foot of the
@@ -84,13 +92,6 @@ entries land under Unreleased as they merge.
   mouse clicks — like a text field, it appears only once the keyboard is
   actually used.
 
-- **A well-timed review ask.** Setting a new best time may now — at most
-  once per app version, and only once you're ten wins in — bring up the
-  standard App Store review prompt. Never after a loss, never over the
-  celebration, and the system caps it a few times a year at most.
-- **Spotlight and Siri shortcuts.** "Continue my board" resumes your most
-  recent game in progress and "Start drills" opens a fresh practice board —
-  from Spotlight, Siri, or the Shortcuts app, no setup needed.
 ### build 23 — 2026-07-12
 
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the
