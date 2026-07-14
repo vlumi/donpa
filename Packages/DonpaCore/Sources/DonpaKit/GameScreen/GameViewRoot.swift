@@ -149,13 +149,13 @@ public struct GameView: View {
             if navigator.showingNewGame {
                 NewGamePopup(
                     settings: settings,
-                    onStart: { startSelectedGame() },
-                    onClose: { navigator.showingNewGame = false },
                     index: InProgressIndex(savedConfigs: saveSummaries.map(\.config)),
-                    onResume: { resume($0) },
                     gates: UnlockGates(
                         records: scoreboard.displayRecords, winsBaseline: winsBaseline,
-                        bypassAll: settings.unlockAll)
+                        bypassAll: settings.unlockAll),
+                    onStart: { startSelectedGame() },
+                    onClose: { navigator.showingNewGame = false },
+                    onResume: { resume($0) }
                 )
                 .transition(.opacity)
                 .zIndex(2)

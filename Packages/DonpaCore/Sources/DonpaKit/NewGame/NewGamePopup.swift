@@ -1,53 +1,40 @@
 import DonpaCore
 import SwiftUI
 
-/// The new-game config chooser as a modal overlay: a dimmed backdrop (tap to
-/// dismiss) over a card holding `BoardSelectionPicker`, a Start button, and a
-/// close (X). The single place a new game is configured. An overlay rather than a
+/// The new-game config chooser as a modal overlay — an overlay rather than a
 /// `.sheet` so the dismiss affordances match the result screen across platforms.
-/// On macOS it's keyboard-drivable: arrows move/cycle, Return starts, Esc closes.
 struct NewGamePopup: View {
     @ObservedObject var settings: Settings
-    /// Begin a game with the current selection.
-    let onStart: () -> Void
-    /// Dismiss without starting (X, backdrop tap, or Escape).
-    let onClose: () -> Void
-    /// In-progress saves — drives the Start→Continue swap + the selector dots.
     var index = InProgressIndex(savedConfigs: [])
-    /// Resume the saved game for a config. nil → the button is always Start.
-    var onResume: ((GameConfig) -> Void)?
-    /// Progressive gating; `.open` = no gating (previews/tests).
     var gates = UnlockGates.open
 
+    let onStart: () -> Void
+    let onClose: () -> Void
+    var onResume: ((GameConfig) -> Void)?
+
     #if os(macOS)
-    /// Keyboard-focused picker row (0 = Mode). nil until the first arrow press.
-    @State private var focusedRow: Int?
+    @State private var keyboardFocusedRow: Int?
     #endif
 
-    /// Card width, fixed across all family pages so paging never resizes the frame.
+    /// Fixed across all family pages so paging never resizes the frame.
     private static let idealWidth: CGFloat = 680
 
-    /// Gap between the card and the window edge.
     private static let outerVMargin: CGFloat = 12
 
-    /// At/above this width the modal uses the sidebar layout; below it (portrait
-    /// phone), the pager. Any landscape phone clears it; a portrait phone doesn't.
+    /// Any landscape phone clears this width; a portrait phone doesn't.
     private static let sidebarMinWidth: CGFloat = 600
 
-    /// Layout chosen by the viewport SHAPE, not the platform — runtime, no `#if os`.
+    /// Layout chosen by the viewport shape, not the platform.
     private static func layout(for viewport: CGSize) -> BoardSelectionPicker.Layout {
         viewport.width >= sidebarMinWidth ? .sidebar : .pager
     }
 
-    /// The ideal width, clamped to what the window allows so the card never spills
-    /// past the edge (the chip rows wrap to fit a narrow window).
     private static func cardWidth(available: CGFloat) -> CGFloat {
         min(Self.idealWidth, max(0, available))
     }
 
     var body: some View {
         ZStack {
-            // Dimmed backdrop: blocks what's behind and dismisses when tapped.
             Color.black.opacity(0.45)
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
@@ -124,13 +111,13 @@ struct NewGamePopup: View {
         // multiple horizontal chip-rows, so ↑/↓ move BETWEEN rows and ←/→ cycle within.
         case .up, .backTab: stepRow(-1)
         case .down, .tab: stepRow(1)
-        case .left: cycleSelection(in: focusedRow ?? 0, by: -1)
-        case .right: cycleSelection(in: focusedRow ?? 0, by: 1)
+        case .left: cycleSelection(in: keyboardFocusedRow ?? 0, by: -1)
+        case .right: cycleSelection(in: keyboardFocusedRow ?? 0, by: 1)
         case .enter: commitSelection()
         case .escape: onClose()
         case .character: break  // no letter actions on this surface
         case .space: break  // Space stays the board's mode key, not a commit
-        case .click: focusedRow = nil  // mouse takes over; the ring stands down
+        case .click: keyboardFocusedRow = nil  // mouse takes over; the ring stands down
         }
     }
 
@@ -140,9 +127,9 @@ struct NewGamePopup: View {
         if settings.family == .basic {
             cycleSelection(in: 0, by: delta)
         } else if delta < 0 {
-            focusedRow = max(0, (focusedRow ?? 0) - 1)
+            keyboardFocusedRow = max(0, (keyboardFocusedRow ?? 0) - 1)
         } else {
-            focusedRow = min(rowCount - 1, (focusedRow ?? -1) + 1)
+            keyboardFocusedRow = min(rowCount - 1, (keyboardFocusedRow ?? -1) + 1)
         }
     }
 
@@ -150,7 +137,7 @@ struct NewGamePopup: View {
         let families = BoardFamily.allCases
         if (1...families.count).contains(n) {
             settings.family = families[n - 1]
-            focusedRow = nil  // reset focus into the new family's rows
+            keyboardFocusedRow = nil
         }
     }
 
@@ -227,13 +214,13 @@ struct NewGamePopup: View {
     ) -> BoardSelectionPicker {
         #if os(macOS)
         BoardSelectionPicker(
-            settings: settings, focusedRow: focusedRow,
-            layout: layout, onStart: onStart,
-            index: index, gates: gates, onResume: onResume, compact: compact)
+            settings: settings, keyboardFocusedRow: keyboardFocusedRow,
+            layout: layout, compact: compact,
+            index: index, gates: gates, onStart: onStart, onResume: onResume)
         #else
         BoardSelectionPicker(
-            settings: settings, layout: layout, onStart: onStart,
-            index: index, gates: gates, onResume: onResume, compact: compact)
+            settings: settings, layout: layout, compact: compact,
+            index: index, gates: gates, onStart: onStart, onResume: onResume)
         #endif
     }
 

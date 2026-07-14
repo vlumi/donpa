@@ -1,16 +1,9 @@
 import DonpaCore
 import SwiftUI
 
-/// The board-config chooser for the three **families** (Basic / Grid / Hive).
-/// Basic is three preset cards; Grid and Hive share the difficulty chips, size
-/// chips, and Flat/Round edges toggle. Two layouts (see `Layout`): a swipe-pager
-/// under a glyph tab strip, or a family sidebar beside a detail pane. Graphical by
-/// design — family glyphs, rank-insignia difficulty, map/globe edges. Binds
-/// directly to `Settings`; the host decides when to start. macOS is keyboard-
-/// drivable: up/down move rows, left/right cycle the focused row (row 0 = family).
-/// How a family switch animates: the sliding pager on iOS wants the motion;
-/// on the Mac a clicked tab expects an INSTANT swap — the whole-card
-/// cross-animation read as ghosting/lag there (user report, b23 testing).
+/// Family-switch animation: the sliding pager on iOS wants the motion, but a
+/// clicked macOS tab expects an instant swap — the cross-animation reads as
+/// ghosting there.
 enum FamilySwitch {
     static var animation: Animation? {
         #if os(macOS)
@@ -22,9 +15,9 @@ enum FamilySwitch {
 }
 
 struct BoardSelectionPicker: View {
-    /// A tapped locked option's teaser, shown briefly in a fixed caption slot
-    /// (0 = the size row's, 1 = the density row's — edges borrows the density
-    /// slot) so the page's height never changes.
+    /// A tapped locked option's teaser, shown in a fixed caption slot (0 = the
+    /// size row's, 1 = the density row's — edges borrows the density slot) so
+    /// the page's height never changes.
     struct LockedHint: Equatable {
         let slot: Int
         let text: String
@@ -32,53 +25,35 @@ struct BoardSelectionPicker: View {
         static func == (a: Self, b: Self) -> Bool { a.id == b.id }
     }
 
-    @ObservedObject var settings: Settings
-    /// Keyboard-focused row, or nil when not keyboard-driven (iOS, or before the
-    /// first arrow press).
-    var focusedRow: Int?
-    /// Which layout to render — the host picks by viewport shape (narrow portrait
-    /// phone → pager; anything wider → sidebar). Not a platform/size-class split.
     enum Layout { case pager, sidebar }
-    var layout: Layout = .pager
-    @State var lockedHint: LockedHint?
-    /// Start the game with the current selection. The picker owns the Start button
-    /// so each layout can place it (sidebar: below its column; pager: the host pins
-    /// it full-width below).
-    var onStart: () -> Void = {}
-    /// Which configs have an in-progress save — drives the Start→Continue button swap
-    /// and the drill-down dots on the selector chips.
-    var index = InProgressIndex(savedConfigs: [])
-    /// Progressive gating (see `UnlockEngine`); `.open` = no gating (previews).
-    var gates = UnlockGates.open
-    /// Resume the saved game for a config (when the current selection has one). nil →
-    /// the button is always Start.
-    var onResume: ((GameConfig) -> Void)?
-    /// Short-window mode (landscape phone): captions drop their tagline line and the
-    /// Start button slims — that buys back the height of the full-width Start row at
-    /// the card's bottom, so nothing scrolls on a landscape SE.
-    var compact = false
 
-    /// Chip/caption line boxes scale with the text they hold (Dynamic Type) — a
-    /// hard 22pt clipped grown labels vertically. Scaled as a set (and the
-    /// insignia with them) so the rows keep their relative proportions; at the
-    /// default size nothing changes.
+    @ObservedObject var settings: Settings
+    var keyboardFocusedRow: Int?
+    var layout: Layout = .pager
+    /// Short-window packing (landscape phone), not the size class: captions
+    /// merge to one line and the Start button slims.
+    var compact = false
+    var index = InProgressIndex(savedConfigs: [])
+    var gates = UnlockGates.open
+
+    var onStart: () -> Void = {}
+    var onResume: ((GameConfig) -> Void)?
+
+    @State var lockedHint: LockedHint?
+    @State private var pagerWidth: CGFloat = 0
+    @State private var pageHeights: [BoardFamily: CGFloat] = [:]
+    /// Snaps back with the same spring the page change uses.
+    @GestureState(resetTransaction: Transaction(animation: .snappy))
+    private var pagerDrag: CGFloat = 0
+
+    /// Scaled as a set with Dynamic Type — a hard 22pt clipped grown labels.
     @ScaledMetric(relativeTo: .subheadline) var chipContentHeight: CGFloat = 22
     @ScaledMetric(relativeTo: .subheadline) var insigniaWidth: CGFloat = 36
     @ScaledMetric(relativeTo: .body) var captionLineHeight: CGFloat = 22
 
-    /// The current selection has a save AND we can resume it → the button says Continue.
     private var canContinue: Bool {
         onResume != nil && index.hasSave(for: settings.currentConfig)
     }
-
-    /// Live drag offset while swiping the pager; snaps back with the same
-    /// spring the page change uses, so release always lands smoothly.
-    @GestureState(resetTransaction: Transaction(animation: .snappy))
-    private var pagerDrag: CGFloat = 0
-    /// The pager's slot width (one page), measured from layout.
-    @State private var pagerWidth: CGFloat = 0
-    /// Measured natural height per page; the slot is fixed at the tallest one.
-    @State private var pageHeights: [BoardFamily: CGFloat] = [:]
 
     var body: some View {
         switch layout {
@@ -87,8 +62,6 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    /// Compact (portrait phone): the tab strip over the swipe-pager. The host pins
-    /// Start below this, so nothing here renders it.
     private var compactLayout: some View {
         VStack(spacing: 14) {
             familyTabs  // family: tap a tab / swipe the pager (⌘1-3 on Mac) — not arrowed
@@ -97,12 +70,8 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    // MARK: Regular layout (iPad / Mac / landscape) — family sidebar + detail pane
+    // MARK: Regular layout (sidebar + detail pane)
 
-    /// Regular: a family sidebar beside the detail pane; the host pins Start below
-    /// BOTH columns (bottom-right is where a confirm belongs — with Start bottom-left
-    /// under the families, the Flat/Round toggle sat in the "start" position and got
-    /// tapped as one). Both columns hug their content; the card hugs the taller.
     private var regularLayout: some View {
         HStack(alignment: .top, spacing: 20) {
             familySidebar  // family: click a row (⌘1-3 on Mac) — not arrowed
@@ -110,12 +79,9 @@ struct BoardSelectionPicker: View {
             detailPaneStack
                 .frame(maxWidth: .infinity)
         }
-        .fixedSize(horizontal: false, vertical: true)  // hug height; don't fill the window
+        .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// The Start button — a filled capsule. Placed by each layout (see `onStart`).
-    /// Becomes **Continue** (and resumes) when the current selection has an in-progress
-    /// save, so you pick the board up where you left it instead of restarting it.
     var startButton: some View {
         let locked = !gates.config(settings.currentConfig)
         return Button {
@@ -138,19 +104,18 @@ struct BoardSelectionPicker: View {
             .foregroundStyle(.white)
         }
         .buttonStyle(.plain)
-        .disabled(locked)  // a locked selection (the Hive teaser page) can't start
+        .disabled(locked)
         .keyboardShortcut(.defaultAction)
         .accessibilityIdentifier("newgame.start")
         .task(id: lockedHint) {
-            // The teaser lines are transient — clear after a beat.
             guard lockedHint != nil else { return }
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             lockedHint = nil
         }
     }
 
-    /// All families' panes stacked, only the selected one shown — so the pane is
-    /// sized to the tallest family and switching families never changes the height.
+    /// All panes stacked, only the selected one shown, so the pane is sized to
+    /// the tallest family and switching never changes the height.
     private var detailPaneStack: some View {
         ZStack(alignment: .top) {
             ForEach(BoardFamily.allCases) { family in
@@ -170,14 +135,10 @@ struct BoardSelectionPicker: View {
         }
     }
 
-    /// The detail pane: the chosen family's options, filling the width. Same content
-    /// as a pager page (`familyContent`) — the sidebar just packs the Grid/Hive rows
-    /// a touch tighter, since it's the short-wide layout.
     private func detailPane(for family: BoardFamily) -> some View {
         familyContent(for: family, gridHiveSpacing: 8, distribute: true)
     }
 
-    /// Move to the previous/next family page, clamped at the ends.
     private func step(family delta: Int) {
         let all = BoardFamily.allCases
         guard let i = all.firstIndex(of: settings.family) else { return }
@@ -191,15 +152,10 @@ struct BoardSelectionPicker: View {
         BoardFamily.allCases.firstIndex(of: settings.family) ?? 0
     }
 
-    /// All three pages side by side, offset to the selected one plus the live drag,
-    /// so the swipe is visible and interruptible. The slot width comes from a
-    /// dedicated ruler, not the sliding content, which would feed its own frame
-    /// back into the layout.
     private var pager: some View {
-        // Render the pages only once the slot width is measured, so the first
-        // layout is already at the constrained width (an unconstrained placeholder
-        // made ViewThatFits see infinite width and never wrap). Until then, show a
-        // zero-content ruler whose width sets `pagerWidth`.
+        // Render the pages only once the slot width is measured: an unconstrained
+        // placeholder made ViewThatFits see infinite width and never wrap. Until
+        // then, a zero-content ruler sets `pagerWidth`.
         Group {
             if pagerWidth > 0 {
                 slidingPages
@@ -360,7 +316,7 @@ struct BoardSelectionPicker: View {
             // line stands where Grid/Hive show their density row.
             VStack(spacing: distribute ? 0 : gridHiveSpacing) {
                 sizeChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
+                    .modifier(FocusRing(focused: keyboardFocusedRow == 0, inset: compact ? 3 : 6))
                 if distribute { Spacer(minLength: gridHiveSpacing) }
                 practiceCreed
             }
@@ -376,13 +332,13 @@ struct BoardSelectionPicker: View {
             // exactly-fitting window they collapse to the plain spacing.
             VStack(spacing: distribute ? 0 : gridHiveSpacing) {
                 sizeChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
+                    .modifier(FocusRing(focused: keyboardFocusedRow == 0, inset: compact ? 3 : 6))
                 if distribute { Spacer(minLength: gridHiveSpacing) }
                 densityChips(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 1, inset: compact ? 3 : 6))
+                    .modifier(FocusRing(focused: keyboardFocusedRow == 1, inset: compact ? 3 : 6))
                 if distribute { Spacer(minLength: gridHiveSpacing) }
                 edgesToggle(for: family)
-                    .modifier(FocusRing(focused: focusedRow == 2, inset: compact ? 3 : 6))
+                    .modifier(FocusRing(focused: keyboardFocusedRow == 2, inset: compact ? 3 : 6))
             }
             .frame(maxHeight: distribute ? .infinity : nil)
         }
