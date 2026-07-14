@@ -1,11 +1,10 @@
 import DonpaCore
 import Foundation
 
-/// Serializes the encode + atomic write of a `GameSnapshot` off the main thread.
-/// The caller snapshots on the main actor (a consistent read of live state) and
-/// hands over the immutable `Sendable` value; only the expensive encode + write
-/// runs here, so a save on a huge board never stalls input. Being an `actor`
-/// serializes writes (no two `.atomic` renames racing) in call order.
+/// Runs the expensive encode + atomic write of a `GameSnapshot` off the main
+/// thread, so a save on a huge board never stalls input; the caller snapshots
+/// on the main actor and hands over the immutable value. The actor serializes
+/// writes and clears in call order, so a clear can't race a pending write.
 actor BackgroundSaveWriter {
     private let store: SaveStore
 
@@ -13,13 +12,10 @@ actor BackgroundSaveWriter {
         self.store = store
     }
 
-    /// Encode + write the snapshot, off the main thread.
     func write(_ snapshot: GameSnapshot) {
         store.save(snapshot)
     }
 
-    /// Remove a config's save, serialized with writes so a clear can't race a pending
-    /// write for the same config.
     func clear(config: GameConfig) {
         store.clear(config: config)
     }

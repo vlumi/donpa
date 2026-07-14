@@ -12,8 +12,6 @@ struct SettingsView: View {
     @ObservedObject var settings: Settings
     @ObservedObject var scoreboard: Scoreboard
     @Environment(\.dismiss) private var dismiss
-    /// The reset-scores confirmation (moved here from the scoreboard — rare +
-    /// destructive belongs in Settings, not a prominent toolbar button).
     @State private var confirmingReset = false
     /// The language in effect when this sheet appeared. Moving away from it needs a
     /// restart to switch, surfaced via `restartNotice`.
@@ -23,11 +21,10 @@ struct SettingsView: View {
         launchLanguage != nil && settings.language != launchLanguage
     }
 
-    /// Measured content height, to size the iOS sheet to a compact card.
+    /// Measured content height, for the iOS fit-content detent.
     @State private var contentHeight: CGFloat = 0
-    /// The keyboard-focused settings row (Tab/arrow navigation); nil until
-    /// the first press, inert off macOS. ←/→ and Space operate the focused
-    /// control.
+    /// The keyboard-focused settings row; nil until the first press, inert
+    /// off macOS.
     @State private var keys = KeyCursor<SettingsKeyRow>()
 
     /// The keyboard-walkable rows, in visual order (haptics is iOS-only).
@@ -180,8 +177,7 @@ struct SettingsView: View {
         }
     }
 
-    /// Reset scores — destructive, so it lives quietly at the bottom of Settings with
-    /// a confirmation. Wording + scope follow the sync state (global wipe when synced).
+    /// Reset scores; wording + scope follow the sync state (global wipe when synced).
     private var resetRow: some View {
         VStack(alignment: .leading, spacing: 6) {
             Button(role: .destructive) {
@@ -199,8 +195,6 @@ struct SettingsView: View {
         }
     }
 
-    /// iOS: NavigationStack with a "Done" toolbar item + fit-content detent. macOS:
-    /// inline title + bottom Done button.
     @ViewBuilder private var sheetChrome: some View {
         #if os(iOS)
         NavigationStack {
@@ -267,9 +261,8 @@ struct SettingsView: View {
         case .right: operateFocusedRow(step: 1)
         case .space: operateFocusedRow(step: 1)
         case .enter:
-            // Desktop convention: Return presses the focused control when
-            // it's a button (Reset); on the toggles/pickers it's the sheet's
-            // default — Done.
+            // Return presses the focused control when it's a button (Reset);
+            // on the toggles/pickers it's the sheet's default — Done.
             if keys.zone == .reset { confirmingReset = true } else { dismiss() }
         case .escape: dismiss()
         case .click: keys.enter(nil)  // mouse takes over; the ring stands down
@@ -277,9 +270,8 @@ struct SettingsView: View {
         }
     }
 
-    /// Operate the focused row: pickers cycle by `step` (clamped at the
-    /// ends, matching how the segmented controls read), toggles flip, Reset
-    /// asks for its confirmation (never resets directly).
+    /// Pickers cycle by `step` (clamped at the ends, matching how the segmented
+    /// controls read), toggles flip, Reset asks for its confirmation.
     private func operateFocusedRow(step: Int) {
         switch keys.zone {
         case .appearance: settings.appearance = KeyStep.clamped(settings.appearance, by: step)
@@ -294,8 +286,7 @@ struct SettingsView: View {
     }
     #endif
 
-    /// A headline over its control(s), carrying the keyboard-focus ring when
-    /// its row is the arrow-focused one.
+    /// A headline over its control(s), carrying the keyboard-focus ring.
     private func settingRow<Content: View>(
         _ title: LocalizedStringKey, key: SettingsKeyRow? = nil,
         @ViewBuilder _ content: () -> Content
@@ -315,7 +306,6 @@ struct SettingsView: View {
         }
     }
 
-    /// Tinted callout shown once the language picker changes: restart to switch.
     private var restartNotice: some View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")

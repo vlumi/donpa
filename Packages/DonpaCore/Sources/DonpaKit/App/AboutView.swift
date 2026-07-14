@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// App "About": name, version, and credits. Shown from the title screen's "i"
-/// button and, on macOS, the app menu — one shared view.
+/// App "About": name, version, and credits — one view shared by the title
+/// screen's "i" button and the macOS app menu.
 public struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
@@ -9,13 +9,15 @@ public struct AboutView: View {
     /// Open the how-to-play reference (the host swaps sheets); nil hides the row.
     var onHowTo: (() -> Void)?
 
+    /// Measured content height, for the iOS fit-content detent.
+    @State private var contentHeight: CGFloat = 0
+
     public init(onHowTo: (() -> Void)? = nil) {
         self.onHowTo = onHowTo
     }
 
     private var palette: Palette { Palette.resolved(for: colorScheme) }
 
-    /// "short (build)" from the main bundle, e.g. "0.1.0 (1)".
     private var versionString: String {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "—"
@@ -23,8 +25,8 @@ public struct AboutView: View {
         return "\(short) (\(build))"
     }
 
-    /// The build's git commit (`GitCommitSHA`, injected at build time). Absent on
-    /// older builds — hidden when missing.
+    /// The build's git commit (`GitCommitSHA`, injected at build time); absent
+    /// on older builds — hidden when missing.
     private var commitSHA: String? {
         Bundle.main.infoDictionary?["GitCommitSHA"] as? String
     }
@@ -36,12 +38,8 @@ public struct AboutView: View {
         Bundle.module.preferredLocalizations.first?.hasPrefix("ja") ?? false
     }
 
-    /// App/author names in the script matching the UI.
     private var appName: String { isJapanese ? "ドンパ隊" : "Donpa Squad" }
     private var authorName: String { isJapanese ? "三﨑ヴィッレ" : "Ville Misaki" }
-
-    /// Measured content height, for the iOS fit-content detent.
-    @State private var contentHeight: CGFloat = 0
 
     public var body: some View {
         chrome
@@ -50,7 +48,6 @@ public struct AboutView: View {
             .accessibilityElement(children: .contain)
     }
 
-    /// The shared credits content (no chrome).
     private var content: some View {
         VStack(spacing: 16) {
             appIcon
@@ -66,9 +63,7 @@ public struct AboutView: View {
                 }
             }
 
-            // The game's own tagline (the title art's subtitle), not a genre blurb —
-            // whoever reads the in-app About already knows both halves of
-            // "a Minesweeper game for Apple platforms".
+            // The game's own tagline (the title art's subtitle), not a genre blurb.
             Text("Clear the mines, save lives.", bundle: .module)
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -83,7 +78,6 @@ public struct AboutView: View {
                 .background(Capsule().fill(palette.counter.opacity(0.15)))
                 .overlay(Capsule().stroke(palette.counter.opacity(0.3), lineWidth: 1))
 
-            // The build's git commit, for matching a build back to its source.
             if let sha = commitSHA {
                 Text(verbatim: sha)
                     .font(.caption2.monospaced())
@@ -130,8 +124,6 @@ public struct AboutView: View {
         }
     }
 
-    /// iOS: NavigationStack with a toolbar "Done" + fit-content detent. macOS:
-    /// inline layout with a bottom Done button.
     @ViewBuilder private var chrome: some View {
         #if os(iOS)
         NavigationStack {
@@ -204,7 +196,6 @@ public struct AboutView: View {
     }
 
     #if os(iOS)
-    /// The primary app icon image, dug out of the bundle's icon dictionary.
     private var uiAppIcon: UIImage? {
         guard
             let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],

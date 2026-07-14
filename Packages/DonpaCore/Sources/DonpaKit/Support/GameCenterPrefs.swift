@@ -1,11 +1,11 @@
 import Foundation
 
 /// The player-scoped Game Center choices, synced via iCloud KVS OUTSIDE the
-/// score-sync gate (the shareName-Keychain precedent: small preference state
-/// travels; DEVICE-scoped settings like the sync toggle don't). The ASK
-/// state merges OR — asked anywhere is asked; the ENABLED state merges
-/// last-writer-wins by decision timestamp, because OR would be a ratchet
-/// where the opt-out loses every conflict to a stale true.
+/// score-sync gate (small preference state travels; device-scoped settings
+/// like the sync toggle don't). The ASK state merges OR — asked anywhere is
+/// asked; the ENABLED state merges last-writer-wins by decision timestamp,
+/// because OR would be a ratchet where the opt-out loses every conflict to a
+/// stale true.
 @MainActor
 final class GameCenterPrefs: ObservableObject {
     @Published private(set) var enabled: Bool

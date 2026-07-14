@@ -1,17 +1,11 @@
 import AppKit
 import DonpaCore
 
-/// Grows the key window when a board needs more room than the current window
-/// gives it — but never shrinks. Picking a bigger board enlarges the window to
-/// fit; picking a smaller one (or one that already fits) leaves the window
-/// alone, so a maximized or manually-sized window is respected. The board view
-/// itself centers and caps cell size within whatever space it's given.
-///
-/// **Basic boards only.** Basic presets vary in shape (9×9 … 30×16), so
-/// matching the window to the board is a nice fit. Grid/Hive boards are all
-/// square and range up to huge (1024×1024), where growing the window to fit
-/// would maximize it off-puttingly — so they keep the current window and are
-/// panned/zoomed within it (the board is a viewport, not a frame).
+/// Grows the key window when a board needs more room — never shrinks, so a
+/// maximized or hand-sized window is respected. Basic boards only: presets
+/// vary in shape (9×9 … 30×16), so fitting the window to the board works;
+/// Grid/Hive are square up to 1024×1024, where growing to fit would maximize
+/// off-puttingly — they stay panned/zoomed within the current window.
 enum WindowSizer {
     /// Target board area (points) used to derive a comfortable cell size, so a
     /// freshly-opened small window lands at a substantial size rather than tiny.
@@ -27,8 +21,6 @@ enum WindowSizer {
     private static let boardPadding: CGFloat = 24
 
     static func growToFit(for config: GameConfig) {
-        // Grid/Hive boards are square and can be huge — never resize the window
-        // for them; they're panned/zoomed inside whatever window the user has.
         guard case .basic = config else { return }
         growToFit(forBoard: config.width, by: config.height)
     }
@@ -48,14 +40,11 @@ enum WindowSizer {
         let needW = CGFloat(cols) * cell + boardPadding * 2
         let needH = CGFloat(rows) * cell + boardPadding + chromeHeight
 
-        // Grow-only: keep the larger of what's needed and the current size, so a
-        // maximized/hand-sized window is never shrunk on a config change.
         let current = window.contentRect(forFrameRect: window.frame).size
         var content = CGSize(
             width: max(needW, current.width),
             height: max(needH, current.height))
 
-        // Stay within the visible screen (minus a little breathing room).
         if let frame = window.screen?.visibleFrame {
             content.width = min(content.width, frame.width - 40)
             content.height = min(content.height, frame.height - 40)
@@ -63,7 +52,6 @@ enum WindowSizer {
         content.width = max(content.width, 420)
         content.height = max(content.height, 560)
 
-        // Nothing to do if the window already fits (avoids a no-op nudge).
         guard content.width > current.width + 1 || content.height > current.height + 1 else {
             return
         }

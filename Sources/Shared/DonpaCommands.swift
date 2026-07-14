@@ -3,14 +3,11 @@ import DonpaKit
 import SwiftUI
 
 /// The shared menu commands: the macOS menu bar, and on iPadOS the hold-⌘
-/// shortcut HUD — both platforms expose the same keyboard vocabulary. About
-/// stays in the macOS app (its menu slot is an AppKit concept).
+/// shortcut HUD — both platforms expose the same keyboard vocabulary.
 ///
-/// Menu titles are wrapped in explicit `Text(...)` (not the bare
-/// `Button("literal")` initializer): SwiftUI's string extractor picks up `Text`
-/// literals reliably, whereas the bare-String `Button` init was extracted
-/// inconsistently and got flagged `extractionState: stale` on every Xcode open
-/// despite being live and translated.
+/// Menu titles are wrapped in explicit `Text(...)`: SwiftUI's string extractor
+/// picks up `Text` literals reliably, whereas the bare-String `Button` init
+/// gets flagged `extractionState: stale` despite being live and translated.
 struct DonpaCommands: Commands {
     @ObservedObject var viewModel: GameViewModel
     // Qualified: SwiftUI has a macOS-only `Settings` scene type.
@@ -21,7 +18,6 @@ struct DonpaCommands: Commands {
     let modalOpen: Bool
 
     var body: some Commands {
-        // Settings at the standard ⌘, slot, presented as the in-window sheet.
         CommandGroup(replacing: .appSettings) {
             Button {
                 navigator.showingSettings = true
@@ -32,10 +28,8 @@ struct DonpaCommands: Commands {
             .disabled(modalOpen)
         }
         CommandGroup(replacing: .newItem) {
-            // New Game opens the config popup (pick mode/size, then Start) — the
-            // ONLY path to a fresh board, deliberately: the picker is where the
-            // families/sizes/densities live, so no preset quick-starts here.
-            // Restart replays the same board.
+            // New Game opens the config popup — deliberately the ONLY path to a
+            // fresh board: no preset quick-starts.
             Button {
                 navigator.showingNewGame = true
             } label: {
@@ -51,8 +45,7 @@ struct DonpaCommands: Commands {
             .keyboardShortcut("r", modifiers: .command)
             .disabled(modalOpen)
             Button {
-                // Pause + save (handled in GameContent), not discard. "Barracks"
-                // is the army vocabulary's name for Home — B for Barracks.
+                // Pause + save (handled in GameContent), not discard.
                 navigator.homeRequested &+= 1
             } label: {
                 Text("Barracks")
@@ -67,8 +60,6 @@ struct DonpaCommands: Commands {
             .keyboardShortcut("m", modifiers: [.command, .shift])
             .disabled(modalOpen)
         }
-        // Help menu: the in-app guide at the standard ⌘? slot, and the
-        // keyboard reference at ⌘/.
         CommandGroup(replacing: .help) {
             Button {
                 navigator.showingHowTo = true
@@ -123,8 +114,6 @@ struct DonpaCommands: Commands {
 
             Divider()
 
-            // ⌘0 toggles the corner minimap between its min and max size — it
-            // pairs with ⌘+/⌘− as the "fit / actual-size" slot many apps use.
             Button {
                 navigator.toggleMinimapRequested &+= 1
             } label: {
@@ -133,11 +122,10 @@ struct DonpaCommands: Commands {
             .keyboardShortcut("0", modifiers: .command)
             .disabled(modalOpen)
 
-            // ⌘+ / ⌘− zoom the board (about its centre). Bind zoom-in to the
-            // "+" *character*, not a physical key: SwiftUI matches on the char
-            // the keystroke produces, so this follows "+" wherever a layout puts
-            // it — Finnish ⌘+ (its own key), US ⌘⇧=, JIS ⌘⇧;. Binding to "="
-            // instead failed on Finnish, where "=" isn't on that key.
+            // Bind zoom-in to the "+" *character*, not a physical key: SwiftUI
+            // matches on the char the keystroke produces, so this follows "+"
+            // wherever a layout puts it (Finnish has its own key, US is ⌘⇧=,
+            // JIS ⌘⇧;). Binding to "=" instead failed on Finnish.
             Button {
                 navigator.zoomInRequested &+= 1
             } label: {
