@@ -133,6 +133,32 @@ final class SharingTests: XCTestCase {
         }
     }
 
+    // MARK: Pace in comparisons
+
+    func testHeadToHeadCarriesBestPaces() {
+        let h = ScoreComparison.headToHead(
+            configKeys: ["k"], yourBests: ["k": 100], theirBests: ["k": 200],
+            yourPaces: ["k": 1.5], theirPaces: [:])
+        XCTAssertEqual(h.rows.first?.yourBestPace, 1.5)
+        XCTAssertNil(h.rows.first?.theirBestPace)
+    }
+
+    func testGroupBestPaceIsMaxAcrossMembers() {
+        let paces = ScoreComparison.groupBestPaces([
+            ["k": 1.2, "j": 3.0], ["k": 2.5],
+        ])
+        XCTAssertEqual(paces["k"], 2.5)
+        XCTAssertEqual(paces["j"], 3.0)
+    }
+
+    func testRankCarriesPaces() {
+        let ranking = ScoreComparison.rank(
+            yourName: "V", yourBest: 100, yourBestPace: 2.0,
+            rivals: [.init(name: "R", best: 90)])
+        XCTAssertEqual(ranking.entries.first?.bestPace, nil)  // R is faster, no pace
+        XCTAssertEqual(ranking.entries.last?.bestPace, 2.0)
+    }
+
     func testGarbageRejected() {
         XCTAssertThrowsError(try ShareCodec.decode(fromString: "not-a-share!!"))
         XCTAssertThrowsError(try ShareCodec.decode(Data([0xFF, 0x00, 0x13])))

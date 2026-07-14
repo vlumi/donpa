@@ -15,14 +15,17 @@ enum FriendRanking {
     ) -> ScoreComparison.Ranking {
         let key = config.storageKey
         // Only rivals with a time on this board rank; you always appear, even without one.
-        let rivalPairs = rivals.compactMap { friend -> (name: String, best: Int?)? in
-            guard let best = friend.scores.first(where: { $0.key == key })?.best else {
-                return nil
-            }
-            return (name: friend.displayName, best: best)
+        let standings = rivals.compactMap { friend -> ScoreComparison.RivalStanding? in
+            guard let score = friend.scores.first(where: { $0.key == key }),
+                let best = score.best
+            else { return nil }
+            return ScoreComparison.RivalStanding(
+                name: friend.displayName, best: best, bestPace: score.bestPace)
         }
         return ScoreComparison.rank(
-            yourName: yourName, yourBest: scoreboard.best(for: config), rivals: rivalPairs)
+            yourName: yourName, yourBest: scoreboard.best(for: config),
+            yourBestPace: scoreboard.displayRecords[key]?.bestPace?.pace,
+            rivals: standings)
     }
 
     // MARK: Head-to-head
@@ -41,6 +44,8 @@ enum FriendRanking {
         let config: GameConfig
         let yourBest: Int?
         let theirBest: Int?
+        let yourBestPace: Double?
+        let theirBestPace: Double?
         let lead: ScoreComparison.Lead
         let holderName: String?
         let gap: Int?
@@ -94,13 +99,26 @@ enum FriendRanking {
         return out
     }
 
+    private static func yourPaces(_ scoreboard: Scoreboard) -> [String: Double] {
+        scoreboard.displayRecords.compactMapValues { $0.bestPace?.pace }
+    }
+
+    private static func paces(of friend: Friend) -> [String: Double] {
+        var out: [String: Double] = [:]
+        for score in friend.scores {
+            if let pace = score.bestPace { out[score.key] = pace }
+        }
+        return out
+    }
+
     static func headToHead(
         with friend: Friend, scoreboard: Scoreboard
     ) -> H2H {
         labeled(
             ScoreComparison.headToHead(
                 configKeys: Array(configByKey.keys),
-                yourBests: yourBests(scoreboard), theirBests: bests(of: friend)))
+                yourBests: yourBests(scoreboard), theirBests: bests(of: friend),
+                yourPaces: yourPaces(scoreboard), theirPaces: paces(of: friend)))
     }
 
     /// Head-to-head against a group's best (fastest member per board).
@@ -113,6 +131,8 @@ enum FriendRanking {
             ScoreComparison.headToHead(
                 configKeys: Array(configByKey.keys),
                 yourBests: yourBests(scoreboard), theirBests: group.times,
+                yourPaces: yourPaces(scoreboard),
+                theirPaces: ScoreComparison.groupBestPaces(members.map { paces(of: $0) }),
                 theirHolders: group.holders))
     }
 
@@ -128,8 +148,9 @@ enum FriendRanking {
                 guard let config = configByKey[row.configKey] else { return nil }
                 return H2HRow(
                     key: row.configKey, config: config,
-                    yourBest: row.yourBest, theirBest: row.theirBest, lead: row.lead,
-                    holderName: row.holderName, gap: row.gap)
+                    yourBest: row.yourBest, theirBest: row.theirBest,
+                    yourBestPace: row.yourBestPace, theirBestPace: row.theirBestPace,
+                    lead: row.lead, holderName: row.holderName, gap: row.gap)
             }
             .sorted { (order[$0.key] ?? .max) < (order[$1.key] ?? .max) }
         return H2H(rows: rows, youLead: h.youLead, theyLead: h.theyLead)

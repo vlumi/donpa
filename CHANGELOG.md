@@ -22,6 +22,11 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Rivals compare pace, not just the stopwatch.** Head-to-head rows and
+  per-board leaderboards now show best pace beside best times, on both
+  sides — so a mixed-skill circle has a number that plays fair. Shows as
+  rivals re-share from an up-to-date app.
+
 - **Pace lines light up in your career.** The Tour of Duty now shows a pace
   figure per board type and difficulty — earned by winning every size up to
   L on that ladder (bigger boards count once you play them, but are never

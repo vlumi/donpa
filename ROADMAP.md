@@ -40,21 +40,12 @@ recorded in DECISIONS.md.
 
 May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
 
-- [ ] **Per-density pace lines in the Record** — read-time UI over the
-      already-shipped pace log: a family × edges × density line lights up once
-      every size in that ladder has a logged win (the full-clear-line idiom;
-      the aggregation model is pinned in DECISIONS.md). No new data needed.
 - [ ] **Daily challenge** (the possible social pillar) — one shared seed per
       day, same board for everyone, NO streaks or notifications. Its value
       isn't retention; it gives the rivals layer its first fair comparison
       (same board, same day) instead of best-of-N-attempts. Needs
       deterministic seeded generation, first-attempt-counts rules, and a
       share-payload field — a real pillar, not filler.
-- [ ] **Pace comparison in the rival UI** — the share payload already carries
-      recent/best pace (shipped with the v2 envelope); surface it in the
-      head-to-head and per-config rankings, not just raw-time tables that
-      discourage mixed-skill circles. Pairs with the daily challenge (same
-      board, so the comparison is fair).
 
 ## v1.0.0 — The store release
 
