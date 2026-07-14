@@ -315,6 +315,12 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 - **New:** strictly **opt-in Game Center** reporting of decorations — off by
   default, Game Center untouched until enabled, and a late opt-in reports
   everything already earned; the toggle lives under the decorations.
+- **New:** an **"Unlock all boards"** Settings toggle skips the unlock ladder
+  for experienced sweepers — freely reversible, wins earned meanwhile count.
+- **New:** **Spotlight/Siri shortcuts** — "Continue my board" and "Start
+  drills", no setup needed; plus a rare, well-timed App Store review ask.
+- **Improved:** restarting keeps your zoom, the minimap pins to your toggle
+  side, and family switching in New Game is instant on the Mac.
 
 ### 0.5.0 — progression
 
