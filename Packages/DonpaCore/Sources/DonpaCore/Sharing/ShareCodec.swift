@@ -1,13 +1,12 @@
 import Foundation
 
 /// Encodes/decodes a `SharePayload` for transport (Universal Link / QR) and applies
-/// every hardening guard on the way IN. The format is compressed JSON in a versioned
-/// envelope — JSON because `JSONDecoder` is memory-safe (malformed input throws, no
-/// code path), and a hand-rolled binary format would be LESS safe (offset math).
+/// every hardening guard on the way in. Format: compressed JSON in a versioned
+/// envelope — JSON deliberately, for memory-safe decoding over hand-rolled binary.
 /// Security is the SIGNATURE, not secrecy: the payload is public by design.
 public enum ShareCodec {
-    /// Reasons a received blob is refused. Distinct cases so the UI can tell a
-    /// tampered/forged share (loud reject) from a merely-unsupported newer version.
+    /// Distinct cases so the UI can tell a tampered/forged share (loud reject) from
+    /// a merely-unsupported newer version.
     public enum DecodeError: Error, Equatable {
         case notDonpaShare  // wrong base64url / not our JSON
         case tooLarge  // decompression-bomb guard tripped
@@ -16,15 +15,11 @@ public enum ShareCodec {
         case badSignature  // signature doesn't verify against its own key
     }
 
-    /// Hard cap on decompressed bytes — a decompression-bomb guard. A legitimate
-    /// share (bests-only, ~all configs) is a few KB; 64 KB is generous headroom.
+    /// Decompression-bomb cap; a legitimate share is a few KB.
     static let maxDecompressedBytes = 64 * 1024
-    /// Display-name length cap (characters), after sanitization.
     static let maxNameLength = 40
 
-    // MARK: Canonical body encoding (what gets signed)
-
-    /// Deterministic JSON encoding of a `ShareBody` — sorted keys so the signer and
+    /// Deterministic encoding of the signed body — sorted keys so signer and
     /// verifier hash the SAME bytes. Never change this without a version bump.
     static func canonicalBody(_ body: ShareBody) throws -> Data {
         let enc = JSONEncoder()
@@ -34,7 +29,6 @@ public enum ShareCodec {
 
     // MARK: Encode (outgoing — trusted, our own data)
 
-    /// Compress a payload to the compact bytes that go into the link/QR.
     public static func encode(_ payload: SharePayload) throws -> Data {
         let enc = JSONEncoder()
         enc.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
@@ -42,17 +36,14 @@ public enum ShareCodec {
         return (try? (json as NSData).compressed(using: .zlib) as Data) ?? json
     }
 
-    /// base64url (URL-safe, unpadded) for embedding in the Universal Link path.
     public static func encodeToString(_ payload: SharePayload) throws -> String {
         base64url(try encode(payload))
     }
 
     // MARK: Decode (incoming — UNTRUSTED; every guard applies here)
 
-    /// Decode + fully validate an incoming blob. Runs in order: decompress (bomb
-    /// guard) → version check → JSON shape → signature → semantic sanitization.
-    /// Returns a payload whose `body` has been sanitized (name cleaned, values
-    /// clamped-or-rejected). A `throw` means DO NOT trust — surface the reason.
+    /// Guards run in order: decompress (bomb guard) → version → JSON shape →
+    /// signature → semantic sanitization. A throw means DO NOT trust.
     public static func decode(_ data: Data) throws -> SharePayload {
         let json = try decompress(data)
         guard json.count <= maxDecompressedBytes else { throw DecodeError.tooLarge }
@@ -67,9 +58,8 @@ public enum ShareCodec {
         guard payload.version >= 1, payload.publicKey.count == 32, payload.signature.count == 64
         else { throw DecodeError.malformed }
 
-        // Signature BEFORE trusting any field — proves the body is authentic to its
-        // key. (Sanitization below doesn't affect the signed bytes; we sign/verify
-        // the raw body, then present a cleaned copy.)
+        // Signature BEFORE trusting any field. Sanitization doesn't affect the
+        // signed bytes: verify the raw body, then present a cleaned copy.
         guard ShareIdentity.verify(payload) else { throw DecodeError.badSignature }
 
         let clean = try sanitize(payload.body)
@@ -78,23 +68,22 @@ public enum ShareCodec {
             signature: payload.signature, body: clean)
     }
 
-    /// Decode from the link's base64url string.
     public static func decode(fromString s: String) throws -> SharePayload {
         guard let data = dataFromBase64url(s) else { throw DecodeError.notDonpaShare }
         return try decode(data)
     }
 
-    // MARK: Sanitization (semantic guards on the decoded body)
+    // MARK: Sanitization
 
-    /// Reject or clean out-of-range / hostile fields. Rejects (throws `.malformed`)
-    /// on structurally-impossible values; cleans cosmetic ones (name).
+    /// Throws `.malformed` on structurally-impossible values; cleans cosmetic ones
+    /// (name).
     static func sanitize(_ body: ShareBody) throws -> ShareBody {
         let name = sanitizeName(body.name)
         var scores: [SharedConfigScore] = []
         var seenKeys = Set<String>()
         for s in body.scores {
             guard isValidStorageKey(s.key), seenKeys.insert(s.key).inserted else {
-                throw DecodeError.malformed  // bad grammar or duplicate key
+                throw DecodeError.malformed
             }
             guard s.wins >= 0, (s.best ?? 0) >= 0 else { throw DecodeError.malformed }
             if let p = s.bestProgress, !(0...1).contains(p) { throw DecodeError.malformed }
@@ -109,12 +98,10 @@ public enum ShareCodec {
             issuedAt: body.issuedAt, rotation: body.rotation)
     }
 
-    /// Length-cap + strip control and bidi-override characters (U+202E etc. spoofing).
-    /// Falls back to a placeholder if nothing printable survives.
+    /// Caps length and strips control + bidi-override/isolate characters (U+202E-style
+    /// name spoofing); falls back to a placeholder if nothing printable survives.
     static func sanitizeName(_ raw: String) -> String {
         let stripped = raw.unicodeScalars.filter { s in
-            // Drop C0/C1 controls and the bidi-override / isolate range that can
-            // visually reorder text to spoof a name.
             if s.properties.generalCategory == .control { return false }
             if (0x202A...0x202E).contains(s.value) || (0x2066...0x2069).contains(s.value) {
                 return false
@@ -127,12 +114,10 @@ public enum ShareCodec {
         return capped.isEmpty ? "?" : capped
     }
 
-    /// The `GameConfig.storageKey` grammar we accept — conservative allowlist so a
-    /// hostile key can't inject anything odd into the friends store or comparison UI.
-    /// Matches `v<N>|family|edges|WxH|mNN` and the basic form `v<N>|basic|<preset>`.
+    /// Conservative allowlist for the `GameConfig.storageKey` grammar, so a hostile
+    /// key can't inject anything odd into the friends store or comparison UI.
     static func isValidStorageKey(_ key: String) -> Bool {
         guard key.count <= 40 else { return false }
-        // Allowlist chars: lowercase, digits, the field separator, x, the version 'v'.
         let allowed = CharacterSet(
             charactersIn:
                 "abcdefghijklmnopqrstuvwxyz0123456789|x")
@@ -153,7 +138,7 @@ public enum ShareCodec {
 
     private static func decompress(_ data: Data) throws -> Data {
         guard !data.isEmpty else { throw DecodeError.notDonpaShare }
-        // Uncompressed JSON (starts with '{') is accepted directly; else zlib.
+        // Plain JSON (encode's fallback when compression fails) passes through.
         if data.first == UInt8(ascii: "{") { return data }
         guard let out = try? (data as NSData).decompressed(using: .zlib) as Data, !out.isEmpty
         else { throw DecodeError.notDonpaShare }

@@ -1,36 +1,31 @@
 import Foundation
 
-/// The cloud side of friend-list sync, abstracted off `NSUbiquitousKeyValueStore`
-/// so it's mockable in tests. Same **one blob per device** layout as the scoreboard's
-/// `CloudStatsStore`: each device writes only its own slot (keyed by `DeviceID`) and
-/// reads every slot to merge (`FriendSyncMerge`). Records carry tombstones, so a
-/// delete on one device propagates through that device's blob.
+/// Cloud side of friend-list sync, abstracted off `NSUbiquitousKeyValueStore` for
+/// testability. One blob per device: each device writes only its own slot (keyed by
+/// `DeviceID`) and reads every slot to merge; records carry tombstones so a delete
+/// propagates through the deleting device's blob.
 @MainActor
 public protocol CloudFriendsStore: AnyObject {
-    /// Whether iCloud is available; when false, reads/writes are no-ops.
+    /// When false, reads/writes are no-ops.
     var isAvailable: Bool { get }
 
-    /// Write this device's encoded friends blob to its own slot.
     func writeOwnBlob(_ data: Data, deviceID: String)
 
-    /// Remove this device's own slot (on sync-off).
     func deleteOwnBlob(deviceID: String)
 
-    /// Every device's blob, keyed by device id (including this device's own).
+    /// Every device's blob, keyed by device id, including this device's own.
     func readAllBlobs() -> [String: Data]
 
-    /// Hint the store to push/pull now (best-effort).
+    /// Best-effort hint to push/pull now.
     func synchronize()
 
-    /// Called on external cloud change or iCloud account change, so the host
-    /// re-merges and refreshes.
+    /// Fired on external cloud change or iCloud account change.
     var onExternalChange: (() -> Void)? { get set }
 }
 
 #if canImport(Foundation)
-/// `NSUbiquitousKeyValueStore`-backed friends store. Per-device blobs live under keys
-/// prefixed `donpa.friends.blob.` — a separate namespace from the scoreboard's blobs,
-/// on the same KVS.
+/// Blobs live under keys prefixed `donpa.friends.blob.` — a separate namespace from
+/// the scoreboard's blobs on the same KVS.
 @MainActor
 public final class UbiquitousFriendsStore: CloudFriendsStore {
     private static let blobPrefix = "donpa.friends.blob."

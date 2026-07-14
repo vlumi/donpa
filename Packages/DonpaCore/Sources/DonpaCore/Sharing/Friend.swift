@@ -1,50 +1,37 @@
 import Foundation
 
-/// A tracked friend — a share pinned on first scan (TOFU). Lives ONLY in the
-/// friends store, never merged into your own stats (the display-merge invariant):
-/// deleting a friend makes their rows vanish with nothing to clean up.
+/// A tracked friend — a share pinned on first scan (TOFU). Lives only in the friends
+/// store, never merged into your own stats, so deleting a friend leaves nothing to
+/// clean up.
 public struct Friend: Codable, Equatable, Sendable, Identifiable {
-    /// The pinned share identity (public key, 32 B) — the stable ID across re-scans.
+    /// The pinned share identity (32 B public key) — the stable ID across re-scans.
     public var publicKey: Data
-    /// The name the FRIEND provided, from their most recent accepted share
-    /// (sanitized). Refreshed on each accepted share; never edited by the receiver.
+    /// Name from the friend's latest accepted share (sanitized); never edited locally.
     public var sharedName: String
-    /// An optional name YOU set for them locally. Never touched by an incoming
-    /// share, so it survives their renames. Wins over `sharedName` for display —
-    /// lets you disambiguate two same-named friends, or just call them what you like.
+    /// Local-only alias: never touched by an incoming share, wins over `sharedName`
+    /// for display.
     public var localAlias: String?
-    /// Receiver-assigned group memberships as `FriendGroup` ids (local only — the
-    /// payload knows nothing of groups). Empty = ungrouped. A friend can be in
-    /// several. Ids, not names, so a group rename doesn't touch its members.
+    /// Local-only `FriendGroup` ids (ids, not names, so a rename doesn't re-tag members).
     public var groups: [String]
-    /// The latest accepted share's `issuedAt` — the replay/downgrade guard: a share
-    /// older than this is ignored, so re-scanning an old QR can't regress the entry.
+    /// Latest accepted share's `issuedAt` — replay/downgrade guard: older shares are ignored.
     public var lastIssuedAt: Date
-    /// The shared scores from the latest accepted share.
     public var scores: [SharedConfigScore]
-    /// Shared career totals, if the friend opted in (else nil).
     public var career: SharedCareer?
-    /// When first pinned (local wall-clock) — for list ordering / "friends since".
     public var addedAt: Date
-    /// Last local mutation (add / alias / groups / refresh). The sync tiebreaker:
-    /// across devices the newest `updatedAt` wins per friend (last-writer-wins).
+    /// Last local mutation — the sync tiebreaker: newest wins per friend across devices.
     public var updatedAt: Date
-    /// Soft-delete tombstone. Non-nil = removed at that time; excluded from the live
-    /// list but kept in the synced blob so the delete propagates and can't resurrect
-    /// from a device that still lists the friend. nil = live.
+    /// Soft-delete tombstone: non-nil = removed then, kept in the synced blob so the
+    /// delete propagates and can't resurrect. nil = live.
     public var deletedAt: Date?
 
     public var id: Data { publicKey }
 
-    /// What to show: your local alias if you set one, else the friend's own name.
     public var displayName: String { localAlias ?? sharedName }
 
-    /// A tombstoned friend — removed, retained only to propagate the delete.
     public var isDeleted: Bool { deletedAt != nil }
 
-    /// A minimal tombstone for this friend: keep only the public key + deletion time,
-    /// stripping name / scores / career / alias / groups. Enough for the merge to
-    /// propagate the delete, without their data lingering in the synced blob.
+    /// Keeps only the public key + deletion time — enough to propagate the delete
+    /// without the friend's data lingering in the synced blob.
     public func tombstone(now: Date = Date()) -> Friend {
         Friend(
             publicKey: publicKey, sharedName: "", localAlias: nil, groups: [],
@@ -65,7 +52,6 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
         self.scores = scores
         self.career = career
         self.addedAt = addedAt
-        // Default updatedAt to addedAt so records created without one sort sanely.
         self.updatedAt = updatedAt ?? addedAt
         self.deletedAt = deletedAt
     }
