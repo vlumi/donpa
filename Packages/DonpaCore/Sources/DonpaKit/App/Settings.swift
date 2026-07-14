@@ -331,12 +331,8 @@ public final class Settings: ObservableObject {
         unlockAll = defaults.bool(forKey: unlockAllKey)
         questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
         reviewPromptedVersion = defaults.string(forKey: reviewPromptedVersionKey) ?? ""
-        scoreFilterFamily =
-            defaults.string(forKey: scoreFilterFamilyKey).flatMap(BoardFamily.init(rawValue:))
-            ?? .basic
-        scoreFilterEdges =
-            defaults.string(forKey: scoreFilterEdgesKey).flatMap(BoardEdges.init(rawValue:))
-            ?? .flat
+        scoreFilterFamily = Self.stored(defaults, scoreFilterFamilyKey) ?? .basic
+        scoreFilterEdges = Self.stored(defaults, scoreFilterEdgesKey) ?? .flat
         sound = defaults.object(forKey: soundKey) as? Bool ?? true
         haptics = defaults.object(forKey: hapticsKey) as? Bool ?? true
         syncScores = defaults.object(forKey: syncScoresKey) as? Bool ?? false
@@ -378,6 +374,12 @@ public final class Settings: ObservableObject {
         case .practice(let size):
             practiceSize = size
         }
+    }
+
+    private static func stored<T: RawRepresentable>(_ defaults: UserDefaults, _ key: String)
+        -> T? where T.RawValue == String
+    {
+        defaults.string(forKey: key).flatMap(T.init(rawValue:))
     }
 
     /// Key paths to a family's own axes, so the picker and keyboard nav bind to
