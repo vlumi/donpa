@@ -1,5 +1,6 @@
 import DonpaCore
 import SpriteKit
+import StoreKit
 import SwiftUI
 
 #if os(iOS)
@@ -37,6 +38,7 @@ struct GameContent: View {
     /// panel dismisses, never over the celebration.
     @State var pendingGCAsk = false
     @State var showGCAsk = false
+    @State var pendingReviewAsk = false
     @State var panelPace: Double?
     @State var guessToast: ForcedGuessEvent?
     @State var guessToastTask: Task<Void, Never>?
@@ -51,6 +53,7 @@ struct GameContent: View {
     @State private var pausedForNewGame = false
     @State private var saveStore: SaveStore
     @State private var saveWriter: BackgroundSaveWriter
+    @Environment(\.requestReview) var requestReview
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) var reduceMotion
