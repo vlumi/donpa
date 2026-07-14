@@ -2,12 +2,10 @@
 import DonpaCore
 import SwiftUI
 
-/// The Service Record's keyboard driving (macOS) — the New Game popup's
-/// vocabulary: Tab cycles the visible zones, arrows move within one, ←/→
-/// (and Space) operate the focused control, Return presses buttons (else
-/// Done), ⌘1–⌘4 pick the family filter, E flips Flat/Round, P plays the
-/// focused board. Split from ScoreboardView.swift because Swift `private` is
-/// file-scoped.
+/// The Service Record's keyboard driving (macOS), sharing the New Game popup's
+/// vocabulary: Tab cycles the visible zones, arrows move within one, ←/→ and
+/// Space operate the focused control, Return presses buttons (else Done),
+/// ⌘1–⌘4 pick the family, E flips Flat/Round, P plays the focused board.
 extension ScoreboardView {
     func handleKey(_ key: KeyCatcher.Key) {
         switch key {
@@ -33,9 +31,8 @@ extension ScoreboardView {
         }
     }
 
-    /// Return follows the desktop convention: it presses the focused control
-    /// when that control is a button (rows, medals, Manage rivals); anywhere
-    /// else it's the sheet's default — Done.
+    /// Return presses the focused control when it's a button (rows, medals,
+    /// Manage rivals); anywhere else it's the sheet's default — Done.
     private func confirmOrActivate() {
         switch keys.zone {
         case .rows, .medals, .manage: activateZone()
@@ -43,16 +40,13 @@ extension ScoreboardView {
         }
     }
 
-    /// The medals HEADER is the zone's landing spot and a real disclosure
-    /// button: Return/Space toggles the fold either way (persisted); the
-    /// focus stays on the header so Return can immediately toggle back.
+    /// Focus stays on the header, so Return can immediately toggle back.
     private func toggleMedalsCollapse() {
         settings.medalsCollapsed.toggle()
         keys.index = nil
     }
 
-    /// Space toggles/steps the focused control: segmented zones step forward
-    /// (like Settings), buttons and rows activate.
+    /// Space steps segmented zones forward (like Settings); buttons and rows activate.
     private func operateOrActivate() {
         switch keys.zone {
         case .breakdown, .family, .edges, .rivals: operateZone(1)
@@ -60,9 +54,8 @@ extension ScoreboardView {
         }
     }
 
-    /// The zones actually rendered right now — the skip logic and the render
-    /// predicates share these gates, so Tab can't reach a hidden control (or
-    /// miss a visible one).
+    /// The zones actually rendered right now — shared with the render
+    /// predicates, so Tab can't reach a hidden control or miss a visible one.
     private var visibleZones: [ScoreboardView.KeyZone] {
         var zones = ScoreboardView.KeyZone.allCases
         if !PlayDistributionView.hasData(scoreboard) {
@@ -82,13 +75,10 @@ extension ScoreboardView {
 
     private func cycleZone(_ delta: Int) {
         keys.cycle(delta, through: visibleZones, entering: entry)
-        // Rows keep STRING-keyed satellite focus (self-heals across filter
-        // changes) — seed it the same way the first arrow press would.
+        // Seed the row focus the same way the first arrow press would.
         if keys.zone == .rows, keyRowKey == nil { seedRowFocus() }
     }
 
-    /// Medals land on the HEADER (ring there; ↓ enters the grid) — the one
-    /// zone whose landing spot is a control of its own.
     private func entry(_ zone: ScoreboardView.KeyZone) -> KeyCursor<KeyZone>.Entry {
         .plain
     }
@@ -102,9 +92,8 @@ extension ScoreboardView {
         }
     }
 
-    /// ↓ from the header enters the grid; ↑ from the first medal returns to
-    /// the header (folded: the focus stays on the header). One stop past the
-    /// last medal is the Game Center toggle in the footer.
+    /// ↓ from the header enters the grid; ↑ from the first medal returns to the
+    /// header. One stop past the last medal is the Game Center toggle.
     private func moveMedalFocus(_ delta: Int) {
         guard !settings.medalsCollapsed else { return }
         if keys.index == 0, delta < 0 {
@@ -122,7 +111,6 @@ extension ScoreboardView {
         case .medals:
             moveMedalFocus(step)
         case .rivals:
-            // ←/→ walk the comparison scope: All rivals, then each squad.
             let options: [String?] = [nil] + friends.groups.map(\.id)
             let i = options.firstIndex(of: rivalGroupID) ?? 0
             rivalGroupID = options[min(max(i + step, 0), options.count - 1)]
@@ -165,7 +153,6 @@ extension ScoreboardView {
         keyRowKey = nil
     }
 
-    /// E flips Flat/Round (where the family has edges); P plays the focused board.
     private func handleLetter(_ ch: Character) {
         switch ch {
         case "e":
@@ -174,8 +161,8 @@ extension ScoreboardView {
             expandedKey = nil
             keyRowKey = nil
         case "p":
-            // Only with the rows zone focused — the row ring is invisible
-            // from other zones, and P would start a game on an unseen board.
+            // Only with the rows zone focused — from other zones the row ring is
+            // invisible, and P would start a game on an unseen board.
             guard keys.zone == .rows, let key = keyRowKey,
                 let config = orderedConfigs.first(where: { $0.storageKey == key }),
                 gates.config(config)
@@ -193,7 +180,6 @@ extension ScoreboardView {
         return Self.groups(family: filterFamily, edges: edges).flatMap(\.configs)
     }
 
-    /// Step the focus; the first press seeds it instead.
     private func moveRowFocus(_ delta: Int) {
         guard keys.zone == .rows else { return }
         let configKeys = orderedConfigs.map(\.storageKey)
@@ -206,8 +192,7 @@ extension ScoreboardView {
         keyRowKey = configKeys[next]
     }
 
-    /// First landing: the current config's row (the "you are here" band) when
-    /// it's in this list, else the first row.
+    /// First landing: the current config's row when present, else the first row.
     private func seedRowFocus() {
         let configKeys = orderedConfigs.map(\.storageKey)
         keyRowKey = configKeys.first(where: { $0 == currentConfigKey }) ?? configKeys.first

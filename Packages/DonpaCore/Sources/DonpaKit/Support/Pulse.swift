@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// A monotonic "do X now" signal across a view boundary — keyboard
-/// activation of a control the host can't call directly (its action lives in
-/// the child's private state). Fire on the host; the child reacts via
-/// `onPulse`.
+/// A monotonic "do X now" signal across a view boundary, for actions living in
+/// a child's private state: fire on the host; the child reacts via `onPulse`.
 struct Pulse: Equatable {
     private(set) var count = 0
     mutating func fire() { count += 1 }

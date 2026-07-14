@@ -2,17 +2,14 @@ import DonpaCore
 import MultipeerConnectivity
 import SwiftUI
 
-/// The Nearby sheet: open it on both devices, tap the other player's name,
-/// and the two share cards cross in one handshake. The received card is
-/// handed to the host's normal receive/confirm flow (same as a scanned QR).
+/// The Nearby sheet; the received card goes to the host's normal receive/confirm
+/// flow, same as a scanned QR.
 struct NearbyExchangeView: View {
     @StateObject private var exchange: NearbyExchange
-    /// Route the rival's received link into the root classify/confirm path.
     let onReceived: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
-    /// The keyboard-focused peer while browsing — tracked by IDENTITY, not
-    /// list position: peers appear and drop mid-browse, and an index could
-    /// silently retarget Return's invite at someone else.
+    /// Tracked by IDENTITY, not list position: peers appear and drop mid-browse,
+    /// and an index could silently retarget Return's invite at someone else.
     @State private var focusedPeer: MCPeerID?
 
     init(
@@ -28,9 +25,6 @@ struct NearbyExchangeView: View {
     var body: some View {
         VStack(spacing: 16) {
             header
-            // The phase content scrolls if it ever outgrows the sheet (a long
-            // peer list at large text); ViewThatFits keeps the natural hug
-            // otherwise. Header and the dismiss button stay pinned.
             ViewThatFits(in: .vertical) {
                 phaseContent
                 ScrollView { phaseContent }
@@ -40,8 +34,6 @@ struct NearbyExchangeView: View {
         }
         .padding(20)
         .frame(minWidth: 300, idealWidth: 340, minHeight: 360)
-        // Esc = the dismiss button's exact routing: a received card must reach
-        // the confirm flow, never be dropped by the close.
         .escDismisses(close)
         .background(nearbyKeyCatcher)
         .onAppear { exchange.start() }
@@ -63,7 +55,8 @@ struct NearbyExchangeView: View {
         }
     }
 
-    /// Close with the received-card routing (a card must never be dropped).
+    /// Every close path routes an already-received card into the confirm flow —
+    /// dismissing must never drop it, or the whole handshake has to be redone.
     private func close() {
         let received = exchange.receivedURL
         dismiss()
@@ -71,7 +64,7 @@ struct NearbyExchangeView: View {
     }
 
     /// Arrows pick a nearby player, Return invites them — or, once cards have
-    /// crossed, adds the received one; Esc = the same never-drop close.
+    /// crossed, adds the received one.
     @ViewBuilder private var nearbyKeyCatcher: some View {
         #if os(macOS)
         KeyCatcher { key in
@@ -112,10 +105,8 @@ struct NearbyExchangeView: View {
     }
     #endif
 
-    /// The bottom button. Once a card has arrived, closing must NOT drop it —
-    /// dismissing routes the received URL into the confirm flow (the same as
-    /// "Add their card"), so the whole handshake needn't be redone. Otherwise it's
-    /// a plain cancel.
+    /// Once a card has arrived, closing routes it into the confirm flow (same as
+    /// "Add their card"); otherwise it's a plain cancel.
     @ViewBuilder private var dismissButton: some View {
         if let url = exchange.receivedURL {
             Button {

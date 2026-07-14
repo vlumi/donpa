@@ -21,8 +21,7 @@ struct DonpaApp: App {
             // Width fits the New Game modal's sidebar on one row; the height
             // floor keeps the result panel readable while still fitting the
             // smallest scaled-display canvas (1024×640 logical) with the menu
-            // and title bars. The modal scrolls when short and the result panel
-            // clamps to the board, so nothing clips at the floor.
+            // and title bars.
             .frame(minWidth: 680, minHeight: 560)
             .onChange(of: viewModel.config) { _, config in
                 WindowSizer.growToFit(for: config)
@@ -33,8 +32,8 @@ struct DonpaApp: App {
             .sheet(isPresented: $showingAbout) { AboutView() }
         }
         .commands {
-            // About stays here — its menu slot is an AppKit concept; the rest of
-            // the vocabulary is shared with iPadOS (DonpaCommands, Sources/Shared).
+            // About stays macOS-local — its menu slot is an AppKit concept; the
+            // rest of the vocabulary is shared with iPadOS via DonpaCommands.
             CommandGroup(replacing: .appInfo) {
                 Button {
                     showingAbout = true
@@ -49,9 +48,8 @@ struct DonpaApp: App {
         }
     }
 
-    /// True while any modal (a navigator sheet/popup, or the macOS About sheet) is
-    /// presented — used to disable the menu commands and their keyboard shortcuts
-    /// so they don't mutate or navigate the game hidden beneath the modal.
+    /// True while any modal (a navigator sheet/popup, or the About sheet) is up —
+    /// menu shortcuts are disabled so they can't mutate the game beneath it.
     private var modalOpen: Bool {
         navigator.isModalPresented || showingAbout
     }

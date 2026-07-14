@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// Brief in-app splash showing the same pre-rendered launch image as the iOS
-/// `UILaunchScreen` (single source of truth), on the matching charcoal ground,
-/// faded out to reveal the title.
+/// In-app splash showing the same pre-rendered launch image as the iOS
+/// `UILaunchScreen`, on the matching charcoal ground.
 struct SplashView: View {
     /// Charcoal ground matching the launch screen's `LaunchBackground`.
     private let ground = Color(red: 0.12, green: 0.12, blue: 0.13)

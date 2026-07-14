@@ -1,12 +1,10 @@
 import DonpaCore
 import SwiftUI
 
-/// The Record's anchored scrolling (current-config jump, expansion and
-/// keyboard-focus following) — a sibling-file ScoreboardView extension.
+/// The Record's anchored scrolling — a sibling-file ScoreboardView extension.
 extension ScoreboardView {
-    /// A ScrollView that, when opened in-game (`currentConfigKey` set), jumps the
-    /// current config's row into view — so you land on the board you're playing.
-    /// Opened from the title (key nil) it stays at the top for plain browsing.
+    /// A ScrollView that jumps the current config's row into view when opened
+    /// in-game (`currentConfigKey` set); opened from the title it stays at the top.
     @ViewBuilder func anchoredScroll<Content: View>(
         @ViewBuilder _ content: () -> Content
     ) -> some View {
@@ -24,10 +22,9 @@ extension ScoreboardView {
                     }
                 }
             }
-            // Expanding a row scrolls it into view — otherwise expanding the LAST
-            // row opens content that's off-screen below the fold (and there may be
-            // no layout shift to nudge it up). A beat later so the taller row has
-            // laid out before we scroll to it.
+            // Expanding a row scrolls it into view — expanding the LAST row
+            // otherwise opens content below the fold. A beat later so the taller
+            // row has laid out first.
             .onChangeCompat(of: expandedKey) { key in
                 guard let key else { return }
                 DispatchQueue.main.async {
@@ -37,15 +34,12 @@ extension ScoreboardView {
                 }
             }
             #if os(macOS)
-            // The keyboard focus scrolls with the arrows, like the expansion.
             .onChangeCompat(of: keyRowKey) { key in
                 guard let key else { return }
                 withAnimation(.easeOut(duration: 0.15)) {
                     proxy.scrollTo(key, anchor: .center)
                 }
             }
-            // Tab brings the focused zone into view — career and the medals
-            // live above the fold once the scores are long.
             .onChangeCompat(of: keys.zone) { zone in
                 let anchor: String? =
                     switch zone {

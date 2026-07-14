@@ -1,7 +1,5 @@
-// Readable-key wire format, new in the family vocabulary (`{"grid":{"size":…}}`).
-// A save written in the old classic/modern shape fails to decode and is discarded
-// by the loader — accepted: the 0.3.0 release already resets scores and drops
-// in-progress saves (a mid-game is a shrug; records are the thing we never lose).
+// Readable-key wire format (`{"grid":{"size":…}}`). A save in an older shape
+// fails to decode and is discarded by the loader — accepted.
 extension GameConfig: Codable {
     private enum CaseKey: String, CodingKey { case basic, grid, hive, practice }
     private enum BasicKey: String, CodingKey { case preset }

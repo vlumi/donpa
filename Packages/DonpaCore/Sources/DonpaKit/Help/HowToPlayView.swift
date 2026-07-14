@@ -2,12 +2,9 @@ import DonpaCore
 import SpriteKit
 import SwiftUI
 
-/// The static how-to-play reference (the progression milestone's "?" page):
-/// every mechanic as a small ACCURATE board diagram plus a line or two of
-/// text — a real rendered mini-board teaches chording better than prose or a
-/// comic panel, tracks dark mode for free, and needs no per-locale art. The
-/// deep-dive lives on donpa.app (linked below); Drills is the interactive
-/// half. Reachable from the title screen's "?" and from About.
+/// The static how-to-play reference: every mechanic as a small ACCURATE board
+/// diagram plus a line or two of text. The deep-dive lives on donpa.app
+/// (linked below); Drills is the interactive half.
 public struct HowToPlayView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
@@ -149,9 +146,8 @@ public struct HowToPlayView: View {
             title: Text("Dig and flag", bundle: .module),
             diagram: HStack(alignment: .top, spacing: 14) {
                 // The glyphs as the TOGGLE renders them (white on the mode
-                // colour) — bare on the sheet the bootprint read as inkblots
-                // (user report), but this is the exact thing the player will
-                // recognize in the corner of the board.
+                // colour) — bare on the sheet the bootprint reads as inkblots;
+                // this is what the player recognizes from the board's corner.
                 captioned(Text("Dig", bundle: .module)) {
                     modeChip(.reveal, fill: palette.digColor)
                 }
@@ -281,8 +277,7 @@ public struct HowToPlayView: View {
 
     /// The in-game mode toggle's segment, EXACTLY as the board renders it —
     /// same glyph size, frame, fill, and screentone. A scaled-down imitation
-    /// lost what legibility the bootprint has (user report ×2); a pixel-true
-    /// replica at least matches what the corner control really shows.
+    /// loses what legibility the bootprint has.
     private func modeChip(_ symbol: MangaIcon.Symbol, fill: Color) -> some View {
         MangaIcon(symbol: symbol, size: 34, tint: .white)
             .frame(width: 50, height: 60)
@@ -296,7 +291,6 @@ public struct HowToPlayView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    /// A tiny mode-name caption under a glyph, so an icon can't float unexplained.
     private func captioned(_ caption: Text, @ViewBuilder icon: () -> some View) -> some View {
         VStack(spacing: 2) {
             icon()
@@ -401,7 +395,6 @@ private struct CounterDiagram: View {
     }
 }
 
-/// SwiftUI wrappers over the Canvas glyph vocabularies, at help scale.
 private struct MangaIconView: View {
     let symbol: MangaIcon.Symbol
     var size: CGFloat = 30

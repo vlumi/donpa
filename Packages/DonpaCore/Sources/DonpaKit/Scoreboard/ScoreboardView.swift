@@ -34,8 +34,7 @@ struct ScoreboardView: View {
     /// the rival-scope control. The host dismisses this sheet and presents the Mess
     /// hall at the root. nil = no cross-link.
     var onMessHall: (() -> Void)?
-    /// Tracked friends, for the per-config rival comparison. No friends → no
-    /// comparison shown, rows behave exactly as before.
+    /// No friends → no rival comparison; rows behave as before.
     @ObservedObject var friends: FriendsStore
     // Throughout: state that sibling-file ScoreboardView extensions drive
     // (Keyboard/Toolbar/Rivals/Scroll) is internal, not `private` — Swift

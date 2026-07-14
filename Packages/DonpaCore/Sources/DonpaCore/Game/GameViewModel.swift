@@ -1,14 +1,11 @@
 import Combine
 import Foundation
 
-/// The live game clock, split out as its own observable so the ~10×/sec timer tick
-/// only re-renders the timer readout — NOT the whole `GameContent` body. (Reading
-/// the tick straight off `GameViewModel` made every view observing the VM re-render
-/// 10×/sec — wasteful, and a battery drain on iOS in particular.)
+/// The live game clock, split out as its own observable so the ~10×/sec timer
+/// tick only re-renders the timer readout, not every view observing the VM.
 @MainActor
 public final class GameClock: ObservableObject {
-    /// Elapsed centiseconds, from the wall clock (not a tick count) so it's exact.
-    /// Setter internal: the writers live in GameViewModel+Timer.swift.
+    /// From the wall clock (not a tick count), so it's exact.
     @Published public internal(set) var elapsedCentiseconds: Int = 0
 }
 
@@ -18,7 +15,6 @@ public final class GameClock: ObservableObject {
 public final class GameViewModel: ObservableObject {
     @Published public private(set) var game: Game
     @Published public private(set) var config: GameConfig
-    /// The live clock, observed on its own by the timer readout (see `GameClock`).
     public let clock = GameClock()
     /// Mirrors `clock` for snapshot/restore/tests without re-publishing per tick.
     public var elapsedCentiseconds: Int { clock.elapsedCentiseconds }
@@ -30,25 +26,24 @@ public final class GameViewModel: ObservableObject {
     /// every reveal).
     @Published public private(set) var gameID: Int = 0
 
-    /// The win's final time + config, set at win, cleared on next new game.
+    /// The win's final time + config; cleared on the next new game.
     @Published public private(set) var lastWin: (config: GameConfig, centiseconds: Int)?
 
-    /// Most recent outcome for end-of-game feedback; cleared on next new game.
+    /// Most recent outcome; cleared on the next new game.
     @Published public private(set) var lastResult: GameResultEvent?
     private var resultCounter = 0
 
     @Published public var inputMode: InputMode = .reveal
 
-    // Timer state — internal (not `private`, which is file-scoped): the timer
-    // methods live in GameViewModel+Timer.swift for the file-length budget.
+    // Timer state — internal, not `private` (file-scoped): written by
+    // GameViewModel+Timer.swift.
     var timer: AnyCancellable?
     /// Segmented clock: `elapsed = accumulated + (now − runningSince)`. Pausing
     /// folds the live span into `accumulated` (a plain number, persists cleanly).
     var accumulatedCentiseconds = 0
     var runningSince: Date?
 
-    /// Clock paused mid-game (game live, clock stopped) — drives the pause overlay.
-    /// Setter internal for GameViewModel+Timer.swift (see the timer state above).
+    /// Clock paused mid-game (game live, clock stopped).
     @Published public internal(set) var isPaused = false
 
     /// True while a reveal/chord computes OFF the main thread (heavy flood-fill /

@@ -1,32 +1,23 @@
 import DonpaCore
 import SwiftUI
 
-/// The achievements grid in the Service Record (A4 of the progression spec):
-/// every feat as a medal — earned inked (tier metals on the tiered ones),
-/// unearned as a silhouette with its rule, hidden as a "?" until earned. One
-/// tap opens the feat's detail line under the grid (fixed placement, so the
-/// grid never reflows).
+/// The achievements grid: earned medals inked, unearned as silhouettes with
+/// their rule, hidden feats a "?" until earned. The selected feat's detail line
+/// renders under the grid, so the grid never reflows.
 struct DecorationsSection: View {
     @ObservedObject var achievements: AchievementStore
-    /// Merged score records, for the detail line's live stat value (e.g. "472 wins").
+    /// Merged score records, feeding the detail line's live stat value.
     let records: [String: ScoreRecord]
     let rowInset: CGFloat
-    /// The medal whose detail line shows — hoisted to the host so keyboard
-    /// browsing can drive it alongside taps.
+    /// Hoisted to the host so keyboard browsing can drive it alongside taps.
     @Binding var selected: AchievementID?
-    /// The HOST's keyboard-focused medal (Tab-zone browsing ring), or nil.
     var keyFocusIndex: Int?
-    /// The header is the zone's LANDING spot (keyboard): ringed when focused,
-    /// Return/Space there toggles the fold, ↓ steps into the grid.
+    /// The header is the keyboard zone's landing spot: Return/Space there
+    /// toggles the fold, ↓ steps into the grid.
     var headerKeyFocused: Bool = false
-    /// Folded away (persisted): achievements are an exploration on-ramp — a
-    /// veteran can collapse the block and it STAYS collapsed; the header keeps
-    /// the earned count so it never goes fully dark.
     @Binding var collapsed: Bool
-    /// The Game Center opt-in, living where its questions arise (the sync-
-    /// toggle placement principle); hidden with the folded block.
     var gcEnabled: Binding<Bool>?
-    /// The footer toggle is the medals zone's LAST keyboard stop.
+    /// The footer toggle is the medals zone's last keyboard stop.
     var gcKeyFocused = false
 
     var body: some View {
@@ -50,8 +41,7 @@ struct DecorationsSection: View {
         }
     }
 
-    /// Opt-in reporting — GC never hears about the app until this is on
-    /// (see GameCenterReporter). One quiet row; the folded block hides it.
+    /// Opt-in reporting — Game Center never hears about the app until this is on.
     private func gameCenterFooter(_ binding: Binding<Bool>) -> some View {
         HStack(spacing: 8) {
             Toggle(isOn: binding) {
@@ -150,7 +140,6 @@ struct DecorationsSection: View {
             : Text(verbatim: id.featDescription)
     }
 
-    /// The tapped feat's rule + earned date, under the grid.
     private func detail(_ id: AchievementID) -> some View {
         let tier = achievements.earnedTier(id)
         let secret = id.isHidden && tier == 0
@@ -165,8 +154,6 @@ struct DecorationsSection: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             if !secret, let progress = AchievementEngine.progress(for: id, records: records) {
-                // The running value behind a tracked feat, so the tier you're at
-                // (and how close the next is) is legible, not just a medal colour.
                 progressLine(id: id, progress: progress)
             }
             if let date = achievements.firstEarned(id, tier: max(tier, 1)), tier > 0 {
@@ -182,8 +169,6 @@ struct DecorationsSection: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// A "current value" line for a tracked feat — "472 wins", "1:23.4 best",
-    /// "25% luck" — plus the next rung for a tiered feat you haven't maxed.
     @ViewBuilder private func progressLine(id: AchievementID, progress: AchievementProgress)
         -> some View
     {
@@ -198,7 +183,6 @@ struct DecorationsSection: View {
     }
 
     private func progressValueText(_ progress: AchievementProgress) -> Text {
-        // Counts use the locale's grouping separator (they reach into the millions).
         let grouped = ScoreboardView.grouped(progress.current)
         switch progress.metric {
         case .wins:
@@ -215,8 +199,8 @@ struct DecorationsSection: View {
         }
     }
 
-    /// The next unearned rung, if any — "next: 1,000" for a count feat. Speed/luck
-    /// bars go the other way (lower is better), so we don't tease a number there.
+    /// The next unearned rung for a count feat. Speed/luck run the other way
+    /// (lower is better), so no number is teased there.
     private func nextThresholdText(id: AchievementID, progress: AchievementProgress) -> Text? {
         guard progress.metric == .wins || progress.metric == .tiles || progress.metric == .mines,
             let thresholds = id.tierThresholds,

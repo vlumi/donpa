@@ -1,40 +1,26 @@
 import DonpaCore
 import SwiftUI
 
-/// One config's row in the high-score table: name/insignia, clears, best %, best
-/// time — plus the two row cues (the just-set record flourish and the persistent
-/// "you are here" band for the config being played) and the non-colour "new best"
-/// marker on the value that just improved.
+/// One config's row in the high-score table: name/insignia and the score
+/// columns, expandable to the config's stat-block.
 struct ScoreRow: View {
     @ObservedObject var scoreboard: Scoreboard
     let config: GameConfig
-    /// The config the player is currently on, for the "you are here" band.
     let currentConfigKey: String?
-    /// Shared horizontal inset (matches the header + section padding).
     let rowInset: CGFloat
-    /// Whether this row's stat-block expansion is open (accordion — one at a time).
     var isExpanded: Bool = false
-    /// Whether the row carries the keyboard-focus ring (macOS arrow navigation).
     var isKeyFocused: Bool = false
-    /// Toggle the expansion. When nil the row isn't expandable (kept for callers
-    /// that just want a static row).
     var onToggle: (() -> Void)?
-    /// Start a fresh game on this row's config (the expansion's "New game" button).
     var onPlay: (() -> Void)?
-    /// The tracked friends to compare against (already filtered to the chosen group),
-    /// and your display name. Empty / nil → no comparison shown (rows still work).
     var rivals: [Friend] = []
     var yourName: String = ""
 
-    /// Grows the stat columns with Dynamic Type (×1 at the default size): fixed
-    /// widths forced grown values to shrink back toward half size via
-    /// `numericCell`, defeating the enlargement in exactly the numbers a
-    /// low-vision reader wants big. Must match the header's factor
-    /// (`ScoreboardView.columnScale`) so the table stays aligned.
+    /// Grows the stat columns with Dynamic Type — fixed widths would shrink
+    /// grown values back down via `numericCell`, defeating the enlargement.
+    /// Must match `ScoreboardView.columnScale` so the table stays aligned.
     @ScaledMetric(relativeTo: .body) private var columnScale: CGFloat = 1
 
-    /// You + rivals ranked by best time on this config — nil when there are no rivals,
-    /// so rows behave exactly as before when the friends list is empty.
+    /// nil when there are no rivals, so rows behave exactly as before.
     private var ranking: ScoreComparison.Ranking? {
         guard !rivals.isEmpty else { return nil }
         return FriendRanking.ranking(
@@ -50,19 +36,11 @@ struct ScoreRow: View {
         .modifier(FocusRing(focused: isKeyFocused, inset: 0))
     }
 
-    // A tap gesture (not a Button) so a scroll that STARTS on a row doesn't toggle
-    // it — inside a ScrollView a plain Button fires even when the touch turns into a
-    // drag, which made the last row nearly impossible to open. A tap only fires when
-    // the finger doesn't move past the scroll threshold.
+    // A tap gesture, not a Button: inside a ScrollView a Button fires even when
+    // the touch turns into a drag, which made the last row nearly impossible to
+    // open without toggling it.
     private var summaryRow: some View {
         HStack {
-            // Grid/Hive rows: rank insignia in a fixed-width column (so size
-            // letters line up), then the size name. No edges tag — the list is
-            // already scoped to one edges value by the filter, so every row shares
-            // it. Basic rows show their preset name.
-            // Shrink to fit rather than truncate or force the row wider — a long
-            // preset name ("Intermediate") scales down instead of clipping or
-            // wobbling the sheet width when the family filter changes.
             if let size = config.size, let density = config.density {
                 DensityInsignia.image(density)
                     .resizable().scaledToFit().frame(width: 30, height: 20)
@@ -100,17 +78,14 @@ struct ScoreRow: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, rowInset)
-        // Shape AFTER the padding so the whole padded row is tappable — the gaps
-        // above/below the content toggle expand/collapse too, which feels natural
-        // (and is the difference between a 20pt and a 44pt tap target here).
+        // Shape AFTER the padding so the whole padded row is tappable — the
+        // difference between a 20pt and a 44pt tap target.
         .contentShape(Rectangle())
         .onTapGesture { onToggle?() }
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text(isExpanded ? "Hide details" : "Show details", bundle: .module))
     }
 
-    /// This config's own stats — the same `StatBlock` the global career uses, scoped
-    /// to one record. An unplayed config shows a gentle placeholder instead.
     @ViewBuilder private var expansion: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let record = scoreboard.record(for: config) {
@@ -129,9 +104,8 @@ struct ScoreRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// The mixed top-5 leaderboard for this board — you slotted among rivals by time,
-    /// highlighted in place. If you're outside the top 5, your own row is appended
-    /// below a break so you can still see where you stand.
+    /// Top-5 by time, you slotted in place; outside the top 5 your row is
+    /// appended below a break so you can still see where you stand.
     @ViewBuilder private func leaderboard(_ ranking: ScoreComparison.Ranking) -> some View {
         let top = Array(ranking.entries.prefix(5))
         let youInTop = top.contains { $0.isYou }
@@ -141,7 +115,6 @@ struct ScoreRow: View {
             ForEach(Array(top.enumerated()), id: \.offset) { index, entry in
                 leaderboardRow(place: index + 1, entry: entry)
             }
-            // You didn't make the top 5 → show your line below, after a break.
             if !youInTop, let you = ranking.entries.first(where: { $0.isYou }),
                 let rank = ranking.yourRank
             {
@@ -167,12 +140,9 @@ struct ScoreRow: View {
             }
         }
         .font(.callout)
-        // Highlight your own line so it stands out in the mix.
         .background(entry.isYou ? Color.accentColor.opacity(0.12) : .clear)
     }
 
-    /// The tiny standing badge for the collapsed row: a medal for 1–3, a compact "4+"
-    /// beyond — kept minimal to fit SE portrait alongside the existing columns.
     @ViewBuilder private func rankBadge(_ rank: Int) -> some View {
         switch rank {
         case 1: badgeGlyph("1.circle.fill", .yellow)
@@ -185,17 +155,14 @@ struct ScoreRow: View {
     }
 
     private func badgeGlyph(_ systemName: String, _ tint: Color) -> some View {
-        // Palette mode: black numeral ON the tint circle (yellow/gray/brown carry
-        // ink at 5–14:1) — the plain tinted glyph knocked the numeral out to the
-        // background and the pale circle itself sat near 1.5:1 on light rows.
+        // Palette mode, black numeral ON the tint circle: the plain tinted glyph
+        // knocked the numeral out to the background and sat near 1.5:1 contrast.
         Image(systemName: systemName).font(.caption)
             .symbolRenderingMode(.palette)
             .foregroundStyle(.black, tint)
             .accessibilityLabel(Text("rank \(String(systemName.prefix(1)))", bundle: .module))
     }
 
-    /// Jump straight into a fresh game on this board — closes the loop between
-    /// "check my best here" and "try to beat it".
     private func playButton(_ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Label {
@@ -214,19 +181,16 @@ struct ScoreRow: View {
         .accessibilityIdentifier("scoreboard.play")
     }
 
-    /// Which "Best" column, if any, just set a record on this row — so the non-color
-    /// "new best" marker can flag the exact value that improved (color alone isn't
-    /// relied on; the row band is the primary cue). Derived from the stored best: a
-    /// recorded time means the PB was a win (time); progress-only means a loss
-    /// (clear-%). nil unless this is the recent-record row.
+    /// Which "Best" column just set a record, for the non-color marker. Derived
+    /// from the stored best: a recorded time means the PB was a win (time);
+    /// progress-only means a loss (clear-%).
     private enum RecordField { case time, progress }
     private var recordMarker: RecordField? {
         guard scoreboard.recentRecord == config.storageKey else { return nil }
         return scoreboard.best(for: config) != nil ? .time : .progress
     }
 
-    /// A small upward chevron flagging the just-improved value. Shape, not colour,
-    /// so it survives any user accent choice and is colour-blind safe.
+    /// Shape, not colour — survives any accent choice and is colour-blind safe.
     private var newBestMarker: some View {
         Image(systemName: "arrow.up")
             .font(.caption2.weight(.bold))
@@ -234,10 +198,8 @@ struct ScoreRow: View {
             .accessibilityLabel(Text("new best", bundle: .module))
     }
 
-    /// Two distinct row cues. The just-set RECORD gets the strong accent flourish
-    /// (transient — cleared when the next game ends). The CURRENT config (the board
-    /// you're on) gets a subtler persistent "you are here" band, so opening the
-    /// scoreboard always shows where you stand. Record wins when a row is both.
+    /// The just-set record gets the transient accent flourish; the config being
+    /// played gets a subtler persistent band. Record wins when a row is both.
     @ViewBuilder private var rowHighlight: some View {
         if scoreboard.recentRecord == config.storageKey {
             RoundedRectangle(cornerRadius: 8)

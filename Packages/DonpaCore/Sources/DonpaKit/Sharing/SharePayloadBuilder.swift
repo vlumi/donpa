@@ -1,23 +1,15 @@
 import DonpaCore
 import Foundation
 
-/// Assembles a signed `SharePayload` from the scoreboard's MERGED (cross-device)
-/// view — `displayRecords`, which is the G-counter-summed / best-time-min
-/// projection across all your devices. So a share always reflects your true best,
-/// not just this device's (see the score-sharing design note). The share flow is
-/// responsible for refreshing-from-cloud first when sync is active, and for
-/// labelling "this device only" honestly when it isn't.
+/// Assembles a signed `SharePayload` from the scoreboard's MERGED cross-device
+/// view (`displayRecords`), so a share reflects your true best, not just this
+/// device's. `issuedAt` is the replay/downgrade guard.
 @MainActor
 enum SharePayloadBuilder {
-    /// Build a payload for `name`, optionally including career totals, signed by
-    /// `identity`. `now` is the `issuedAt` stamp (the replay/downgrade guard).
-    /// Returns nil only if signing fails (shouldn't, with a valid identity).
     static func build(
         from scoreboard: Scoreboard, identity: ShareIdentity, name: String,
         includeCareer: Bool, now: Date
     ) -> SharePayload? {
-        // Per-config bests + wins, straight off the merged records. Only configs with
-        // an actual record ship (an untouched config isn't worth a payload slot).
         let scores: [SharedConfigScore] = scoreboard.displayRecords.map { key, rec in
             SharedConfigScore(
                 key: key,
@@ -35,8 +27,7 @@ enum SharePayloadBuilder {
     }
 
     /// Career totals summed across every merged config record — mirrors the
-    /// `StatFigures(career:)` scope used by the scoreboard's own career block. Not
-    /// private: the head-to-head career comparison reuses it for YOUR side.
+    /// `StatFigures(career:)` scope of the scoreboard's own career block.
     static func career(from scoreboard: Scoreboard) -> SharedCareer {
         let records = Array(scoreboard.displayRecords.values)
         func sum(_ f: (ScoreRecord) -> Int) -> Int { records.reduce(0) { $0 + f($1) } }
@@ -55,13 +46,9 @@ enum SharePayloadBuilder {
 }
 
 extension SharePayloadBuilder {
-    /// The signed share link for the CURRENT settings/scoreboard state — the
-    /// ONE gate chain the share card, Nearby, and the keyboard zones all
-    /// read. Refreshes from cloud first when sync is active (the shared blob
-    /// must reflect the cross-device best). Nil without a trimmed name or an
-    /// identity: a "?" card is a bad first handshake when the name IS the
-    /// shared identity. The name is the sharer's own input; the RECEIVER
-    /// sanitizes on decode, where it matters for safety.
+    /// The ONE gate chain the share card, Nearby, and the keyboard zones all read.
+    /// Nil without a trimmed name or an identity — the name IS the shared identity.
+    /// The name is the sharer's own input; the RECEIVER sanitizes on decode.
     static func currentURL(
         scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore
     ) -> URL? {

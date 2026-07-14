@@ -6,13 +6,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 #endif
 
-/// The QR-scanning surface (hosted by AddFriendSheet). iOS scans live with
-/// the camera; macOS imports/drops an image and decodes it.
-/// A decoded string is handed to `onFound` — the receive flow then verifies and prompts,
-/// exactly as a tapped link does. Knows nothing about signatures.
+/// The QR-scanning surface: iOS scans live with the camera; macOS imports/drops an
+/// image. Knows nothing about signatures — the receive flow verifies and prompts.
 struct ScanContent: View {
-    /// A decoded QR string (expected to be a donpa.app/s/… URL). The presenter routes
-    /// it through the same receive path as `onOpenURL`.
     let onFound: (URL) -> Void
 
     #if os(macOS)
@@ -75,7 +71,6 @@ struct ScanContent: View {
                     dropTargeted ? Color.accentColor : Color.secondary.opacity(0.4),
                     style: StrokeStyle(lineWidth: 1.5, dash: [6]))
         )
-        // Accept a dragged image (Finder file or an image dragged from another app).
         .dropDestination(for: Data.self) { items, _ in
             handleDrop(items)
         } isTargeted: {
@@ -84,32 +79,27 @@ struct ScanContent: View {
         #endif
     }
 
-    /// Hand a decoded string to the presenter as a URL. A non-URL (a random QR) is
-    /// dropped — the receive flow only understands donpa.app links.
     private func deliver(_ string: String) {
         guard let url = URL(string: string) else { return }
         onFound(url)
     }
 
     #if os(macOS)
-    /// Decode the first QR in the picked image with a `CIDetector`. The URL is
-    /// security-scoped (sandbox), so bracket the read with start/stop access.
+    /// The picked URL is security-scoped (sandbox) — bracket the read with start/stop.
     private func handleImport(_ result: Result<[URL], Error>) {
         guard let url = try? result.get().first else {
-            importFailed = true  // cancelled or errored
+            importFailed = true
             return
         }
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         guard let image = CIImage(contentsOf: url), let string = Self.decodeQR(from: image) else {
-            importFailed = true  // not a readable image / no QR found
+            importFailed = true
             return
         }
         deliver(string)
     }
 
-    /// A dropped image arrives as raw bytes (Finder file or an image from another app);
-    /// decode a QR straight from the data — no security-scoped URL needed.
     @discardableResult
     private func handleDrop(_ items: [Data]) -> Bool {
         importFailed = false
@@ -123,8 +113,7 @@ struct ScanContent: View {
         return true
     }
 
-    /// First QR string in a `CIImage`, or nil. High-accuracy detector — a screenshot
-    /// of a QR can be small or skewed.
+    /// High-accuracy detector — a screenshot of a QR can be small or skewed.
     static func decodeQR(from image: CIImage) -> String? {
         let detector = CIDetector(
             ofType: CIDetectorTypeQRCode, context: nil,

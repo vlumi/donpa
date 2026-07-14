@@ -66,7 +66,6 @@ public enum Handedness: String, CaseIterable, Identifiable, Sendable {
             ? String(localized: "Right", bundle: .module)
             : String(localized: "Left", bundle: .module)
     }
-    /// SwiftUI alignment for the floating toggle's corner.
     public var alignment: Alignment { self == .right ? .bottomTrailing : .bottomLeading }
 }
 
@@ -113,7 +112,7 @@ public final class Settings: ObservableObject {
         didSet { defaults.set(family.rawValue, forKey: familyKey) }
     }
     // Grid and Hive remember their OWN size/density/edges independently — picking
-    // a huge Round hive must not retune the next Grid game (user decision).
+    // a huge Round hive must not retune the next Grid game.
     @Published public var gridSize: BoardSize {
         didSet { defaults.set(gridSize.rawValue, forKey: "donpa.grid.size") }
     }
@@ -151,7 +150,7 @@ public final class Settings: ObservableObject {
     }
 
     /// Whether shares include career totals — sticky per device, so the choice
-    /// survives reopening the share card (it used to reset to off every time).
+    /// survives reopening the share card.
     @Published public var shareIncludeCareer: Bool {
         didSet { defaults.set(shareIncludeCareer, forKey: shareIncludeCareerKey) }
     }
@@ -175,27 +174,6 @@ public final class Settings: ObservableObject {
         }
     }
 
-    /// Key paths to a family's own axes, so the picker and keyboard nav bind to
-    /// whichever page they're on. Basic has no axes; callers guard on family.
-    public static func sizePath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
-        Settings, BoardSize
-    > {
-        switch family {
-        case .hive: return \.hiveSize
-        case .practice: return \.practiceSize
-        default: return \.gridSize
-        }
-    }
-    public static func densityPath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
-        Settings, Density
-    > {
-        family == .hive ? \.hiveDensity : \.gridDensity
-    }
-    public static func edgesPath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
-        Settings, BoardEdges
-    > {
-        family == .hive ? \.hiveEdges : \.gridEdges
-    }
     @Published public var handedness: Handedness {
         didSet { defaults.set(handedness.rawValue, forKey: handednessKey) }
     }
@@ -204,9 +182,7 @@ public final class Settings: ObservableObject {
     @Published public var showMinimap: Bool {
         didSet { defaults.set(showMinimap, forKey: showMinimapKey) }
     }
-    /// The Record's Decorations block, folded away — achievements are an
-    /// exploration on-ramp, and a veteran can put them (and keep them) out of
-    /// the way once they've outlived their usefulness.
+    /// The Record's Decorations block, folded away.
     @Published public var medalsCollapsed: Bool {
         didSet { defaults.set(medalsCollapsed, forKey: medalsCollapsedKey) }
     }
@@ -215,9 +191,6 @@ public final class Settings: ObservableObject {
     @Published public var minimapScale: Double {
         didSet { defaults.set(minimapScale, forKey: minimapScaleKey) }
     }
-    /// Add a "?" step to the flag cycle (hidden → flag → "?" → clear). Opt-in, off
-    /// by default: the third state taxes the common flag→clear tap, so only players
-    /// who want the classic maybe-mark pay for it.
     /// Bypass progressive gating: the picker offers everything, no wins needed.
     /// Freely reversible — gates derive from records, so turning this off just
     /// returns to whatever the wins say (including any earned while it was on).
@@ -226,6 +199,9 @@ public final class Settings: ObservableObject {
         didSet { defaults.set(unlockAll, forKey: unlockAllKey) }
     }
 
+    /// Add a "?" step to the flag cycle (hidden → flag → "?" → clear). Opt-in,
+    /// off by default: the third state taxes the common flag→clear tap, so only
+    /// players who want the classic maybe-mark pay for it.
     @Published public var questionMarks: Bool {
         didSet { defaults.set(questionMarks, forKey: questionMarksKey) }
     }
@@ -334,12 +310,9 @@ public final class Settings: ObservableObject {
         // the key is missing.
         showMinimap = defaults.object(forKey: showMinimapKey) as? Bool ?? true
         medalsCollapsed = defaults.object(forKey: medalsCollapsedKey) as? Bool ?? false
-        // Default 1.0 (base size); a stored value restores the player's last size.
         minimapScale = defaults.object(forKey: minimapScaleKey) as? Double ?? 1.0
-        // Off by default — the "?" step is opt-in.
         unlockAll = defaults.bool(forKey: unlockAllKey)
         questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
-        // On by default — the ringer switch is the quick mute on iOS.
         sound = defaults.object(forKey: soundKey) as? Bool ?? true
         haptics = defaults.object(forKey: hapticsKey) as? Bool ?? true
         syncScores = defaults.object(forKey: syncScoresKey) as? Bool ?? false
@@ -381,6 +354,28 @@ public final class Settings: ObservableObject {
         case .practice(let size):
             practiceSize = size
         }
+    }
+
+    /// Key paths to a family's own axes, so the picker and keyboard nav bind to
+    /// whichever page they're on. Basic has no axes; callers guard on family.
+    public static func sizePath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
+        Settings, BoardSize
+    > {
+        switch family {
+        case .hive: return \.hiveSize
+        case .practice: return \.practiceSize
+        default: return \.gridSize
+        }
+    }
+    public static func densityPath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
+        Settings, Density
+    > {
+        family == .hive ? \.hiveDensity : \.gridDensity
+    }
+    public static func edgesPath(_ family: BoardFamily) -> ReferenceWritableKeyPath<
+        Settings, BoardEdges
+    > {
+        family == .hive ? \.hiveEdges : \.gridEdges
     }
 
     /// Map a pre-family install's stored mode/shape selection onto a family.

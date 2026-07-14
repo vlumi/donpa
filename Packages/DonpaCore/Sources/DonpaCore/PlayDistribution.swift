@@ -1,10 +1,6 @@
 import Foundation
 
-/// How play spreads across the config axes — family, size, density — by playtime or
-/// game count. A pure aggregation over per-config figures; the Service Record's
-/// breakdown bars are a straight rendering of these shares.
 public enum PlayDistribution {
-    /// One config's contribution, extracted by the caller from its score record.
     public struct Entry {
         public let config: GameConfig
         public let games: Int
@@ -21,17 +17,15 @@ public enum PlayDistribution {
         case playtime, games
     }
 
-    /// One bar segment: an axis value's share of the total. `fraction` is of the
-    /// AXIS total (family shares sum to 1; size/density cover Grid+Hive only, since
-    /// Basic has no size/density tier — their shares still sum to 1 of what they
-    /// measure).
+    /// `fraction` is of the AXIS total: configs lacking the axis (Basic has no
+    /// size/density) don't count, so shares still sum to 1 of what they measure.
     public struct Share: Equatable {
         public let label: String
         public let fraction: Double
     }
 
-    /// Shares along one axis, in the axis's canonical order (families / XS→XXXL /
-    /// easy→insane), zero-value segments dropped. Empty when nothing measured.
+    /// Shares in the axis's canonical order, zero-value segments dropped; empty
+    /// when nothing measured.
     public static func shares(
         entries: [Entry], metric: Metric, axis: Axis
     ) -> [Share] {
@@ -56,12 +50,9 @@ public enum PlayDistribution {
         }
     }
 
-    /// The three bars. Size/density apply to Grid+Hive only (Basic's presets have
-    /// no tier on those axes), so those bars describe the configurable families.
     public enum Axis: CaseIterable, Sendable {
         case family, size, density, edges
 
-        /// The axis's canonical bucket labels, in display order.
         var buckets: [String] {
             switch self {
             case .family: return BoardFamily.allCases.map(\.label)
@@ -71,9 +62,8 @@ public enum PlayDistribution {
             }
         }
 
-        /// The bucket a config contributes to, or nil when the axis doesn't apply.
-        /// Edges: every config buckets (Basic/Drills are inherently Flat), so the
-        /// bar shows how much of ALL play wraps.
+        /// nil when the axis doesn't apply — except edges: every config buckets
+        /// (Basic/Drills are inherently Flat), so that bar covers ALL play.
         func bucket(for config: GameConfig) -> String? {
             switch self {
             case .family: return config.family.label

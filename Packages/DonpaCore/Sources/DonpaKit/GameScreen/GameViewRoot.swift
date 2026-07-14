@@ -1,22 +1,13 @@
 import DonpaCore
 import SwiftUI
 
-/// The full game surface: a status bar over a pannable/zoomable SpriteKit board.
-/// A thin wrapper that owns the stores and hosts a single long-lived `BoardScene`
-/// (which owns all board input natively). `.preferredColorScheme` is applied HERE
-/// so the descendant `GameContent` can read the resolved scheme — a view can't
-/// observe a scheme it forces on itself, so the read must be below the modifier.
-/// Owns the long-lived `BoardScene` so SwiftUI builds it exactly once:
+/// Holds the long-lived `BoardScene` so SwiftUI builds it exactly once:
 /// `@State`'s `initialValue:` is EAGER and re-runs on every re-init (~10×/s
 /// from the clock), while `@StateObject`'s autoclosure runs a single time.
 @MainActor
 final class SceneHolder: ObservableObject {
     let scene: BoardScene
-    /// App-lifetime sound player, preloaded once. The scene fires input effects
-    /// through it; GameContent keeps `isEnabled` in step with Settings.
     let soundPlayer = SoundPlayer()
-    /// App-lifetime haptics, alongside sound. Same wiring: the scene fires the
-    /// per-action taps; GameContent keeps `isEnabled` in step with Settings.
     let hapticPlayer = HapticPlayer()
     init(viewModel: GameViewModel) {
         scene = BoardScene(viewModel: viewModel)
@@ -34,31 +25,22 @@ public struct GameView: View {
     @StateObject private var friends: FriendsStore
     @StateObject private var sceneHolder: SceneHolder
     private var scene: BoardScene { sceneHolder.scene }
-    /// The single save store, shared with `GameContent` (which does the writing) so
-    /// the popup's resume list / dots read the SAME files the live game writes.
-    /// Must be stable `@State`: under `-uitest-clean` it's a fresh ephemeral dir, and
-    /// a recomputed `ephemeral()` would mint a NEW dir on every access — so the reader
-    /// and writer would never see each other's saves. In production both would resolve
-    /// the same App Support dir, but a shared instance keeps them honest either way.
+    /// Shared with `GameContent` (the writer). Must be stable `@State`: under
+    /// `-uitest-clean` a recomputed `ephemeral()` would mint a NEW dir per
+    /// access, so reader and writer would never see each other's saves.
     @State private var saveStore: SaveStore =
         SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
     private var resumeStore: SaveStore { saveStore }
-    /// Cached in-progress summaries feeding Home's Continue card and the New Game
-    /// dots. Refreshed when either surface (re)opens — NOT read per body eval:
-    /// `summaries()` parses every save file, and an XXXL save is megabytes of JSON.
-    /// The hosts flush pending writes synchronously before opening (goHome /
-    /// openNewGame), so a refresh always sees disk truth.
+    /// Cached, refreshed only when a surface that shows them (re)opens — NOT
+    /// per body eval: `summaries()` parses every save file, and an XXXL save
+    /// is megabytes of JSON.
     @State private var saveSummaries: [SaveStore.SaveSummary] = []
-    /// A saved board whose file couldn't be read when the player tried to resume
-    /// it — drives the broken-save alert (OK starts fresh on the same board).
+    /// Drives the broken-save alert (OK starts fresh on the same board).
     @State private var failedResumeConfig: GameConfig?
-    /// Brief in-app splash mirroring the OS launch image (which can't be delayed,
-    /// being pre-process) so the hand-off into the title is seamless.
+    /// Mirrors the OS launch image so the hand-off into the title is seamless.
     @State private var showSplash = true
 
     public init(config: GameConfig = .beginner) {
-        // Scoreboard iCloud sync is gated by `syncScores` (opt-in, OFF by default);
-        // the cloud store also no-ops when signed out.
         let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false
         self.init(
             viewModel: GameViewModel(config: config),
@@ -67,8 +49,7 @@ public struct GameView: View {
             navigator: Navigator())
     }
 
-    /// For a host (e.g. the macOS menu bar) that drives the same view model /
-    /// navigation the board renders.
+    /// For a host (e.g. the macOS menu bar) driving the same model/navigation.
     public init(
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
         navigator: Navigator
@@ -77,23 +58,17 @@ public struct GameView: View {
         _scoreboard = StateObject(wrappedValue: scoreboard)
         _settings = StateObject(wrappedValue: settings)
         _navigator = ObservedObject(wrappedValue: navigator)
-        // Bridge the share name to the synchronizable Keychain beside the signing
-        // key (assigning reconciles). Skipped under -uitest-clean: a clean launch
-        // must not adopt a name a previous run synced.
+        // Skipped under -uitest-clean: a clean launch must not adopt a name a
+        // previous run synced to the Keychain.
         if !SaveStore.isUITestCleanLaunch {
             settings.shareNameStore = ShareIdentityStore()
         }
-        // Friend list + groups sync under the SAME `syncScores` gate as the scoreboard
-        // (one social picture), over their own KVS blob namespace + the shared deviceID.
+        // Friends and feats sync under the SAME syncScores gate as the
+        // scoreboard — one social picture.
         let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false
-        // Earned feats: local always, synced under the same gate. PERMANENT —
-        // the stats wipe never touches this store (decided semantics).
         let achievementStore = AchievementStore(
             cloud: UbiquitousAchievementsStore(), syncEnabled: syncOn)
         _achievements = StateObject(wrappedValue: achievementStore)
-        // Game Center: strictly opt-in (see the reporter); created here so it
-        // observes the stores for the app's lifetime, but it touches GameKit
-        // only after the player enables it.
         _gameCenter = StateObject(
             wrappedValue: GameCenterReporter(
                 prefs: GameCenterPrefs(), achievements: achievementStore,
@@ -102,17 +77,14 @@ public struct GameView: View {
             wrappedValue: FriendsStore(
                 cloud: UbiquitousFriendsStore(),
                 deviceID: DeviceID.current(), syncEnabled: syncOn))
-        // Autoclosure → BoardScene is built once, not on every re-init (see SceneHolder).
         _sceneHolder = StateObject(wrappedValue: SceneHolder(viewModel: viewModel))
-        // The `-donpa.gates.fresh` debug run: remember launch-time win counts so
-        // gates (and unlock celebrations) see only wins earned this session — a
-        // veteran tester experiences the fresh ladder without touching records.
+        // -donpa.gates.fresh: only session wins count, so a veteran tester
+        // experiences the fresh ladder without touching their records.
         winsBaseline =
             UnlockGates.freshRun
             ? scoreboard.displayRecords.mapValues(\.wins.total) : [:]
     }
 
-    /// See init: non-empty only under `-donpa.gates.fresh`.
     private let winsBaseline: [String: Int]
     @StateObject private var gameCenter: GameCenterReporter
 
@@ -123,14 +95,12 @@ public struct GameView: View {
                 navigator: navigator, friends: friends, achievements: achievements,
                 gameCenter: gameCenter,
                 scene: scene, winsBaseline: winsBaseline, saveStore: saveStore)
-            // Home fade scoped to this overlay via `.animation(_:value:)` — an
-            // imperative `withAnimation` would also animate the chrome's first
-            // layout, making the status bar visibly settle.
+            // Fade scoped HERE — an imperative `withAnimation` would also
+            // animate the chrome's first layout.
             HomeScreen(
                 settings: settings,
                 snapshots: saveSummaries,
                 onContinue: { resume($0) },
-                // Over the still-visible Home — leaving happens on the pick.
                 onNewGame: { navigator.showingNewGame = true },
                 onScores: { navigator.showingScores = true },
                 onMessHall: { navigator.showingMessHall = true },
@@ -144,24 +114,21 @@ public struct GameView: View {
             .animation(.easeInOut(duration: 0.3), value: navigator.showingTitle)
             .zIndex(1)
 
-            // New Game popup above both board and title (zIndex 2) so the
-            // still-visible title can't occlude it. Tap-outside / X / Esc dismiss.
             if navigator.showingNewGame {
                 NewGamePopup(
                     settings: settings,
-                    onStart: { startSelectedGame() },
-                    onClose: { navigator.showingNewGame = false },
                     index: InProgressIndex(savedConfigs: saveSummaries.map(\.config)),
-                    onResume: { resume($0) },
                     gates: UnlockGates(
                         records: scoreboard.displayRecords, winsBaseline: winsBaseline,
-                        bypassAll: settings.unlockAll)
+                        bypassAll: settings.unlockAll),
+                    onStart: { startSelectedGame() },
+                    onClose: { navigator.showingNewGame = false },
+                    onResume: { resume($0) }
                 )
                 .transition(.opacity)
                 .zIndex(2)
             }
 
-            // In-app splash on top (zIndex 3), fading out after a beat.
             if showSplash {
                 SplashView()
                     .transition(.opacity)
@@ -174,16 +141,14 @@ public struct GameView: View {
         }
         .preferredColorScheme(settings.appearance.colorScheme)
         .animation(.easeInOut(duration: 0.2), value: navigator.showingNewGame)
-        // A tapped donpa.app/s/… link (or a Universal Link from the Camera) arrives
-        // here: decode + classify, then let the receive prompt render the decision.
+        // A tapped donpa.app/s/… link (or a Camera Universal Link) arrives here.
         .onOpenURL { receive($0) }
         .modifier(
             ReceivePrompt(
                 navigator: navigator, friends: friends, scoreboard: scoreboard,
                 settings: settings)
         )
-        // A saved board that couldn't be read: say so, and offer a fresh start on
-        // the same board — never a silent nothing.
+        // An unreadable save is never a silent nothing.
         .alert(
             Text("Couldn't load the saved game", bundle: .module),
             isPresented: Binding(
@@ -202,19 +167,15 @@ public struct GameView: View {
                 "The save couldn't be read, so a fresh game starts on this board.",
                 bundle: .module)
         }
-        // Keep the scoreboard's iCloud-sync gate in step with the Settings toggle.
         .onChangeCompat(of: settings.syncScores) {
             scoreboard.syncEnabled = $0
             friends.syncEnabled = $0
             achievements.setSyncEnabled($0)
         }
-        // Refresh the in-progress summaries whenever a surface that shows them
-        // opens (cheap: sidecar summaries, not full saves)…
         .onChangeCompat(of: navigator.showingTitle) { showing in
             if showing { saveSummaries = resumeStore.summaries() }
         }
-        // The retroactive pass: stamp whatever the records already prove
-        // (veterans on first launch, cloud restores) — SILENT by design, no
+        // Retroactive feats (veterans, cloud restores) stamp SILENTLY — no
         // 15-sticker backlog parade; live celebrations only for new earns.
         .task {
             _ = achievements.reconcile(
@@ -223,17 +184,14 @@ public struct GameView: View {
         .onChangeCompat(of: navigator.showingNewGame) { showing in
             if showing { saveSummaries = resumeStore.summaries() }
         }
-        // …and when a save COMMITS while one of those surfaces is up. Big boards
-        // can still be computing the first move when the popup opens — the
-        // open-time flush has nothing to write yet, and the real save lands via
-        // the debounce seconds later. This keeps the dots/Continue live.
+        // Re-read when a save COMMITS while a surface is up: a big board can
+        // still be computing at open, its real save landing seconds later.
         .onChangeCompat(of: navigator.savesChanged) { _ in
             if navigator.showingTitle || navigator.showingNewGame {
                 saveSummaries = resumeStore.summaries()
             }
         }
-        // UI-test hooks (like -uitest-clean): jump straight to a modal, so
-        // tests/screenshots don't depend on tapping through the title.
+        // UI-test hooks: jump straight to a modal.
         .onAppear {
             saveSummaries = resumeStore.summaries()
             let args = ProcessInfo.processInfo.arguments
@@ -246,19 +204,14 @@ public struct GameView: View {
         }
     }
 
-    /// Start a fresh game with the popup's selection and leave Home — the single
-    /// entry point for the New Game button and the result screen.
     private func startSelectedGame() {
         navigator.showingNewGame = false
         viewModel.newGame(config: settings.currentConfig)
         navigator.showingTitle = false
     }
 
-    /// Resume a saved board: load its snapshot, restore, and leave Home — shared by
-    /// the Home Continue card/list, the art tap, and the New Game popup's Continue.
-    /// An unreadable save (corruption, a between-builds geometry retune) raises the
-    /// broken-save alert instead of silently doing nothing; its OK starts a fresh
-    /// game on the same board.
+    /// An unreadable save (corruption, a between-builds geometry retune)
+    /// raises the broken-save alert instead of silently doing nothing.
     private func resume(_ config: GameConfig) {
         guard let snapshot = resumeStore.load(config: config) else {
             failedResumeConfig = config
@@ -269,8 +222,6 @@ public struct GameView: View {
         navigator.showingTitle = false
     }
 
-    /// The broken-save follow-up: discard the dead file and start fresh on the same
-    /// board (the alert already told the player why).
     private func startFreshAfterFailedResume(_ config: GameConfig) {
         resumeStore.clear(config: config)  // stop it haunting the lists
         saveSummaries = resumeStore.summaries()
@@ -280,19 +231,15 @@ public struct GameView: View {
         navigator.showingTitle = false
     }
 
-    /// Decode + verify a received donpa.app/s/… URL, classify it against the current
-    /// friends list, and hand the result to the receive prompt. Verification lives in
-    /// `ShareLink.payload` (signature) — a throw here means the share is invalid, so
-    /// we surface a loud `.failed`; a valid share becomes `.accepted` or `.collision`.
-    /// Shared by `onOpenURL` (tapped link) and the scanner (decoded QR).
+    /// Classify a received share URL for the receive prompt. Shared by
+    /// `onOpenURL` and the QR scanner; verification is in `ShareLink.payload`.
     static func classify(
         _ url: URL, existing: [Friend], ownKey: Data? = nil
     ) -> IncomingShare {
         do {
             let payload = try ShareLink.payload(from: url)
-            // Your own card — your own QR, or Nearby finding your other device
-            // (both carry the same synchronizable Keychain identity). Importing
-            // yourself as a rival is never right.
+            // Your other device carries the same synced Keychain identity —
+            // importing yourself as a rival is never right.
             if let ownKey, payload.publicKey == ownKey { return .own }
             switch FriendMerge.outcome(for: payload, existing: existing) {
             case .nameCollision(let key):
@@ -313,23 +260,19 @@ public struct GameView: View {
     }
 }
 
-/// Presents the receive flow driven by `Navigator`: the sheet for a verified
-/// add/refresh/collision, the loud alert for a share that failed to verify, and the
-/// QR scan sheet (whose decoded code routes through the same classify path).
-/// A modifier (not inline) so `GameView.body` stays readable.
+/// The receive flow: a sheet for a verified share, a loud alert for one
+/// that failed to verify.
 private struct ReceivePrompt: ViewModifier {
     @ObservedObject var navigator: Navigator
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
 
-    /// True for `.own` — the gentle "that's you" alert.
     private var isOwn: Bool {
         if case .own = navigator.incomingShare { return true }
         return false
     }
 
-    /// True only for `.failed`, which routes to the alert rather than the sheet.
     private var failure: ShareCodec.DecodeError? {
         if case .failed(let error) = navigator.incomingShare { return error }
         return nil
@@ -339,17 +282,14 @@ private struct ReceivePrompt: ViewModifier {
         alerts(sheets(content))
     }
 
-    /// The two sheets (receive prompt + Mess hall), split from `body` for the
-    /// function-length budget.
     private func sheets(_ content: Content) -> some View {
         content
             .sheet(item: sheetBinding) { incoming in
                 ReceiveShareView(
                     incoming: incoming, friends: friends,
                     onDone: { navigator.incomingShare = nil },
-                    // A fresh add lands in the Mess hall (deferred a tick — this
-                    // sheet is dismissing, and two sheet swaps in one runloop race),
-                    // so a new rival is never invisible.
+                    // A fresh add lands in the Mess hall so a new rival is never
+                    // invisible; deferred a tick (sheet swaps in one turn race).
                     onAdded: {
                         navigator.incomingShare = nil
                         Task { @MainActor in navigator.showingMessHall = true }
@@ -358,22 +298,17 @@ private struct ReceivePrompt: ViewModifier {
             .sheet(isPresented: $navigator.showingMessHall) {
                 MessHallView(
                     friends: friends, scoreboard: scoreboard, settings: settings,
-                    // A rival URL scanned inside the Mess hall's share sheet: the
-                    // view dismissed itself; classify and prompt at root (deferred
-                    // a tick for the same sheet-swap reason).
+                    // Classify and prompt at root, deferred a tick (sheet swap).
                     onScanned: { url in
                         let incoming = GameView.classify(
                             url, existing: friends.friends,
                             ownKey: ShareIdentityStore().identity()?.publicKey)
                         Task { @MainActor in navigator.incomingShare = incoming }
                     },
-                    // A head-to-head rematch: same rail as the Service Record's
-                    // play button (GameView owns the actual start).
                     onPlay: { navigator.playConfigRequested = $0 })
             }
     }
 
-    /// The failed-share and own-card alerts.
     private func alerts(_ content: some View) -> some View {
         content
             .alert(
@@ -409,7 +344,7 @@ private struct ReceivePrompt: ViewModifier {
             }
     }
 
-    /// The sheet shows every incoming case EXCEPT `.failed` (which is the alert).
+    /// Every incoming case EXCEPT `.failed` (that one is the alert).
     private var sheetBinding: Binding<IncomingShare?> {
         Binding(
             get: { failure == nil ? navigator.incomingShare : nil },

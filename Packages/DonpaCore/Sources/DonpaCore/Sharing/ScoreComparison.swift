@@ -1,22 +1,12 @@
 import Foundation
 
-/// Pure comparison logic for the scoreboard's friend features. Two shapes:
-///
-/// - **Per-config ranking** (`rank(config:)`): you + the selected rivals on one board,
-///   ordered by best time (fastest first), with your position and the field size —
-///   drives both the expanded interleave and the collapsed "N/M" badge.
-/// - **Head-to-head** (`headToHead(...)`): across every board either side has cleared,
-///   who is faster, plus the win/loss tally — drives the dedicated compare sheet.
-///
-/// Headless: takes plain figures (your best per config, rivals' `SharedConfigScore`),
-/// no dependency on `Scoreboard` / `FriendsStore` / UI. Best time is centiseconds;
+/// Pure comparison logic for the scoreboard's friend features: per-config ranking
+/// (`rank`) and cross-board head-to-head (`headToHead`). Headless — takes plain
+/// figures, no `Scoreboard`/`FriendsStore`/UI dependency. Times are centiseconds;
 /// nil = never won (sorts last, never "wins" a comparison).
 public enum ScoreComparison {
-    /// One competitor's standing on a board: who, their best time (nil = unwon), and
-    /// whether it's you. Sorted rows use this.
     public struct Entry: Equatable, Sendable {
         public let name: String
-        /// Best winning time in centiseconds, or nil if never won this board.
         public let best: Int?
         public let isYou: Bool
 
@@ -27,20 +17,15 @@ public enum ScoreComparison {
         }
     }
 
-    /// A ranked board: every competitor ordered fastest-first (unwon last), plus your
-    /// 1-based rank among those who HAVE a time (nil if you haven't won it) and the
-    /// count of competitors with a time (the "M" in "N/M").
     public struct Ranking: Equatable, Sendable {
         public let entries: [Entry]
-        /// Your 1-based position among ranked (won) competitors, or nil if you haven't
-        /// won this board.
+        /// Your 1-based position among competitors with a time, or nil if you
+        /// haven't won this board.
         public let yourRank: Int?
-        /// How many competitors have a time here (the field you're ranked within).
+        /// How many competitors have a time here (the "M" in "N/M").
         public let rankedCount: Int
     }
 
-    /// Rank you + rivals on one board. `yourBest` is your best time (nil = unwon);
-    /// `rivals` are (name, best) for each selected friend on this config.
     public static func rank(
         yourName: String, yourBest: Int?, rivals: [(name: String, best: Int?)]
     ) -> Ranking {
@@ -53,13 +38,11 @@ public enum ScoreComparison {
         return Ranking(entries: entries, yourRank: yourRank, rankedCount: ranked.count)
     }
 
-    /// Who's ahead on a board in a head-to-head.
     public enum Lead: Equatable, Sendable { case you, them, tie, neither }
 
-    /// One board's line in a head-to-head: your time, their time, who's ahead, and —
-    /// for a group opponent — WHO on the other side holds that best (nil for a single
-    /// rival, where the name is in the sheet title). `gap` is your signed time delta
-    /// vs. theirs in centiseconds (negative = you faster), nil unless both have a time.
+    /// `holderName` is who on the other side holds that best for a group opponent
+    /// (nil for a single rival). `gap` is yours minus theirs in centiseconds
+    /// (negative = you faster), nil unless both have a time.
     public struct HeadToHeadRow: Equatable, Sendable {
         public let configKey: String
         public let yourBest: Int?
@@ -69,18 +52,14 @@ public enum ScoreComparison {
         public let gap: Int?
     }
 
-    /// A full head-to-head: per-board rows (only boards either side has a bearing on)
-    /// plus the tally of boards each leads.
     public struct HeadToHead: Equatable, Sendable {
         public let rows: [HeadToHeadRow]
         public let youLead: Int
         public let theyLead: Int
     }
 
-    /// Compare all your bests against one opponent's (a single friend, or a group's
-    /// best-per-board already reduced to `theirBests`). `configKeys` is the union of
-    /// boards to consider. Bests are keyed only where a board was WON — an absent key
-    /// means unwon (no double-optionals).
+    /// Rows cover only boards either side has a time on. Bests are keyed only where
+    /// a board was WON — an absent key means unwon.
     public static func headToHead(
         configKeys: [String], yourBests: [String: Int], theirBests: [String: Int],
         theirHolders: [String: String] = [:]
@@ -91,12 +70,10 @@ public enum ScoreComparison {
         for key in configKeys {
             let mine = yourBests[key]
             let theirs = theirBests[key]
-            // Skip boards neither side has cleared — nothing to compare.
             guard mine != nil || theirs != nil else { continue }
             let lead = leadFor(mine: mine, theirs: theirs)
             if lead == .you { youLead += 1 }
             if lead == .them { theyLead += 1 }
-            // Your signed gap vs. theirs (negative = you faster) when both have a time.
             let gap: Int? = (mine != nil && theirs != nil) ? mine! - theirs! : nil
             rows.append(
                 HeadToHeadRow(
@@ -106,9 +83,8 @@ public enum ScoreComparison {
         return HeadToHead(rows: rows, youLead: youLead, theyLead: theyLead)
     }
 
-    /// The group's best time per board and WHO holds it (the fastest member), so the
-    /// head-to-head is you vs "the group's best" but names the holder rather than being
-    /// anonymous. `members` is (name, scores) per member.
+    /// The group's best time per board and which member holds it, so a group
+    /// head-to-head names the holder rather than being anonymous.
     public static func groupBests(
         _ members: [(name: String, scores: [String: Int])]
     ) -> (times: [String: Int], holders: [String: String]) {
@@ -123,10 +99,7 @@ public enum ScoreComparison {
         return (best, holder)
     }
 
-    // MARK: Ordering
-
-    /// Fastest first; a missing time sorts after any real time. Ties break by name so
-    /// the order is deterministic. `isYou` never affects order (only highlighting).
+    /// Fastest first; missing times sort last; ties break by name for determinism.
     private static func fasterFirst(_ a: Entry, _ b: Entry) -> Bool {
         switch (a.best, b.best) {
         case (let x?, let y?): return x != y ? x < y : a.name < b.name

@@ -1,18 +1,13 @@
 import Foundation
 
-/// The earned-feat record (A3 of the progression spec): id × tier → the date
-/// first earned. Local-first (UserDefaults), synced as a per-device KVS blob
-/// whose merge is a pure UNION with the EARLIEST date winning — achievements
-/// never delete, so there are no tombstones, no LWW, and deliberately **no
-/// reset-epoch: feats are permanent** (the stats wipe never touches this store;
-/// hidden feats can't be re-derived and Game Center can't un-report).
-///
-/// Derivable feats are STAMPED here when first observed (see `reconcile`), so
-/// dates stay stable and the future Game Center reporter fires once per tier.
+/// Earned feats: id × tier → date first earned. Local-first (UserDefaults),
+/// synced as per-device KVS blobs merged by pure UNION with the EARLIEST date
+/// winning. Achievements never delete: no tombstones, no LWW, and deliberately
+/// NO reset-epoch — the stats wipe must not touch this store (hidden feats
+/// can't be re-derived and Game Center can't un-report).
 @MainActor
 public final class AchievementStore: ObservableObject {
-    /// Earned tiers per feat: tier (1-based) → date first earned. One-shot
-    /// feats live at tier 1.
+    /// tier (1-based) → date first earned; one-shot feats live at tier 1.
     @Published public private(set) var earned: [AchievementID: [Int: Date]] = [:]
 
     private let defaults: UserDefaults
@@ -44,17 +39,15 @@ public final class AchievementStore: ObservableObject {
         earned[id]?.keys.max() ?? 0
     }
 
-    /// When a tier was first earned (anywhere), or nil.
     public func firstEarned(_ id: AchievementID, tier: Int = 1) -> Date? {
         earned[id]?[tier]
     }
 
     // MARK: Writes
 
-    /// Stamp one feat tier; false if it was already earned (a feat only ever
-    /// fires once — the celebration and the future GC report key off `true`).
-    /// An EARLIER date still lowers the stamp (the union invariant: the first
-    /// earn anywhere wins, whichever order the devices sync in).
+    /// False if already earned — the celebration and GC report key off `true`.
+    /// An EARLIER date still lowers the stamp: the first earn anywhere wins,
+    /// whichever order the devices sync in.
     @discardableResult
     public func record(_ id: AchievementID, tier: Int = 1, at date: Date = Date()) -> Bool {
         if let known = earned[id]?[tier] {
@@ -69,9 +62,8 @@ public final class AchievementStore: ObservableObject {
         return true
     }
 
-    /// Stamp everything the records prove that the store doesn't hold yet —
-    /// the retroactive pass (veterans on first launch, cloud restores). Returns
-    /// the fresh stamps, oldest feats first, for the celebration queue.
+    /// The retroactive pass: stamp everything the records prove that isn't held
+    /// yet. Returns the fresh stamps for the celebration queue.
     @discardableResult
     public func reconcile(
         derivable: [AchievementID: Int], at date: Date = Date()
@@ -88,8 +80,7 @@ public final class AchievementStore: ObservableObject {
         return fresh.sorted { ($0.id.rawValue, $0.tier) < ($1.id.rawValue, $1.tier) }
     }
 
-    /// Follow the sync toggle: on turns publishing on and merges what's there;
-    /// off removes this device's slot (local earnings stay — permanence).
+    /// Off removes this device's slot; local earnings stay (permanence).
     public func setSyncEnabled(_ on: Bool) {
         syncEnabled = on
         if on {
@@ -102,8 +93,6 @@ public final class AchievementStore: ObservableObject {
 
     // MARK: Sync
 
-    /// Union every device's blob into the local set (earliest date per tier
-    /// wins), and re-publish when the union taught us something new.
     private func mergeFromCloud() {
         guard syncEnabled, let cloud, cloud.isAvailable else { return }
         var merged = earned
@@ -123,8 +112,8 @@ public final class AchievementStore: ObservableObject {
         persistAndPublish()
     }
 
-    /// This device's blob is the full known union — idempotent under the union
-    /// merge, and it converges the fleet faster than own-earnings-only would.
+    /// Publishes the FULL known union, not just own earnings — idempotent under
+    /// the union merge, and converges the fleet faster.
     private func publish() {
         guard syncEnabled, let cloud, cloud.isAvailable,
             let data = Self.encode(earned)
@@ -140,8 +129,7 @@ public final class AchievementStore: ObservableObject {
     // MARK: Wire format
 
     /// {"version":1,"earned":{"win.first":{"1":<date>}}} — string keys
-    /// throughout (Int-keyed Codable dictionaries encode as arrays), unknown
-    /// ids tolerated (a future version's feats survive a round-trip here).
+    /// throughout (Int-keyed Codable dictionaries encode as arrays).
     private struct Envelope: Codable {
         var version: Int
         var earned: [String: [String: Date]]
@@ -161,8 +149,8 @@ public final class AchievementStore: ObservableObject {
         else { return nil }
         var out: [AchievementID: [Int: Date]] = [:]
         for (rawID, tiers) in envelope.earned {
-            // Unknown ids (a newer build's feats) are dropped from the DECODED
-            // view but survive on the cloud side untouched.
+            // Unknown ids (a newer build's feats) drop from the decoded view but
+            // survive untouched on the cloud side.
             guard let id = AchievementID(rawValue: rawID) else { continue }
             for (rawTier, date) in tiers {
                 guard let tier = Int(rawTier) else { continue }

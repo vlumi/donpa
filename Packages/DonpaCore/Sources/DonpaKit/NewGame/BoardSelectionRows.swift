@@ -16,7 +16,7 @@ extension BoardSelectionPicker {
                 basicCard(preset)
             }
         }
-        .modifier(FocusRing(focused: focusedRow == 0, inset: compact ? 3 : 6))
+        .modifier(FocusRing(focused: keyboardFocusedRow == 0, inset: compact ? 3 : 6))
     }
 
     private func basicCard(_ preset: BasicPreset) -> some View {

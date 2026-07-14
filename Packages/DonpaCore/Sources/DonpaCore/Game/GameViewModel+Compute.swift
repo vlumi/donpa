@@ -1,22 +1,11 @@
 import Foundation
 
-/// Pure helpers for the off-main compute path, split from the main view model for
-/// the file-length budget. Both are read-only / static — no state mutation — so
-/// they live cleanly outside the type body.
 extension GameViewModel {
-    /// What a finishing off-main compute should do, decided purely so it's testable
-    /// (the async closure just applies the result, with no branching of its own).
-    /// - `finished`: the gameID the finishing task belongs to.
-    /// - `current`: the live gameID now.
-    /// - `latestStarted`: the gameID of the most recently *started* compute.
-    ///
-    /// `applyResult` — only the live task (`finished == current`) writes its board +
-    /// runs afterApply; a stale task (a newGame/restore bumped gameID past it) must
-    /// not clobber the newer game.
-    /// `releaseGate` — release `isComputing` for the live task, OR for a stale task
-    /// when no newer compute is arming the current generation (`latestStarted !=
-    /// current`); otherwise that newer compute owns the release. So the gate can
-    /// never wedge shut regardless of which entry point bumped gameID.
+    /// What a finishing off-main compute should do (pure, for testability).
+    /// Only the live task (`finished == current`) applies its result — a stale
+    /// one must not clobber a newer game. The gate releases for the live task,
+    /// or for a stale one when no newer compute is arming the current
+    /// generation (`latestStarted != current`) — so it can never wedge shut.
     static func computeOutcome(finished: Int, current: Int, latestStarted: Int)
         -> (applyResult: Bool, releaseGate: Bool)
     {
@@ -24,9 +13,8 @@ extension GameViewModel {
         return (applyResult: live, releaseGate: live || latestStarted != current)
     }
 
-    /// The momentary end-of-game facts for the achievement layer. 3BV is
-    /// computed here on wins only — one linear pass at the game-end instant,
-    /// imperceptible next to the end-game effects even on huge boards.
+    /// The end-of-game facts for the achievement layer. 3BV is computed on
+    /// wins only — one linear pass at the game-end instant.
     func event(finalCentiseconds: Int) -> GameEndEvent {
         let won = game.status == .won
         return GameEndEvent(

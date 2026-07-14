@@ -1,30 +1,25 @@
 import DonpaCore
 import SwiftUI
 
-/// The score list's size grouping + full-clear standings: a slim subheader before
-/// each size's density rows carrying the group's full-clear sum (all densities won)
-/// or its n/N progress — and Basic's trifecta total under its three presets. Split
-/// from `ScoreboardView` (which keeps the sheet chrome and filters) for the
-/// type-body-length budget; not `private` because Swift `private` is file-scoped.
+/// The score list's size grouping + full-clear standings, split from
+/// `ScoreboardView` for the type-body-length budget (not `private`: Swift
+/// `private` is file-scoped).
 extension ScoreboardView {
-    /// One header-plus-rows group of the filtered list. Grid/Hive group by SIZE
-    /// (the sum stays comparable within one board scale); Basic is a single
-    /// unlabelled group whose standing renders as a trailing Total row instead.
+    /// One header-plus-rows group of the filtered list: Grid/Hive get a labelled
+    /// group per size; Basic and Drills are single unlabelled groups.
     struct ConfigGroup: Identifiable {
         let label: String?
         let configs: [GameConfig]
         var id: String { configs.first?.storageKey ?? "empty" }
     }
 
-    /// The filtered leaf, grouped: Grid/Hive one group per size; Basic one group.
     static func groups(family: BoardFamily, edges: BoardEdges) -> [ConfigGroup] {
         switch family {
         case .basic:
             return [ConfigGroup(label: nil, configs: GameConfig.configs(family: .basic))]
         case .practice:
-            // One row per size, one flat group: Drills has no density axis, so
-            // there is nothing to sum within a size (cross-size totals are a
-            // deliberate non-goal — it's a practice mode, not a ladder).
+            // Drills has no density axis; a cross-size total is a deliberate
+            // non-goal (practice, not a ladder).
             return [ConfigGroup(label: nil, configs: GameConfig.configs(family: .practice))]
         case .grid, .hive:
             return BoardSize.allCases.map { size in
@@ -37,14 +32,10 @@ extension ScoreboardView {
         }
     }
 
-    /// The group's full-clear standing from the live scoreboard.
     func standing(for group: ConfigGroup) -> FullClear.Standing {
         FullClear.standing(bests: group.configs.map { scoreboard.best(for: $0) })
     }
 
-    /// The slim size subheader: size label leading, the full-clear sum (or n/N
-    /// progress) trailing. Untouched sizes show just the label — a row of "0/5"
-    /// noise would drown the list.
     @ViewBuilder func groupHeader(_ label: String, standing: FullClear.Standing) -> some View {
         HStack(spacing: 8) {
             Text(verbatim: label)
@@ -76,7 +67,7 @@ extension ScoreboardView {
     }
 
     /// "Full clear m:ss.t" once every config in the group is won; "n/N cleared"
-    /// while working toward it; nothing when untouched.
+    /// in progress; nothing when untouched — a row of "0/5" would drown the list.
     @ViewBuilder private func standingLabel(_ standing: FullClear.Standing) -> some View {
         if let sum = standing.sumCentiseconds {
             Text("Full clear \(TimeFormat.mmsst(centiseconds: sum))", bundle: .module)

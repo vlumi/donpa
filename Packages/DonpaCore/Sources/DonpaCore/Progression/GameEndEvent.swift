@@ -1,23 +1,19 @@
 import Foundation
 
-/// One finished game, as the achievement layer sees it (A1 of the progression
-/// spec). Everything else a feat could need — purity bits, luck records, career
-/// counters — already lives in the score records; this carries only the
-/// momentary facts that vanish when the next game starts.
+/// One finished game, as the achievement layer sees it — only the momentary
+/// facts that vanish when the next game starts (everything else a feat could
+/// need already lives in the score records).
 public struct GameEndEvent: Equatable, Sendable {
     public let config: GameConfig
     public let won: Bool
-    /// The final clock, centiseconds.
     public let timeCentiseconds: Int
     /// Fraction of safe cells revealed (1 on a win).
     public let progress: Double
-    /// Reveal-type actions this game (reveals + chords) — "lose on your second
-    /// reveal" reads this. Restore-poisoned: a resumed game reports a huge
-    /// count, so momentary feats can never false-fire on it.
+    /// Reveals + chords this game. Restore-poisoned: a resumed game reports a
+    /// huge count, so momentary feats can never false-fire on it.
     public let revealActions: Int
     public let date: Date
-    /// The board's 3BV (see `Pace.threeBV`) — computed on WINS only (pace of
-    /// an unfinished board is undefined), nil on losses.
+    /// The board's 3BV (see `Pace.threeBV`); wins only, nil on losses.
     public let threeBV: Int?
 
     public init(

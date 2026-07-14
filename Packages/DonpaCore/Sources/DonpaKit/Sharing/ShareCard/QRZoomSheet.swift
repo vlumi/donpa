@@ -1,10 +1,7 @@
 import DonpaCore
 import SwiftUI
 
-/// The QR at scanning size: near the full sheet width on iOS, a generous fixed
-/// square on macOS. The branded-card image exports (share/save) render exactly
-/// what's shown, so they live beside it, in the footer with the standard
-/// bottom-right Done. Tap anywhere (or Done) to dismiss.
+/// The QR at scanning size, with the branded-card image exports beside it.
 struct QRZoomSheet: View {
     let qr: Image?
     /// Stamped on the exported card image.
@@ -20,8 +17,6 @@ struct QRZoomSheet: View {
     var body: some View {
         VStack(spacing: 20) {
             if let qr {
-                // Flexible in both axes (scaledToFit keeps the code square), so
-                // the plate fills the sheet with no dead space.
                 qr
                     .interpolation(.none)
                     .resizable()
@@ -40,10 +35,8 @@ struct QRZoomSheet: View {
         .onTapGesture { dismiss() }
         .background(zoomKeyCatcher)
         #if os(macOS)
-        // Low floors so small scaled-display screens can shrink it (the QR
-        // scales down), capped at the ideal: macOS won't resize a sheet's width,
-        // so extra height would only add dead space around the square code. The
-        // ideal lands the plate near-square (~520pt), well above scan density.
+        // Low floors so small scaled displays can shrink it; capped at the ideal
+        // because macOS won't resize a sheet's width, so extra height is dead space.
         .frame(
             minWidth: 480, idealWidth: 560, maxWidth: 560,
             minHeight: 420, idealHeight: 600, maxHeight: 600)
@@ -57,9 +50,7 @@ struct QRZoomSheet: View {
                     ShareImageButton(qr: qr, name: name, linkID: link, activate: sharePulse)
                         .keyFocusRing(keyIndex == 0)
                     #if os(macOS)
-                    // macOS's share picker has NO save-to-disk service (iOS's
-                    // sheet offers "Save to Files"), so saving the card is its
-                    // own button + save panel.
+                    // macOS's share picker has no save-to-disk service, unlike iOS's sheet.
                     SaveImageButton(qr: qr, name: name, linkID: link, activate: savePulse)
                         .keyFocusRing(keyIndex == 1)
                     #endif
@@ -76,9 +67,7 @@ struct QRZoomSheet: View {
         }
     }
 
-    /// Arrows/Tab move between the export buttons; Return and Space press the
-    /// focused one, Return with none focused is the default — Done. Esc
-    /// dismisses (the catcher owns keyDown, so it's routed here).
+    /// Arrows/Tab move between the export buttons; Return with none focused is Done.
     @ViewBuilder private var zoomKeyCatcher: some View {
         #if os(macOS)
         KeyCatcher { key in
@@ -101,9 +90,7 @@ struct QRZoomSheet: View {
         if keyIndex == 0 { sharePulse.fire() }
         if keyIndex == 1 { savePulse.fire() }
     }
-    #endif
 
-    #if os(macOS)
     private func moveFocus(_ delta: Int) {
         guard qr != nil, link != nil else { return }
         keyIndex = KeyStep.moved(keyIndex, by: delta, count: 2)

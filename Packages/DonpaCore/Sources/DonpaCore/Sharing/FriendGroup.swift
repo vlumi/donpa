@@ -1,27 +1,19 @@
 import Foundation
 
-/// A receiver-defined circle of friends (e.g. "work", "family"). Local only — the
-/// share payload knows nothing of groups. A real object with a stable `id` so a group
-/// can be renamed (members reference the id, not the name) and can exist while empty.
-/// `Friend.groups` holds these ids.
+/// A receiver-defined circle of friends. Local only — the share payload knows nothing
+/// of groups. Stable `id` (referenced by `Friend.groups`) so a group can be renamed
+/// without re-tagging members, and can exist while empty.
 public struct FriendGroup: Codable, Equatable, Sendable, Identifiable {
-    /// Stable identity, independent of the name — lets a group be renamed without
-    /// re-tagging its members. A short opaque string (UUID by default).
     public var id: String
-    /// The display name. Not unique-enforced at the type level; the store trims and
-    /// rejects blank/duplicate names when creating or renaming.
     public var name: String
-    /// Last local mutation (create / rename). Sync tiebreaker: newest wins per id.
+    /// Last local mutation — sync tiebreaker: newest wins per id.
     public var updatedAt: Date
-    /// Soft-delete tombstone; non-nil = deleted then, kept only to propagate the
-    /// delete across devices. nil = live.
+    /// Soft-delete tombstone: non-nil = deleted then, kept only to propagate the delete.
     public var deletedAt: Date?
 
-    /// A tombstoned group — deleted, retained only to propagate the delete.
     public var isDeleted: Bool { deletedAt != nil }
 
-    /// A minimal tombstone: keep the id + deletion time, blank the name. Enough for
-    /// the merge to propagate the delete without the name lingering.
+    /// Keeps the id + deletion time, blanks the name — enough to propagate the delete.
     public func tombstone(now: Date = Date()) -> FriendGroup {
         FriendGroup(id: id, name: "", updatedAt: now, deletedAt: now)
     }
