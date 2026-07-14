@@ -194,6 +194,7 @@ public struct GameView: View {
         // UI-test hooks: jump straight to a modal.
         .onAppear {
             saveSummaries = resumeStore.summaries()
+            LaunchActionRouter.shared.register { handleLaunchAction($0) }
             let args = ProcessInfo.processInfo.arguments
             if args.contains("-uitest-open-newgame") {
                 navigator.showingNewGame = true
@@ -201,6 +202,25 @@ public struct GameView: View {
             if args.contains("-uitest-open-scores") {
                 navigator.showingScores = true
             }
+        }
+    }
+
+    /// App Intents land here (Spotlight / Siri / Shortcuts).
+    private func handleLaunchAction(_ action: LaunchActionRouter.Action) {
+        switch action {
+        case .continueBoard:
+            let latest = resumeStore.summaries().max { $0.updatedAt < $1.updatedAt }
+            guard let config = latest?.config else {
+                navigator.showingTitle = true
+                return
+            }
+            resume(config)
+        case .startDrills:
+            let config = GameConfig.practice(settings.practiceSize)
+            settings.adopt(config)
+            navigator.showingNewGame = false
+            viewModel.newGame(config: config)
+            navigator.showingTitle = false
         }
     }
 

@@ -88,6 +88,9 @@ entries land under Unreleased as they merge.
   once per app version, and only once you're ten wins in — bring up the
   standard App Store review prompt. Never after a loss, never over the
   celebration, and the system caps it a few times a year at most.
+- **Spotlight and Siri shortcuts.** "Continue my board" resumes your most
+  recent game in progress and "Start drills" opens a fresh practice board —
+  from Spotlight, Siri, or the Shortcuts app, no setup needed.
 ### build 23 — 2026-07-12
 
 - **Board keyboard hardening.** On iPad with a hardware keyboard, the
