@@ -82,6 +82,8 @@ struct ScoreboardView: View {
         sheetChrome
             .escDismisses { dismiss() }
             .onAppear(perform: seedFilterFromCurrent)
+            .onChangeCompat(of: filterFamily) { settings.scoreFilterFamily = $0 }
+            .onChangeCompat(of: filterEdges) { settings.scoreFilterEdges = $0 }
     }
 
     /// iOS: a NavigationStack with Reset / Done nav-bar items over the list. macOS:
@@ -415,9 +417,13 @@ struct ScoreboardView: View {
     /// Seed the filter to the config being played (so opening in-game shows its
     /// list), else leave the Basic default for plain browsing from the title.
     private func seedFilterFromCurrent() {
-        guard let config = currentConfig else { return }
-        filterFamily = config.family
-        filterEdges = config.edges
+        if let config = currentConfig {
+            filterFamily = config.family
+            filterEdges = config.edges
+        } else {
+            filterFamily = settings.scoreFilterFamily
+            filterEdges = settings.scoreFilterEdges
+        }
     }
 
     private func sectionHeader(_ title: LocalizedStringKey) -> some View {

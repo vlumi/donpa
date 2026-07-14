@@ -202,6 +202,15 @@ public final class Settings: ObservableObject {
     /// Add a "?" step to the flag cycle (hidden → flag → "?" → clear). Opt-in,
     /// off by default: the third state taxes the common flag→clear tap, so only
     /// players who want the classic maybe-mark pay for it.
+    /// The Record's last-browsed Family × Edges filter, so reopening lands
+    /// where you left off (an in-game open still seeds to the played board).
+    public var scoreFilterFamily: BoardFamily {
+        didSet { defaults.set(scoreFilterFamily.rawValue, forKey: scoreFilterFamilyKey) }
+    }
+    public var scoreFilterEdges: BoardEdges {
+        didSet { defaults.set(scoreFilterEdges.rawValue, forKey: scoreFilterEdgesKey) }
+    }
+
     /// The marketing version the review prompt last fired for.
     public var reviewPromptedVersion: String {
         didSet { defaults.set(reviewPromptedVersion, forKey: reviewPromptedVersionKey) }
@@ -260,6 +269,8 @@ public final class Settings: ObservableObject {
     private let unlockAllKey = "donpa.unlockAll"
     private let questionMarksKey = "donpa.questionMarks"
     private let reviewPromptedVersionKey = "donpa.reviewPromptedVersion"
+    private let scoreFilterFamilyKey = "donpa.scoreFilterFamily"
+    private let scoreFilterEdgesKey = "donpa.scoreFilterEdges"
     private let soundKey = "donpa.sound"
     private let hapticsKey = "donpa.haptics"
     private let syncScoresKey = "donpa.syncScores"
@@ -320,6 +331,8 @@ public final class Settings: ObservableObject {
         unlockAll = defaults.bool(forKey: unlockAllKey)
         questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
         reviewPromptedVersion = defaults.string(forKey: reviewPromptedVersionKey) ?? ""
+        scoreFilterFamily = Self.stored(defaults, scoreFilterFamilyKey) ?? .basic
+        scoreFilterEdges = Self.stored(defaults, scoreFilterEdgesKey) ?? .flat
         sound = defaults.object(forKey: soundKey) as? Bool ?? true
         haptics = defaults.object(forKey: hapticsKey) as? Bool ?? true
         syncScores = defaults.object(forKey: syncScoresKey) as? Bool ?? false
@@ -361,6 +374,12 @@ public final class Settings: ObservableObject {
         case .practice(let size):
             practiceSize = size
         }
+    }
+
+    private static func stored<T: RawRepresentable>(_ defaults: UserDefaults, _ key: String)
+        -> T? where T.RawValue == String
+    {
+        defaults.string(forKey: key).flatMap(T.init(rawValue:))
     }
 
     /// Key paths to a family's own axes, so the picker and keyboard nav bind to
