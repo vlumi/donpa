@@ -108,7 +108,6 @@ extension MangaPanelView {
             localized: "Unlocked: \(labels.joined(separator: ", "))", bundle: .module)
     }
 
-    /// Top-right X to dismiss the panel (also tap-anywhere or Esc).
     var closeButton: some View {
         Button(action: onContinue) {
             Image(systemName: "xmark.circle.fill")

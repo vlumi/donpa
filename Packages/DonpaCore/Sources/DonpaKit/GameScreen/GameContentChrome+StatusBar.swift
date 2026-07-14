@@ -16,7 +16,6 @@ extension GameContent {
         HStack(spacing: 8) {
             FitToWidth {
                 HStack(spacing: 16) {
-                    // Tappable badge for the current game; opens the New Game popup.
                     configButton
                     CounterReadout.mines(viewModel.flagsRemaining, tint: palette.counter)
                     ProgressReadout(progress: viewModel.game.progress, tint: palette.counter)

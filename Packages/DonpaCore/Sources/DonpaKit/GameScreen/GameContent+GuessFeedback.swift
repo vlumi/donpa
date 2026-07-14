@@ -1,10 +1,8 @@
 import DonpaCore
 import SwiftUI
 
-/// How lucky a survived guess was — drives the toast's escalating wording and
-/// the win pill's stamp. The cuts mirror the planned 0.5.0 achievement tiers
-/// (Coin flip / Long shot / Miracle), so the achievements will land on words
-/// the player already knows. A hair of tolerance keeps the boundary odds
+/// How lucky a survived guess was — drives the toast's escalating wording
+/// and the win pill's stamp. A hair of tolerance keeps the boundary odds
 /// (exactly 1/2, 1/3, 1/4) inside their tier.
 enum GuessTier {
     case lucky, coinFlip, longShot, miracle

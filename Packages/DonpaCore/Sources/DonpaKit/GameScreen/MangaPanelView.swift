@@ -64,13 +64,10 @@ struct MangaPanelView: View {
                 return line
             }
         }
-        /// The new-best time, if this is a record win.
         var recordCentiseconds: Int? {
             if case .record(let cs, _) = self { return cs }
             return nil
         }
-        /// The centiseconds improvement over the prior best, if this record win beat
-        /// an existing best (nil on a first-ever clear).
         var recordImprovedBy: Int? {
             if case .record(_, let by) = self { return by }
             return nil
@@ -84,8 +81,6 @@ struct MangaPanelView: View {
             }
             return nil
         }
-        /// The progress improvement over the prior best for a best loss, if there was
-        /// a prior to beat (nil on a first run or a non-best loss).
         var lossImprovedBy: Double? {
             if case .loss(_, _, .improved(let by)) = self { return by }
             return nil
@@ -134,24 +129,18 @@ struct MangaPanelView: View {
     }
 
     let kind: Kind
-    /// The board uses hex cells — picks the loss line's cell word (tiles/cells).
     var hexCells = false
-    /// What this win just opened (progressive gating) — the corner sticker.
     var unlockedLabels: [String] = []
-    /// Feat titles this game earned — the decoration sticker, same corner.
     var earnedFeatTitles: [String] = []
     let reduceMotion: Bool
     /// The guess that ENDED this game, when its final action was a genuine
-    /// forced guess (nil otherwise) — the "was that luck or my mistake?" answer,
-    /// straight on the result. The label escalates with the odds on a win
-    /// ("coin flip", "miracle"…) and stamps "forced guess" on a loss. Arrives
-    /// async (computed off-thread), so the host passes it reactively.
+    /// forced guess — the "was that luck or my mistake?" answer. Arrives async
+    /// (computed off-thread), so the host passes it reactively.
     var guess: (odds: String, label: LocalizedStringKey)?
     /// This win's pace (3BV/s), or nil (losses, or a pre-pace record). A
     /// quiet caption chip, not a pill — it shows on EVERY win, and shouting
     /// every time would cheapen the event pills around it.
     var pace: Double?
-    /// Dismiss to inspect the finished board (X / tap / Esc).
     let onContinue: () -> Void
 
     // Internal (not `private`): the corner overlays live in
@@ -230,7 +219,6 @@ struct MangaPanelView: View {
             // Subtle accent glow over the mono art (frames rather than tints).
             .shadow(color: kind.accent.opacity(0.7), radius: 28)
             .shadow(color: .black.opacity(0.4), radius: 12, y: 6)
-            // A tap on the art also dismisses.
             .contentShape(Rectangle())
             .onTapGesture { onContinue() }
             .accessibilityElement(children: .ignore)

@@ -5,22 +5,16 @@ import SwiftUI
 import UIKit
 #endif
 
-/// End-of-game result feedback: the manga result screen, score submission, the
-/// restart-button pop, and haptics. Split from `GameContent.swift` for the file/type
-/// length caps.
+/// End-of-game result feedback: the manga result screen, score submission,
+/// the restart pop, and haptics.
 extension GameContent {
 
-    /// The end-of-game result screen, overlaid on the BOARD only so the control
-    /// strip's actions stay live. Dims the board until dismissed (X / tap / Esc).
+    /// Overlaid on the BOARD only, so the control strip stays live.
     ///
-    /// Hit-testing is gated on the LOGICAL state (outside the `if`, so it applies
-    /// to the outgoing fade too): the dismissing panel used to stay clickable
-    /// through its 0.25s fade-out, and a rapid click landing there started a
-    /// gesture recognition on a dying view — the hosting view's stuck recognizer
-    /// then swallowed EVERY further click of the continuing rapid-click sequence
-    /// (the board went dead until a ~1s pause let the chain expire). With the
-    /// gate, a click during the fade passes straight through to the board, where
-    /// it lands as the fresh game's first reveal.
+    /// Hit-testing gates on the LOGICAL state, outside the `if`, covering the
+    /// outgoing fade: a click on the dismissing panel starts a recognizer on a
+    /// dying view, and that stuck recognizer swallows every further click. With
+    /// the gate, fade-time clicks fall through as the fresh game's first reveal.
     @ViewBuilder var mangaPanel: some View {
         ZStack {
             if let panel {
@@ -38,8 +32,7 @@ extension GameContent {
             }
         }
         .allowsHitTesting(panel != nil)
-        // The one-time Game Center ask, at the first decoration (see the
-        // reporter: strictly opt-in, and "Not now" is never asked again).
+        // The one-time Game Center ask; "Not now" is never asked again.
         .alert(
             Text("Report decorations to Game Center?", bundle: .module),
             isPresented: $showGCAsk
@@ -63,10 +56,8 @@ extension GameContent {
         }
     }
 
-    /// The feats pass, AFTER the submits so the records include this game: the
-    /// momentary gags off the end event, then the derivable reconcile picks up
-    /// whatever this game's records now prove. Fresh earns announce to
-    /// VoiceOver (the Decorations grid + earn sticker arrive with A4's UI).
+    /// Runs AFTER the submits so the derivable reconcile sees this game's
+    /// records.
     private func recordFeats() {
         var fresh: [(id: AchievementID, tier: Int)] = []
         if let event = viewModel.lastEndEvent {
@@ -107,14 +98,12 @@ extension GameContent {
     func handleResult() {
         guard let result = viewModel.lastResult?.result else { return }
         fireHaptic(for: result)
-        // Win rings UP, loss booms DOWN — distinct sounds, alongside the haptic.
         scene.soundPlayer?.play(result.isWin ? .win : .lose)
 
-        // Snapshot BEFORE the submits below, so a win can diff what it opened.
+        // Snapshot BEFORE the submits, so a win can diff what it opened.
         let recordsBefore = scoreboard.displayRecords
 
-        // Clear the prior record highlight; submit() below re-sets it if THIS game
-        // was a record.
+        // submit() re-sets the highlight if THIS game was a record.
         scoreboard.clearRecentRecord()
 
         let kind: MangaPanelView.Kind
@@ -123,10 +112,8 @@ extension GameContent {
         case .won(let centiseconds, let config):
             kind = submitWin(centiseconds: centiseconds, config: config)
         case .lost:
-            // Record cleared % as a consolation score; the "new best %" pill shows
-            // only when this loss beat the prior best, and by how much.
             let progress = viewModel.game.progress
-            // Prior best progress BEFORE submit overwrites it (nil = first run).
+            // Prior best BEFORE submit overwrites it (nil = first run).
             let priorProgress = scoreboard.bestProgress(for: viewModel.config)
             let isBest = scoreboard.submitLossProgress(progress, for: viewModel.config)
             let safeRemaining = viewModel.game.safeCellCount - viewModel.game.revealedSafeCount
@@ -141,9 +128,8 @@ extension GameContent {
             kind = .loss(progress: progress, safeRemaining: safeRemaining, best: best)
             panelPace = nil
         }
-        // The finished game's OUTCOME: games-played + the mine tally (activity
-        // already accrued live via flushes). minesHit = the single loss detonation;
-        // on a win disarmedMineCount reads the full set.
+        // Outcome only — activity already accrued live via flushes. minesHit =
+        // the single loss detonation; a win's disarmedMineCount reads the full set.
         scoreboard.recordGameOutcome(
             for: viewModel.config,
             won: isWin,
@@ -154,10 +140,9 @@ extension GameContent {
         recordFeats()
         showPanel(kind)
 
-        // The game is over → discard its in-progress save now (a game is kept only
-        // while playable). Without this the last debounced save lingered until the
-        // next autosave, so New Game could still show a stale Continue for it.
-        autosave()  // not in progress → clears this config's save
+        // Discard the save NOW — the last debounced save would otherwise linger
+        // as a stale Continue in New Game.
+        autosave()
 
         if !reduceMotion {
             restartPop = true
@@ -165,12 +150,8 @@ extension GameContent {
         }
     }
 
-    /// The win-side bookkeeping (submit + pace + panel kind), extracted from
-    /// `handleResult` for the function-length cap.
     private func submitWin(centiseconds: Int, config: GameConfig) -> MangaPanelView.Kind {
-        // Capture the prior best BEFORE submit() overwrites it, so the panel can
-        // show how much faster this clear was rather than the (already-on-timer)
-        // final time. No prior best → a first-ever clear (improvedBy nil).
+        // Prior best BEFORE submit() overwrites it (nil = first-ever clear).
         let priorBest = scoreboard.best(for: config)
         let threeBV = viewModel.lastEndEvent?.threeBV
         let isRecord = scoreboard.submit(
@@ -181,10 +162,9 @@ extension GameContent {
             RecentWin(date: Date(), centiseconds: centiseconds, threeBV: $0).pace
         }
         if isRecord {
-            // The pill shows how much the DISPLAYED best changed (times truncate
-            // to tenths) — a raw delta could read "improved by 0.0s" when both
-            // times show the same tenth, or overstate by a tenth. nil (no pill)
-            // when the visible value didn't move, even though the record stands.
+            // Delta of the DISPLAYED (tenth-truncated) bests — a raw delta could
+            // read "improved by 0.0s". nil = record stands but the shown value
+            // didn't move, so no pill.
             let improvedBy = priorBest.flatMap {
                 TimeFormat.displayedImprovement(from: $0, to: centiseconds)
             }
@@ -193,8 +173,7 @@ extension GameContent {
         return .win
     }
 
-    /// Slam the result screen in after a short beat so the board's detonation / win
-    /// ripple plays first. The beat is animation timing, not a hang.
+    /// A short beat lets the board's detonation / win ripple land first.
     private func showPanel(_ kind: MangaPanelView.Kind) {
         InputTrace.log("panel scheduled")
         panelTask?.cancel()
