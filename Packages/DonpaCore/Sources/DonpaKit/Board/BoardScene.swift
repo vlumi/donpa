@@ -11,9 +11,8 @@ import AppKit
 /// from the view model whenever its revision changes.
 public final class BoardScene: SKScene {
     let viewModel: GameViewModel
-    /// Pixel layout for the current board, derived from the live config so it
-    /// follows a shape switch (square ↔ hex) on New Game — the scene is long-lived
-    /// and rebuilds on `gameID` change, so a stored constant would go stale.
+    /// Derived from the live config: the scene is long-lived, so a stored layout
+    /// would go stale on a shape switch (square ↔ hex) at New Game.
     var layout: any CellLayout { viewModel.config.layout() }
     let cameraNode = SKCameraNode()
     let boardLayer = SKNode()
@@ -59,7 +58,6 @@ public final class BoardScene: SKScene {
     /// keys; the logical cell it focuses is `displayCoord` of this, mirrored to
     /// `viewModel.focusedCell` for the chrome. nil until the first move.
     var cursorScreenCoord: Coord?
-    /// The single ring node marking the cursor, on its own layer above the glow.
     var cursorNode: SKSpriteNode?
     /// Ring visibility tracks the INPUT SOURCE: a mouse click hides it (the
     /// position still follows, so arrows resume from the click), any cursor
@@ -79,43 +77,27 @@ public final class BoardScene: SKScene {
     var minimapImageRect: CGRect?
     var lastMinimapRevision = -1
     var lastMinimapBoard: CGSize = .zero
-    /// Show the minimap when the board exceeds the viewport (user preference).
     var showMinimap = true
-    /// Which top corner the minimap pins to — the SAME side as the control strip
-    /// (Settings.handedness): chrome clusters on the holding-thumb side so the
-    /// play hand sweeps an unobstructed board. The resize caret bakes its side
-    /// into its path, so flipping tears the minimap down for a rebuild.
+    /// The control-strip side (Settings.handedness). The resize caret bakes its
+    /// side into its path, so flipping tears the minimap down for a rebuild.
     var minimapOnRight = false {
         didSet { if minimapOnRight != oldValue { recolorMinimap() } }
     }
-    /// Whether the flag cycle includes the "?" step (Settings.questionMarks), pushed
-    /// from the host like `showMinimap`. Read by the flag input paths.
     var useQuestionMarks = false
-    /// Plays the input sound effects (flag/chord/reveal). The host owns it and keeps
-    /// its `isEnabled` in step with Settings; nil until wired (tests, previews).
+    /// Host-owned; nil until wired (tests, previews).
     weak var soundPlayer: SoundPlayer?
-    /// Fires the per-action haptics (flag/chord; reveal is driven by the VM's
-    /// onReveal so it can scale by cascade size). Host-owned, like `soundPlayer`.
+    /// Reveal haptics ride the VM's onReveal instead, to scale by cascade size.
     weak var hapticPlayer: HapticPlayer?
-    /// Minimap size multiplier (persisted in Settings), clamped when applied.
     var minimapScale: CGFloat = 1
-    /// Whether a drag in progress began on the minimap, so the whole drag scrubs
-    /// the board via the minimap instead of panning.
+    /// A drag that BEGAN on the minimap scrubs for its whole duration (no pan).
     var scrubbingMinimap = false
-    /// Whether a drag began on the minimap RESIZE HANDLE, so it resizes the minimap
-    /// rather than scrubbing or panning.
     var resizingMinimap = false
-    /// The resize handle's hit area in CAMERA space — an L of two overlapping rects
-    /// (a vertical arm along the minimap's right edge + a horizontal arm along the
-    /// bottom), hugging the corner. Empty while hidden.
+    /// The resize handle's L-shaped hit area in CAMERA space; empty while hidden.
     var minimapHandleRects: [CGRect] = []
-    /// Push a new minimap scale to the host, which persists it in Settings.
     var onMinimapScaleChange: ((CGFloat) -> Void)?
-    /// The in-flight minimap-overview render. A burst of board revisions (e.g. a big
-    /// flood-fill reveal on a huge board) would otherwise spawn one full 1M-cell
-    /// raster per revision and pile them onto the cooperative pool, pegging every
-    /// core long after the reveal finished. Cancel the prior render before starting
-    /// the next so only the latest runs.
+    /// Cancel-before-restart: a flood-fill burst would otherwise pile one full
+    /// 1M-cell raster PER REVISION onto the cooperative pool, pegging every
+    /// core long after the reveal finished.
     var minimapRenderTask: Task<Void, Never>?
 
     /// A saved camera view to hold across the launch dance instead of the default
@@ -125,7 +107,6 @@ public final class BoardScene: SKScene {
     /// starts a new game), then cleared.
     var restoreCameraTarget: CameraView?
 
-    /// Set by the host on appearance change; recolors the background and rebuilds.
     public var palette: Palette = .dark {
         didSet {
             // BoardView re-assigns on EVERY SwiftUI update; the guard keeps
