@@ -22,6 +22,10 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The Service Record remembers your place.** Opening it from the title
+  now lands on the board family you last browsed instead of always Basic;
+  opening it mid-game still jumps to the board you're playing.
+
 - **Rivals compare pace, not just the stopwatch.** Head-to-head rows and
   per-board leaderboards now show best pace beside best times, on both
   sides — so a mixed-skill circle has a number that plays fair. Shows as
