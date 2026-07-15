@@ -835,10 +835,40 @@
     "%lld attempts" : {
       "comment" : "Calendar day detail: total attempts",
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld attempt"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld attempts"
+                }
+              }
+            }
+          }
+        },
         "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld yritystä"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld yritys"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld yritystä"
+                }
+              }
+            }
           }
         },
         "ja" : {
@@ -2280,6 +2310,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「？」マークを使う"
+          }
+        }
+      }
+    },
+    "Dailies" : {
+      "comment" : "Head-to-head section: shared daily-challenge days",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivähaasteet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デイリー"
           }
         }
       }

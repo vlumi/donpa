@@ -72,6 +72,39 @@ public struct SharedCareer: Codable, Equatable, Sendable {
     }
 }
 
+/// One shared daily-challenge day — the payload carries a channel-sized
+/// window of these (full history over Nearby, a rolling window in the QR);
+/// receivers accumulate per date across swaps.
+public struct SharedDailyDay: Codable, Equatable, Sendable {
+    /// "yyyy-MM-dd" — the day's identity everywhere.
+    public var key: String
+    /// Best clear in centiseconds, nil while never cleared.
+    public var best: Int?
+    /// The best's 3BV, for the pace display.
+    public var threeBV: Int?
+    /// Best cleared fraction from losing attempts.
+    public var progress: Double?
+    /// Total attempts across the sharer's devices.
+    public var attempts: Int
+
+    public init(key: String, best: Int?, threeBV: Int?, progress: Double?, attempts: Int) {
+        self.key = key
+        self.best = best
+        self.threeBV = threeBV
+        self.progress = progress
+        self.attempts = attempts
+    }
+
+    public var pace: Double? {
+        guard let best, let threeBV else { return nil }
+        return Double(threeBV) * 100 / Double(max(best, 1))
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case key = "k", best = "b", threeBV = "v", progress = "p", attempts = "a"
+    }
+}
+
 /// The inner, SIGNED body of a share — every field here is covered by the signature,
 /// so a tampered field fails verification.
 public struct ShareBody: Codable, Equatable, Sendable {
@@ -79,6 +112,8 @@ public struct ShareBody: Codable, Equatable, Sendable {
     public var name: String
     public var scores: [SharedConfigScore]
     public var career: SharedCareer?
+    /// The daily-challenge window (v3+): per-day results, channel-sized.
+    public var daily: [SharedDailyDay]?
     /// The replay/downgrade guard: a receiver keeps only the newest per identity.
     public var issuedAt: Date
     /// The sharer's PREVIOUS identity signing this new public key, letting friends
@@ -87,17 +122,20 @@ public struct ShareBody: Codable, Equatable, Sendable {
 
     public init(
         name: String, scores: [SharedConfigScore], career: SharedCareer?,
-        issuedAt: Date, rotation: RotationEndorsement? = nil
+        daily: [SharedDailyDay]? = nil, issuedAt: Date,
+        rotation: RotationEndorsement? = nil
     ) {
         self.name = name
         self.scores = scores
         self.career = career
+        self.daily = daily
         self.issuedAt = issuedAt
         self.rotation = rotation
     }
 
     enum CodingKeys: String, CodingKey {
-        case name = "n", scores = "s", career = "c", issuedAt = "t", rotation = "r"
+        case name = "n", scores = "s", career = "c", daily = "d", issuedAt = "t"
+        case rotation = "r"
     }
 }
 
@@ -132,7 +170,7 @@ public struct SharePayload: Codable, Equatable, Sendable {
     public var signature: Data
     public var body: ShareBody
 
-    public static let currentVersion = 2
+    public static let currentVersion = 3
 
     public init(version: Int = currentVersion, publicKey: Data, signature: Data, body: ShareBody) {
         self.version = version

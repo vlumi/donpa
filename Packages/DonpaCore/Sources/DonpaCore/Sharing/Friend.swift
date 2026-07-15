@@ -16,6 +16,10 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
     /// Latest accepted share's `issuedAt` — replay/downgrade guard: older shares are ignored.
     public var lastIssuedAt: Date
     public var scores: [SharedConfigScore]
+    /// Daily results, accumulated PER DATE across shares: each card carries
+    /// a window, and the newest share wins the dates it covers while older
+    /// dates survive — long rivalries build full histories organically.
+    public var dailies: [String: SharedDailyDay]
     public var career: SharedCareer?
     public var addedAt: Date
     /// Last local mutation — the sync tiebreaker: newest wins per friend across devices.
@@ -41,7 +45,8 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
 
     public init(
         publicKey: Data, sharedName: String, localAlias: String? = nil, groups: [String] = [],
-        lastIssuedAt: Date, scores: [SharedConfigScore], career: SharedCareer?, addedAt: Date,
+        lastIssuedAt: Date, scores: [SharedConfigScore],
+        dailies: [String: SharedDailyDay] = [:], career: SharedCareer?, addedAt: Date,
         updatedAt: Date? = nil, deletedAt: Date? = nil
     ) {
         self.publicKey = publicKey
@@ -50,6 +55,7 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
         self.groups = groups
         self.lastIssuedAt = lastIssuedAt
         self.scores = scores
+        self.dailies = dailies
         self.career = career
         self.addedAt = addedAt
         self.updatedAt = updatedAt ?? addedAt
@@ -64,6 +70,8 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
         groups = try c.decodeIfPresent([String].self, forKey: .groups) ?? []
         lastIssuedAt = try c.decode(Date.self, forKey: .lastIssuedAt)
         scores = try c.decodeIfPresent([SharedConfigScore].self, forKey: .scores) ?? []
+        dailies =
+            try c.decodeIfPresent([String: SharedDailyDay].self, forKey: .dailies) ?? [:]
         career = try c.decodeIfPresent(SharedCareer.self, forKey: .career)
         addedAt = try c.decode(Date.self, forKey: .addedAt)
         // Pre-sync records lack these: default updatedAt to addedAt, no tombstone.
@@ -73,7 +81,7 @@ public struct Friend: Codable, Equatable, Sendable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case publicKey = "pk", sharedName = "n", localAlias = "la", groups = "g"
-        case lastIssuedAt = "t", scores = "s", career = "c", addedAt = "a"
+        case lastIssuedAt = "t", scores = "s", dailies = "y", career = "c", addedAt = "a"
         case updatedAt = "u", deletedAt = "d"
     }
 }

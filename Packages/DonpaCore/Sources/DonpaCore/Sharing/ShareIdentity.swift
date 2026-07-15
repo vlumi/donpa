@@ -28,10 +28,12 @@ public struct ShareIdentity: Sendable {
     /// (see `ShareCodec.canonicalBody`).
     public func makePayload(
         name: String, scores: [SharedConfigScore], career: SharedCareer?,
-        issuedAt: Date, rotation: RotationEndorsement? = nil
+        daily: [SharedDailyDay]? = nil, issuedAt: Date,
+        rotation: RotationEndorsement? = nil
     ) throws -> SharePayload {
         let body = ShareBody(
-            name: name, scores: scores, career: career, issuedAt: issuedAt, rotation: rotation)
+            name: name, scores: scores, career: career, daily: daily,
+            issuedAt: issuedAt, rotation: rotation)
         let signed = try ShareCodec.canonicalBody(body)
         let sig = try privateKey.signature(for: signed)
         return SharePayload(publicKey: publicKey, signature: sig, body: body)

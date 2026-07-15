@@ -7,9 +7,10 @@ import Foundation
 /// everyone — the Start reveal always opens the same region, so the board
 /// AND the luck are shared.
 public enum DailyChallenge {
-    /// Day one. Re-stamp at the cut of the release that ships the feature;
-    /// the calendar clamps to [epoch, today].
-    public static let epochKey = "2026-07-20"
+    /// Day one, PERMANENT (backdated so the calendar opens with history to
+    /// explore; backfilled days never feed streaks — only live play does).
+    /// The calendar clamps to [epoch, today].
+    public static let epochKey = "2026-07-01"
 
     /// "yyyy-MM-dd" in the user's calendar — the identity of a day.
     public static func dateKey(for date: Date = Date(), calendar: Calendar = .current) -> String {

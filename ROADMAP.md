@@ -64,8 +64,8 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       memorizing the board is the discipline, like fixed-seed speedrunning;
       the per-day record keeps it honest — best time + pace, cleared/best-%,
       attempt count, and which attempt set the best. A CALENDAR view lists
-      every day since the feature's epoch (a constant baked at the shipping
-      release's cut); any past day is playable, but only TODAY feeds the
+      every day since the feature's epoch (fixed: 2026-07-01, backdated so
+      the calendar opens with history to explore); any past day is playable, but only TODAY feeds the
       streak — and streaks measure PARTICIPATION, never outcomes (a
       completed attempt, won or lost, marks the day played; no
       notifications, neutral display "12 days · longest 23"). MEDALS ride

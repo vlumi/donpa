@@ -8,7 +8,7 @@ import Foundation
 enum SharePayloadBuilder {
     static func build(
         from scoreboard: Scoreboard, identity: ShareIdentity, name: String,
-        includeCareer: Bool, now: Date
+        includeCareer: Bool, daily: [SharedDailyDay]? = nil, now: Date
     ) -> SharePayload? {
         let scores: [SharedConfigScore] = scoreboard.displayRecords.map { key, rec in
             SharedConfigScore(
@@ -23,7 +23,22 @@ enum SharePayloadBuilder {
 
         let career = includeCareer ? Self.career(from: scoreboard) : nil
         return try? identity.makePayload(
-            name: name, scores: scores, career: career, issuedAt: now)
+            name: name, scores: scores, career: career, daily: daily, issuedAt: now)
+    }
+
+    /// The daily slice for a share: the newest `days` (nil = the full
+    /// history, for channels with no size budget), oldest-first so the
+    /// payload stays deterministic. Nil when there's nothing to tell.
+    static func dailyWindow(from dailyStore: DailyStore, days: Int?) -> [SharedDailyDay]? {
+        var keys = dailyStore.displayRecords.keys.sorted()
+        if let days { keys = keys.suffix(days) }
+        let window = keys.compactMap { key -> SharedDailyDay? in
+            guard let day = dailyStore.displayRecords[key] else { return nil }
+            return SharedDailyDay(
+                key: key, best: day.best?.centiseconds, threeBV: day.best?.threeBV,
+                progress: day.bestProgress, attempts: day.attempts.total)
+        }
+        return window.isEmpty ? nil : window
     }
 
     /// Career totals summed across every merged config record — mirrors the
@@ -49,8 +64,11 @@ extension SharePayloadBuilder {
     /// The ONE gate chain the share card, Nearby, and the keyboard zones all read.
     /// Nil without a trimmed name or an identity — the name IS the shared identity.
     /// The name is the sharer's own input; the RECEIVER sanitizes on decode.
+    /// `dailyDays` sizes the daily slice to the channel: a rolling window
+    /// for the QR/link (scan budget), nil = full history for Nearby.
     static func currentURL(
-        scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore
+        scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore,
+        dailyStore: DailyStore, dailyDays: Int?
     ) -> URL? {
         if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
         let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -58,7 +76,8 @@ extension SharePayloadBuilder {
             let identity = identityStore.identity(),
             let payload = build(
                 from: scoreboard, identity: identity, name: trimmed,
-                includeCareer: settings.shareIncludeCareer, now: Date())
+                includeCareer: settings.shareIncludeCareer,
+                daily: dailyWindow(from: dailyStore, days: dailyDays), now: Date())
         else { return nil }
         return try? ShareLink.url(for: payload)
     }
