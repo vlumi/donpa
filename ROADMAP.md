@@ -43,78 +43,17 @@ gates.
 
 Code complete — the substance shipped (see CHANGELOG). The scope cuts
 (widgets, App Clip, SharePlay, TipKit) and the sync-flag scope rule are
-recorded in DECISIONS.md.
-
-## v0.7.0 — Skill & social play
-
-May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
-
-- [ ] **Daily challenge** (the possible social pillar) — one shared board
-      per day: the seed derives from the LOCAL date string, so the same
-      calendar date is the same board everywhere (timezones only shift when
-      it flips; a date-changer can cheat — let them, they cheat themselves).
-      Boards are PRE-ARMED with a fixed revealed opening so first-click-safe
-      can't diverge them — everyone's luck is identical. The pre-opened
-      board never lands as a surprise: every attempt opens in a REVIEW
-      state (board visible, input locked, a Start overlay — first-time
-      explainer line) and the clock runs from Start, so study is
-      explicitly free (memorization is legitimate anyway) and the time
-      measures pure execution. Backing out of review costs nothing (an
-      attempt = a completed game). Unlimited attempts:
-      memorizing the board is the discipline, like fixed-seed speedrunning;
-      the per-day record keeps it honest — best time + pace, cleared/best-%,
-      attempt count, and which attempt set the best. A CALENDAR view lists
-      every day since the feature's epoch (fixed: 2026-07-01, backdated so
-      the calendar opens with history to explore); any past day is playable, but only TODAY feeds the
-      streak — and streaks measure PARTICIPATION, never outcomes (a
-      completed attempt, won or lost, marks the day played; no
-      notifications, neutral display "12 days · longest 23"). MEDALS ride
-      the same line: ONE tiered ladder `daily.streak` (1/7/30 days
-      running — bronze/silver/gold like the other ladders; the 1-step is
-      the on-ramp) — permanent one-shots per tier, so the chase is
-      bounded and a later break takes nothing away. A participation
-      streak is volume-of-consistency, so tiers fit the only-volume-
-      keeps-tiers rule. No separate played-count ladder (miles.* already
-      counts the grind; the calendar displays volume better). Never
-      cleared/first-try streaks (the luck-based kind the no-streaks rule
-      still forbids). +3 ASC definitions and medal images when this
-      ships.
-      DATA: full history kept locally + own-device sync forever (a year is
-      a few KB zlib'd); ONE aggregate line per day — never per-attempt
-      rows — merging across own devices on the scoreboard's proven
-      pattern: best time/pace min-wins (device-owned, projected at merge),
-      attempts a DeviceCounter (plain counts can't merge across devices);
-      the best's attempt ordinal NEVER merges — it's device-owned data
-      riding with the best itself (the BestTime pattern), so the merged
-      view shows the winner's own ordinal. The ordinal is STORED but
-      NOT DISPLAYED until device attribution can qualify it ("attempt 2
-      on iPhone") — bare, it reads as a user-global attempt number,
-      which nothing tracks; the total (summed) shows alone. Career adds
-      a "Daily orders" segment (played, cleared, current/longest streak)
-      beside the shipped Engagements/Fieldwork/Discipline/Fortune/
-      Service grouping; sharing carries a CHANNEL-SIZED slice of the same
-      v3 payload field — full history over Nearby (no size limit), a
-      rolling 14–31-day window over QR/link (scan budget) — and the
-      receiver merges PER DATE (newest share wins a date; the sharer's own
-      day only improves), so rivals' histories accumulate organically
-      across swaps and the QR never needs to carry the past.
-      UI: Home card (today's board, result, streak) → Daily sheet with a
-      month-grid calendar clamped to [epoch, today] — chips show best time
-      / ✗ with % / unplayed, today ringed; arrows walk days, Return plays
-      (KeyCursor idiom), VoiceOver speaks each day's result; the selected
-      day's detail row shows the full record ("best on attempt 2 of 7"),
-      Play/Replay, and same-day rival lines where data exists (the H2H
-      Dailies section is the per-rival rollup of the same data). May build
-      pre-1.0 in three independent slices (core+store, Home card + play
-      flow, calendar + payload + H2H) — it rides 1.0 if stable by
-      submission, else 1.0.1, without delaying the release.
+recorded in DECISIONS.md. The **daily challenge** (planned as 0.7.0's
+"skill & social" pillar) landed in this beta train instead — decide at
+the cut whether the next build stays 0.6.0 or stamps 0.7.0; the design
+of record is in DECISIONS.md.
 
 ## v1.0.0 — The store release
 
 The features are in; 1.0 makes them ship-shape for the public App Store.
 
 - [ ] **Game Center, ASC side** (the reporter code shipped 2026-07-13; design
-      + merge rules in DECISIONS.md): create the 26 achievement definitions
+      + merge rules in DECISIONS.md): create the 29 achievement definitions
       per the tier-flattening mapping (`GameCenterMapping.allWireIDs` is
       canonical), assign the ≤ 1 000-point budget, flag the four gags hidden;
       one 1024×1024 image each — export via the MedalGalleryRender harness;
