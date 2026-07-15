@@ -83,8 +83,12 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       rows — merging across own devices on the scoreboard's proven
       pattern: best time/pace min-wins (device-owned, projected at merge),
       attempts a DeviceCounter (plain counts can't merge across devices);
-      "best on attempt 2" is the ordinal ON the device holding the best,
-      the total is global; sharing carries a CHANNEL-SIZED slice of the same
+      the best's attempt ordinal NEVER merges — it's device-owned data
+      riding with the best itself (the BestTime pattern), so the merged
+      view shows the winner's own ordinal. Display keeps ordinal and
+      total as SEPARATE figures ("Best 1:42 (attempt 2)" + "9 attempts")
+      — "attempt 2 of 9" would imply a global sequence that doesn't
+      exist; the device registry can someday attribute it ("on iPhone"); sharing carries a CHANNEL-SIZED slice of the same
       v3 payload field — full history over Nearby (no size limit), a
       rolling 14–31-day window over QR/link (scan budget) — and the
       receiver merges PER DATE (newest share wins a date; the sharer's own
