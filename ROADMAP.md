@@ -40,12 +40,19 @@ recorded in DECISIONS.md.
 
 May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
 
-- [ ] **Daily challenge** (the possible social pillar) — one shared seed per
-      day, same board for everyone, NO streaks or notifications. Its value
-      isn't retention; it gives the rivals layer its first fair comparison
-      (same board, same day) instead of best-of-N-attempts. Needs
-      deterministic seeded generation, first-attempt-counts rules, and a
-      share-payload field — a real pillar, not filler.
+- [ ] **Daily challenge** (the possible social pillar) — one shared board
+      per day (UTC-keyed seed, PRE-ARMED with a fixed revealed opening so
+      first-click-safe can't diverge the boards — and everyone's luck is
+      identical). Unlimited attempts: memorizing the board is the
+      discipline, like fixed-seed speedrunning; the per-day record keeps it
+      honest — best time + pace, cleared/best-%, attempt count, and which
+      attempt set the best. Streaks measure PARTICIPATION, never outcomes
+      (a completed attempt, won or lost, marks the day played; no
+      notifications, neutral display). Comparison is snapshot-based like
+      all sharing: the payload carries a rolling ~14-day window (a new
+      signed body field → envelope v3), aligned by date when cards are
+      swapped; Nearby compares today's runs on the spot. Recommended slot:
+      the first post-1.0 update's flagship.
 
 ## v1.0.0 — The store release
 
