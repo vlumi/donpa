@@ -8,8 +8,9 @@ ideas are recorded in [DECISIONS.md](DECISIONS.md)**; the technical "why" is
 
 Versions are indicative, not contractual. For the record: v0.1.0 (classic),
 v0.2.0 (cross-device sync + big boards), v0.3.0 (board variants + the New
-Game / scoreboard redesign), v0.4.0 (friendly rivalry), v0.5.0 (progression)
-all shipped to TestFlight; **v0.6.0 (keyboard & accessibility) is in beta**.
+Game / scoreboard redesign), v0.4.0 (friendly rivalry), v0.5.0 (progression),
+and v0.6.0 (keyboard & accessibility) all shipped to TestFlight — everything
+before 1.0 is beta by definition.
 
 ---
 
@@ -39,7 +40,7 @@ gates.
       tiny). Revisit only near KVS storage limits.
 
 
-## v0.6.0 — Keyboard & accessibility (in beta)
+## v0.6.0 — Keyboard & accessibility
 
 Code complete — the substance shipped (see CHANGELOG). The scope cuts
 (widgets, App Clip, SharePlay, TipKit) and the sync-flag scope rule are
