@@ -22,6 +22,8 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 25 — 2026-07-15
+
 - **The Daily Challenge arrives.** One shared board per day — same layout,
   same luck, for everyone. The Home screen's "Today's orders" card shows
   the day's board and your standing; every attempt opens in a review
