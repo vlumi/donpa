@@ -29,6 +29,9 @@ public enum DailyChallenge {
         .grid(.s, .hard, .flat),
         .hive(.m, .normal, .flat),
         .grid(.m, .brutal, .flat),
+        .grid(.s, .normal, .round),
+        .hive(.s, .normal, .round),
+        .grid(.m, .hard, .round),
     ]
 
     public struct Board: Equatable, Sendable {
