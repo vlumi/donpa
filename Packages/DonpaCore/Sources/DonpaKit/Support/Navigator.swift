@@ -52,6 +52,12 @@ public final class Navigator: ObservableObject {
     public init(showingTitle: Bool = true) {
         self.showingTitle = showingTitle
     }
+
+    /// Two sheet swaps in one runloop turn race; presenting the second a tick
+    /// later is the reliable order. Callers dismiss first, then present here.
+    public func afterDismiss(_ present: @escaping @MainActor () -> Void) {
+        Task { @MainActor in present() }
+    }
 }
 
 /// A decoded incoming share plus the classification the receive UI branches on.

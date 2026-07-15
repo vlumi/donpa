@@ -256,7 +256,7 @@ struct HeadToHeadView: View {
             VStack(alignment: .trailing, spacing: 1) {
                 time(row.yourBest, winner: row.lead == .you)
                 if let gap = row.gap, gap != 0 { gapLabel(gap) }
-                paceLabel(row.yourBestPace)
+                PaceText(pace: row.yourBestPace)
             }
             .frame(width: yourColumnWidth, alignment: .trailing)
             .accessibilityElement(children: .combine)
@@ -264,7 +264,7 @@ struct HeadToHeadView: View {
                 Text("You: \(timeSpoken(row.yourBest))", bundle: .module))
             VStack(alignment: .trailing, spacing: 1) {
                 time(row.theirBest, winner: row.lead == .them)
-                paceLabel(row.theirBestPace)
+                PaceText(pace: row.theirBestPace)
             }
             .frame(width: theirColumnWidth, alignment: .trailing)
             .accessibilityElement(children: .combine)
@@ -290,16 +290,6 @@ struct HeadToHeadView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: config.fullLabel))
-    }
-
-    /// Best pace (3BV/s), when logged — nothing for pre-pace data.
-    @ViewBuilder private func paceLabel(_ pace: Double?) -> some View {
-        if let pace {
-            Text(verbatim: StatBlock.paceDisplay(pace))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-        }
     }
 
     /// Your signed gap vs. theirs: −faster (green), +slower (red). Placed under YOUR

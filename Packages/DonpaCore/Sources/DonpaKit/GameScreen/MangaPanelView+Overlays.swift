@@ -14,7 +14,7 @@ extension MangaPanelView {
                 Text("Pace", bundle: .module)
                     .font(.system(.caption2, design: .rounded).weight(.heavy))
                     .textCase(.uppercase)
-                Text(verbatim: StatBlock.paceDisplay(pace))
+                Text(verbatim: PaceText.display(pace))
                     .font(.system(.caption, design: .rounded).weight(.black).monospacedDigit())
             }
             .padding(.horizontal, 8)
@@ -31,7 +31,7 @@ extension MangaPanelView {
     var paceA11ySuffix: String {
         guard kind.isWin, let pace else { return "" }
         return " "
-            + String(localized: "Pace \(StatBlock.paceDisplay(pace)).", bundle: .module)
+            + String(localized: "Pace \(PaceText.display(pace)).", bundle: .module)
     }
 
     /// The guess pill folded into the spoken label (overlays are ignored children).

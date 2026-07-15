@@ -231,7 +231,7 @@ extension GameContent {
             // the scoreboard is dismissing; two sheet swaps in one runloop race).
             onMessHall: {
                 navigator.showingScores = false
-                Task { @MainActor in navigator.showingMessHall = true }
+                navigator.afterDismiss { navigator.showingMessHall = true }
             },
             friends: friends, gameCenter: gameCenter)
     }

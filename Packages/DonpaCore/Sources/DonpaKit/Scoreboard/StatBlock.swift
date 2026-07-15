@@ -157,10 +157,10 @@ struct StatBlock: View {
         // The pace line — the luck line's sibling (how skilled / how lucky):
         // median 3BV/s over the recent-wins window, weighted by board size.
         if let pace = figures.recentPace {
-            pairs.append(("Recent pace", Self.paceDisplay(pace)))
+            pairs.append(("Recent pace", PaceText.display(pace)))
         }
         if let pace = figures.bestPace {
-            pairs.append(("Best pace", Self.paceDisplay(pace)))
+            pairs.append(("Best pace", PaceText.display(pace)))
         }
         // The luck line — only once the board has actually forced a guess (a row
         // of "0/0" would just be noise), and the record only with it.
@@ -185,10 +185,6 @@ struct StatBlock: View {
     }
 
     /// A pace as "0.62/s" (locale decimal separator; the unit stays verbatim).
-    static func paceDisplay(_ pace: Double) -> String {
-        pace.formatted(.number.precision(.fractionLength(2))) + "/s"
-    }
-
     private func statRow(_ label: LocalizedStringKey, _ value: String) -> some View {
         HStack {
             Text(label, bundle: .module).font(labelFont)

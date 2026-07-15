@@ -64,7 +64,7 @@ struct PaceLinesView: View {
                     HStack {
                         Text(verbatim: line.label).font(.callout)
                         Spacer()
-                        Text(verbatim: StatBlock.paceDisplay(line.pace))
+                        Text(verbatim: PaceText.display(line.pace))
                             .font(.callout.weight(.semibold))
                             .monospacedDigit()
                     }

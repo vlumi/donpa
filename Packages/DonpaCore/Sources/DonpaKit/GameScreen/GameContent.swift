@@ -178,7 +178,7 @@ struct GameContent: View {
             // Two sheet swaps in one runloop turn race; defer the second a tick.
             AboutView(onHowTo: {
                 navigator.showingAbout = false
-                Task { @MainActor in navigator.showingHowTo = true }
+                navigator.afterDismiss { navigator.showingHowTo = true }
             })
         }
         .sheet(isPresented: $navigator.showingHowTo) {

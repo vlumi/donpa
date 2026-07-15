@@ -41,7 +41,8 @@ public struct GameView: View {
     @State private var showSplash = true
 
     public init(config: GameConfig = .beginner) {
-        let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false
+        let syncOn =
+            UserDefaults.standard.object(forKey: Settings.syncScoresKey) as? Bool ?? false
         self.init(
             viewModel: GameViewModel(config: config),
             scoreboard: Scoreboard(cloud: UbiquitousStatsStore(), syncEnabled: syncOn),
@@ -65,7 +66,8 @@ public struct GameView: View {
         }
         // Friends and feats sync under the SAME syncScores gate as the
         // scoreboard — one social picture.
-        let syncOn = UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false
+        let syncOn =
+            UserDefaults.standard.object(forKey: Settings.syncScoresKey) as? Bool ?? false
         let achievementStore = AchievementStore(
             cloud: UbiquitousAchievementsStore(), syncEnabled: syncOn)
         _achievements = StateObject(wrappedValue: achievementStore)
@@ -312,7 +314,7 @@ private struct ReceivePrompt: ViewModifier {
                     // invisible; deferred a tick (sheet swaps in one turn race).
                     onAdded: {
                         navigator.incomingShare = nil
-                        Task { @MainActor in navigator.showingMessHall = true }
+                        navigator.afterDismiss { navigator.showingMessHall = true }
                     })
             }
             .sheet(isPresented: $navigator.showingMessHall) {
@@ -323,7 +325,7 @@ private struct ReceivePrompt: ViewModifier {
                         let incoming = GameView.classify(
                             url, existing: friends.friends,
                             ownKey: ShareIdentityStore().identity()?.publicKey)
-                        Task { @MainActor in navigator.incomingShare = incoming }
+                        navigator.afterDismiss { navigator.incomingShare = incoming }
                     },
                     onPlay: { navigator.playConfigRequested = $0 })
             }

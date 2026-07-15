@@ -133,10 +133,7 @@ struct ScoreRow: View {
             Text(entry.name).lineLimit(1).minimumScaleFactor(0.7)
                 .fontWeight(entry.isYou ? .bold : .regular)
             Spacer()
-            if let pace = entry.bestPace {
-                Text(verbatim: StatBlock.paceDisplay(pace))
-                    .font(.caption2).foregroundStyle(.secondary).monospacedDigit()
-            }
+            PaceText(pace: entry.bestPace)
             if let best = entry.best {
                 Text(TimeFormat.mmsst(centiseconds: best)).font(.body.monospaced()).numericCell()
             } else {
