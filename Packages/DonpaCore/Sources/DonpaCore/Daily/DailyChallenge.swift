@@ -21,17 +21,23 @@ public enum DailyChallenge {
 
     /// The pool of one-sitting boards a day draws from. Deterministic
     /// forever — reordering or resizing this table changes every future day.
+    /// Every family x size x edge combo at Normal, four Hards spread across
+    /// the matrix, two Brutals for spice — a full tour every block.
     static let pool: [GameConfig] = [
         .grid(.s, .normal, .flat),
-        .hive(.s, .normal, .flat),
         .grid(.m, .normal, .flat),
-        .hive(.s, .hard, .flat),
-        .grid(.s, .hard, .flat),
-        .hive(.m, .normal, .flat),
-        .grid(.m, .brutal, .flat),
         .grid(.s, .normal, .round),
+        .grid(.m, .normal, .round),
+        .hive(.s, .normal, .flat),
+        .hive(.m, .normal, .flat),
         .hive(.s, .normal, .round),
+        .hive(.m, .normal, .round),
+        .grid(.s, .hard, .flat),
         .grid(.m, .hard, .round),
+        .hive(.m, .hard, .flat),
+        .hive(.s, .hard, .round),
+        .grid(.m, .brutal, .flat),
+        .hive(.s, .brutal, .round),
     ]
 
     public struct Board: Equatable, Sendable {
