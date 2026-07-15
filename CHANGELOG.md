@@ -22,6 +22,12 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The daily grows a calendar and a medal.** A History view on the
+  Today's-orders card shows every day since the challenge began — play
+  any past day you missed (past days never repair a streak; only showing
+  up on the day counts). A new tiered Roll Call decoration marks 1 / 7 /
+  30 days played running.
+
 - **The Daily Challenge arrives.** One shared board per day — same layout,
   same luck, for everyone. The Home screen's "Today's orders" card shows
   the day's board and your standing; every attempt opens in a review

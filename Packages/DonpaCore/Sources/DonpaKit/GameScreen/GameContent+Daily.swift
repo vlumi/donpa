@@ -75,8 +75,10 @@ extension GameContent {
         case .won(let centiseconds, _):
             let threeBV = viewModel.lastEndEvent?.threeBV
             dailyStore.recordAttempt(
-                dateKey: daily.dateKey, won: true, centiseconds: centiseconds,
-                threeBV: threeBV, progress: 1)
+                dateKey: daily.dateKey,
+                .init(
+                    won: true, centiseconds: centiseconds, threeBV: threeBV, progress: 1,
+                    live: daily.dateKey == DailyChallenge.dateKey()))
             panelPace = threeBV.map {
                 RecentWin(date: Date(), centiseconds: centiseconds, threeBV: $0).pace
             }
@@ -93,8 +95,10 @@ extension GameContent {
         case .lost:
             let progress = viewModel.game.progress
             dailyStore.recordAttempt(
-                dateKey: daily.dateKey, won: false, centiseconds: 0, threeBV: nil,
-                progress: progress)
+                dateKey: daily.dateKey,
+                .init(
+                    won: false, centiseconds: 0, threeBV: nil, progress: progress,
+                    live: daily.dateKey == DailyChallenge.dateKey()))
             let priorProgress = prior?.bestProgress
             let safeRemaining = viewModel.game.safeCellCount - viewModel.game.revealedSafeCount
             let best: MangaPanelView.LossBest

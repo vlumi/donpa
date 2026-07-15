@@ -120,6 +120,35 @@ extension MedalView {
             path, with: .color(ink), style: StrokeStyle(lineWidth: s * 0.06, lineJoin: .round))
     }
 
+    /// A bound calendar page with a bold check across its day grid — the
+    /// daily-participation motif (rings on top, a header band, a tick).
+    static func calendarPage(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
+        let line = StrokeStyle(lineWidth: s * 0.055, lineJoin: .round)
+        let page = CGRect(x: s * 0.16, y: s * 0.22, width: s * 0.68, height: s * 0.62)
+        var path = Path(roundedRect: page, cornerRadius: s * 0.06)
+        // Header band under the binding.
+        path.move(to: CGPoint(x: page.minX, y: page.minY + s * 0.16))
+        path.addLine(to: CGPoint(x: page.maxX, y: page.minY + s * 0.16))
+        ctx.stroke(path, with: .color(ink), style: line)
+        // Binding rings.
+        var rings = Path()
+        for x in [page.minX + page.width * 0.28, page.minX + page.width * 0.72] {
+            rings.move(to: CGPoint(x: x, y: page.minY + s * 0.04))
+            rings.addLine(to: CGPoint(x: x, y: page.minY - s * 0.08))
+        }
+        ctx.stroke(
+            rings, with: .color(ink),
+            style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+        // The check, over the day area.
+        var check = Path()
+        check.move(to: CGPoint(x: page.minX + page.width * 0.22, y: page.minY + s * 0.38))
+        check.addLine(to: CGPoint(x: page.minX + page.width * 0.42, y: page.maxY - s * 0.10))
+        check.addLine(to: CGPoint(x: page.maxX - page.width * 0.12, y: page.minY + s * 0.24))
+        ctx.stroke(
+            check, with: .color(ink),
+            style: StrokeStyle(lineWidth: s * 0.09, lineCap: .round, lineJoin: .round))
+    }
+
     /// A drawn lemniscate — the ∞ glyph doesn't centre optically.
     static func infinity(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
         let r = s * 0.19

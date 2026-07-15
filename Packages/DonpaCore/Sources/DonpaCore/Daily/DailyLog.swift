@@ -28,17 +28,33 @@ public struct DailyDayRecord: Codable, Equatable, Sendable {
     /// Best cleared fraction from a losing attempt (a win implies 100%).
     public var bestProgress: Double?
     public var attempts: DeviceCounter
+    /// An attempt was completed ON the day itself — the only thing streaks
+    /// count. Playing a past day from the calendar records results but can
+    /// never repair a broken streak. Merges OR.
+    public var playedLive: Bool
 
-    public init(best: Best? = nil, bestProgress: Double? = nil, attempts: DeviceCounter = .init()) {
+    public init(
+        best: Best? = nil, bestProgress: Double? = nil, attempts: DeviceCounter = .init(),
+        playedLive: Bool = false
+    ) {
         self.best = best
         self.bestProgress = bestProgress
         self.attempts = attempts
+        self.playedLive = playedLive
     }
 
     public var cleared: Bool { best != nil }
 
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        best = try c.decodeIfPresent(Best.self, forKey: .best)
+        bestProgress = try c.decodeIfPresent(Double.self, forKey: .bestProgress)
+        attempts = try c.decodeIfPresent(DeviceCounter.self, forKey: .attempts) ?? .init()
+        playedLive = try c.decodeIfPresent(Bool.self, forKey: .playedLive) ?? false
+    }
+
     enum CodingKeys: String, CodingKey {
-        case best = "b", bestProgress = "p", attempts = "a"
+        case best = "b", bestProgress = "p", attempts = "a", playedLive = "l"
     }
 }
 
@@ -65,6 +81,7 @@ public enum DailyMerge {
                 if let progress = theirs.bestProgress {
                     record.bestProgress = max(record.bestProgress ?? 0, progress)
                 }
+                record.playedLive = record.playedLive || theirs.playedLive
                 othersAttempts += theirs.attempts.mine
             }
             record.attempts.setOthersTotal(othersAttempts)
@@ -98,7 +115,7 @@ public enum DailyMerge {
         return longest
     }
 
-    static func dateKey(ordinal: Int) -> String? {
+    public static func dateKey(ordinal: Int) -> String? {
         guard let epoch = DailyChallenge.dayOrdinal(of: DailyChallenge.epochKey),
             epoch == 0
         else { return nil }

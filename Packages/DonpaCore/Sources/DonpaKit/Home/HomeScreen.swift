@@ -29,6 +29,7 @@ struct HomeScreen: View {
     var dailyDay: DailyDayRecord?
     var dailyStreak: (current: Int, longest: Int) = (0, 0)
     var onDaily: () -> Void = {}
+    var onDailyCalendar: () -> Void = {}
     let onScores: () -> Void
     /// Open the Mess hall — the social screen (share card, rivals, squads).
     let onMessHall: () -> Void

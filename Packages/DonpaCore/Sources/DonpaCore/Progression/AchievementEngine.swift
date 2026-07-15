@@ -24,6 +24,9 @@ public enum AchievementID: String, CaseIterable, Sendable {
     case milesWins = "miles.wins"
     case milesTiles = "miles.tiles"
     case milesDisarmed = "miles.disarmed"
+    /// Participation-streak ladder — the 1-step is the daily's on-ramp; a
+    /// streak is volume-of-consistency, so tiers fit the only-volume rule.
+    case dailyStreak = "daily.streak"
     // Hidden (momentary)
     case hiddenSecond = "hidden.second"
     case hiddenThirteen = "hidden.thirteen"
@@ -37,6 +40,7 @@ public enum AchievementID: String, CaseIterable, Sendable {
         case .milesWins: return [10, 100, 1000]
         case .milesTiles: return [10_000, 100_000, 1_000_000]
         case .milesDisarmed: return [1000, 10_000, 100_000]
+        case .dailyStreak: return [1, 7, 30]
         default: return nil
         }
     }
@@ -72,7 +76,10 @@ public struct AchievementProgress: Equatable, Sendable {
 /// persistence; this owns only the rules.
 public enum AchievementEngine {
     /// id → earned tier count (1 for one-shots). Absent = nothing earned.
-    public static func derivable(records: [String: ScoreRecord]) -> [AchievementID: Int] {
+    /// `longestDailyStreak` is the daily store's fact — records can't carry it.
+    public static func derivable(
+        records: [String: ScoreRecord], longestDailyStreak: Int = 0
+    ) -> [AchievementID: Int] {
         let facts = Facts(records: records)
         var earned: [AchievementID: Int] = [:]
         func award(_ id: AchievementID, _ condition: Bool) {
@@ -111,6 +118,7 @@ public enum AchievementEngine {
         tiers(.milesWins, value: facts.totalWins)
         tiers(.milesTiles, value: facts.totalTiles)
         tiers(.milesDisarmed, value: facts.totalDisarmed)
+        tiers(.dailyStreak, value: longestDailyStreak)
         return earned
     }
 

@@ -252,7 +252,7 @@ final class AchievementEngineTests: XCTestCase {
     func testIDsAreStableAndUnique() {
         let raw = AchievementID.allCases.map(\.rawValue)
         XCTAssertEqual(raw.count, Set(raw).count)
-        XCTAssertEqual(AchievementID.allCases.count, 20)
+        XCTAssertEqual(AchievementID.allCases.count, 21)
         // Exactly the four gags hide until earned.
         XCTAssertEqual(
             AchievementID.allCases.filter(\.isHidden),

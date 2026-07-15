@@ -74,7 +74,7 @@ public enum DailyChallenge {
 
     /// Whole days from the epoch to `dateKey` (negative = before day one).
     /// Date-string arithmetic via UTC so the ordinal is calendar-independent.
-    static func dayOrdinal(of dateKey: String) -> Int? {
+    public static func dayOrdinal(of dateKey: String) -> Int? {
         guard let day = utcMidnight(dateKey), let epoch = utcMidnight(epochKey) else {
             return nil
         }

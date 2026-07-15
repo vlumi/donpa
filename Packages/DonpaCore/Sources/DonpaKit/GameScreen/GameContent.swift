@@ -194,6 +194,12 @@ struct GameContent: View {
         .sheet(isPresented: $navigator.showingShortcuts) {
             KeyboardShortcutsView()
         }
+        .sheet(isPresented: $navigator.showingDailyCalendar) {
+            DailyCalendarView(dailyStore: dailyStore) { board in
+                navigator.showingDailyCalendar = false
+                startDailyBoard(board)
+            }
+        }
         .onChangeCompat(of: navigator.playConfigRequested) { config in
             if let config { playFromScoreboard(config) }
         }
@@ -355,6 +361,13 @@ struct GameContent: View {
             guard !Task.isCancelled else { return }
             autosave()
         }
+    }
+
+    /// Enter an attempt on any day's board (today's card, calendar Play).
+    func startDailyBoard(_ board: DailyChallenge.Board) {
+        navigator.activeDaily = board
+        viewModel.newGame(config: board.config, seed: board.seed)
+        navigator.showingTitle = false
     }
 
     /// Retry restarts the SAME board: a daily re-seeds its shared layout
