@@ -65,20 +65,39 @@ public enum DailyChallenge {
         return Board(dateKey: dateKey, config: config, seed: base, startCell: startCell)
     }
 
-    /// The day's board type: hash-picked from the pool so the sequence
-    /// FEELS random (a plain `ordinal % count` repeated weekly), nudged off
-    /// yesterday's pick so no two consecutive days play the same config.
-    /// The nudge chains, so the sequence is walked from the epoch — a few
-    /// integer hashes per day, trivial beside the seed scan.
+    /// The day's board type: the pool is dealt in seeded-permutation BLOCKS
+    /// — day `n` reads slot `n % count` of block `n / count`'s shuffle. The
+    /// sequence feels random (a plain `ordinal % count` repeated weekly) but
+    /// every config still appears exactly once per block, and the lookup is
+    /// O(1): a block's deal derives from its index alone, no walk from the
+    /// epoch.
     static func config(forOrdinal ordinal: Int) -> GameConfig {
-        var previous = -1
-        var pick = 0
-        for day in 0...ordinal {
-            pick = Int(fnv1a("donpa.daily.config.\(day)") % UInt64(pool.count))
-            if pick == previous { pick = (pick + 1) % pool.count }
-            previous = pick
+        pool[blockOrder(ordinal / pool.count)[ordinal % pool.count]]
+    }
+
+    /// A block's dealt order, with the boundary guard: a permutation already
+    /// forbids repeats WITHIN a block, and if the first day would repeat the
+    /// previous block's last, the first two slots swap. The guard reads only
+    /// the neighbor's RAW deal — a guard never touches its own last slot, so
+    /// nothing chains.
+    static func blockOrder(_ block: Int) -> [Int] {
+        var order = rawBlockOrder(block)
+        if block > 0, order[0] == rawBlockOrder(block - 1).last {
+            order.swapAt(0, 1)
         }
-        return pool[pick]
+        return order
+    }
+
+    /// Seeded Fisher–Yates on raw `next()` draws — Swift's own
+    /// `shuffled(using:)` bound-derivation isn't pinned across toolchains,
+    /// and this must never drift (it would move every future day's board).
+    private static func rawBlockOrder(_ block: Int) -> [Int] {
+        var order = Array(pool.indices)
+        var rng = SeededGenerator(seed: fnv1a("donpa.daily.block.\(block)"))
+        for slot in stride(from: order.count - 1, to: 0, by: -1) {
+            order.swapAt(slot, Int(rng.next() % UInt64(slot + 1)))
+        }
+        return order
     }
 
     static func startZoneIsClear(config: GameConfig, seed: UInt64, startCell: Coord) -> Bool {

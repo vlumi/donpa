@@ -35,6 +35,16 @@ final class DailyChallengeTests: XCTestCase {
         XCTAssertEqual(Set(picks).count, DailyChallenge.pool.count)
     }
 
+    func testEveryBlockDealsTheWholePool() {
+        let count = DailyChallenge.pool.count
+        for block in 0..<20 {
+            let picks = (0..<count).map {
+                DailyChallenge.config(forOrdinal: block * count + $0)
+            }
+            XCTAssertEqual(Set(picks).count, count, "block \(block) skips a config")
+        }
+    }
+
     func testNoTwoConsecutiveDaysShareAConfig() {
         let picks = (0..<366).map { DailyChallenge.config(forOrdinal: $0) }
         for day in 1..<picks.count {
