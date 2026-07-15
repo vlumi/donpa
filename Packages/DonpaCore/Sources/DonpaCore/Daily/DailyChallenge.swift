@@ -71,39 +71,28 @@ public enum DailyChallenge {
         return Board(dateKey: dateKey, config: config, seed: base, startCell: startCell)
     }
 
-    /// The day's board type: the pool is dealt in seeded-permutation BLOCKS
-    /// — day `n` reads slot `n % count` of block `n / count`'s shuffle. The
-    /// sequence feels random (a plain `ordinal % count` repeated weekly) but
-    /// every config still appears exactly once per block, and the lookup is
-    /// O(1): a block's deal derives from its index alone, no walk from the
-    /// epoch.
+    /// The day's board type, O(1) and pattern-free: EVEN ordinals pick
+    /// freely by hash; ODD ordinals hash into the pool minus BOTH even
+    /// neighbours' picks. Every adjacent pair of days contains one odd
+    /// member, so consecutive days can never match — no walk from the
+    /// epoch, no repeating block structure, valid for any future date.
     static func config(forOrdinal ordinal: Int) -> GameConfig {
-        pool[blockOrder(ordinal / pool.count)[ordinal % pool.count]]
+        pool[pick(ordinal)]
     }
 
-    /// A block's dealt order, with the boundary guard: a permutation already
-    /// forbids repeats WITHIN a block, and if the first day would repeat the
-    /// previous block's last, the first two slots swap. The guard reads only
-    /// the neighbor's RAW deal — a guard never touches its own last slot, so
-    /// nothing chains.
-    static func blockOrder(_ block: Int) -> [Int] {
-        var order = rawBlockOrder(block)
-        if block > 0, order[0] == rawBlockOrder(block - 1).last {
-            order.swapAt(0, 1)
-        }
-        return order
+    static func pick(_ ordinal: Int) -> Int {
+        guard !ordinal.isMultiple(of: 2) else { return freePick(ordinal) }
+        // Map the day's hash into the pool with the neighbours' slots
+        // excised: walk the forbidden slots in order, shifting past each.
+        let forbidden = Set([freePick(ordinal - 1), freePick(ordinal + 1)]).sorted()
+        let room = UInt64(pool.count - forbidden.count)
+        var slot = Int(fnv1a("donpa.daily.pick.\(ordinal)") % room)
+        for taken in forbidden where taken <= slot { slot += 1 }
+        return slot
     }
 
-    /// Seeded Fisher–Yates on raw `next()` draws — Swift's own
-    /// `shuffled(using:)` bound-derivation isn't pinned across toolchains,
-    /// and this must never drift (it would move every future day's board).
-    private static func rawBlockOrder(_ block: Int) -> [Int] {
-        var order = Array(pool.indices)
-        var rng = SeededGenerator(seed: fnv1a("donpa.daily.block.\(block)"))
-        for slot in stride(from: order.count - 1, to: 0, by: -1) {
-            order.swapAt(slot, Int(rng.next() % UInt64(slot + 1)))
-        }
-        return order
+    private static func freePick(_ ordinal: Int) -> Int {
+        Int(fnv1a("donpa.daily.pick.\(ordinal)") % UInt64(pool.count))
     }
 
     static func startZoneIsClear(config: GameConfig, seed: UInt64, startCell: Coord) -> Bool {

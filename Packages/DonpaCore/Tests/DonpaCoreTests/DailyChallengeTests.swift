@@ -35,21 +35,22 @@ final class DailyChallengeTests: XCTestCase {
         XCTAssertEqual(Set(picks).count, DailyChallenge.pool.count)
     }
 
-    func testEveryBlockDealsTheWholePool() {
-        let count = DailyChallenge.pool.count
-        for block in 0..<20 {
-            let picks = (0..<count).map {
-                DailyChallenge.config(forOrdinal: block * count + $0)
-            }
-            XCTAssertEqual(Set(picks).count, count, "block \(block) skips a config")
+    func testNoTwoConsecutiveDaysShareAConfigForACentury() {
+        // O(1) per day, so checking 100 years is cheap — and deterministic,
+        // so this green means the guarantee holds for every real date.
+        var previous = -1
+        for day in 0..<36_525 {
+            let pick = DailyChallenge.pick(day)
+            XCTAssertNotEqual(pick, previous, "day \(day) repeats its eve")
+            previous = pick
         }
     }
 
-    func testNoTwoConsecutiveDaysShareAConfig() {
-        let picks = (0..<366).map { DailyChallenge.config(forOrdinal: $0) }
-        for day in 1..<picks.count {
-            XCTAssertNotEqual(picks[day], picks[day - 1], "day \(day) repeats its eve")
-        }
+    func testEveryConfigKeepsAppearing() {
+        // No block structure guarantees coverage anymore; sanity-check the
+        // hash spreads the pool over a season.
+        let picks = (0..<90).map { DailyChallenge.config(forOrdinal: $0) }
+        XCTAssertEqual(Set(picks).count, DailyChallenge.pool.count)
     }
 
     func testStableHashNeverDrifts() {
