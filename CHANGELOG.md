@@ -46,6 +46,11 @@ entries land under Unreleased as they merge.
   sides — so a mixed-skill circle has a number that plays fair. Shows as
   rivals re-share from an up-to-date app.
 
+- **The career reads in sections.** Tour of Duty's stat pile is grouped
+  into Engagements, Fieldwork, Discipline, Fortune, Daily orders (your
+  daily-challenge days and streaks), and Service — same numbers, findable
+  at a glance. Per-board expansions stay compact.
+
 - **Pace lines light up in your career.** The Tour of Duty now shows a pace
   figure per board type and difficulty — earned by winning every size up to
   L on that ladder (bigger boards count once you play them, but are never
@@ -54,11 +59,6 @@ entries land under Unreleased as they merge.
 - **A record pace gets its moment.** When a win's pace beats your best on
   that board, the win panel's pace chip says "Best pace" and picks up the
   win accent — still a quiet chip; the stopwatch record keeps the ribbon.
-
-- **The career reads in sections.** Tour of Duty's stat pile is grouped
-  into Engagements, Fieldwork, Discipline, Fortune, Daily orders (your
-  daily-challenge days and streaks), and Service — same numbers, findable
-  at a glance. Per-board expansions stay compact.
 
 - **The Service Record remembers your place.** Opening it from the title
   now lands on the board family you last browsed instead of always Basic;
