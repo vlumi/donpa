@@ -21,7 +21,7 @@ final class DailyChallengeTests: XCTestCase {
     }
 
     func testPreEpochHasNoBoard() {
-        XCTAssertNil(DailyChallenge.board(for: "2026-07-19"))
+        XCTAssertNil(DailyChallenge.board(for: "2026-06-30"))
         XCTAssertNotNil(DailyChallenge.board(for: DailyChallenge.epochKey))
     }
 
