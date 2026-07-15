@@ -8,34 +8,12 @@ struct AddFriendSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        #if os(iOS)
-        NavigationStack {
+        SheetScaffold("Add rival", dismissStyle: .cancel, macMinWidth: 340) {
+            #if os(iOS)
             ScrollView { ScanContent(onFound: onFound).padding(20) }
-                .navigationTitle(Text("Add rival", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Cancel", bundle: .module)
-                        }
-                    }
-                }
-        }
-        #else
-        VStack(spacing: 16) {
-            Text("Add rival", bundle: .module).font(.title2.bold())
+            #else
             ScanContent(onFound: onFound)
-            Button {
-                dismiss()
-            } label: {
-                Text("Cancel", bundle: .module)
-            }
-            .keyboardShortcut(.cancelAction)
+            #endif
         }
-        .padding(24)
-        .frame(minWidth: 340)
-        #endif
     }
 }
