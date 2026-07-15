@@ -23,6 +23,7 @@ public struct GameView: View {
     @StateObject private var settings: Settings
     @ObservedObject private var navigator: Navigator
     @StateObject private var friends: FriendsStore
+    @StateObject private var dailyStore: DailyStore
     @StateObject private var sceneHolder: SceneHolder
     private var scene: BoardScene { sceneHolder.scene }
     /// Shared with `GameContent` (the writer). Must be stable `@State`: under
@@ -79,6 +80,10 @@ public struct GameView: View {
             wrappedValue: FriendsStore(
                 cloud: UbiquitousFriendsStore(),
                 deviceID: DeviceID.current(), syncEnabled: syncOn))
+        _dailyStore = StateObject(
+            wrappedValue: DailyStore(
+                cloud: UbiquitousDailyStore(),
+                deviceID: DeviceID.current(), syncEnabled: syncOn))
         _sceneHolder = StateObject(wrappedValue: SceneHolder(viewModel: viewModel))
         // -donpa.gates.fresh: only session wins count, so a veteran tester
         // experiences the fresh ladder without touching their records.
@@ -95,7 +100,7 @@ public struct GameView: View {
             GameContent(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator, friends: friends, achievements: achievements,
-                gameCenter: gameCenter,
+                gameCenter: gameCenter, dailyStore: dailyStore,
                 scene: scene, winsBaseline: winsBaseline, saveStore: saveStore)
             // Fade scoped HERE — an imperative `withAnimation` would also
             // animate the chrome's first layout.
@@ -104,6 +109,10 @@ public struct GameView: View {
                 snapshots: saveSummaries,
                 onContinue: { resume($0) },
                 onNewGame: { navigator.showingNewGame = true },
+                dailyBoard: todaysBoard,
+                dailyDay: todaysBoard.flatMap { dailyStore.displayRecords[$0.dateKey] },
+                dailyStreak: (dailyStore.currentStreak(), dailyStore.longestStreak),
+                onDaily: { startDaily() },
                 onScores: { navigator.showingScores = true },
                 onMessHall: { navigator.showingMessHall = true },
                 onSettings: { navigator.showingSettings = true },
@@ -173,6 +182,7 @@ public struct GameView: View {
             scoreboard.syncEnabled = $0
             friends.syncEnabled = $0
             achievements.setSyncEnabled($0)
+            dailyStore.syncEnabled = $0
             refreshDeviceRegistry()
         }
         .onChangeCompat(of: navigator.showingTitle) { showing in
@@ -211,6 +221,7 @@ public struct GameView: View {
 
     /// App Intents land here (Spotlight / Siri / Shortcuts).
     private func handleLaunchAction(_ action: LaunchActionRouter.Action) {
+        navigator.activeDaily = nil
         switch action {
         case .continueBoard:
             let latest = resumeStore.summaries().max { $0.updatedAt < $1.updatedAt }
@@ -234,7 +245,21 @@ public struct GameView: View {
             .refreshOwnEntry(syncEnabled: settings.syncScores, describe: DeviceFacts.current)
     }
 
+    private var todaysBoard: DailyChallenge.Board? {
+        DailyChallenge.board(for: DailyChallenge.dateKey())
+    }
+
+    /// Start (or re-enter) today's board; the review overlay arms via the
+    /// gameID change in GameContent.
+    private func startDaily() {
+        guard let board = todaysBoard else { return }
+        navigator.activeDaily = board
+        viewModel.newGame(config: board.config, seed: board.seed)
+        navigator.showingTitle = false
+    }
+
     private func startSelectedGame() {
+        navigator.activeDaily = nil
         navigator.showingNewGame = false
         viewModel.newGame(config: settings.currentConfig)
         navigator.showingTitle = false
@@ -247,12 +272,14 @@ public struct GameView: View {
             failedResumeConfig = config
             return
         }
+        navigator.activeDaily = nil
         navigator.showingNewGame = false
         viewModel.restore(from: snapshot)
         navigator.showingTitle = false
     }
 
     private func startFreshAfterFailedResume(_ config: GameConfig) {
+        navigator.activeDaily = nil
         resumeStore.clear(config: config)  // stop it haunting the lists
         saveSummaries = resumeStore.summaries()
         settings.adopt(config)

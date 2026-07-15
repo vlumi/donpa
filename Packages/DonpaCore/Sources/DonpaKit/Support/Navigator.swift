@@ -53,6 +53,17 @@ public final class Navigator: ObservableObject {
         self.showingTitle = showingTitle
     }
 
+    /// The daily board being attempted, nil during normal play. Set by the
+    /// Home card / retry, cleared by every non-daily start path — the result
+    /// recorder trusts it.
+    @Published public var activeDaily: DailyChallenge.Board?
+    /// The daily's pre-game review: board visible, input locked, clock not
+    /// yet running; Start flips it off and performs the shared reveal.
+    @Published public var dailyReviewActive = false
+    /// Restart (the strip's Retry, ⌘R) routes here so a daily retry re-seeds
+    /// the SAME board instead of minting a random one on its config.
+    @Published public var restartRequested = 0
+
     /// Two sheet swaps in one runloop turn race; presenting the second a tick
     /// later is the reliable order. Callers dismiss first, then present here.
     public func afterDismiss(_ present: @escaping @MainActor () -> Void) {

@@ -38,7 +38,7 @@ struct DonpaCommands: Commands {
             .keyboardShortcut("n", modifiers: .command)
             .disabled(modalOpen)
             Button {
-                viewModel.newGame()
+                navigator.restartRequested &+= 1
             } label: {
                 Text("Restart Game")
             }

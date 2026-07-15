@@ -68,12 +68,13 @@ extension GameContent {
             // Custom reveal/flag cursor only during a live, non-paused game with
             // nothing modal above it; the normal arrow elsewhere.
             boardCursorActive: gameInProgress && !navigator.showingTitle
-                && !viewModel.isPaused && !navigator.isModalPresented,
+                && !viewModel.isPaused && !navigator.isModalPresented
+                && !navigator.dailyReviewActive,
             // Keyboard ownership INCLUDES paused (Esc must reach the scene to
             // resume) but never the title or a modal — a sheet's text field
             // is never robbed, and the KeyCatcher surfaces never fight.
             keyboardOwner: gameInProgress && !navigator.showingTitle
-                && !navigator.isModalPresented,
+                && !navigator.isModalPresented && !navigator.dailyReviewActive,
             minimap: MinimapPrefs(
                 show: settings.showMinimap,
                 onRight: settings.handedness == .right,
@@ -86,6 +87,7 @@ extension GameContent {
         .modifier(BoardCellA11y(viewModel: viewModel, scene: scene, summary: boardSummary))
         .overlay { mangaPanel }
         .overlay { pauseOverlay }
+        .overlay { dailyReviewOverlay }
         .overlay { processingOverlay }
         .overlay(alignment: .top) { guessToastOverlay }
         .animation(.easeInOut(duration: 0.2), value: viewModel.isPaused)
@@ -204,7 +206,7 @@ extension GameContent {
             actionButton(.home, help: "Barracks") { navigator.homeRequested &+= 1 }
                 .accessibilityIdentifier("game.home")
         case .retry:
-            actionButton(.retry, help: "Retry", tint: newGameTint) { viewModel.newGame() }
+            actionButton(.retry, help: "Retry", tint: newGameTint) { restartGame() }
                 .accessibilityIdentifier("game.retry")
         case .pause:
             let paused = viewModel.isPaused

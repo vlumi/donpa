@@ -110,6 +110,8 @@ extension GameContent {
         let kind: MangaPanelView.Kind
         let isWin = result.isWin
         switch result {
+        case _ where navigator.activeDaily != nil:
+            kind = recordDailyAttempt(result: result, daily: navigator.activeDaily!)
         case .won(let centiseconds, let config):
             kind = submitWin(centiseconds: centiseconds, config: config)
         case .lost:

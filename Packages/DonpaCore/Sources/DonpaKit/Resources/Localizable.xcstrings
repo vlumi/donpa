@@ -551,6 +551,23 @@
         }
       }
     },
+    "Today's orders" : {
+      "comment" : "Daily challenge: Home card + review title",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päiväkäsky"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日の任務"
+          }
+        }
+      }
+    },
     "Toggle minimap size" : {
       "localizations" : {
         "en" : {
@@ -2212,6 +2229,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「？」マークを使う"
+          }
+        }
+      }
+    },
+    "Daily challenge review" : {
+      "comment" : "VoiceOver label for the daily review overlay",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivähaasteen esikatselu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デイリーチャレンジの確認"
           }
         }
       }
@@ -4343,6 +4377,23 @@
         }
       }
     },
+    "Not played yet" : {
+      "comment" : "Daily card: no attempt today",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei vielä pelattu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ挑戦していません"
+          }
+        }
+      }
+    },
     "Not reporting" : {
       "localizations" : {
         "en" : {
@@ -5096,6 +5147,23 @@
         }
       }
     },
+    "Same board for everyone — study freely; the clock starts on Start." : {
+      "comment" : "Daily review explainer",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sama kenttä kaikille — tutki rauhassa; kello käynnistyy Aloita-napista."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全員同じ盤面 — じっくり確認できます。開始を押すと計測が始まります。"
+          }
+        }
+      }
+    },
     "Save image" : {
       "comment" : "Share card (macOS): save the branded QR card as a PNG via the save panel",
       "localizations" : {
@@ -5584,6 +5652,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "スタート"
+          }
+        }
+      }
+    },
+    "Streak %lld · longest %lld" : {
+      "comment" : "Daily card: participation streak line",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Putki %lld · pisin %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連続%lld日・最長%lld日"
           }
         }
       }

@@ -20,6 +20,7 @@ struct GameContent: View {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var achievements: AchievementStore
     @ObservedObject var gameCenter: GameCenterReporter
+    @ObservedObject var dailyStore: DailyStore
     let scene: BoardScene
     /// `-donpa.gates.fresh` baseline: only wins earned this session count.
     var winsBaseline: [String: Int] = [:]
@@ -73,7 +74,7 @@ struct GameContent: View {
     init(
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
         navigator: Navigator, friends: FriendsStore, achievements: AchievementStore,
-        gameCenter: GameCenterReporter,
+        gameCenter: GameCenterReporter, dailyStore: DailyStore,
         scene: BoardScene, winsBaseline: [String: Int] = [:], saveStore: SaveStore
     ) {
         self.viewModel = viewModel
@@ -83,6 +84,7 @@ struct GameContent: View {
         self.friends = friends
         self.achievements = achievements
         self.gameCenter = gameCenter
+        self.dailyStore = dailyStore
         self.scene = scene
         self.winsBaseline = winsBaseline
         // Shared with GameViewRoot so the New Game popup's resume cues read the
@@ -117,7 +119,11 @@ struct GameContent: View {
         .onAppear { onLaunch() }
         .onChangeCompat(of: viewModel.lastResult?.id) { _ in handleResult() }
         .onChangeCompat(of: viewModel.lastForcedGuess) { handleGuessEvent($0) }
-        .onChangeCompat(of: viewModel.gameID) { _ in dismissPanel() }
+        .onChangeCompat(of: viewModel.gameID) { _ in
+            dismissPanel()
+            // Every daily attempt (first or retry) opens in review.
+            navigator.dailyReviewActive = navigator.activeDaily != nil
+        }
         .onChangeCompat(of: viewModel.revision) { _ in autosaveSoon() }
         // Save INLINE when leaving the foreground — the process may suspend
         // before a background task could run.
@@ -195,6 +201,7 @@ struct GameContent: View {
         .onChangeCompat(of: navigator.zoomInRequested) { _ in scene.zoom(by: 1.25) }
         .onChangeCompat(of: navigator.zoomOutRequested) { _ in scene.zoom(by: 0.8) }
         .onChangeCompat(of: navigator.toggleMinimapRequested) { _ in scene.toggleMinimapSize() }
+        .onChangeCompat(of: navigator.restartRequested) { _ in restartGame() }
         .onChangeCompat(of: settings.sound) { scene.soundPlayer?.isEnabled = $0 }
         .onChangeCompat(of: settings.haptics) { scene.hapticPlayer?.isEnabled = $0 }
     }
@@ -347,6 +354,16 @@ struct GameContent: View {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             guard !Task.isCancelled else { return }
             autosave()
+        }
+    }
+
+    /// Retry restarts the SAME board: a daily re-seeds its shared layout
+    /// (back into review); a normal game just re-rolls its config.
+    func restartGame() {
+        if let daily = navigator.activeDaily {
+            viewModel.newGame(config: daily.config, seed: daily.seed)
+        } else {
+            viewModel.newGame()
         }
     }
 

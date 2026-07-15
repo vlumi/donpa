@@ -22,6 +22,14 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The Daily Challenge arrives.** One shared board per day — same layout,
+  same luck, for everyone. The Home screen's "Today's orders" card shows
+  the day's board and your standing; every attempt opens in a review
+  (study freely — the clock starts on Start), retries are unlimited, and
+  the day keeps your best time, best pace, and attempt count. Playing any
+  day builds a participation streak; daily results stay the day's own
+  competition and never touch a board's regular best times.
+
 - **The career reads in sections.** Tour of Duty's stat pile is grouped
   into Engagements, Fieldwork, Discipline, Fortune, and Service — same
   numbers, findable at a glance. Per-board expansions stay compact.
