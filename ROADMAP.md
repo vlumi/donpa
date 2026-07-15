@@ -25,16 +25,14 @@ gates.
 
 **Carry-overs (deferred, revisit when relevant):**
 
-- [ ] **Device registry** — publish a small metadata entry beside each
-      device's KVS blob (user's device name, model identifier, platform
-      class, first-seen/last-active). The per-device blobs already make
-      "which device holds this best" and "playtime per device" read-time
-      projections; the registry just names the IDs. Ship the COLLECTION
-      early (attribution can't be backfilled — the pace-log lesson);
-      readers come later: record-attribution lines, playtime by device
-      class, a Settings "Your devices" list, and eventually
-      forget-a-device (the KVS-blob-pruning item wearing a friendlier
-      face). Device info NEVER enters the share payload.
+- [ ] **Device registry readers** — the COLLECTION shipped (a metadata
+      entry beside each device's KVS blob: name, model, class, first-seen/
+      last-active; published under the sync gate, wipe-immune, never in
+      the share payload). Readers to build on it later: record-attribution
+      lines ("set on MacBook"), playtime by device class, a Settings "Your
+      devices" list, and eventually forget-a-device (the KVS-blob-pruning
+      item wearing a friendlier face). iOS names are generic until the
+      user-assigned-device-name entitlement ships with that UI.
 
 - [ ] **KVS blob pruning** — a reinstall mints a new sync slot, orphaning the old
       blob. Deferred (a dead reinstall looks like an offline device; blobs are

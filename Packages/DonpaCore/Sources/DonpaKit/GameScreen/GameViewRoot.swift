@@ -173,6 +173,7 @@ public struct GameView: View {
             scoreboard.syncEnabled = $0
             friends.syncEnabled = $0
             achievements.setSyncEnabled($0)
+            refreshDeviceRegistry()
         }
         .onChangeCompat(of: navigator.showingTitle) { showing in
             if showing { saveSummaries = resumeStore.summaries() }
@@ -196,6 +197,7 @@ public struct GameView: View {
         // UI-test hooks: jump straight to a modal.
         .onAppear {
             saveSummaries = resumeStore.summaries()
+            refreshDeviceRegistry()
             LaunchActionRouter.shared.register { handleLaunchAction($0) }
             let args = ProcessInfo.processInfo.arguments
             if args.contains("-uitest-open-newgame") {
@@ -224,6 +226,12 @@ public struct GameView: View {
             viewModel.newGame(config: config)
             navigator.showingTitle = false
         }
+    }
+
+    /// Publish/freshen this device's registry entry (throttled internally).
+    private func refreshDeviceRegistry() {
+        DeviceRegistry(cloud: UbiquitousDeviceRegistry(), deviceID: DeviceID.current())
+            .refreshOwnEntry(syncEnabled: settings.syncScores, describe: DeviceFacts.current)
     }
 
     private func startSelectedGame() {
