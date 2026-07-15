@@ -56,11 +56,15 @@ extension HomeScreen {
                 } icon: {
                     Image(systemName: "calendar")
                 }
-                .font(.caption)
+                .font(.footnote)
+                // The card is roomy; the button shouldn't need a marksman.
+                .padding(.horizontal, 2)
+                .padding(.vertical, 1)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
+            .buttonStyle(.bordered)
+            .foregroundStyle(Color.accentColor)
             .accessibilityIdentifier("home.daily.history")
+            .modifier(homeRing(.dailyHistory))
         }
     }
 

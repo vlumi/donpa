@@ -12,6 +12,9 @@ import AppKit
 struct ScoreboardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    /// The daily-challenge store for the career's "Daily orders" segment;
+    /// nil in previews/tests keeps the segment away.
+    var dailyStore: DailyStore?
     /// The earned-feat store behind the Decorations grid. Optional so title-
     /// screen previews and tests don't have to build the sync stack.
     var achievements: AchievementStore?
@@ -220,7 +223,7 @@ struct ScoreboardView: View {
             let career = StatFigures(career: Array(scoreboard.displayRecords.values))
             if career.hasPlayed {
                 StatBlock(
-                    figures: career, segmented: true,
+                    figures: career, segmented: true, daily: dailyStore?.career,
                     twoColumnWidth: Self.twoColumnMinWidth,
                     rowInset: Self.rowInset)
                 PlayDistributionView(

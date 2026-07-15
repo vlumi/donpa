@@ -84,6 +84,24 @@ public final class DailyStore: ObservableObject {
         DailyMerge.currentStreak(playedDays: playedDays, today: today)
     }
 
+    /// The career rollup for the Service Record's "Daily orders" segment.
+    /// Played counts any attempted day, replays included — the day was faced;
+    /// only the streaks insist on live play.
+    public struct Career: Equatable, Sendable {
+        public let played: Int
+        public let cleared: Int
+        public let currentStreak: Int
+        public let longestStreak: Int
+    }
+
+    public var career: Career {
+        Career(
+            played: displayRecords.count,
+            cleared: displayRecords.values.filter(\.cleared).count,
+            currentStreak: currentStreak(),
+            longestStreak: longestStreak)
+    }
+
     public var longestStreak: Int {
         DailyMerge.longestStreak(playedDays: playedDays)
     }

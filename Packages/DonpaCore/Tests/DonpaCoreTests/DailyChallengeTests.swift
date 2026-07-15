@@ -25,11 +25,21 @@ final class DailyChallengeTests: XCTestCase {
         XCTAssertNotNil(DailyChallenge.board(for: DailyChallenge.epochKey))
     }
 
-    func testRotationCyclesDeterministically() {
-        let day0 = DailyChallenge.board(for: DailyChallenge.epochKey)
-        let dayN = DailyChallenge.board(for: DailyMerge.dateKey(ordinal: 7)!)
-        XCTAssertEqual(day0?.config, dayN?.config, "rotation wraps weekly")
-        XCTAssertNotEqual(day0?.seed, dayN?.seed)
+    func testConfigPickIsDeterministicButNotAWeeklyCycle() {
+        let picks = (0..<70).map { DailyChallenge.config(forOrdinal: $0) }
+        XCTAssertEqual(picks, (0..<70).map { DailyChallenge.config(forOrdinal: $0) })
+        // Not `ordinal % count`: somewhere in ten weeks the cycle must break.
+        let weekly = (0..<70).map { DailyChallenge.pool[$0 % DailyChallenge.pool.count] }
+        XCTAssertNotEqual(picks, weekly)
+        // The whole pool still shows up over ten weeks.
+        XCTAssertEqual(Set(picks).count, DailyChallenge.pool.count)
+    }
+
+    func testNoTwoConsecutiveDaysShareAConfig() {
+        let picks = (0..<366).map { DailyChallenge.config(forOrdinal: $0) }
+        for day in 1..<picks.count {
+            XCTAssertNotEqual(picks[day], picks[day - 1], "day \(day) repeats its eve")
+        }
     }
 
     func testStableHashNeverDrifts() {

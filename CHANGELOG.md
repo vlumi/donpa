@@ -56,8 +56,9 @@ entries land under Unreleased as they merge.
   win accent — still a quiet chip; the stopwatch record keeps the ribbon.
 
 - **The career reads in sections.** Tour of Duty's stat pile is grouped
-  into Engagements, Fieldwork, Discipline, Fortune, and Service — same
-  numbers, findable at a glance. Per-board expansions stay compact.
+  into Engagements, Fieldwork, Discipline, Fortune, Daily orders (your
+  daily-challenge days and streaks), and Service — same numbers, findable
+  at a glance. Per-board expansions stay compact.
 
 - **The Service Record remembers your place.** Opening it from the title
   now lands on the board family you last browsed instead of always Basic;

@@ -19,10 +19,9 @@ public enum DailyChallenge {
             format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }
 
-    /// The rotation: one-sitting boards, mostly Normal with a spicier
-    /// weekend, cycling by the day's position since the epoch. Deterministic
+    /// The pool of one-sitting boards a day draws from. Deterministic
     /// forever — reordering or resizing this table changes every future day.
-    static let rotation: [GameConfig] = [
+    static let pool: [GameConfig] = [
         .grid(.s, .normal, .flat),
         .hive(.s, .normal, .flat),
         .grid(.m, .normal, .flat),
@@ -51,7 +50,7 @@ public enum DailyChallenge {
     /// the bound is unreachable in practice.)
     public static func board(for dateKey: String) -> Board? {
         guard let ordinal = dayOrdinal(of: dateKey), ordinal >= 0 else { return nil }
-        let config = rotation[ordinal % rotation.count]
+        let config = config(forOrdinal: ordinal)
         let startCell = Coord(config.width / 2, config.height / 2)
         let base = fnv1a("donpa.daily." + dateKey)
         for offset in 0..<64 {
@@ -61,6 +60,22 @@ public enum DailyChallenge {
             }
         }
         return Board(dateKey: dateKey, config: config, seed: base, startCell: startCell)
+    }
+
+    /// The day's board type: hash-picked from the pool so the sequence
+    /// FEELS random (a plain `ordinal % count` repeated weekly), nudged off
+    /// yesterday's pick so no two consecutive days play the same config.
+    /// The nudge chains, so the sequence is walked from the epoch — a few
+    /// integer hashes per day, trivial beside the seed scan.
+    static func config(forOrdinal ordinal: Int) -> GameConfig {
+        var previous = -1
+        var pick = 0
+        for day in 0...ordinal {
+            pick = Int(fnv1a("donpa.daily.config.\(day)") % UInt64(pool.count))
+            if pick == previous { pick = (pick + 1) % pool.count }
+            previous = pick
+        }
+        return pool[pick]
     }
 
     static func startZoneIsClear(config: GameConfig, seed: UInt64, startCell: Coord) -> Bool {

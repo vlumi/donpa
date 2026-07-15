@@ -2280,6 +2280,23 @@
         }
       }
     },
+    "Current streak" : {
+      "comment" : "Career: Daily orders segment",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nykyinen putki"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在の連続日数"
+          }
+        }
+      }
+    },
     "Cursed Time" : {
       "comment" : "Achievement title (see ROADMAP Progression spec)",
       "localizations" : {
@@ -2365,6 +2382,23 @@
         }
       }
     },
+    "Daily orders" : {
+      "comment" : "Career segment: daily-challenge rollup",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päiväkäskyt"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デイリー任務"
+          }
+        }
+      }
+    },
     "Dark" : {
       "comment" : "Appearance option",
       "localizations" : {
@@ -2378,6 +2412,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ダーク"
+          }
+        }
+      }
+    },
+    "Days cleared" : {
+      "comment" : "Career: Daily orders segment",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selvitetyt päivät"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クリアした日数"
+          }
+        }
+      }
+    },
+    "Days played" : {
+      "comment" : "Career: Daily orders segment",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelatut päivät"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "挑戦した日数"
           }
         }
       }
@@ -3808,6 +3876,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "大博打！（%@）"
+          }
+        }
+      }
+    },
+    "Longest streak" : {
+      "comment" : "Career: Daily orders segment",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pisin putki"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最長連続日数"
           }
         }
       }
