@@ -67,6 +67,19 @@ final class DeviceRegistryTests: XCTestCase {
         XCTAssertEqual(reg.knownDevices().first?.name, "Renamed")
     }
 
+    func testNilOrUnavailableCloudIsInert() {
+        let none = DeviceRegistry(cloud: nil, deviceID: "dev-a")
+        none.refreshOwnEntry(syncEnabled: true, describe: { facts }, now: t0)
+        XCTAssertTrue(none.knownDevices().isEmpty)
+
+        let offline = MockCloud()
+        offline.isAvailable = false
+        let reg = registry(offline)
+        reg.refreshOwnEntry(syncEnabled: true, describe: { facts }, now: t0)
+        XCTAssertTrue(offline.entries.isEmpty)
+        XCTAssertTrue(reg.knownDevices().isEmpty)
+    }
+
     func testKnownDevicesSortsNewestActiveFirstAndSkipsGarbage() {
         let cloud = MockCloud()
         cloud.entries["junk"] = Data("not json".utf8)
