@@ -22,7 +22,6 @@ struct SettingsView: View {
     }
 
     /// Measured content height, for the iOS fit-content detent.
-    @State private var contentHeight: CGFloat = 0
     /// The keyboard-focused settings row; nil until the first press, inert
     /// off macOS.
     @State private var keys = KeyCursor<SettingsKeyRow>()
@@ -195,61 +194,28 @@ struct SettingsView: View {
         }
     }
 
-    @ViewBuilder private var sheetChrome: some View {
-        #if os(iOS)
-        NavigationStack {
-            // Scrolls when the rows outgrow the detent (large accessibility
-            // text) — the fit-content detent is measured from the UNSCROLLED
-            // content, so nothing changes when everything fits; Done stays a
-            // pinned toolbar item either way.
-            ScrollView {
+    private var sheetChrome: some View {
+        SheetScaffold(
+            title: "Settings", macMinWidth: 320,
+            fitContentDetent: true, iosScrolls: true, macScrollFallback: true,
+            content: {
+                #if os(iOS)
                 settingsList
                     .padding(24)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(heightReader)
-            }
-            .navigationTitle(Text("Settings", bundle: .module))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Text("Done", bundle: .module)
-                    }
-                    .accessibilityIdentifier("sheet.done")
-                }
-            }
-        }
-        // +64 leaves room for the nav bar + grabber.
-        .presentationDetents(contentHeight > 0 ? [.height(contentHeight + 64)] : [.medium])
-        #else
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Settings", bundle: .module).font(.title2.bold())
-            // Scroll fallback for short windows / large text; ViewThatFits so
-            // the sheet still hugs its natural height when the rows fit. The
-            // title and Done row stay pinned outside the scroller.
-            ViewThatFits(in: .vertical) {
+                #else
                 settingsList
-                ScrollView { settingsList }
-            }
-            Divider()
-            HStack {
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done", bundle: .module)
-                }
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(24)
-        .frame(minWidth: 320)
-        // Tab/arrows move between rows (wrapping); ←/→ and Space operate the
-        // focused control; Return is Done (or presses Reset); Esc closes.
-        .background(KeyCatcher(onKey: handleKey))
-        #endif
+                #endif
+            },
+            macFooter: { EmptyView() },
+            macBackground: {
+                #if os(macOS)
+                // Tab/arrows move between rows (wrapping); ←/→ and Space
+                // operate the focused control; Return is Done (or presses
+                // Reset); Esc closes.
+                KeyCatcher(onKey: handleKey)
+                #endif
+            })
     }
 
     #if os(macOS)
@@ -296,14 +262,6 @@ struct SettingsView: View {
             content()
         }
         .keyFocusRing(key != nil && keys.zone == key, inset: 4)
-    }
-
-    /// Reports the content's natural height (for the iOS fit-content detent).
-    private var heightReader: some View {
-        GeometryReader { geo in
-            Color.clear.onAppear { contentHeight = geo.size.height }
-                .onChangeCompat(of: geo.size.height) { contentHeight = $0 }
-        }
     }
 
     private var restartNotice: some View {
