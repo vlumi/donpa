@@ -21,17 +21,23 @@ public enum DailyChallenge {
 
     /// The pool of one-sitting boards a day draws from. Deterministic
     /// forever — reordering or resizing this table changes every future day.
+    /// Every family x size x edge combo at Normal, four Hards spread across
+    /// the matrix, two Brutals for spice — a full tour every block.
     static let pool: [GameConfig] = [
         .grid(.s, .normal, .flat),
-        .hive(.s, .normal, .flat),
         .grid(.m, .normal, .flat),
-        .hive(.s, .hard, .flat),
-        .grid(.s, .hard, .flat),
-        .hive(.m, .normal, .flat),
-        .grid(.m, .brutal, .flat),
         .grid(.s, .normal, .round),
+        .grid(.m, .normal, .round),
+        .hive(.s, .normal, .flat),
+        .hive(.m, .normal, .flat),
         .hive(.s, .normal, .round),
+        .hive(.m, .normal, .round),
+        .grid(.s, .hard, .flat),
         .grid(.m, .hard, .round),
+        .hive(.m, .hard, .flat),
+        .hive(.s, .hard, .round),
+        .grid(.m, .brutal, .flat),
+        .hive(.s, .brutal, .round),
     ]
 
     public struct Board: Equatable, Sendable {
@@ -65,20 +71,28 @@ public enum DailyChallenge {
         return Board(dateKey: dateKey, config: config, seed: base, startCell: startCell)
     }
 
-    /// The day's board type: hash-picked from the pool so the sequence
-    /// FEELS random (a plain `ordinal % count` repeated weekly), nudged off
-    /// yesterday's pick so no two consecutive days play the same config.
-    /// The nudge chains, so the sequence is walked from the epoch — a few
-    /// integer hashes per day, trivial beside the seed scan.
+    /// The day's board type, O(1) and pattern-free: EVEN ordinals pick
+    /// freely by hash; ODD ordinals hash into the pool minus BOTH even
+    /// neighbours' picks. Every adjacent pair of days contains one odd
+    /// member, so consecutive days can never match — no walk from the
+    /// epoch, no repeating block structure, valid for any future date.
     static func config(forOrdinal ordinal: Int) -> GameConfig {
-        var previous = -1
-        var pick = 0
-        for day in 0...ordinal {
-            pick = Int(fnv1a("donpa.daily.config.\(day)") % UInt64(pool.count))
-            if pick == previous { pick = (pick + 1) % pool.count }
-            previous = pick
-        }
-        return pool[pick]
+        pool[pick(ordinal)]
+    }
+
+    static func pick(_ ordinal: Int) -> Int {
+        guard !ordinal.isMultiple(of: 2) else { return freePick(ordinal) }
+        // Map the day's hash into the pool with the neighbours' slots
+        // excised: walk the forbidden slots in order, shifting past each.
+        let forbidden = Set([freePick(ordinal - 1), freePick(ordinal + 1)]).sorted()
+        let room = UInt64(pool.count - forbidden.count)
+        var slot = Int(fnv1a("donpa.daily.pick.\(ordinal)") % room)
+        for taken in forbidden where taken <= slot { slot += 1 }
+        return slot
+    }
+
+    private static func freePick(_ ordinal: Int) -> Int {
+        Int(fnv1a("donpa.daily.pick.\(ordinal)") % UInt64(pool.count))
     }
 
     static func startZoneIsClear(config: GameConfig, seed: UInt64, startCell: Coord) -> Bool {
