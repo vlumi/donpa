@@ -104,56 +104,36 @@ public enum LanguagePreference: String, CaseIterable, Identifiable, Sendable {
 /// `UserDefaults`, so the picker restores the player's last choice across launches.
 @MainActor
 public final class Settings: ObservableObject {
-    @Published public var appearance: AppearancePreference {
-        didSet { defaults.set(appearance.rawValue, forKey: appearanceKey) }
-    }
+    let defaults: UserDefaults
+
+    @Stored("donpa.appearance") public var appearance: AppearancePreference = .system
     /// The board family whose page the New Game picker shows (and starts from).
-    @Published public var family: BoardFamily {
-        didSet { defaults.set(family.rawValue, forKey: familyKey) }
-    }
+    @Stored("donpa.family") public var family: BoardFamily = .practice
     // Grid and Hive remember their OWN size/density/edges independently — picking
     // a huge Round hive must not retune the next Grid game.
-    @Published public var gridSize: BoardSize {
-        didSet { defaults.set(gridSize.rawValue, forKey: "donpa.grid.size") }
-    }
-    @Published public var gridDensity: Density {
-        didSet { defaults.set(gridDensity.rawValue, forKey: "donpa.grid.density") }
-    }
-    @Published public var gridEdges: BoardEdges {
-        didSet { defaults.set(gridEdges.rawValue, forKey: "donpa.grid.edges") }
-    }
-    @Published public var hiveSize: BoardSize {
-        didSet { defaults.set(hiveSize.rawValue, forKey: "donpa.hive.size") }
-    }
-    @Published public var hiveDensity: Density {
-        didSet { defaults.set(hiveDensity.rawValue, forKey: "donpa.hive.density") }
-    }
-    @Published public var hiveEdges: BoardEdges {
-        didSet { defaults.set(hiveEdges.rawValue, forKey: "donpa.hive.edges") }
-    }
-    @Published public var basicPreset: BasicPreset {
-        didSet { defaults.set(basicPreset.rawValue, forKey: presetKey) }
-    }
+    @Stored("donpa.grid.size") public var gridSize: BoardSize = .s
+    @Stored("donpa.grid.density") public var gridDensity: Density = .normal
+    @Stored("donpa.grid.edges") public var gridEdges: BoardEdges = .flat
+    @Stored("donpa.hive.size") public var hiveSize: BoardSize = .s
+    @Stored("donpa.hive.density") public var hiveDensity: Density = .normal
+    @Stored("donpa.hive.edges") public var hiveEdges: BoardEdges = .flat
+    @Stored("donpa.classicPreset") public var basicPreset: BasicPreset = .beginner
     /// Drills' own remembered size (its only axis — density is fixed).
-    @Published public var practiceSize: BoardSize {
-        didSet { defaults.set(practiceSize.rawValue, forKey: "donpa.practice.size") }
-    }
+    @Stored("donpa.practice.size") public var practiceSize: BoardSize = .s
+
     /// The display name last used when sharing scores — remembered so the share
     /// sheet pre-fills it. The local defaults copy is a CACHE; the durable home is
     /// the synchronizable Keychain beside the signing key (via `shareNameStore`),
     /// so the name half of the identity follows the key across devices.
     @Published public var shareName: String {
         didSet {
-            defaults.set(shareName, forKey: shareNameKey)
+            defaults.set(shareName, forKey: Self.shareNameKey)
             shareNameStore?.sharedName = shareName
         }
     }
 
-    /// Whether shares include career totals — sticky per device, so the choice
-    /// survives reopening the share card.
-    @Published public var shareIncludeCareer: Bool {
-        didSet { defaults.set(shareIncludeCareer, forKey: shareIncludeCareerKey) }
-    }
+    /// Whether shares include career totals — sticky per device.
+    @Stored("donpa.shareIncludeCareer") public var shareIncludeCareer = false
 
     /// The Keychain bridge for `shareName`, set by the app at startup (nil in
     /// tests — defaults-only there). Assigning reconciles immediately.
@@ -174,71 +154,41 @@ public final class Settings: ObservableObject {
         }
     }
 
-    @Published public var handedness: Handedness {
-        didSet { defaults.set(handedness.rawValue, forKey: handednessKey) }
-    }
+    @Stored("donpa.handedness") public var handedness: Handedness = .left
     /// Show the big-board minimap overview (only appears when the board also
     /// exceeds the viewport).
-    @Published public var showMinimap: Bool {
-        didSet { defaults.set(showMinimap, forKey: showMinimapKey) }
-    }
+    @Stored("donpa.showMinimap") public var showMinimap = true
     /// The Record's Decorations block, folded away.
-    @Published public var medalsCollapsed: Bool {
-        didSet { defaults.set(medalsCollapsed, forKey: medalsCollapsedKey) }
-    }
-    /// Minimap size multiplier over its base size, persisted so a resize survives
-    /// new game / restart / save-restore. The scene clamps it to a sane range.
-    @Published public var minimapScale: Double {
-        didSet { defaults.set(minimapScale, forKey: minimapScaleKey) }
-    }
+    @Stored("donpa.medalsCollapsed") public var medalsCollapsed = false
+    /// Minimap size multiplier over its base size; the scene clamps it.
+    @Stored("donpa.minimapScale") public var minimapScale = 1.0
     /// Bypass progressive gating: the picker offers everything, no wins needed.
     /// Freely reversible — gates derive from records, so turning this off just
     /// returns to whatever the wins say (including any earned while it was on).
     /// DEVICE-scoped like the other toggles (the records themselves sync).
-    @Published public var unlockAll: Bool {
-        didSet { defaults.set(unlockAll, forKey: unlockAllKey) }
-    }
-
+    @Stored("donpa.unlockAll") public var unlockAll = false
     /// Add a "?" step to the flag cycle (hidden → flag → "?" → clear). Opt-in,
-    /// off by default: the third state taxes the common flag→clear tap, so only
-    /// players who want the classic maybe-mark pay for it.
+    /// off by default: the third state taxes the common flag→clear tap.
+    @Stored("donpa.questionMarks") public var questionMarks = false
     /// The Record's last-browsed Family × Edges filter, so reopening lands
     /// where you left off (an in-game open still seeds to the played board).
-    public var scoreFilterFamily: BoardFamily {
-        didSet { defaults.set(scoreFilterFamily.rawValue, forKey: scoreFilterFamilyKey) }
-    }
-    public var scoreFilterEdges: BoardEdges {
-        didSet { defaults.set(scoreFilterEdges.rawValue, forKey: scoreFilterEdgesKey) }
-    }
-
+    @Stored("donpa.scoreFilterFamily") public var scoreFilterFamily: BoardFamily = .basic
+    @Stored("donpa.scoreFilterEdges") public var scoreFilterEdges: BoardEdges = .flat
     /// The marketing version the review prompt last fired for.
-    public var reviewPromptedVersion: String {
-        didSet { defaults.set(reviewPromptedVersion, forKey: reviewPromptedVersionKey) }
-    }
-
-    @Published public var questionMarks: Bool {
-        didSet { defaults.set(questionMarks, forKey: questionMarksKey) }
-    }
+    @Stored("donpa.reviewPromptedVersion") public var reviewPromptedVersion = ""
     /// Play sound effects (flag/chord/reveal + the result sting). On by default;
     /// on iOS the Ring/Silent switch also mutes it (the audio session is `.ambient`).
-    @Published public var sound: Bool {
-        didSet { defaults.set(sound, forKey: soundKey) }
-    }
-    /// Per-move haptics (flag tick, chord thud, dig rumble). On by default; iOS-only
-    /// in effect (no-op where there's no Taptic Engine).
-    @Published public var haptics: Bool {
-        didSet { defaults.set(haptics, forKey: hapticsKey) }
-    }
+    @Stored("donpa.sound") public var sound = true
+    /// Per-move haptics. On by default; iOS-only in effect.
+    @Stored("donpa.haptics") public var haptics = true
     /// Sync the scoreboard across devices via iCloud. Opt-in, off by default — our
     /// own toggle, not a system grant (KVS rides on the system sign-in).
-    @Published public var syncScores: Bool {
-        didSet { defaults.set(syncScores, forKey: syncScoresKey) }
-    }
+    @Stored(Settings.syncScoresKey) public var syncScores = false
     /// Language override. Persisted as our preference and written to
     /// `AppleLanguages` for the system to pick up next launch.
     @Published public var language: LanguagePreference {
         didSet {
-            defaults.set(language.rawValue, forKey: languageKey)
+            defaults.set(language.rawValue, forKey: Self.languageKey)
             if let code = language.languageCode {
                 defaults.set([code], forKey: "AppleLanguages")
             } else {
@@ -247,98 +197,55 @@ public final class Settings: ObservableObject {
         }
     }
 
-    private let defaults: UserDefaults
-    private let appearanceKey = "donpa.appearance"
-    private let familyKey = "donpa.family"
-    private let presetKey = "donpa.classicPreset"
-    private let shareNameKey = "donpa.shareName"
-    private let shareIncludeCareerKey = "donpa.shareIncludeCareer"
-    // Legacy (pre-family / pre-split) selection keys, read once for migration:
-    // mode+shape became the family; the shared size/density/edges seed BOTH
-    // families' own axes.
-    private let legacyModeKey = "donpa.mode"
-    private let legacyShapeKey = "donpa.modernShape"
-    private let legacySizeKey = "donpa.modernSize"
-    private let legacyDensityKey = "donpa.modernDensity"
-    private let legacyEdgesKey = "donpa.modernEdges"
-    private let handednessKey = "donpa.handedness"
-    private let languageKey = "donpa.language"
-    private let showMinimapKey = "donpa.showMinimap"
-    private let medalsCollapsedKey = "donpa.medalsCollapsed"
-    private let minimapScaleKey = "donpa.minimapScale"
-    private let unlockAllKey = "donpa.unlockAll"
-    private let questionMarksKey = "donpa.questionMarks"
-    private let reviewPromptedVersionKey = "donpa.reviewPromptedVersion"
-    private let scoreFilterFamilyKey = "donpa.scoreFilterFamily"
-    private let scoreFilterEdgesKey = "donpa.scoreFilterEdges"
-    private let soundKey = "donpa.sound"
-    private let hapticsKey = "donpa.haptics"
-    private let syncScoresKey = "donpa.syncScores"
+    /// Read raw at app init, before a Settings exists (the store wiring needs it).
+    public static let syncScoresKey = "donpa.syncScores"
+    private static let shareNameKey = "donpa.shareName"
+    private static let languageKey = "donpa.language"
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        appearance =
-            defaults.string(forKey: appearanceKey).flatMap(AppearancePreference.init(rawValue:))
-            ?? .system
-        // Family: prefer the stored value; else migrate a pre-family install's
-        // mode+shape selection (classic → basic; modern → grid/hive by shape).
-        // A GENUINELY fresh install — no family key AND no legacy mode key — lands
-        // on Drills, the no-guess on-ramp (a newcomer learns the patterns before
-        // the real families). A pre-family veteran has the legacy key, so they
-        // migrate to their old pick and are never yanked to Drills.
-        let legacyMode = defaults.string(forKey: legacyModeKey)
-        family =
-            defaults.string(forKey: familyKey).flatMap(BoardFamily.init(rawValue:))
-            ?? (legacyMode == nil
-                ? .practice
-                : Self.legacyFamily(
-                    mode: legacyMode, shape: defaults.string(forKey: legacyShapeKey)))
-        // Per-family axes: prefer each family's own stored value; fall back to the
-        // legacy SHARED keys (seeding both families with the old pick), then the
-        // defaults. Legacy edges values used the bounded/wrapped vocabulary.
-        let sharedSize =
-            defaults.string(forKey: legacySizeKey).flatMap(BoardSize.init(rawValue:)) ?? .s
-        let sharedDensity =
-            defaults.string(forKey: legacyDensityKey).flatMap(Density.init(rawValue:)) ?? .normal
-        let sharedEdges =
-            defaults.string(forKey: legacyEdgesKey).flatMap(Self.edgesValue(from:)) ?? .flat
-        func axis<T>(_ key: String, _ parse: (String) -> T?, else shared: T) -> T {
-            defaults.string(forKey: key).flatMap(parse) ?? shared
-        }
-        gridSize = axis("donpa.grid.size", BoardSize.init(rawValue:), else: sharedSize)
-        gridDensity = axis("donpa.grid.density", Density.init(rawValue:), else: sharedDensity)
-        gridEdges = axis("donpa.grid.edges", Self.edgesValue(from:), else: sharedEdges)
-        hiveSize = axis("donpa.hive.size", BoardSize.init(rawValue:), else: sharedSize)
-        hiveDensity = axis("donpa.hive.density", Density.init(rawValue:), else: sharedDensity)
-        hiveEdges = axis("donpa.hive.edges", Self.edgesValue(from:), else: sharedEdges)
-        // Drills is post-legacy, so no shared-key seeding — default S, like the
-        // other families' size axes. Clamped to ITS ladder: a stored huge size
-        // (tampered or from a future build) must not smuggle an un-generatable
-        // board into the no-guess mode.
-        let storedPractice = axis("donpa.practice.size", BoardSize.init(rawValue:), else: .s)
-        practiceSize = GameConfig.practiceSizes.contains(storedPractice) ? storedPractice : .s
-        basicPreset =
-            defaults.string(forKey: presetKey).flatMap(BasicPreset.init(rawValue:)) ?? .beginner
-        shareName = defaults.string(forKey: shareNameKey) ?? ""
-        shareIncludeCareer = defaults.object(forKey: shareIncludeCareerKey) as? Bool ?? false
-        handedness =
-            defaults.string(forKey: handednessKey).flatMap(Handedness.init(rawValue:)) ?? .left
-        // Default ON: check presence explicitly, since `bool(forKey:)` is false when
-        // the key is missing.
-        showMinimap = defaults.object(forKey: showMinimapKey) as? Bool ?? true
-        medalsCollapsed = defaults.object(forKey: medalsCollapsedKey) as? Bool ?? false
-        minimapScale = defaults.object(forKey: minimapScaleKey) as? Double ?? 1.0
-        unlockAll = defaults.bool(forKey: unlockAllKey)
-        questionMarks = defaults.object(forKey: questionMarksKey) as? Bool ?? false
-        reviewPromptedVersion = defaults.string(forKey: reviewPromptedVersionKey) ?? ""
-        scoreFilterFamily = Self.stored(defaults, scoreFilterFamilyKey) ?? .basic
-        scoreFilterEdges = Self.stored(defaults, scoreFilterEdgesKey) ?? .flat
-        sound = defaults.object(forKey: soundKey) as? Bool ?? true
-        haptics = defaults.object(forKey: hapticsKey) as? Bool ?? true
-        syncScores = defaults.object(forKey: syncScoresKey) as? Bool ?? false
+        shareName = defaults.string(forKey: Self.shareNameKey) ?? ""
         language =
-            defaults.string(forKey: languageKey).flatMap(LanguagePreference.init(rawValue:))
+            defaults.string(forKey: Self.languageKey).flatMap(LanguagePreference.init(rawValue:))
             ?? .system
+        Self.migrateLegacySelections(in: defaults)
+    }
+
+    /// Pre-family installs stored mode/shape + one SHARED size/density/edges set;
+    /// Drills guards against a smuggled off-ladder size. Writes each family key
+    /// only when absent, so it runs idempotently before `@Stored`'s first read.
+    private static func migrateLegacySelections(in defaults: UserDefaults) {
+        func write(_ raw: String?, to key: String) {
+            guard defaults.string(forKey: key) == nil, let raw else { return }
+            defaults.set(raw, forKey: key)
+        }
+        if let mode = defaults.string(forKey: "donpa.mode") {
+            write(
+                legacyFamily(mode: mode, shape: defaults.string(forKey: "donpa.modernShape"))
+                    .rawValue,
+                to: "donpa.family")
+        }
+        let sharedSize = defaults.string(forKey: "donpa.modernSize")
+        let sharedDensity = defaults.string(forKey: "donpa.modernDensity")
+        let sharedEdges = defaults.string(forKey: "donpa.modernEdges")
+            .flatMap(edgesValue(from:))?.rawValue
+        for family in ["grid", "hive"] {
+            write(sharedSize, to: "donpa.\(family).size")
+            write(sharedDensity, to: "donpa.\(family).density")
+            write(sharedEdges, to: "donpa.\(family).edges")
+        }
+        // Own edges keys may also hold the legacy vocabulary from older builds.
+        for key in ["donpa.grid.edges", "donpa.hive.edges"] {
+            if let raw = defaults.string(forKey: key), BoardEdges(rawValue: raw) == nil {
+                defaults.set(edgesValue(from: raw)?.rawValue, forKey: key)
+            }
+        }
+        if let raw = defaults.string(forKey: "donpa.practice.size"),
+            let size = BoardSize(rawValue: raw),
+            !GameConfig.practiceSizes.contains(size)
+        {
+            defaults.removeObject(forKey: "donpa.practice.size")
+        }
     }
 
     /// The `GameConfig` implied by the current family + ITS selections. All
@@ -355,9 +262,7 @@ public final class Settings: ObservableObject {
 
     /// Adopt a `GameConfig` as the current selection — sets the family and its
     /// per-family size/density/edges so `currentConfig` round-trips to it, and so a
-    /// later plain New Game / relaunch remembers this board. Used when a game is
-    /// started from a specific config (e.g. the scoreboard's "New game on this
-    /// board") rather than by editing the picker.
+    /// later plain New Game / relaunch remembers this board.
     public func adopt(_ config: GameConfig) {
         family = config.family
         switch config {
@@ -374,12 +279,6 @@ public final class Settings: ObservableObject {
         case .practice(let size):
             practiceSize = size
         }
-    }
-
-    private static func stored<T: RawRepresentable>(_ defaults: UserDefaults, _ key: String)
-        -> T? where T.RawValue == String
-    {
-        defaults.string(forKey: key).flatMap(T.init(rawValue:))
     }
 
     /// Key paths to a family's own axes, so the picker and keyboard nav bind to
@@ -419,3 +318,12 @@ public final class Settings: ObservableObject {
         }
     }
 }
+
+extension AppearancePreference: DefaultsValue {}
+extension BoardFamily: DefaultsValue {}
+extension BoardSize: DefaultsValue {}
+extension Density: DefaultsValue {}
+extension BoardEdges: DefaultsValue {}
+extension BasicPreset: DefaultsValue {}
+extension Handedness: DefaultsValue {}
+extension LanguagePreference: DefaultsValue {}
