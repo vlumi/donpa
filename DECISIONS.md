@@ -399,6 +399,43 @@ repair-based generation, far beyond resampling; see CHANGELOG).
 
 ---
 
+## Daily challenge — design of record (shipped 2026-07-15, #438–#443)
+
+One shared board per day, keyed by the LOCAL date string — the same
+calendar date is the same board everywhere (timezones only shift when it
+flips; a date-changer only cheats themselves). Epoch `2026-07-01` is
+PERMANENT — backdated so the calendar opens with history to explore.
+FNV-1a hashes (never Swift's randomized `Hasher`); the seed scans forward
+until the pre-armed layout leaves the start cell's neighbourhood
+mine-free, so first-click relocation (non-deterministic) never fires and
+everyone's luck is identical. Every attempt opens in a REVIEW state —
+board visible, input locked, clock starts on Start — so study is
+explicitly free (memorization is legitimate, like fixed-seed
+speedrunning).
+
+**Config pick:** parity scheme — even day-ordinals hash freely into the
+pool, odd ordinals hash into the pool minus BOTH even neighbours' picks;
+consecutive repeats are impossible by construction, O(1) for any date,
+no cycle. (Rejected on the way: `ordinal % count` read as a weekly
+pattern; a chained no-repeat nudge was O(days); permutation blocks were
+card-countable; salt-hunting a clean window dies past ~a year at
+(13/14)^N.) **The 14-config pool is append-frozen from the shipping
+cut** — resizing remaps every future date's board.
+
+**Records:** ONE aggregate line per day, never per-attempt rows — best
+time/pace min-wins across own devices (attempt ordinal rides with the
+winning device, stored but not displayed until device attribution can
+qualify it), attempts a DeviceCounter, progress max. Daily results never
+touch a board's regular best times — the day is its own competition.
+**Streaks measure participation, never outcomes:** only an attempt
+completed ON the day counts (`playedLive`), once per day; calendar
+replays of past days record results but never repair a streak. Roll Call
+medal ladder 1/7/30. **Sharing:** payload v3 carries a channel-sized
+window (full history over Nearby, rolling 14 days over QR/link);
+receivers accumulate PER DATE — newest share wins its dates, older dates
+survive — so rivals' histories build across swaps and the QR never
+carries the past. H2H "Dailies" section is single-rival only.
+
 ## Scrapped & rejected
 
 Kept on record so the next review doesn't redo the evaluation. Anything here
