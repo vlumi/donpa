@@ -57,6 +57,13 @@ public enum FriendMerge {
             groups: existing?.groups ?? [],
             lastIssuedAt: payload.body.issuedAt,
             scores: payload.body.scores,
+            // Accumulate per date: the new card wins the dates it carries;
+            // dates outside its window survive from earlier swaps.
+            dailies: (existing?.dailies ?? [:]).merging(
+                Dictionary(
+                    (payload.body.daily ?? []).map { ($0.key, $0) },
+                    uniquingKeysWith: { _, newest in newest })
+            ) { _, incoming in incoming },
             career: payload.body.career,
             addedAt: existing?.addedAt ?? now)
     }

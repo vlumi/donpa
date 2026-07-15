@@ -136,6 +136,44 @@ enum FriendRanking {
                 theirHolders: group.holders))
     }
 
+    // MARK: Dailies
+
+    /// One shared daily day, you vs. them. `lead` compares best times
+    /// (an unwon side never leads); paces ride for the sub-lines.
+    struct DailyRow: Identifiable {
+        let key: String
+        let yourBest: Int?
+        let theirBest: Int?
+        let yourPace: Double?
+        let theirPace: Double?
+        var id: String { key }
+
+        var lead: ScoreComparison.Lead {
+            switch (yourBest, theirBest) {
+            case (nil, nil): return .tie
+            case (.some, nil): return .you
+            case (nil, .some): return .them
+            case (.some(let mine), .some(let theirs)):
+                return mine == theirs ? .tie : (mine < theirs ? .you : .them)
+            }
+        }
+    }
+
+    /// A row per day the rival has shared, newest first — their window is
+    /// the comparison's universe (your solo days have nothing to compare).
+    static func dailyRows(
+        yours: [String: DailyDayRecord], theirs: [String: SharedDailyDay]
+    ) -> [DailyRow] {
+        theirs.keys.sorted(by: >).compactMap { key in
+            guard let their = theirs[key] else { return nil }
+            let your = yours[key]
+            return DailyRow(
+                key: key,
+                yourBest: your?.best?.centiseconds, theirBest: their.best,
+                yourPace: your?.best?.pace, theirPace: their.pace)
+        }
+    }
+
     /// Attach board configs, dropping rows whose key can't resolve (unknown/legacy
     /// configs), in the app's canonical config order.
     private static func labeled(_ h: ScoreComparison.HeadToHead) -> H2H {

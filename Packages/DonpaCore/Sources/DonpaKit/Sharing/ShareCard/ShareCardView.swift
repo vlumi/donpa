@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 struct ShareCardView: View {
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    @ObservedObject var dailyStore: DailyStore
     /// Open the Nearby exchange — the promoted, in-person path. The host owns the
     /// sheet (it also receives the swapped card); the card owns the gate: the
     /// button only shows once a name has produced a shareable link.
@@ -29,6 +30,10 @@ struct ShareCardView: View {
 
     /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
+
+    /// The QR/link path carries a rolling daily window (scan budget); Nearby
+    /// sends the full history — receivers accumulate per date either way.
+    static let qrDailyWindow = 14
 
     @State private var name: String = ""
     @State private var link: URL?
@@ -215,7 +220,8 @@ struct ShareCardView: View {
         }
         guard
             let url = SharePayloadBuilder.currentURL(
-                scoreboard: scoreboard, settings: settings, identityStore: identityStore)
+                scoreboard: scoreboard, settings: settings, identityStore: identityStore,
+                dailyStore: dailyStore, dailyDays: Self.qrDailyWindow)
         else {
             qr = nil
             link = nil

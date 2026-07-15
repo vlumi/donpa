@@ -2284,6 +2284,23 @@
         }
       }
     },
+    "Dailies" : {
+      "comment" : "Head-to-head section: shared daily-challenge days",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivähaasteet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デイリー"
+          }
+        }
+      }
+    },
     "Daily challenge" : {
       "comment" : "Calendar sheet title",
       "localizations" : {

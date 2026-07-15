@@ -13,6 +13,9 @@ struct HeadToHeadView: View {
     /// Career totals to compare (yours vs. theirs), or nil — only for a single rival who
     /// opted to share career (a group's career isn't meaningfully aggregated).
     var career: (yours: SharedCareer, theirs: SharedCareer)?
+    /// Daily-challenge days the rival has shared, newest first — single-rival
+    /// compares only (a squad's dailies aren't meaningfully aggregated).
+    var dailyRows: [FriendRanking.DailyRow] = []
     /// Start a fresh game on a row's board — the "I'm trailing here, rematch" loop.
     /// The host owns the navigation (dismissing this sheet included).
     var onPlay: ((GameConfig) -> Void)?
@@ -34,7 +37,7 @@ struct HeadToHeadView: View {
     @ViewBuilder private var content: some View {
         VStack(spacing: 12) {
             tally
-            if result.rows.isEmpty {
+            if result.rows.isEmpty && dailyRows.isEmpty && career == nil {
                 Text(
                     "No shared boards yet — play some of the same boards to compare.",
                     bundle: .module
@@ -60,6 +63,7 @@ struct HeadToHeadView: View {
                                 groupHeader(group)
                             }
                         }
+                        if !dailyRows.isEmpty { dailiesSection }
                         if let career { careerSection(career) }
                     }
                     .background(h2hKeyCatcher(proxy))
@@ -332,5 +336,62 @@ struct HeadToHeadView: View {
             content.frame(minHeight: 280)
             #endif
         }
+    }
+}
+
+/// The H2H "Dailies" section — the shared daily-challenge days beside the
+/// board rows (single-rival compares only).
+extension HeadToHeadView {
+    /// The shared daily days, you vs. them, newest first — the same column
+    /// layout as the boards so the sheet reads as one table. A day one side
+    /// hasn't cleared shows the dash; the faster clear is tinted.
+    var dailiesSection: some View {
+        Section {
+            ForEach(dailyRows) { row in
+                HStack(alignment: .top) {
+                    Text(verbatim: row.key)
+                        .font(.callout.monospacedDigit())
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 1) {
+                        time(row.yourBest, winner: row.lead == .you)
+                        PaceText(pace: row.yourPace)
+                    }
+                    .frame(width: yourColumnWidth, alignment: .trailing)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(
+                        Text("You: \(timeSpoken(row.yourBest))", bundle: .module))
+                    VStack(alignment: .trailing, spacing: 1) {
+                        time(row.theirBest, winner: row.lead == .them)
+                        PaceText(pace: row.theirPace)
+                    }
+                    .frame(width: theirColumnWidth, alignment: .trailing)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(
+                        Text("Rival: \(timeSpoken(row.theirBest))", bundle: .module))
+                }
+                .font(.callout)
+            }
+        } header: {
+            dailiesHeader
+        }
+    }
+
+    /// The Dailies sticky title, with the same column captions as the board
+    /// groups (they scroll away with those headers otherwise).
+    private var dailiesHeader: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "calendar")
+            Text("Dailies", bundle: .module)
+            Spacer()
+            Text("You", bundle: .module)
+                .frame(width: yourColumnWidth, alignment: .trailing)
+            Text(verbatim: opponentName)
+                .frame(width: theirColumnWidth, alignment: .trailing)
+        }
+        .font(.caption).foregroundStyle(.secondary)
+        .textCase(nil)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
     }
 }

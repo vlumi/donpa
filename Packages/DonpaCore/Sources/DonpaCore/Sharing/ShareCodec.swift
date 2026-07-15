@@ -93,13 +93,34 @@ public enum ShareCodec {
             scores.append(s)
         }
         if let c = body.career, !careerNonNegative(c) { throw DecodeError.malformed }
+        try validateDaily(body.daily)
         return ShareBody(
-            name: name, scores: scores, career: body.career,
+            name: name, scores: scores, career: body.career, daily: body.daily,
             issuedAt: body.issuedAt, rotation: body.rotation)
     }
 
     /// Caps length and strips control + bidi-override/isolate characters (U+202E-style
     /// name spoofing); falls back to a placeholder if nothing printable survives.
+    /// Day keys are strict "yyyy-MM-dd", unique; values non-negative and
+    /// finite; the window is capped (the byte bomb-guard is upstream, this
+    /// keeps a hostile share from flooding the friend store with rows).
+    static func validateDaily(_ daily: [SharedDailyDay]?) throws {
+        guard let daily else { return }
+        guard daily.count <= 400 else { throw DecodeError.malformed }
+        var seen = Set<String>()
+        for day in daily {
+            guard let ordinal = DailyChallenge.dayOrdinal(of: day.key),
+                DailyMerge.dateKey(ordinal: ordinal) == day.key,
+                seen.insert(day.key).inserted
+            else { throw DecodeError.malformed }
+            guard (day.best ?? 0) >= 0, (day.threeBV ?? 0) >= 0, day.attempts >= 0
+            else { throw DecodeError.malformed }
+            if let p = day.progress, !(p.isFinite && (0...1).contains(p)) {
+                throw DecodeError.malformed
+            }
+        }
+    }
+
     static func sanitizeName(_ raw: String) -> String {
         let stripped = raw.unicodeScalars.filter { s in
             if s.properties.generalCategory == .control { return false }

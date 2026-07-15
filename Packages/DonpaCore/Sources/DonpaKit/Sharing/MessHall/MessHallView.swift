@@ -12,6 +12,7 @@ struct MessHallView: View {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    @ObservedObject var dailyStore: DailyStore
     /// Route a scanned rival URL into the receive flow: the host closes this sheet
     /// and hands the URL to the root classify/prompt path (same as a tapped link).
     var onScanned: ((URL) -> Void)?
@@ -109,6 +110,8 @@ struct MessHallView: View {
                     career: rival.career.map {
                         (yours: SharePayloadBuilder.career(from: scoreboard), theirs: $0)
                     },
+                    dailyRows: FriendRanking.dailyRows(
+                        yours: dailyStore.displayRecords, theirs: rival.dailies),
                     onPlay: play)
             }
             .sheet(item: $editingGroup) { GroupEditView(group: $0, friends: friends) }
@@ -139,7 +142,7 @@ struct MessHallView: View {
     private var shareHeader: some View {
         VStack(spacing: 8) {
             ShareCardView(
-                scoreboard: scoreboard, settings: settings,
+                scoreboard: scoreboard, settings: settings, dailyStore: dailyStore,
                 onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) },
                 keyFocus: cardKeyFocus, activate: cardActivate,
                 hasLink: $cardHasLink)
@@ -157,10 +160,12 @@ struct MessHallView: View {
         }
     }
 
-    /// The signed share link, through the same gate chain the card uses.
+    /// The signed share link, through the same gate chain the card uses —
+    /// but with the FULL daily history (Nearby has no scan budget).
     func currentShareURL() -> URL? {
         SharePayloadBuilder.currentURL(
-            scoreboard: scoreboard, settings: settings, identityStore: identityStore)
+            scoreboard: scoreboard, settings: settings, identityStore: identityStore,
+            dailyStore: dailyStore, dailyDays: nil)
     }
 
     // MARK: Tabs

@@ -158,7 +158,7 @@ public struct GameView: View {
         .modifier(
             ReceivePrompt(
                 navigator: navigator, friends: friends, scoreboard: scoreboard,
-                settings: settings)
+                settings: settings, dailyStore: dailyStore)
         )
         // An unreadable save is never a silent nothing.
         .alert(
@@ -327,6 +327,7 @@ private struct ReceivePrompt: ViewModifier {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
     @ObservedObject var settings: Settings
+    @ObservedObject var dailyStore: DailyStore
 
     private var isOwn: Bool {
         if case .own = navigator.incomingShare { return true }
@@ -358,6 +359,7 @@ private struct ReceivePrompt: ViewModifier {
             .sheet(isPresented: $navigator.showingMessHall) {
                 MessHallView(
                     friends: friends, scoreboard: scoreboard, settings: settings,
+                    dailyStore: dailyStore,
                     // Classify and prompt at root, deferred a tick (sheet swap).
                     onScanned: { url in
                         let incoming = GameView.classify(

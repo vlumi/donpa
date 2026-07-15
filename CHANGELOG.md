@@ -22,6 +22,11 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Dailies join the rivalry.** Your share card now carries your recent
+  daily-challenge results (the full history over Nearby), rivals'
+  histories accumulate swap by swap, and the head-to-head gains a
+  Dailies section — same day, same board, whose time stands?
+
 - **The daily grows a calendar and a medal.** A History view on the
   Today's-orders card shows every day since the challenge began — play
   any past day you missed (past days never repair a streak; only showing
