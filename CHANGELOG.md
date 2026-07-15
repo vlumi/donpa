@@ -22,6 +22,10 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The career reads in sections.** Tour of Duty's stat pile is grouped
+  into Engagements, Fieldwork, Discipline, Fortune, and Service — same
+  numbers, findable at a glance. Per-board expansions stay compact.
+
 - **A record pace gets its moment.** When a win's pace beats your best on
   that board, the win panel's pace chip says "Best pace" and picks up the
   win accent — still a quiet chip; the stopwatch record keeps the ribbon.
