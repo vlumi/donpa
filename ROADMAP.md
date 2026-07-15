@@ -25,6 +25,17 @@ gates.
 
 **Carry-overs (deferred, revisit when relevant):**
 
+- [ ] **Device registry** — publish a small metadata entry beside each
+      device's KVS blob (user's device name, model identifier, platform
+      class, first-seen/last-active). The per-device blobs already make
+      "which device holds this best" and "playtime per device" read-time
+      projections; the registry just names the IDs. Ship the COLLECTION
+      early (attribution can't be backfilled — the pace-log lesson);
+      readers come later: record-attribution lines, playtime by device
+      class, a Settings "Your devices" list, and eventually
+      forget-a-device (the KVS-blob-pruning item wearing a friendlier
+      face). Device info NEVER enters the share payload.
+
 - [ ] **KVS blob pruning** — a reinstall mints a new sync slot, orphaning the old
       blob. Deferred (a dead reinstall looks like an offline device; blobs are
       tiny). Revisit only near KVS storage limits.
@@ -55,7 +66,12 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       completed attempt, won or lost, marks the day played; no
       notifications, neutral display "12 days · longest 23").
       DATA: full history kept locally + own-device sync forever (a year is
-      a few KB zlib'd); sharing carries a CHANNEL-SIZED slice of the same
+      a few KB zlib'd); ONE aggregate line per day — never per-attempt
+      rows — merging across own devices on the scoreboard's proven
+      pattern: best time/pace min-wins (device-owned, projected at merge),
+      attempts a DeviceCounter (plain counts can't merge across devices);
+      "best on attempt 2" is the ordinal ON the device holding the best,
+      the total is global; sharing carries a CHANNEL-SIZED slice of the same
       v3 payload field — full history over Nearby (no size limit), a
       rolling 14–31-day window over QR/link (scan budget) — and the
       receiver merges PER DATE (newest share wins a date; the sharer's own
