@@ -5,7 +5,9 @@ import SwiftUI
 /// renders the title, the content, and a bottom bar with an optional leading
 /// accessory and the default-action Done. Esc dismisses on both. Sheets keep
 /// only their content and sizing knobs.
-struct SheetScaffold<Content: View, MacFooter: View, MacBackground: View>: View {
+struct SheetScaffold<Content: View, MacFooter: View, MacBackground: View, IOSBottomBar: View>:
+    View
+{
     /// The sheet's one dismissing control: Done for read-and-close sheets,
     /// Cancel where dismissing means abandoning (scanning, confirm flows).
     enum DismissStyle {
@@ -33,6 +35,12 @@ struct SheetScaffold<Content: View, MacFooter: View, MacBackground: View>: View 
     @ViewBuilder var macFooter: MacFooter
     /// macOS chrome background — the seat for a sheet's KeyCatcher.
     @ViewBuilder var macBackground: MacBackground
+    /// iOS bottom bar pinned under the content (a Divider + `.bar` backing).
+    @ViewBuilder var iosBottomBar: IOSBottomBar
+    /// macOS: drive the width firmly (two-column sheets) instead of minimums.
+    var macFixedWidth: CGFloat?
+    /// macOS: cap growth; the sheet still sizes to content below the cap.
+    var macMaxHeight: CGFloat?
 
     @Environment(\.dismiss) private var dismiss
     #if os(iOS)
@@ -57,6 +65,7 @@ struct SheetScaffold<Content: View, MacFooter: View, MacBackground: View>: View 
     private var chrome: some View {
         NavigationStack {
             scrollingContent
+                .safeAreaInset(edge: .bottom) { bottomBarIfAny }
                 .navigationTitle(Text(title, bundle: .module))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -75,6 +84,19 @@ struct SheetScaffold<Content: View, MacFooter: View, MacBackground: View>: View 
             ScrollView { measured }
         } else {
             measured
+        }
+    }
+
+    @ViewBuilder private var bottomBarIfAny: some View {
+        if !(iosBottomBar is EmptyView) {
+            VStack(spacing: 0) {
+                Divider()
+                iosBottomBar
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+            }
+            .background(.bar)
         }
     }
 
@@ -99,10 +121,12 @@ struct SheetScaffold<Content: View, MacFooter: View, MacBackground: View>: View 
             }
         }
         .padding(20)
+        .frame(width: macFixedWidth)
         .frame(
-            minWidth: macMinWidth, idealWidth: macIdealWidth,
+            minWidth: macFixedWidth == nil ? macMinWidth : nil, idealWidth: macIdealWidth,
             minHeight: macMinHeight, idealHeight: macIdealHeight
         )
+        .frame(maxHeight: macMaxHeight)
         .background(macBackground)
     }
 
@@ -120,7 +144,7 @@ struct SheetScaffold<Content: View, MacFooter: View, MacBackground: View>: View 
 }
 
 extension SheetScaffold
-where MacFooter == EmptyView, MacBackground == EmptyView {
+where MacFooter == EmptyView, MacBackground == EmptyView, IOSBottomBar == EmptyView {
     init(
         _ title: LocalizedStringKey, dismissStyle: DismissStyle = .done,
         macMinWidth: CGFloat = 300, macIdealWidth: CGFloat? = nil,
@@ -135,7 +159,30 @@ where MacFooter == EmptyView, MacBackground == EmptyView {
             macMinHeight: macMinHeight, macIdealHeight: macIdealHeight,
             fitContentDetent: fitContentDetent, iosScrolls: iosScrolls,
             macScrollFallback: macScrollFallback, content: content,
-            macFooter: { EmptyView() }, macBackground: { EmptyView() })
+            macFooter: { EmptyView() }, macBackground: { EmptyView() },
+            iosBottomBar: { EmptyView() })
+    }
+}
+
+extension SheetScaffold where IOSBottomBar == EmptyView {
+    init(
+        title: LocalizedStringKey, dismissStyle: DismissStyle = .done,
+        macMinWidth: CGFloat = 300, macIdealWidth: CGFloat? = nil,
+        macMinHeight: CGFloat? = nil, macIdealHeight: CGFloat? = nil,
+        fitContentDetent: Bool = false, iosScrolls: Bool = false,
+        macScrollFallback: Bool = false,
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder macFooter: () -> MacFooter,
+        @ViewBuilder macBackground: () -> MacBackground
+    ) {
+        self.init(
+            title: title, dismissStyle: dismissStyle,
+            macMinWidth: macMinWidth, macIdealWidth: macIdealWidth,
+            macMinHeight: macMinHeight, macIdealHeight: macIdealHeight,
+            fitContentDetent: fitContentDetent, iosScrolls: iosScrolls,
+            macScrollFallback: macScrollFallback, content: content,
+            macFooter: macFooter, macBackground: macBackground,
+            iosBottomBar: { EmptyView() })
     }
 }
 

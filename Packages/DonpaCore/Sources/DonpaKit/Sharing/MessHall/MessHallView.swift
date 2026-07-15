@@ -163,19 +163,6 @@ struct MessHallView: View {
             scoreboard: scoreboard, settings: settings, identityStore: identityStore)
     }
 
-    /// Sync lives here too, not only in the Service Record: the Mess hall is where
-    /// sync questions arise (the share card's footer already talks about it), and the
-    /// same self-contained control reads shared state, so mounting it twice is free.
-    private var syncFooter: some View {
-        VStack(spacing: 0) {
-            Divider()
-            SyncFooterControl(settings: settings, scoreboard: scoreboard)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-        }
-    }
-
     // MARK: Tabs
 
     private var tabPicker: some View {
@@ -300,59 +287,46 @@ extension MessHallView {
 
     // MARK: Chrome
 
-    @ViewBuilder private var chrome: some View {
-        #if os(iOS)
-        NavigationStack {
-            VStack(spacing: 0) {
-                shareHeader.padding([.horizontal, .top], 12)
-                tabContent
-            }
-            .safeAreaInset(edge: .bottom) { syncFooter.background(.bar) }
-            .navigationTitle(Text("Mess hall", bundle: .module))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Text("Done", bundle: .module)
-                    }
+    // No macOS minHeight: the sheet's floor derives from the content's own
+    // minimums (a fixed floor below them clipped both ends); the list carries
+    // an explicit ideal because a List's ideal height resolves near ZERO
+    // under a sheet's unbounded proposal.
+    private var chrome: some View {
+        SheetScaffold(
+            title: "Mess hall", macMinWidth: 600, macIdealHeight: 600,
+            content: {
+                #if os(iOS)
+                VStack(spacing: 0) {
+                    shareHeader.padding([.horizontal, .top], 12)
+                    tabContent
                 }
-            }
-        }
-        #else
-        VStack(spacing: 12) {
-            Text("Mess hall", bundle: .module).font(.title2.bold())
-            shareHeader
-            // The list is the flexible part: an explicit ideal, because a List's
-            // ideal height resolves near ZERO under a sheet's unbounded proposal —
-            // the sheet then presents at the frame minimums and the fixed chrome
-            // clips top and bottom.
-            tabContent.frame(minHeight: 180, idealHeight: 300)
-            HStack(spacing: 12) {
+                #else
+                shareHeader
+                tabContent.frame(minHeight: 180, idealHeight: 300)
+                #endif
+            },
+            macFooter: {
+                #if os(macOS)
                 SyncFooterControl(
                     settings: settings, scoreboard: scoreboard,
                     keyFocused: keys.zone == .sync, activate: syncActivate)
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done", bundle: .module)
-                }
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(20)
-        // No outer minHeight: the sheet's floor derives from the content's own
-        // minimums, so nothing it can present or resize to clips the chrome
-        // (a fixed floor below the content minimum clipped both ends). The
-        // ideal keeps it inside the minimum game window.
-        .frame(minWidth: 600, idealHeight: 600)
-        // Arrows move the row focus, Return compares, E edits, ⌘1/⌘2 switch
-        // tabs, Esc closes. Yields while a name field is being edited, so
-        // typing is never hijacked (Return there still submits the field).
-        .background(KeyCatcher(onKey: handleKey, yieldsToTextFields: true))
-        #endif
+                #endif
+            },
+            macBackground: {
+                #if os(macOS)
+                // Arrows move the row focus, Return compares, E edits, ⌘1/⌘2
+                // switch tabs, Esc closes. Yields while a name field is being
+                // edited, so typing is never hijacked.
+                KeyCatcher(onKey: handleKey, yieldsToTextFields: true)
+                #endif
+            },
+            iosBottomBar: {
+                #if os(iOS)
+                // Sync lives here too, not only in the Record — the Mess hall
+                // is where sync questions arise; the control is self-contained.
+                SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                #endif
+            })
     }
 }
 

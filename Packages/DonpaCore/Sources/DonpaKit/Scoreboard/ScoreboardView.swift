@@ -86,59 +86,53 @@ struct ScoreboardView: View {
             .onChangeCompat(of: filterEdges) { settings.scoreFilterEdges = $0 }
     }
 
-    /// iOS: a NavigationStack with Reset / Done nav-bar items over the list. macOS:
-    /// inline title + bottom buttons, window-sized.
-    @ViewBuilder private var sheetChrome: some View {
-        #if os(iOS)
-        NavigationStack {
-            content
-                .padding(.vertical, 8)
-                .padding(.horizontal, 14)
-                // Sync control pinned to the bottom, not buried under the stats.
-                .safeAreaInset(edge: .bottom) {
-                    VStack(spacing: 0) {
-                        Divider()
-                        SyncFooterControl(settings: settings, scoreboard: scoreboard)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                    }
-                    .background(.bar)
-                }
-                .navigationTitle(Text("Service Record", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { iOSToolbar }
-        }
-        #else
-        VStack(spacing: 16) {
-            Text("Service Record", bundle: .module).font(.title2.bold())
-
-            content  // sizes to content; capped by the sheet's maxHeight below
-
-            Divider()
-            HStack(spacing: 12) {
+    private var sheetChrome: some View {
+        SheetScaffold(
+            title: "Service Record",
+            content: {
+                #if os(iOS)
+                content
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 14)
+                #else
+                content
+                #endif
+            },
+            macFooter: {
+                #if os(macOS)
                 SyncFooterControl(
                     settings: settings, scoreboard: scoreboard,
                     keyFocused: keys.zone == .sync, activate: syncActivate)
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done", bundle: .module)
-                }
-                .keyboardShortcut(.defaultAction)
-            }
-            .padding(.horizontal, Self.rowInset)  // align with the row text
-        }
-        .padding(.vertical, 24)
-        .padding(.horizontal, 14)  // rest of the side margin lives on the rows
-        // Arrow/Return/⌘1-4/E/P keyboard driving — see ScoreboardKeyboard.
-        .background(KeyCatcher { handleKey($0) })
-        // Width is driven firmly (else the sheet shrinks to content and won't widen
-        // for two columns). Height is a cap only — the sheet sizes to content and
-        // only grows to `sheetHeight` (then the scores column scrolls).
-        .frame(width: sheetWidth)
-        .frame(maxHeight: sheetHeight)
+                #endif
+            },
+            macBackground: {
+                #if os(macOS)
+                // Arrow/Return/⌘1-4/E/P driving — see ScoreboardKeyboard.
+                KeyCatcher { handleKey($0) }
+                #endif
+            },
+            iosBottomBar: {
+                #if os(iOS)
+                SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                #endif
+            },
+            // Width is driven firmly (else the sheet shrinks to content and
+            // won't widen for two columns); height is a cap only.
+            macFixedWidth: macSheetWidth, macMaxHeight: macSheetHeight)
+    }
+
+    private var macSheetWidth: CGFloat? {
+        #if os(macOS)
+        sheetWidth
+        #else
+        nil
+        #endif
+    }
+    private var macSheetHeight: CGFloat? {
+        #if os(macOS)
+        sheetHeight
+        #else
+        nil
         #endif
     }
 
