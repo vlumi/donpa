@@ -41,13 +41,18 @@ recorded in DECISIONS.md.
 May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
 
 - [ ] **Daily challenge** (the possible social pillar) — one shared board
-      per day (UTC-keyed seed, PRE-ARMED with a fixed revealed opening so
-      first-click-safe can't diverge the boards — and everyone's luck is
-      identical). Unlimited attempts: memorizing the board is the
-      discipline, like fixed-seed speedrunning; the per-day record keeps it
-      honest — best time + pace, cleared/best-%, attempt count, and which
-      attempt set the best. Streaks measure PARTICIPATION, never outcomes
-      (a completed attempt, won or lost, marks the day played; no
+      per day: the seed derives from the LOCAL date string, so the same
+      calendar date is the same board everywhere (timezones only shift when
+      it flips; a date-changer can cheat — let them, they cheat themselves).
+      Boards are PRE-ARMED with a fixed revealed opening so first-click-safe
+      can't diverge them — everyone's luck is identical. Unlimited attempts:
+      memorizing the board is the discipline, like fixed-seed speedrunning;
+      the per-day record keeps it honest — best time + pace, cleared/best-%,
+      attempt count, and which attempt set the best. A CALENDAR view lists
+      every day since the feature's epoch (a constant baked at the shipping
+      release's cut); any past day is playable, but only TODAY feeds the
+      streak — and streaks measure PARTICIPATION, never outcomes (a
+      completed attempt, won or lost, marks the day played; no
       notifications, neutral display). Comparison is snapshot-based like
       all sharing: the payload carries a rolling ~14-day window (a new
       signed body field → envelope v3), aligned by date when cards are
