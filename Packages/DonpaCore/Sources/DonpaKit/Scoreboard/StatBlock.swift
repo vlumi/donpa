@@ -85,6 +85,8 @@ struct StatBlock: View {
     /// Career scope groups the grid into named segments; a config's short
     /// expansion stays one flat list (headers there would be noise).
     var segmented = false
+    /// The daily-challenge rollup — career scope only, hidden until played.
+    var daily: DailyStore.Career?
     /// One hex config's stats use "cells" (FI kennot); false for square configs
     /// AND for the cross-family career, whose totals mix both shapes.
     var hexCells = false
@@ -157,7 +159,7 @@ struct StatBlock: View {
     }
 
     /// The career's named segments, in display order. Pace lives in
-    /// PaceLinesView below the block; Daily joins when the feature ships.
+    /// PaceLinesView below the block.
     private var statSegments: [(title: LocalizedStringKey, pairs: [(LocalizedStringKey, String)])] {
         var segments: [(title: LocalizedStringKey, pairs: [(LocalizedStringKey, String)])] = [
             (
@@ -191,12 +193,24 @@ struct StatBlock: View {
         if figures.forcedGuesses > 0 {
             segments.append(("Fortune", luckPairs))
         }
+        if let daily, daily.played > 0 {
+            segments.append(("Daily orders", dailyPairs(daily)))
+        }
         segments.append(
             (
                 "Service",
                 [("Time played", ScoreboardView.durationLabel(figures.playtimeCentiseconds))]
             ))
         return segments
+    }
+
+    private func dailyPairs(_ daily: DailyStore.Career) -> [(LocalizedStringKey, String)] {
+        [
+            ("Days played", grouped(daily.played)),
+            ("Days cleared", grouped(daily.cleared)),
+            ("Current streak", grouped(daily.currentStreak)),
+            ("Longest streak", grouped(daily.longestStreak)),
+        ]
     }
 
     private var luckPairs: [(LocalizedStringKey, String)] {

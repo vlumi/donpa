@@ -50,17 +50,27 @@ extension HomeScreen {
                 .foregroundStyle(.secondary)
             }
             Spacer()
+            // Hand-drawn chrome on a .plain button, NOT .bordered: a native
+            // bordered control is the title's only focusable view, so Tab
+            // moved SYSTEM focus onto it — stealing the KeyCatcher's first-
+            // responder seat and with it the home cursor's Return.
             Button(action: onDailyCalendar) {
                 Label {
                     Text("History", bundle: .module)
                 } icon: {
                     Image(systemName: "calendar")
                 }
-                .font(.caption)
+                .font(.footnote)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Color.accentColor.opacity(0.12)))
+                .overlay(Capsule().stroke(Color.accentColor.opacity(0.4), lineWidth: 1))
+                .contentShape(Capsule())
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.accentColor)
             .accessibilityIdentifier("home.daily.history")
+            .modifier(homeRing(.dailyHistory))
         }
     }
 

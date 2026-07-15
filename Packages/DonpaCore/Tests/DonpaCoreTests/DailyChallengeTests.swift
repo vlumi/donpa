@@ -25,11 +25,21 @@ final class DailyChallengeTests: XCTestCase {
         XCTAssertNotNil(DailyChallenge.board(for: DailyChallenge.epochKey))
     }
 
-    func testRotationCyclesDeterministically() {
-        let day0 = DailyChallenge.board(for: DailyChallenge.epochKey)
-        let dayN = DailyChallenge.board(for: DailyMerge.dateKey(ordinal: 7)!)
-        XCTAssertEqual(day0?.config, dayN?.config, "rotation wraps weekly")
-        XCTAssertNotEqual(day0?.seed, dayN?.seed)
+    func testConfigPickIsDeterministicButNotAWeeklyCycle() {
+        let picks = (0..<70).map { DailyChallenge.config(forOrdinal: $0) }
+        XCTAssertEqual(picks, (0..<70).map { DailyChallenge.config(forOrdinal: $0) })
+        // Not `ordinal % count`: somewhere in ten weeks the cycle must break.
+        let weekly = (0..<70).map { DailyChallenge.pool[$0 % DailyChallenge.pool.count] }
+        XCTAssertNotEqual(picks, weekly)
+        // The whole pool still shows up over ten weeks.
+        XCTAssertEqual(Set(picks).count, DailyChallenge.pool.count)
+    }
+
+    func testNoTwoConsecutiveDaysShareAConfig() {
+        let picks = (0..<366).map { DailyChallenge.config(forOrdinal: $0) }
+        for day in 1..<picks.count {
+            XCTAssertNotEqual(picks[day], picks[day - 1], "day \(day) repeats its eve")
+        }
     }
 
     func testStableHashNeverDrifts() {
@@ -198,6 +208,24 @@ final class DailyStoreTests: XCTestCase {
             .init(won: true, centiseconds: 100, threeBV: 10, progress: 1, live: false))
         XCTAssertTrue(store.playedDays.isEmpty, "a replayed past day is not 'played'")
         XCTAssertEqual(store.displayRecords["d-past"]?.best?.centiseconds, 100)
+    }
+
+    func testCareerRollsUpPlayedClearedAndStreaks() {
+        let store = DailyStore(
+            cloud: nil, deviceID: "a", syncEnabled: false, defaults: freshDefaults())
+        let today = DailyChallenge.dateKey()
+        store.recordAttempt(
+            dateKey: today,
+            .init(won: true, centiseconds: 800, threeBV: 30, progress: 1, live: true))
+        store.recordAttempt(
+            dateKey: "2026-07-02",
+            .init(won: false, centiseconds: 0, threeBV: nil, progress: 0.5, live: false))
+
+        let career = store.career
+        XCTAssertEqual(career.played, 2, "replayed past days count as played")
+        XCTAssertEqual(career.cleared, 1)
+        XCTAssertEqual(career.currentStreak, 1, "only the live day feeds the streak")
+        XCTAssertEqual(career.longestStreak, 1)
     }
 
     func testMergesOtherDevicesBlobs() {

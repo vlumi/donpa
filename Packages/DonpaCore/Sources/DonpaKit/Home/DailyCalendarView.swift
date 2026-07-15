@@ -10,6 +10,7 @@ struct DailyCalendarView: View {
     /// Start an attempt on a day's board; the host owns dismissal + routing.
     let onPlay: (DailyChallenge.Board) -> Void
 
+    @Environment(\.dismiss) private var dismiss
     @State private var monthAnchor: Date = Date()
     @State private var selectedKey: String = DailyChallenge.dateKey()
 
@@ -265,6 +266,7 @@ struct DailyCalendarView: View {
             if let board = DailyChallenge.board(for: selectedKey), isPlayable(selectedKey) {
                 onPlay(board)
             }
+        case .escape: dismiss()
         default: break
         }
     }

@@ -55,7 +55,7 @@ struct HomeScreen: View {
     /// The title's keyboard-walkable items, in visual order (top-right corner
     /// utilities last).
     enum HomeKeyItem: CaseIterable {
-        case continueLatest, inProgress, daily, newGame, record, messHall
+        case continueLatest, inProgress, daily, dailyHistory, newGame, record, messHall
         case sound, howTo, settings, about
     }
 
@@ -132,7 +132,7 @@ struct HomeScreen: View {
             switch item {
             case .continueLatest: return !snapshots.isEmpty
             case .inProgress: return snapshots.count > 1
-            case .daily: return dailyBoard != nil
+            case .daily, .dailyHistory: return dailyBoard != nil
             default: return true
             }
         }
@@ -184,7 +184,10 @@ struct HomeScreen: View {
         if let latest = snapshots.first {
             actions[.continueLatest] = { onContinue(latest.config) }
         }
-        if dailyBoard != nil { actions[.daily] = onDaily }
+        if dailyBoard != nil {
+            actions[.daily] = onDaily
+            actions[.dailyHistory] = onDailyCalendar
+        }
         return actions
     }
     #endif

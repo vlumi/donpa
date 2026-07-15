@@ -233,7 +233,7 @@ extension GameContent {
     /// board → no "you are here" marker; in-game, mark the played config.
     var scoreboardSheet: some View {
         ScoreboardView(
-            scoreboard: scoreboard, settings: settings,
+            scoreboard: scoreboard, settings: settings, dailyStore: dailyStore,
             achievements: achievements, available: windowSize,
             gates: gates,
             currentConfig: navigator.showingTitle ? nil : viewModel.config,
