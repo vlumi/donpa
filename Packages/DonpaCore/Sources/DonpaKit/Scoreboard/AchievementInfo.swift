@@ -21,6 +21,7 @@ extension AchievementID {
         case .milesWins: return String(localized: "Campaigner", bundle: .module)
         case .milesTiles: return String(localized: "Ground Covered", bundle: .module)
         case .milesDisarmed: return String(localized: "Bomb Squad", bundle: .module)
+        case .dailyStreak: return String(localized: "Roll Call", bundle: .module)
         case .hiddenSecond: return String(localized: "Beginner's Unluck", bundle: .module)
         case .hiddenThirteen: return String(localized: "Cursed Time", bundle: .module)
         case .hiddenSoClose: return String(localized: "So Close", bundle: .module)

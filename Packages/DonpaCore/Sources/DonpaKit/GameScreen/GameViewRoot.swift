@@ -113,6 +113,7 @@ public struct GameView: View {
                 dailyDay: todaysBoard.flatMap { dailyStore.displayRecords[$0.dateKey] },
                 dailyStreak: (dailyStore.currentStreak(), dailyStore.longestStreak),
                 onDaily: { startDaily() },
+                onDailyCalendar: { navigator.showingDailyCalendar = true },
                 onScores: { navigator.showingScores = true },
                 onMessHall: { navigator.showingMessHall = true },
                 onSettings: { navigator.showingSettings = true },
@@ -192,7 +193,9 @@ public struct GameView: View {
         // 15-sticker backlog parade; live celebrations only for new earns.
         .task {
             _ = achievements.reconcile(
-                derivable: AchievementEngine.derivable(records: scoreboard.displayRecords))
+                derivable: AchievementEngine.derivable(
+                    records: scoreboard.displayRecords,
+                    longestDailyStreak: dailyStore.longestStreak))
         }
         .onChangeCompat(of: navigator.showingNewGame) { showing in
             if showing { saveSummaries = resumeStore.summaries() }

@@ -60,6 +60,7 @@ public final class Navigator: ObservableObject {
     /// The daily's pre-game review: board visible, input locked, clock not
     /// yet running; Start flips it off and performs the shared reveal.
     @Published public var dailyReviewActive = false
+    @Published public var showingDailyCalendar = false
     /// Restart (the strip's Retry, ⌘R) routes here so a daily retry re-seeds
     /// the SAME board instead of minting a random one on its config.
     @Published public var restartRequested = 0

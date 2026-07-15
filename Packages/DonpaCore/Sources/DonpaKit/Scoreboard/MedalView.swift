@@ -157,6 +157,10 @@ struct MedalView: View {
             mine(in: inner, side: s * 0.62, ink: ink.opacity(0.6))
             noSign(in: ctx, side: s, ink: ink)
         },
+        .dailyStreak: { ctx, s, ink in
+            // A calendar page with a checked day: the participation medal.
+            calendarPage(in: ctx, side: s, ink: ink)
+        },
         .hiddenSecond: { ctx, s, ink in
             burst(in: ctx, side: s, ink: ink)
             label("2", in: ctx, side: s, ink: ink, scale: 0.34)

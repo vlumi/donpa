@@ -67,7 +67,9 @@ extension GameContent {
                 .map { (id: $0, tier: 1) }
         }
         fresh += achievements.reconcile(
-            derivable: AchievementEngine.derivable(records: scoreboard.displayRecords))
+            derivable: AchievementEngine.derivable(
+                records: scoreboard.displayRecords,
+                longestDailyStreak: dailyStore.longestStreak))
         panelFeats = fresh.map(\.id.title)
         guard !fresh.isEmpty else { return }
         // The FIRST decoration is the moment the Game Center question means

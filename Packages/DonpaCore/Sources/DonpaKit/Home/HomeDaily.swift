@@ -22,14 +22,7 @@ extension HomeScreen {
                     Spacer(minLength: 8)
                     dailyStanding
                 }
-                if dailyStreak.current > 0 {
-                    Text(
-                        "Streak \(dailyStreak.current) · longest \(dailyStreak.longest)",
-                        bundle: .module
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
+                dailyCardFooter
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -44,6 +37,31 @@ extension HomeScreen {
                         .stroke(Color.accentColor.opacity(0.35), lineWidth: 1))
         )
         .accessibilityIdentifier("home.daily")
+    }
+
+    @ViewBuilder private var dailyCardFooter: some View {
+        HStack {
+            if dailyStreak.current > 0 {
+                Text(
+                    "Streak \(dailyStreak.current) · longest \(dailyStreak.longest)",
+                    bundle: .module
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button(action: onDailyCalendar) {
+                Label {
+                    Text("History", bundle: .module)
+                } icon: {
+                    Image(systemName: "calendar")
+                }
+                .font(.caption)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .accessibilityIdentifier("home.daily.history")
+        }
     }
 
     @ViewBuilder private var dailyStanding: some View {

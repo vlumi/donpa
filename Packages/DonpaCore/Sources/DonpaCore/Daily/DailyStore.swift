@@ -35,22 +35,38 @@ public final class DailyStore: ObservableObject {
         remerge()
     }
 
-    /// A finished attempt (won or lost) — the only thing that mutates a day.
+    /// One finished attempt (won or lost) — the only thing that mutates a day.
+    public struct Attempt {
+        public let won: Bool
+        public let centiseconds: Int
+        public let threeBV: Int?
+        public let progress: Double
+        /// Completed ON the day itself — the only thing streaks count.
+        public let live: Bool
+
+        public init(won: Bool, centiseconds: Int, threeBV: Int?, progress: Double, live: Bool) {
+            self.won = won
+            self.centiseconds = centiseconds
+            self.threeBV = threeBV
+            self.progress = progress
+            self.live = live
+        }
+    }
+
     /// The ordinal is this device's attempt sequence, captured when a new
     /// best lands (stored, undisplayed until device attribution exists).
-    public func recordAttempt(
-        dateKey: String, won: Bool, centiseconds: Int, threeBV: Int?, progress: Double
-    ) {
+    public func recordAttempt(dateKey: String, _ attempt: Attempt) {
         var day = records[dateKey] ?? DailyDayRecord()
         day.attempts.add(1)
-        if won {
-            if centiseconds < (day.best?.centiseconds ?? .max) {
+        day.playedLive = day.playedLive || attempt.live
+        if attempt.won {
+            if attempt.centiseconds < (day.best?.centiseconds ?? .max) {
                 day.best = DailyDayRecord.Best(
-                    centiseconds: centiseconds, threeBV: threeBV ?? 0,
+                    centiseconds: attempt.centiseconds, threeBV: attempt.threeBV ?? 0,
                     attemptOrdinal: day.attempts.mine)
             }
         } else {
-            day.bestProgress = max(day.bestProgress ?? 0, progress)
+            day.bestProgress = max(day.bestProgress ?? 0, attempt.progress)
         }
         records[dateKey] = day
         persist()
@@ -58,9 +74,10 @@ public final class DailyStore: ObservableObject {
         remerge()
     }
 
-    /// Days with at least one completed attempt — what streaks count.
+    /// Days played ON the day itself — the only thing streaks count
+    /// (calendar replays of past days never repair a streak).
     public var playedDays: Set<String> {
-        Set(displayRecords.filter { $0.value.attempts.total > 0 }.keys)
+        Set(displayRecords.filter(\.value.playedLive).keys)
     }
 
     public func currentStreak(today: String = DailyChallenge.dateKey()) -> Int {

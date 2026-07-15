@@ -148,9 +148,15 @@ final class DailyStoreTests: XCTestCase {
     func testAttemptsAccrueAndBestKeepsItsOrdinal() {
         let store = DailyStore(
             cloud: nil, deviceID: "a", syncEnabled: false, defaults: freshDefaults())
-        store.recordAttempt(dateKey: "d1", won: false, centiseconds: 0, threeBV: nil, progress: 0.4)
-        store.recordAttempt(dateKey: "d1", won: true, centiseconds: 900, threeBV: 40, progress: 1)
-        store.recordAttempt(dateKey: "d1", won: true, centiseconds: 1200, threeBV: 40, progress: 1)
+        store.recordAttempt(
+            dateKey: "d1",
+            .init(won: false, centiseconds: 0, threeBV: nil, progress: 0.4, live: true))
+        store.recordAttempt(
+            dateKey: "d1",
+            .init(won: true, centiseconds: 900, threeBV: 40, progress: 1, live: true))
+        store.recordAttempt(
+            dateKey: "d1",
+            .init(won: true, centiseconds: 1200, threeBV: 40, progress: 1, live: true))
 
         let day = store.displayRecords["d1"]
         XCTAssertEqual(day?.attempts.total, 3)
@@ -162,7 +168,9 @@ final class DailyStoreTests: XCTestCase {
     func testPersistsAcrossInstances() {
         let defaults = freshDefaults()
         let store = DailyStore(cloud: nil, deviceID: "a", syncEnabled: false, defaults: defaults)
-        store.recordAttempt(dateKey: "d1", won: true, centiseconds: 500, threeBV: 30, progress: 1)
+        store.recordAttempt(
+            dateKey: "d1",
+            .init(won: true, centiseconds: 500, threeBV: 30, progress: 1, live: true))
 
         let reloaded = DailyStore(
             cloud: nil, deviceID: "a", syncEnabled: false, defaults: defaults)
@@ -173,11 +181,23 @@ final class DailyStoreTests: XCTestCase {
         let cloud = MockCloud()
         let store = DailyStore(
             cloud: cloud, deviceID: "a", syncEnabled: true, defaults: freshDefaults())
-        store.recordAttempt(dateKey: "d1", won: false, centiseconds: 0, threeBV: nil, progress: 0.2)
+        store.recordAttempt(
+            dateKey: "d1",
+            .init(won: false, centiseconds: 0, threeBV: nil, progress: 0.2, live: true))
         XCTAssertNotNil(cloud.blobs["a"])
 
         store.syncEnabled = false
         XCTAssertNil(cloud.blobs["a"])
+    }
+
+    func testCalendarReplayNeverRepairsAStreak() {
+        let store = DailyStore(
+            cloud: nil, deviceID: "a", syncEnabled: false, defaults: freshDefaults())
+        store.recordAttempt(
+            dateKey: "d-past",
+            .init(won: true, centiseconds: 100, threeBV: 10, progress: 1, live: false))
+        XCTAssertTrue(store.playedDays.isEmpty, "a replayed past day is not 'played'")
+        XCTAssertEqual(store.displayRecords["d-past"]?.best?.centiseconds, 100)
     }
 
     func testMergesOtherDevicesBlobs() {
@@ -189,7 +209,9 @@ final class DailyStoreTests: XCTestCase {
 
         let store = DailyStore(
             cloud: cloud, deviceID: "a", syncEnabled: true, defaults: freshDefaults())
-        store.recordAttempt(dateKey: "d1", won: true, centiseconds: 800, threeBV: 20, progress: 1)
+        store.recordAttempt(
+            dateKey: "d1",
+            .init(won: true, centiseconds: 800, threeBV: 20, progress: 1, live: true))
 
         let day = store.displayRecords["d1"]
         XCTAssertEqual(day?.best?.centiseconds, 300)

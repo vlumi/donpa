@@ -7,7 +7,7 @@ import XCTest
 final class GameCenterMappingTests: XCTestCase {
     func testTwentySixDefinitions() {
         let ids = GameCenterMapping.allWireIDs
-        XCTAssertEqual(ids.count, 26)  // 17 one-shots + 3 ladders × 3 steps
+        XCTAssertEqual(ids.count, 29)  // 17 one-shots + 4 ladders × 3 steps
         XCTAssertEqual(ids.count, Set(ids).count, "wire IDs are unique")
         XCTAssertTrue(ids.allSatisfy { $0.hasPrefix("fi.misaki.donpa.") })
     }

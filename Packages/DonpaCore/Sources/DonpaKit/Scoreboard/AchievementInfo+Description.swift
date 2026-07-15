@@ -50,6 +50,10 @@ extension AchievementID {
         case .milesDisarmed:
             return String(
                 localized: "Disarm 1,000 / 10,000 / 100,000 mines.", bundle: .module)
+        case .dailyStreak:
+            return String(
+                localized: "Play the daily challenge 1 / 7 / 30 days running.",
+                bundle: .module)
         case .hiddenSecond:
             return String(localized: "Lose on your second reveal.", bundle: .module)
         case .hiddenThirteen:
