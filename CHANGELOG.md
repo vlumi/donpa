@@ -22,17 +22,6 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- **Dailies join the rivalry.** Your share card now carries your recent
-  daily-challenge results (the full history over Nearby), rivals'
-  histories accumulate swap by swap, and the head-to-head gains a
-  Dailies section — same day, same board, whose time stands?
-
-- **The daily grows a calendar and a medal.** A History view on the
-  Today's-orders card shows every day since the challenge began — play
-  any past day you missed (past days never repair a streak; only showing
-  up on the day counts). A new tiered Roll Call decoration marks 1 / 7 /
-  30 days played running.
-
 - **The Daily Challenge arrives.** One shared board per day — same layout,
   same luck, for everyone. The Home screen's "Today's orders" card shows
   the day's board and your standing; every attempt opens in a review
@@ -41,17 +30,16 @@ entries land under Unreleased as they merge.
   day builds a participation streak; daily results stay the day's own
   competition and never touch a board's regular best times.
 
-- **The career reads in sections.** Tour of Duty's stat pile is grouped
-  into Engagements, Fieldwork, Discipline, Fortune, and Service — same
-  numbers, findable at a glance. Per-board expansions stay compact.
+- **The daily grows a calendar and a medal.** A History view on the
+  Today's-orders card shows every day since the challenge began — play
+  any past day you missed (past days never repair a streak; only showing
+  up on the day counts). A new tiered Roll Call decoration marks 1 / 7 /
+  30 days played running.
 
-- **A record pace gets its moment.** When a win's pace beats your best on
-  that board, the win panel's pace chip says "Best pace" and picks up the
-  win accent — still a quiet chip; the stopwatch record keeps the ribbon.
-
-- **The Service Record remembers your place.** Opening it from the title
-  now lands on the board family you last browsed instead of always Basic;
-  opening it mid-game still jumps to the board you're playing.
+- **Dailies join the rivalry.** Your share card now carries your recent
+  daily-challenge results (the full history over Nearby), rivals'
+  histories accumulate swap by swap, and the head-to-head gains a
+  Dailies section — same day, same board, whose time stands?
 
 - **Rivals compare pace, not just the stopwatch.** Head-to-head rows and
   per-board leaderboards now show best pace beside best times, on both
@@ -63,9 +51,22 @@ entries land under Unreleased as they merge.
   L on that ladder (bigger boards count once you play them, but are never
   required). One honest number per ladder, from your recent wins.
 
+- **A record pace gets its moment.** When a win's pace beats your best on
+  that board, the win panel's pace chip says "Best pace" and picks up the
+  win accent — still a quiet chip; the stopwatch record keeps the ribbon.
+
+- **The career reads in sections.** Tour of Duty's stat pile is grouped
+  into Engagements, Fieldwork, Discipline, Fortune, and Service — same
+  numbers, findable at a glance. Per-board expansions stay compact.
+
+- **The Service Record remembers your place.** Opening it from the title
+  now lands on the board family you last browsed instead of always Basic;
+  opening it mid-game still jumps to the board you're playing.
+
 - **Spotlight and Siri shortcuts.** "Continue my board" resumes your most
   recent game in progress and "Start drills" opens a fresh practice board —
   from Spotlight, Siri, or the Shortcuts app, no setup needed.
+
 - **A well-timed review ask.** Setting a new best time may now — at most
   once per app version, and only once you're ten wins in — bring up the
   standard App Store review prompt. Never after a loss, never over the
