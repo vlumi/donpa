@@ -322,40 +322,15 @@ struct HeadToHeadView: View {
         }
     }
 
-    @ViewBuilder private var chrome: some View {
-        #if os(iOS)
-        NavigationStack {
+    // Ideal height only, no floor: the minimum derives from the content so
+    // small scaled displays fit.
+    private var chrome: some View {
+        SheetScaffold("Head to head", macMinWidth: 520, macIdealHeight: 600) {
+            #if os(iOS)
             content.padding(.horizontal, 8)
-                .navigationTitle(Text("Head to head", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                    }
-                }
-        }
-        #else
-        VStack(spacing: 12) {
-            Text("Head to head", bundle: .module).font(.title2.bold())
+            #else
             content.frame(minHeight: 280)
-            Button {
-                dismiss()
-            } label: {
-                Text("Done", bundle: .module)
-            }
-            .keyboardShortcut(.defaultAction)
-            // Esc closes too (Done carries Return) — dismissal must not depend
-            // on the Done button being on-screen.
-            .escDismisses { dismiss() }
+            #endif
         }
-        .padding(20)
-        // Ideal only, no height floor: the minimum derives from the content
-        // so small scaled displays fit.
-        .frame(minWidth: 520, idealHeight: 600)
-        #endif
     }
 }

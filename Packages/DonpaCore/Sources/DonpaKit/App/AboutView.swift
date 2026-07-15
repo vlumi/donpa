@@ -10,7 +10,6 @@ public struct AboutView: View {
     var onHowTo: (() -> Void)?
 
     /// Measured content height, for the iOS fit-content detent.
-    @State private var contentHeight: CGFloat = 0
 
     public init(onHowTo: (() -> Void)? = nil) {
         self.onHowTo = onHowTo
@@ -124,52 +123,13 @@ public struct AboutView: View {
         }
     }
 
-    @ViewBuilder private var chrome: some View {
-        #if os(iOS)
-        NavigationStack {
+    private var chrome: some View {
+        SheetScaffold("About", fitContentDetent: true) {
             content
-                .padding(28)
+                .padding(.horizontal, 8)
                 .frame(maxWidth: .infinity)
-                .background(heightReader)
-                .navigationTitle(Text("About", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                        .accessibilityIdentifier("sheet.done")
-                    }
-                }
-        }
-        .presentationDetents(contentHeight > 0 ? [.height(contentHeight + 64)] : [.medium])
-        #else
-        VStack(spacing: 16) {
-            content
-            Button {
-                dismiss()
-            } label: {
-                Text("Done", bundle: .module)
-            }
-            .keyboardShortcut(.defaultAction)
-            .padding(.top, 4)
-        }
-        .padding(28)
-        .frame(minWidth: 300)
-        #endif
-    }
-
-    #if os(iOS)
-    /// Reports the content's natural height (for the iOS fit-content detent).
-    private var heightReader: some View {
-        GeometryReader { geo in
-            Color.clear.onAppear { contentHeight = geo.size.height }
-                .onChangeCompat(of: geo.size.height) { contentHeight = $0 }
         }
     }
-    #endif
 
     /// The app icon, dug out of the bundle (the `AppIcon` set isn't directly
     /// loadable as a UI image).

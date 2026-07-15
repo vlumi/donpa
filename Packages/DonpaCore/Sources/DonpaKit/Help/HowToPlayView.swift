@@ -18,50 +18,12 @@ public struct HowToPlayView: View {
     private var palette: Palette { Palette.resolved(for: colorScheme) }
 
     public var body: some View {
-        sheet
-            .escDismisses { dismiss() }
-    }
-
-    @ViewBuilder private var sheet: some View {
-        #if os(iOS)
-        NavigationStack {
+        SheetScaffold(
+            "How to play", macMinWidth: 460, macIdealWidth: 520,
+            macMinHeight: 480, macIdealHeight: 640
+        ) {
             content
-                .navigationTitle(Text("How to play", bundle: .module))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text("Done", bundle: .module)
-                        }
-                        .accessibilityIdentifier("sheet.done")
-                    }
-                }
         }
-        #else
-        VStack(spacing: 0) {
-            Text("How to play", bundle: .module)
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-            Divider()
-            content
-            Divider()
-            HStack {
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done", bundle: .module)
-                }
-                .keyboardShortcut(.defaultAction)
-                .accessibilityIdentifier("sheet.done")
-            }
-            .padding()
-        }
-        .frame(minWidth: 460, idealWidth: 520, minHeight: 480, idealHeight: 640)
-        #endif
     }
 
     private var content: some View {
