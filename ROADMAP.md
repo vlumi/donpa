@@ -107,7 +107,6 @@ Ideas to revisit:
 
 ## Distribution & extras (later)
 
-- [ ] **Static home page** (marketing/landing site for the app).
 - [ ] **Real board images on donpa.app/how-to-play** — replace the monospace
       unicode diagrams with actual rendered boards. Not hand-cropped
       screenshots: export the in-app guide's own `TileDiagram` (+ mode chips)
