@@ -217,6 +217,22 @@ public final class GameViewModel: ObservableObject {
         }
     }
 
+    /// The shared tail of every board-opening action: open feedback (tick vs
+    /// flood), game settlement, and the forced-guess report.
+    private func finishBoardAction(
+        safeBefore: Int, pre: Game?, flooded: (Game) -> Bool,
+        verdict: @escaping @Sendable () -> GuessOdds.Verdict?
+    ) {
+        let opened = game.revealedSafeCount - safeBefore
+        if opened > 0 {
+            onReveal?(opened, game.status != .lost && flooded(game))
+        }
+        finishIfEnded()
+        if pre != nil {
+            reportGuess(survived: game.status != .lost, verdict: verdict)
+        }
+    }
+
     public func reveal(_ c: Coord) {
         InputTrace.log(
             "reveal \(c) computing=\(isComputing) paused=\(isPaused) status=\(game.status)")
@@ -236,22 +252,11 @@ public final class GameViewModel: ObservableObject {
             guard let self else { return }
             // The first reveal places mines and starts the clock.
             if wasNotStarted, self.game.status == .playing { self.startTimer() }
-            let opened = self.game.revealedSafeCount - safeBefore
-            if opened > 0 {
-                // A single reveal floods iff the clicked cell was a 0 (which opens
-                // its whole region); a numbered cell opens just itself.
-                let flooded =
-                    self.game.status != .lost && self.game.board[c].adjacentMines == 0
-                self.onReveal?(opened, flooded)
-            }
-            self.finishIfEnded()
-            // A single reveal only ever loses on the clicked cell, so
-            // post-state loss ⟺ died to it.
-            if let pre {
-                self.reportGuess(survived: self.game.status != .lost) {
-                    GuessOdds.analyze(pre, clicked: c)
-                }
-            }
+            self.finishBoardAction(
+                safeBefore: safeBefore, pre: pre,
+                // A single reveal floods iff the clicked cell was a 0.
+                flooded: { $0.board[c].adjacentMines == 0 },
+                verdict: { pre.flatMap { GuessOdds.analyze($0, clicked: c) } })
         }
     }
 
@@ -308,22 +313,11 @@ public final class GameViewModel: ObservableObject {
         }
         computeOffMain({ game in game.chord(c) }) { [weak self] in
             guard let self else { return }
-            // A chord opens cells too — feed the same onReveal so its open sound
-            // (tick vs the fuller flood) matches a single reveal.
-            let opened = self.game.revealedSafeCount - safeBefore
-            if opened > 0 {
+            self.finishBoardAction(
+                safeBefore: safeBefore, pre: pre,
                 // Flood iff one of the cells the chord opened was a 0.
-                let flooded =
-                    self.game.status != .lost
-                    && opening.contains { self.game.board[$0].adjacentMines == 0 }
-                self.onReveal?(opened, flooded)
-            }
-            self.finishIfEnded()
-            if let pre {
-                self.reportGuess(survived: self.game.status != .lost) {
-                    GuessOdds.analyzeChord(pre, at: c)
-                }
-            }
+                flooded: { game in opening.contains { game.board[$0].adjacentMines == 0 } },
+                verdict: { pre.flatMap { GuessOdds.analyzeChord($0, at: c) } })
         }
     }
 
