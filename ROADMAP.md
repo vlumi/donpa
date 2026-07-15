@@ -53,11 +53,24 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       release's cut); any past day is playable, but only TODAY feeds the
       streak — and streaks measure PARTICIPATION, never outcomes (a
       completed attempt, won or lost, marks the day played; no
-      notifications, neutral display). Comparison is snapshot-based like
-      all sharing: the payload carries a rolling ~14-day window (a new
-      signed body field → envelope v3), aligned by date when cards are
-      swapped; Nearby compares today's runs on the spot. Recommended slot:
-      the first post-1.0 update's flagship.
+      notifications, neutral display "12 days · longest 23").
+      DATA: full history kept locally + own-device sync forever (a year is
+      a few KB zlib'd); sharing carries a CHANNEL-SIZED slice of the same
+      v3 payload field — full history over Nearby (no size limit), a
+      rolling 14–31-day window over QR/link (scan budget) — and the
+      receiver merges PER DATE (newest share wins a date; the sharer's own
+      day only improves), so rivals' histories accumulate organically
+      across swaps and the QR never needs to carry the past.
+      UI: Home card (today's board, result, streak) → Daily sheet with a
+      month-grid calendar clamped to [epoch, today] — chips show best time
+      / ✗ with % / unplayed, today ringed; arrows walk days, Return plays
+      (KeyCursor idiom), VoiceOver speaks each day's result; the selected
+      day's detail row shows the full record ("best on attempt 2 of 7"),
+      Play/Replay, and same-day rival lines where data exists (the H2H
+      Dailies section is the per-rival rollup of the same data). May build
+      pre-1.0 in three independent slices (core+store, Home card + play
+      flow, calendar + payload + H2H) — it rides 1.0 if stable by
+      submission, else 1.0.1, without delaying the release.
 
 ## v1.0.0 — The store release
 
