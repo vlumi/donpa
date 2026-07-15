@@ -64,7 +64,13 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       release's cut); any past day is playable, but only TODAY feeds the
       streak — and streaks measure PARTICIPATION, never outcomes (a
       completed attempt, won or lost, marks the day played; no
-      notifications, neutral display "12 days · longest 23").
+      notifications, neutral display "12 days · longest 23"). MEDALS ride
+      the same line: participation-streak one-shots `daily.week` (7 days
+      running) and `daily.month` (30) — permanent, so the chase is bounded
+      and a later break takes nothing away — plus the `daily.played`
+      volume ladder (10/100/1000, miles-style). Never cleared/first-try
+      streaks (the luck-based kind the no-streaks rule still forbids).
+      +5 ASC definitions and medal images when this ships.
       DATA: full history kept locally + own-device sync forever (a year is
       a few KB zlib'd); ONE aggregate line per day — never per-attempt
       rows — merging across own devices on the scoreboard's proven
