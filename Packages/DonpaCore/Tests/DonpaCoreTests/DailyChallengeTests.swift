@@ -210,6 +210,24 @@ final class DailyStoreTests: XCTestCase {
         XCTAssertEqual(store.displayRecords["d-past"]?.best?.centiseconds, 100)
     }
 
+    func testCareerRollsUpPlayedClearedAndStreaks() {
+        let store = DailyStore(
+            cloud: nil, deviceID: "a", syncEnabled: false, defaults: freshDefaults())
+        let today = DailyChallenge.dateKey()
+        store.recordAttempt(
+            dateKey: today,
+            .init(won: true, centiseconds: 800, threeBV: 30, progress: 1, live: true))
+        store.recordAttempt(
+            dateKey: "2026-07-02",
+            .init(won: false, centiseconds: 0, threeBV: nil, progress: 0.5, live: false))
+
+        let career = store.career
+        XCTAssertEqual(career.played, 2, "replayed past days count as played")
+        XCTAssertEqual(career.cleared, 1)
+        XCTAssertEqual(career.currentStreak, 1, "only the live day feeds the streak")
+        XCTAssertEqual(career.longestStreak, 1)
+    }
+
     func testMergesOtherDevicesBlobs() {
         let cloud = MockCloud()
         var otherDay = DailyDayRecord()
