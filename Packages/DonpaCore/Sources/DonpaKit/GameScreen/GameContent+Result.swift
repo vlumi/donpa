@@ -26,6 +26,7 @@ extension GameContent {
                     reduceMotion: reduceMotion,
                     guess: panelGuess,
                     pace: panelPace,
+                    paceIsRecord: panelPaceIsRecord,
                     onContinue: { dismissPanel() }
                 )
                 .transition(.opacity)
@@ -127,6 +128,7 @@ extension GameContent {
             }
             kind = .loss(progress: progress, safeRemaining: safeRemaining, best: best)
             panelPace = nil
+            panelPaceIsRecord = false
         }
         // Outcome only — activity already accrued live via flushes. minesHit =
         // the single loss detonation; a win's disarmedMineCount reads the full set.
@@ -151,8 +153,9 @@ extension GameContent {
     }
 
     private func submitWin(centiseconds: Int, config: GameConfig) -> MangaPanelView.Kind {
-        // Prior best BEFORE submit() overwrites it (nil = first-ever clear).
+        // Prior bests BEFORE submit() overwrites them (nil = first-ever).
         let priorBest = scoreboard.best(for: config)
+        let priorBestPace = scoreboard.displayRecords[config.storageKey]?.bestPace?.pace
         let threeBV = viewModel.lastEndEvent?.threeBV
         let isRecord = scoreboard.submit(
             centiseconds, for: config,
@@ -161,6 +164,10 @@ extension GameContent {
         panelPace = threeBV.map {
             RecentWin(date: Date(), centiseconds: centiseconds, threeBV: $0).pace
         }
+        // "Best" only when it BEAT a prior pace — a first-ever log stays quiet
+        // (every first win would otherwise shout).
+        panelPaceIsRecord =
+            panelPace.map { pace in priorBestPace.map { pace > $0 } ?? false } ?? false
         let totalWins = scoreboard.displayRecords.values.reduce(0) { $0 + $1.wins.total }
         if ReviewPrompt.shouldAsk(
             newBest: isRecord, totalWins: totalWins,

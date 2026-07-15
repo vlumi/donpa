@@ -40,6 +40,7 @@ struct GameContent: View {
     @State var showGCAsk = false
     @State var pendingReviewAsk = false
     @State var panelPace: Double?
+    @State var panelPaceIsRecord = false
     @State var guessToast: ForcedGuessEvent?
     @State var guessToastTask: Task<Void, Never>?
     @State private var autosaveTask: Task<Void, Never>?

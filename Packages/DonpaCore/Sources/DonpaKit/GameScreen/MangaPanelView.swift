@@ -141,6 +141,8 @@ struct MangaPanelView: View {
     /// quiet caption chip, not a pill — it shows on EVERY win, and shouting
     /// every time would cheapen the event pills around it.
     var pace: Double?
+    /// This pace beat the config's prior best — the chip dresses up.
+    var paceIsRecord = false
     let onContinue: () -> Void
 
     // Internal (not `private`): the corner overlays live in
