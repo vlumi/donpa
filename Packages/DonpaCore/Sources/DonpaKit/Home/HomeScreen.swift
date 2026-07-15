@@ -23,6 +23,12 @@ struct HomeScreen: View {
     let onContinue: (GameConfig) -> Void
     /// Open the New Game picker — the single, deliberate path to a fresh game.
     let onNewGame: () -> Void
+    /// Today's board, or nil before the daily epoch.
+    var dailyBoard: DailyChallenge.Board?
+    /// Your standing on today's board (nil = not attempted).
+    var dailyDay: DailyDayRecord?
+    var dailyStreak: (current: Int, longest: Int) = (0, 0)
+    var onDaily: () -> Void = {}
     let onScores: () -> Void
     /// Open the Mess hall — the social screen (share card, rivals, squads).
     let onMessHall: () -> Void
@@ -48,7 +54,7 @@ struct HomeScreen: View {
     /// The title's keyboard-walkable items, in visual order (top-right corner
     /// utilities last).
     enum HomeKeyItem: CaseIterable {
-        case continueLatest, inProgress, newGame, record, messHall
+        case continueLatest, inProgress, daily, newGame, record, messHall
         case sound, howTo, settings, about
     }
 
@@ -125,6 +131,7 @@ struct HomeScreen: View {
             switch item {
             case .continueLatest: return !snapshots.isEmpty
             case .inProgress: return snapshots.count > 1
+            case .daily: return dailyBoard != nil
             default: return true
             }
         }
@@ -176,6 +183,7 @@ struct HomeScreen: View {
         if let latest = snapshots.first {
             actions[.continueLatest] = { onContinue(latest.config) }
         }
+        if dailyBoard != nil { actions[.daily] = onDaily }
         return actions
     }
     #endif
@@ -255,6 +263,9 @@ struct HomeScreen: View {
         VStack(spacing: 12) {
             if let latest = snapshots.first {
                 continueCard(latest: latest).modifier(homeRing(.continueLatest))
+            }
+            if let board = dailyBoard {
+                dailyCard(board: board).modifier(homeRing(.daily))
             }
             newGameButton.modifier(homeRing(.newGame))
             recordButton.modifier(homeRing(.record))
