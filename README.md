@@ -14,8 +14,9 @@ touching the game logic.
 (friendly rivalry — peer-to-peer score sharing, rivals and squads, the
 home-screen redesign, per-board saves, forced-guess luck tracking, and the
 Lunatic tier), and **v0.5.0** (progression — achievements, unlockable boards,
-Drills, how-to-play, Nearby exchange, sound & haptics) have shipped to
-TestFlight; **v0.6.0** (keyboard & accessibility) is in development. See
+Drills, how-to-play, Nearby exchange, sound & haptics), and **v0.6.0**
+(keyboard & accessibility, plus the daily challenge) have shipped to
+TestFlight. See
 [CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md) for
 the path to v1.0, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
 decisions.
@@ -290,7 +291,7 @@ later, this note will credit it.
 High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
 in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
 
-### 0.6.0 — keyboard & accessibility (in development)
+### 0.6.0 — keyboard & accessibility
 
 - **New:** **the whole app works from the keyboard** — a focused-cell board
   cursor (arrows/WASD, Return digs/chords, F flags) and full navigation over
@@ -306,6 +307,13 @@ in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS
 - **Changed:** the Mess hall header is compact everywhere (the rivals list
   gets the room) and **Nearby** is the share card's headline action, with the
   QR code full-size behind a button beside Share link.
+- **New:** **the Daily Challenge** — one shared board per day, same layout
+  and same luck for everyone. Every attempt opens in review (study freely —
+  the clock starts on Start), retries are unlimited, and the day keeps your
+  best time, pace, and attempt count. A calendar reaches back to day one;
+  playing on the day builds a participation streak (a tiered Roll Call
+  decoration at 1/7/30), shared score cards carry your dailies to rivals for
+  a head-to-head Dailies section, and the career gains a Daily orders segment.
 - **New:** **pace** — every win shows its 3BV/s sweep rate (a number board
   luck can't inflate), with recent and best pace per board in the Service
   Record; the raw skill reading the scoreboard builds on.

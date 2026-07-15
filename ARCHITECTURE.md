@@ -433,6 +433,40 @@ flowchart LR
   FB -. "FriendSyncMerge" .-> FriendsStore
 ```
 
+## Daily challenge: one deterministic board, no server
+
+The daily is a pure function of the LOCAL date string — no server hands
+out boards, so determinism carries the whole feature. Three places
+non-determinism had to be squeezed out:
+
+- **Hashing.** Swift's `Hasher` is randomized per process; the daily uses
+  FNV-1a, pinned by a test (a drift would hand every player a new board).
+- **First-click safety.** Relocating a mine out of the opening draws from
+  a non-deterministic RNG, which would silently diverge players' boards.
+  Instead the seed SCANS forward from the date hash until the pre-armed
+  layout leaves the fixed start cell's neighbourhood mine-free — the
+  relocation never fires, and the guaranteed 0-opening means the shared
+  Start reveal opens the identical region for everyone. Attempts open in
+  a REVIEW state (board visible, input locked); the clock starts on
+  Start, so study is free and the time measures execution.
+- **Config pick.** Even day-ordinals hash freely into the pool; odd
+  ordinals hash into the pool minus BOTH even neighbours' picks. Every
+  adjacent pair of days contains an odd member, so consecutive days can
+  never repeat a config — O(1) for any date, no cycle, nothing baked.
+  The pool table is append-frozen: resizing remaps every future day.
+
+Records follow the scoreboard's proven shape: ONE aggregate line per day
+(never per-attempt rows) in per-device blobs — best min-wins at merge
+with the winning device's attempt ordinal riding along, attempts a
+`DeviceCounter`, and a `playedLive` flag that only same-day completions
+set. Streaks read `playedLive` alone, so replaying a missed day from the
+calendar records results but can never repair a streak. Daily results
+never touch a config's regular bests — the day is its own competition.
+Shares carry a channel-sized window of the same records (full history
+over Nearby, a rolling window in the QR) and receivers accumulate per
+date, newest share winning its dates — long rivalries assemble full
+histories from small cards.
+
 ## Feedback (sound + haptics) lives in DonpaKit, never Core
 
 `Game`/`GameViewModel` stay **audio- and haptics-free** — pure logic that reports
