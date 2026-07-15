@@ -69,15 +69,16 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       streak — and streaks measure PARTICIPATION, never outcomes (a
       completed attempt, won or lost, marks the day played; no
       notifications, neutral display "12 days · longest 23"). MEDALS ride
-      the same line: EXACTLY two participation-streak one-shots,
-      `daily.week` (7 days running) and `daily.month` (30) — permanent,
-      so the chase is bounded and a later break takes nothing away. No
-      daily volume ladder: dailies feed normal stats, so miles.* already
-      counts the grind (tiered thresholds are progress-tracking in badge
-      costume — the Expert-ladder lesson), and the calendar displays
-      volume better than a medal. Never cleared/first-try streaks (the
-      luck-based kind the no-streaks rule still forbids). +2 ASC
-      definitions and medal images when this ships.
+      the same line: ONE tiered ladder `daily.streak` (1/7/30 days
+      running — bronze/silver/gold like the other ladders; the 1-step is
+      the on-ramp) — permanent one-shots per tier, so the chase is
+      bounded and a later break takes nothing away. A participation
+      streak is volume-of-consistency, so tiers fit the only-volume-
+      keeps-tiers rule. No separate played-count ladder (miles.* already
+      counts the grind; the calendar displays volume better). Never
+      cleared/first-try streaks (the luck-based kind the no-streaks rule
+      still forbids). +3 ASC definitions and medal images when this
+      ships.
       DATA: full history kept locally + own-device sync forever (a year is
       a few KB zlib'd); ONE aggregate line per day — never per-attempt
       rows — merging across own devices on the scoreboard's proven
