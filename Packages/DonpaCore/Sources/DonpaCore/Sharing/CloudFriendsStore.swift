@@ -23,7 +23,6 @@ public protocol CloudFriendsStore: AnyObject {
     var onExternalChange: (() -> Void)? { get set }
 }
 
-#if canImport(Foundation)
 /// Blobs live under keys prefixed `donpa.friends.blob.` — a separate namespace from
 /// the scoreboard's blobs on the same KVS.
 @MainActor
@@ -75,4 +74,3 @@ public final class UbiquitousFriendsStore: CloudFriendsStore {
 
     public func synchronize() { kvs.synchronize() }
 }
-#endif
