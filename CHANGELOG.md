@@ -22,6 +22,10 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **A record pace gets its moment.** When a win's pace beats your best on
+  that board, the win panel's pace chip says "Best pace" and picks up the
+  win accent — still a quiet chip; the stopwatch record keeps the ribbon.
+
 - **The Service Record remembers your place.** Opening it from the title
   now lands on the board family you last browsed instead of always Basic;
   opening it mid-game still jumps to the board you're playing.

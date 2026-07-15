@@ -1505,6 +1505,23 @@
         }
       }
     },
+    "Best pace %@." : {
+      "comment" : "Result-panel spoken pace when it beat the prior best",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paras tahti %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ベストペース %@。"
+          }
+        }
+      }
+    },
     "Best times" : {
       "localizations" : {
         "fi" : {

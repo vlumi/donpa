@@ -11,7 +11,7 @@ extension MangaPanelView {
     @ViewBuilder var paceChip: some View {
         if kind.isWin, let pace {
             HStack(spacing: 4) {
-                Text("Pace", bundle: .module)
+                Text(paceIsRecord ? "Best pace" : "Pace", bundle: .module)
                     .font(.system(.caption2, design: .rounded).weight(.heavy))
                     .textCase(.uppercase)
                 Text(verbatim: PaceText.display(pace))
@@ -20,7 +20,9 @@ extension MangaPanelView {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Capsule().fill(.white))
-            .overlay(Capsule().stroke(.black, lineWidth: 1.5))
+            // A record pace borrows the win accent for its ring — still a
+            // chip, not a pill: the stopwatch record keeps the ribbon.
+            .overlay(Capsule().stroke(paceIsRecord ? kind.accent : .black, lineWidth: 1.5))
             .foregroundStyle(.black)
             .padding(.bottom, 12)
             .padding(.leading, 10)
@@ -30,8 +32,11 @@ extension MangaPanelView {
 
     var paceA11ySuffix: String {
         guard kind.isWin, let pace else { return "" }
-        return " "
-            + String(localized: "Pace \(PaceText.display(pace)).", bundle: .module)
+        let line =
+            paceIsRecord
+            ? String(localized: "Best pace \(PaceText.display(pace)).", bundle: .module)
+            : String(localized: "Pace \(PaceText.display(pace)).", bundle: .module)
+        return " " + line
     }
 
     /// The guess pill folded into the spoken label (overlays are ignored children).
