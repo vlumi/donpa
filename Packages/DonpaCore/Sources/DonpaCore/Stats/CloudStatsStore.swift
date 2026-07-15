@@ -36,7 +36,6 @@ public protocol CloudStatsStore: AnyObject {
     var onExternalChange: (() -> Void)? { get set }
 }
 
-#if canImport(Foundation)
 /// `NSUbiquitousKeyValueStore`-backed store.
 @MainActor
 public final class UbiquitousStatsStore: CloudStatsStore {
@@ -114,4 +113,3 @@ public final class UbiquitousStatsStore: CloudStatsStore {
 
     public func synchronize() { kvs.synchronize() }
 }
-#endif
