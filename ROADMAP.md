@@ -54,7 +54,13 @@ May fold into 0.6.0 if it stays thin — semantics, decide at cut time.
       calendar date is the same board everywhere (timezones only shift when
       it flips; a date-changer can cheat — let them, they cheat themselves).
       Boards are PRE-ARMED with a fixed revealed opening so first-click-safe
-      can't diverge them — everyone's luck is identical. Unlimited attempts:
+      can't diverge them — everyone's luck is identical. The pre-opened
+      board never lands as a surprise: every attempt opens in a REVIEW
+      state (board visible, input locked, a Start overlay — first-time
+      explainer line) and the clock runs from Start, so study is
+      explicitly free (memorization is legitimate anyway) and the time
+      measures pure execution. Backing out of review costs nothing (an
+      attempt = a completed game). Unlimited attempts:
       memorizing the board is the discipline, like fixed-seed speedrunning;
       the per-day record keeps it honest — best time + pace, cleared/best-%,
       attempt count, and which attempt set the best. A CALENDAR view lists
