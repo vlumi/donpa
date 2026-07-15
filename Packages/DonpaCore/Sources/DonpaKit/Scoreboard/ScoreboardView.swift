@@ -220,7 +220,8 @@ struct ScoreboardView: View {
             let career = StatFigures(career: Array(scoreboard.displayRecords.values))
             if career.hasPlayed {
                 StatBlock(
-                    figures: career, twoColumnWidth: Self.twoColumnMinWidth,
+                    figures: career, segmented: true,
+                    twoColumnWidth: Self.twoColumnMinWidth,
                     rowInset: Self.rowInset)
                 PlayDistributionView(
                     scoreboard: scoreboard, rowInset: Self.rowInset,

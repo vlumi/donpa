@@ -2435,6 +2435,23 @@
         }
       }
     },
+    "Discipline" : {
+      "comment" : "Career segment: purity wins",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuri"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "規律"
+          }
+        }
+      }
+    },
     "Done" : {
       "comment" : "Close a sheet",
       "localizations" : {
@@ -2740,6 +2757,23 @@
         }
       }
     },
+    "Engagements" : {
+      "comment" : "Career segment: game outcomes",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taistelut"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "戦闘"
+          }
+        }
+      }
+    },
     "Erase everywhere" : {
       "comment" : "Destructive button: confirm the global (all-devices) wipe",
       "localizations" : {
@@ -2886,6 +2920,23 @@
         }
       }
     },
+    "Fieldwork" : {
+      "comment" : "Career segment: board actions",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kenttätyöt"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "野戦作業"
+          }
+        }
+      }
+    },
     "Flag" : {
       "comment" : "Accessibility value: input mode is flagging",
       "localizations" : {
@@ -2988,6 +3039,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "強制推測と運"
+          }
+        }
+      }
+    },
+    "Fortune" : {
+      "comment" : "Career segment: forced-guess luck",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onni"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "運"
           }
         }
       }
@@ -5075,6 +5143,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "区域制圧"
+          }
+        }
+      }
+    },
+    "Service" : {
+      "comment" : "Career segment: playtime",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palvelus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勤務"
           }
         }
       }

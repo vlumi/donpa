@@ -82,6 +82,9 @@ struct StatFigures {
 /// alike. Lays out in one column when narrow, two when there's room.
 struct StatBlock: View {
     let figures: StatFigures
+    /// Career scope groups the grid into named segments; a config's short
+    /// expansion stays one flat list (headers there would be noise).
+    var segmented = false
     /// One hex config's stats use "cells" (FI kennot); false for square configs
     /// AND for the cross-family career, whose totals mix both shapes.
     var hexCells = false
@@ -100,17 +103,32 @@ struct StatBlock: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            statGrid
+            if segmented {
+                ForEach(Array(statSegments.enumerated()), id: \.offset) { _, segment in
+                    VStack(alignment: .leading, spacing: 2) {
+                        segmentHeader(segment.title)
+                        grid(segment.pairs)
+                    }
+                }
+            } else {
+                grid(statPairs)
+            }
             if !figures.topTimes.isEmpty { bestTimes }
             if let since = figures.firstPlayed { playingSince(since) }
         }
     }
 
+    private func segmentHeader(_ title: LocalizedStringKey) -> some View {
+        Text(title, bundle: .module)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, rowInset)
+    }
+
     /// The count rows. `ViewThatFits` picks the two-column arrangement when it fits
     /// the width, else stacks to one column — no GeometryReader needed.
-    private var statGrid: some View {
-        let pairs = statPairs
-        return ViewThatFits(in: .horizontal) {
+    private func grid(_ pairs: [(LocalizedStringKey, String)]) -> some View {
+        ViewThatFits(in: .horizontal) {
             twoColumn(pairs)
             oneColumn(pairs)
         }
@@ -138,6 +156,64 @@ struct StatBlock: View {
         .frame(minWidth: twoColumnWidth)
     }
 
+    /// The career's named segments, in display order. Pace lives in
+    /// PaceLinesView below the block; Daily joins when the feature ships.
+    private var statSegments: [(title: LocalizedStringKey, pairs: [(LocalizedStringKey, String)])] {
+        var segments: [(title: LocalizedStringKey, pairs: [(LocalizedStringKey, String)])] = [
+            (
+                "Engagements",
+                [
+                    ("Games played", grouped(figures.gamesPlayed)),
+                    ("Wins", grouped(figures.wins)),
+                ]
+            ),
+            (
+                "Fieldwork",
+                [
+                    (
+                        hexCells ? "Cells cleared" : "Squares cleared",
+                        grouped(figures.tilesOpened)
+                    ),
+                    ("Chords used", grouped(figures.chordsUsed)),
+                    ("Flags placed", grouped(figures.flagsPlaced)),
+                    ("Mines disarmed", grouped(figures.minesDisarmed)),
+                    ("Mines hit", grouped(figures.minesHit)),
+                ]
+            ),
+            (
+                "Discipline",
+                [
+                    ("No-flag wins", grouped(figures.noFlagWins)),
+                    ("No-chord wins", grouped(figures.noChordWins)),
+                ]
+            ),
+        ]
+        if figures.forcedGuesses > 0 {
+            segments.append(("Fortune", luckPairs))
+        }
+        segments.append(
+            (
+                "Service",
+                [("Time played", ScoreboardView.durationLabel(figures.playtimeCentiseconds))]
+            ))
+        return segments
+    }
+
+    private var luckPairs: [(LocalizedStringKey, String)] {
+        let ratio = Double(figures.guessesSurvived) / Double(figures.forcedGuesses)
+        var pairs: [(LocalizedStringKey, String)] = [
+            (
+                "Lucky guesses",
+                "\(grouped(figures.guessesSurvived))/\(grouped(figures.forcedGuesses))"
+                    + " (\(Self.percent(ratio)))"
+            )
+        ]
+        if let lucky = figures.luckiestGuess {
+            pairs.append(("Luckiest guess", Self.percent(lucky.survival)))
+        }
+        return pairs
+    }
+
     /// Label/value pairs, in display order.
     private var statPairs: [(LocalizedStringKey, String)] {
         var pairs: [(LocalizedStringKey, String)] = [
@@ -162,19 +238,10 @@ struct StatBlock: View {
         if let pace = figures.bestPace {
             pairs.append(("Best pace", PaceText.display(pace)))
         }
-        // The luck line — only once the board has actually forced a guess (a row
-        // of "0/0" would just be noise), and the record only with it.
+        // The luck line — only once the board has actually forced a guess (a
+        // row of "0/0" would just be noise), and the record only with it.
         if figures.forcedGuesses > 0 {
-            let ratio = Double(figures.guessesSurvived) / Double(figures.forcedGuesses)
-            pairs.append(
-                (
-                    "Lucky guesses",
-                    "\(grouped(figures.guessesSurvived))/\(grouped(figures.forcedGuesses))"
-                        + " (\(Self.percent(ratio)))"
-                ))
-            if let lucky = figures.luckiestGuess {
-                pairs.append(("Luckiest guess", Self.percent(lucky.survival)))
-            }
+            pairs += luckPairs
         }
         return pairs
     }
