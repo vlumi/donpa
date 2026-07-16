@@ -17,7 +17,7 @@ extension GameContent {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Text(
-                        "Same board for everyone — study freely; the clock starts on Start.",
+                        "Same board for everyone — take your time; the clock starts on Start.",
                         bundle: .module
                     )
                     .font(.caption)

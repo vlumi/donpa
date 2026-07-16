@@ -22,6 +22,10 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Clearer daily start prompt.** The daily challenge's Start screen now
+  says "take your time" instead of "study freely" — there's nothing to
+  study on a fresh board; the point is the clock hasn't started yet.
+
 - **Time comparisons match what's on screen.** A rival gap or record
   improvement is now figured from the times as displayed (to the tenth),
   so it can never show a signed "0:00.0" or a delta that seems to
