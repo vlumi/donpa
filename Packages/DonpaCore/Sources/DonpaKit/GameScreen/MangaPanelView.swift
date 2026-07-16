@@ -33,15 +33,20 @@ struct MangaPanelView: View {
         var accent: Color { isWin ? .green : .red }
         /// Spoken description for VoiceOver (the art conveys nothing to it).
         /// `hexCells` picks the board's cell word for the loss line (tiles/cells).
-        func a11yLabel(hexCells: Bool = false) -> String {
+        func a11yLabel(hexCells: Bool = false, isDaily: Bool = false) -> String {
             switch self {
             case .win:
-                return String(localized: "Minefield cleared", bundle: .module)
+                return isDaily
+                    ? String(localized: "Daily challenge cleared", bundle: .module)
+                    : String(localized: "Minefield cleared", bundle: .module)
             case .record(let cs, _):
-                return String(
-                    localized:
-                        "New record! Minefield cleared in \(TimeFormat.mmsst(centiseconds: cs))",
-                    bundle: .module)
+                let time = TimeFormat.mmsst(centiseconds: cs)
+                return isDaily
+                    ? String(
+                        localized: "Today's best! Daily challenge cleared in \(time)",
+                        bundle: .module)
+                    : String(
+                        localized: "New record! Minefield cleared in \(time)", bundle: .module)
             case .loss(let progress, let safeRemaining, _):
                 let cleared = Self.clearedDisplay(
                     progress, safeRemaining: safeRemaining, hexCells: hexCells)
@@ -130,6 +135,9 @@ struct MangaPanelView: View {
 
     let kind: Kind
     var hexCells = false
+    /// A daily-challenge result: the ribbon and a11y read as the day's own
+    /// competition, not an all-time record.
+    var isDaily = false
     var unlockedLabels: [String] = []
     var earnedFeatTitles: [String] = []
     let reduceMotion: Bool
@@ -203,6 +211,7 @@ struct MangaPanelView: View {
             // area outside its border is transparent, so the corners show through.
             .overlay(alignment: .topLeading) { recordBadge }
             .overlay(alignment: .topLeading) { bestLossPill }
+            .overlay(alignment: .topLeading) { dailyTag }
             .overlay(alignment: .bottomLeading) {
                 VStack(alignment: .leading, spacing: 6) {
                     guessPill
@@ -225,7 +234,8 @@ struct MangaPanelView: View {
             .onTapGesture { onContinue() }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(
-                kind.a11yLabel(hexCells: hexCells) + guessA11ySuffix + paceA11ySuffix
+                kind.a11yLabel(hexCells: hexCells, isDaily: isDaily) + guessA11ySuffix
+                    + paceA11ySuffix
                     + (Self.unlockSpoken(unlockedLabels).map { " " + $0 + "." } ?? "")
             )
             .accessibilityAddTraits(.isImage)

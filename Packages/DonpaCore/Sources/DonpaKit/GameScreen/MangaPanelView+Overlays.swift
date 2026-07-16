@@ -125,20 +125,25 @@ extension MangaPanelView {
         .accessibilityLabel(Text("Close", bundle: .module))
     }
 
-    /// "New record" flourish — a tilted corner ribbon stamp. Shows how much faster
-    /// than the prior best (the final time is already on the timer); a first-ever
-    /// clear has no prior to beat, so it reads as the first record instead.
+    /// The record ribbon: a tilted corner stamp. The −delta shows when a prior
+    /// best was beaten; the eyebrow ("first clear" / "daily first") shows on a
+    /// first-ever clear. A daily win reads "Today", not an all-time record.
     @ViewBuilder var recordBadge: some View {
         if kind.recordCentiseconds != nil {
             VStack(spacing: 0) {
-                // Kana headline verbatim in all languages — a manga flourish.
-                Text(verbatim: "新記録")
-                    .font(.system(.callout, design: .rounded).weight(.black))
+                Group {
+                    if isDaily {
+                        Text("Today", bundle: .module)
+                    } else {
+                        Text("New record", bundle: .module)
+                    }
+                }
+                .font(.system(.callout, design: .rounded).weight(.black))
                 if let improved = kind.recordImprovedBy {
                     Text(verbatim: Kind.timeImprovement(improved))
                         .font(.system(.caption, design: .monospaced).weight(.heavy))
                 } else {
-                    Text("first clear", bundle: .module)
+                    Text(isDaily ? "daily first" : "first clear", bundle: .module)
                         .font(.system(.caption2, design: .rounded).weight(.heavy))
                         .textCase(.uppercase)
                 }
@@ -148,6 +153,23 @@ extension MangaPanelView {
             .padding(.top, 10)
             .padding(.leading, 8)
             .scaleEffect(appeared ? 1 : 0.5, anchor: .topLeading)
+        }
+    }
+
+    /// The top-leading corner's daily marker, shown only when neither the record
+    /// ribbon nor the best-loss pill (both already daily-framed) occupies it — so
+    /// a plain daily win or non-best loss still reads as a daily.
+    @ViewBuilder var dailyTag: some View {
+        if isDaily, kind.recordCentiseconds == nil, kind.bestLossHeadline == nil {
+            Text("Daily challenge", bundle: .module)
+                .font(.system(.caption2, design: .rounded).weight(.heavy))
+                .textCase(.uppercase)
+                .modifier(PillStamp(accent: kind.accent))
+                .rotationEffect(.degrees(-8))
+                .padding(.top, 10)
+                .padding(.leading, 8)
+                .scaleEffect(appeared ? 1 : 0.5, anchor: .topLeading)
+                .accessibilityHidden(true)  // folded into the panel's a11yLabel
         }
     }
 

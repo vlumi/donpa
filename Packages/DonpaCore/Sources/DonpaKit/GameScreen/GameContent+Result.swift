@@ -21,6 +21,7 @@ extension GameContent {
                 MangaPanelView(
                     kind: panel,
                     hexCells: viewModel.config.isHex,
+                    isDaily: panelIsDaily,
                     unlockedLabels: panelUnlocks,
                     earnedFeatTitles: panelFeats,
                     reduceMotion: reduceMotion,
@@ -111,6 +112,7 @@ extension GameContent {
 
         let kind: MangaPanelView.Kind
         let isWin = result.isWin
+        panelIsDaily = navigator.activeDaily != nil
         switch result {
         case _ where navigator.activeDaily != nil:
             kind = recordDailyAttempt(result: result, daily: navigator.activeDaily!)

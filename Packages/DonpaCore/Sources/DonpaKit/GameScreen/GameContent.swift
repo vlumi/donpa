@@ -42,6 +42,8 @@ struct GameContent: View {
     @State var pendingReviewAsk = false
     @State var panelPace: Double?
     @State var panelPaceIsRecord = false
+    /// This result was a daily-challenge attempt.
+    @State var panelIsDaily = false
     @State var guessToast: ForcedGuessEvent?
     @State var guessToastTask: Task<Void, Never>?
     @State private var autosaveTask: Task<Void, Never>?

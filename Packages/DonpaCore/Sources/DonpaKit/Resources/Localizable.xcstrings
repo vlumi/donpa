@@ -585,6 +585,40 @@
         }
       }
     },
+    "Today" : {
+      "comment" : "Daily win-panel ribbon headline (JA keeps the manga kanji)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tänään"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日"
+          }
+        }
+      }
+    },
+    "Today's best! Daily challenge cleared in %@" : {
+      "comment" : "Win panel a11y: new daily best time",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivän paras! Päivähaaste selvitetty ajassa %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日のベスト！デイリーチャレンジを%@でクリア"
+          }
+        }
+      }
+    },
     "Today's orders" : {
       "comment" : "Daily challenge: Home card + review title",
       "localizations" : {
@@ -2365,6 +2399,23 @@
         }
       }
     },
+    "Daily challenge cleared" : {
+      "comment" : "Win panel a11y: daily attempt won",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivähaaste selvitetty"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デイリーチャレンジクリア"
+          }
+        }
+      }
+    },
     "Daily challenge review" : {
       "comment" : "VoiceOver label for the daily review overlay",
       "localizations" : {
@@ -2770,6 +2821,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "折りたたみ中、%lld/%lld獲得"
+          }
+        }
+      }
+    },
+    "daily first" : {
+      "comment" : "Daily win ribbon eyebrow: first clear of the day",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "päivän avaus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日初"
           }
         }
       }
@@ -4321,6 +4389,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "この盤面で新規ゲーム"
+          }
+        }
+      }
+    },
+    "New record" : {
+      "comment" : "Win-panel record ribbon headline (JA keeps the manga kanji)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ennätys"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新記録"
           }
         }
       }
