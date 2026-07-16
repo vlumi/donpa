@@ -288,6 +288,26 @@ record, shown in the app's own grid.
 Code SHIPPED 2026-07-13 (`GameCenterMapping` + `GameCenterPrefs` /
 `GameCenterReporter`); the remaining ASC-side work is a ROADMAP 1.0 item.
 
+**ASC definition set — FINALIZED (2026-07-16).** 29 definitions (26 grew
+to 29 when the Roll Call daily-streak ladder joined, tier-flattened to
+three), IDs = `GameCenterMapping.allWireIDs` (locked once the release is
+live). Point budget spends the full **1000 / 1000**, all multiples of 5,
+none over 100, weighted by difficulty: one-shots scale 5→100 (a first win
+is 5, clearing Lunatic is the lone 100 marquee); the three grind ladders
+(miles.wins/tiles/disarmed) share a 10/35/75 bronze/silver/gold shape;
+Roll Call is 10/35/65 (a streak is participation, slightly under the skill
+ladders); the four hidden gags stay 5–10. **Progress display ON** for the
+12 tiered-ladder members only (the reporter feeds live percent toward the
+next tier); everything else is binary. **Images:** 29 × 1024×1024 opaque
+PNG (ASC rejects alpha), the earned medal per definition, exported by
+`MedalGalleryRender.testRenderASCImages` (`DONPA_MEDAL_ASC=<dir>`), named
+by wire ID. ASC requires the image PER LOCALIZATION (same file dropped
+into each of EN/FI/JA — no shared slot). Localized title + pre/post-earned
+text drafted for all three languages. **Leaderboards and Game Activities
+stay empty by design** (the no-global-leaderboards rule; the app drives no
+`GKGameActivity`). English variant: **English (U.S.)**, matching the app's
+`en` source.
+
 ## Sync scope rule — device-scoped vs player-scoped (2026-07-13)
 
 **The score-sync flag does NOT sync** (reversed 2026-07-13, same day, on
