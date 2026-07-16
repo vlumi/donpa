@@ -40,6 +40,9 @@ public struct GameView: View {
     @State private var failedResumeConfig: GameConfig?
     /// Mirrors the OS launch image so the hand-off into the title is seamless.
     @State private var showSplash = true
+    /// One-shot guard for the `-uitest-demo` screenshot seed (onAppear can fire
+    /// more than once).
+    @State private var didSeedDemo = false
 
     public init(config: GameConfig = .beginner) {
         let syncOn =
@@ -212,6 +215,12 @@ public struct GameView: View {
             saveSummaries = resumeStore.summaries()
             refreshDeviceRegistry()
             LaunchActionRouter.shared.register { handleLaunchAction($0) }
+            if DemoSeed.isRequested, !didSeedDemo {
+                didSeedDemo = true
+                DemoSeed.apply(
+                    scoreboard: scoreboard, friends: friends, daily: dailyStore,
+                    settings: settings)
+            }
             let args = ProcessInfo.processInfo.arguments
             if args.contains("-uitest-open-newgame") {
                 navigator.showingNewGame = true
