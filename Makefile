@@ -55,9 +55,20 @@ test:  ## Run the package logic tests (no Xcode project needed)
 uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 	@Scripts/uitest.sh
 
-.PHONY: screenshots
-screenshots: Donpa.xcodeproj  ## Capture App Store / website screenshots (simulator, seeded demo data)
-	@Scripts/screenshots.sh
+# Launch in demo mode (seeded data + fixed accent) for MANUAL App Store
+# screenshots — see Scripts/asc/SCREENSHOTS.md for the shot list. Capture with
+# the simulator's ⌘S (iOS/iPad) or Scripts/grab-mac-shot.sh (Mac).
+.PHONY: demo-iphone
+demo-iphone: build-ios  ## Launch the iPhone simulator in demo mode (manual screenshots)
+	@PLATFORM=iphone Scripts/demo.sh
+
+.PHONY: demo-ipad
+demo-ipad: build-ios  ## Launch the iPad simulator in demo mode (manual screenshots)
+	@PLATFORM=ipad Scripts/demo.sh
+
+.PHONY: demo-mac
+demo-mac: build-mac  ## Launch the Mac app in demo mode (manual screenshots)
+	@PLATFORM=mac Scripts/demo.sh
 
 perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a heavy XXXL board
 	@Scripts/perf-profile.sh
@@ -83,6 +94,18 @@ asc-listing:  ## Show what differs between listing.json and the ASC App Store li
 .PHONY: asc-listing-apply
 asc-listing-apply:  ## Push listing.json (description/keywords/etc.) to the ASC listing
 	@Scripts/asc/run.sh listing --apply $(ARGS)
+
+.PHONY: asc-release
+asc-release:  ## Show which achievements would be added to review (dry run)
+	@Scripts/asc/run.sh sync --release
+
+.PHONY: asc-release-apply
+asc-release-apply:  ## Add all achievements to review (create release records)
+	@Scripts/asc/run.sh sync --release --apply
+
+.PHONY: asc-shots
+asc-shots:  ## Rename raw screenshots by capture order: DIR=<folder> PLATFORM=iphone|ipad|mac
+	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR)
 
 # ── Release lane ──────────────────────────────────────────────────────────────
 # The cut is split by concern, one script each, chained here in order:

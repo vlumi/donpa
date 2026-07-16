@@ -25,6 +25,17 @@ enum WindowSizer {
         growToFit(forBoard: config.width, by: config.height)
     }
 
+    /// A FIXED window size for the App Store screenshot pass, so every capture
+    /// generation is pixel-identical (a hand-dragged window never is). 1440×900
+    /// is a clean 16:10 above Apple's 1280×800 Mac minimum. Demo mode only.
+    static func fixToScreenshotSize() {
+        guard
+            let window = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible })
+        else { return }
+        window.setContentSize(CGSize(width: 1440, height: 900))
+        window.center()
+    }
+
     private static func growToFit(forBoard cols: Int, by rows: Int) {
         guard let window = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible }) else {
             return

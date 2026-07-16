@@ -23,11 +23,18 @@ struct DonpaApp: App {
             // smallest scaled-display canvas (1024×640 logical) with the menu
             // and title bars.
             .frame(minWidth: 680, minHeight: 560)
+            .screenshotAccent()
             .onChange(of: viewModel.config) { _, config in
-                WindowSizer.growToFit(for: config)
+                // Demo mode pins a fixed screenshot size — don't let board-fit
+                // resize it out from under a capture.
+                if !DemoSeed.isRequested { WindowSizer.growToFit(for: config) }
             }
             .onAppear {
-                WindowSizer.growToFit(for: viewModel.config)
+                if DemoSeed.isRequested {
+                    WindowSizer.fixToScreenshotSize()
+                } else {
+                    WindowSizer.growToFit(for: viewModel.config)
+                }
             }
             .sheet(isPresented: $showingAbout) { AboutView() }
         }

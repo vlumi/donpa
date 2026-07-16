@@ -17,7 +17,9 @@ struct DonpaApp: App {
         WindowGroup {
             GameView(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
-                navigator: navigator)
+                navigator: navigator
+            )
+            .screenshotAccent()
         }
         .commands {
             DonpaCommands(

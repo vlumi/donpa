@@ -22,6 +22,10 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Share buttons keep their labels.** On the widest iPhones the Mess
+  hall's Share link / QR code labels no longer wrap or truncate — they
+  stay on one line, shrinking a hair if needed.
+
 ### build 26 — 2026-07-16
 
 - **Clearer daily start prompt.** The daily challenge's Start screen now

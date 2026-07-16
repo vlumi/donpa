@@ -35,6 +35,11 @@ struct ShareCardView: View {
     /// sends the full history — receivers accumulate per date either way.
     static let qrDailyWindow = 14
 
+    #if os(iOS)
+    /// Compact width (iPhone) stacks the share buttons; regular (iPad) rows them.
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    #endif
+
     @State private var name: String = ""
     @State private var link: URL?
     @State private var qr: Image?
@@ -133,17 +138,19 @@ struct ShareCardView: View {
         .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
     }
 
-    /// All the share actions, ONE row when it fits: Nearby (the promoted default)
-    /// at half the width, the remote channels a quarter each — two flexible
-    /// siblings split the row 50/50 and the remote pair halves its side. Narrow
-    /// layouts (compact phones) stack Nearby above the remote pair instead.
+    /// All the share actions. On a WIDE canvas (iPad, Mac) they sit in one row —
+    /// Nearby (the promoted default) beside the remote pair. On a phone the three
+    /// labels can't share a row without truncating ("Sh…", "QR…"), so Nearby
+    /// takes the top row and the remote pair stacks below it. Decided by size
+    /// class rather than ViewThatFits, which counts truncated text as "fitting".
     @ViewBuilder private func shareActions(for link: URL) -> some View {
         if onNearby != nil {
-            ViewThatFits(in: .horizontal) {
+            if isWideLayout {
                 HStack(spacing: 8) {
                     nearbyButton
                     remoteButtons(for: link).frame(maxWidth: .infinity)
                 }
+            } else {
                 VStack(spacing: 8) {
                     nearbyButton
                     remoteButtons(for: link)
@@ -154,6 +161,15 @@ struct ShareCardView: View {
         }
     }
 
+    /// One row only where there's genuinely room: iPad (regular width) and Mac.
+    private var isWideLayout: Bool {
+        #if os(macOS)
+        return true
+        #else
+        return hSizeClass == .regular
+        #endif
+    }
+
     @ViewBuilder private var nearbyButton: some View {
         if let onNearby {
             Button(action: onNearby) {
@@ -162,6 +178,8 @@ struct ShareCardView: View {
                 } icon: {
                     Image(systemName: "person.line.dotted.person.fill")
                 }
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -190,6 +208,8 @@ struct ShareCardView: View {
                     } icon: {
                         Image(systemName: "qrcode")
                     }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .frame(maxWidth: .infinity)
                 }
                 .modifier(ring(.qr))

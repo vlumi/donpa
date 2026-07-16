@@ -133,17 +133,54 @@ def _put_bytes(op, data, headers):
         pass
 
 
+def release_achievements(asc, gc_id, live, apply):
+    """Add every achievement to review by creating its release record against
+    the Game Center detail (the "add to review from the Game Center section"
+    flow — one call per achievement, not the per-item UI click). Skips any that
+    already have a release. Idempotent: a duplicate create 409s and is skipped."""
+    existing = {
+        (r.get("relationships", {}).get("gameCenterAchievement", {}).get("data") or {}).get("id")
+        for r in asc.get_all(f"/gameCenterDetails/{gc_id}/achievementReleases?limit=200")
+    }
+    made = skipped = 0
+    for wid, cur in sorted(live.items()):
+        if cur["id"] in existing:
+            skipped += 1
+            continue
+        print(f"release: {wid}")
+        if apply:
+            asc.post("/gameCenterAchievementReleases", {
+                "data": {
+                    "type": "gameCenterAchievementReleases",
+                    "relationships": {
+                        "gameCenterDetail": {
+                            "data": {"type": "gameCenterDetails", "id": gc_id}},
+                        "gameCenterAchievement": {
+                            "data": {"type": "gameCenterAchievements", "id": cur["id"]}},
+                    }}})
+        made += 1
+    print(f"\n{made} release(s) {'created' if apply else 'to create'}, "
+          f"{skipped} already released.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="write changes (default: dry run)")
     ap.add_argument("--images", action="store_true", help="also (re)upload images")
     ap.add_argument("--image-dir", default="asc-medals", help="dir of <id>.png files")
+    ap.add_argument("--release", action="store_true",
+                    help="add achievements to review (create release records)")
     args = ap.parse_args()
 
     doc = load_canonical()
     asc = ASC()
     gc_id = resolve_gc(asc, doc["bundleId"])
     live = live_achievements(asc, gc_id)
+
+    if args.release:
+        print(f"== {'APPLYING' if args.apply else 'DRY RUN (--apply to write)'} ==\n")
+        release_achievements(asc, gc_id, live, args.apply)
+        return
 
     verb = "APPLYING" if args.apply else "DRY RUN (no changes; --apply to write)"
     print(f"== {verb} ==\n")

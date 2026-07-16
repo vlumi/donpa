@@ -1,842 +1,80 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Anywhere" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anywhere"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kaikkialla"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "どこでも"
-          }
-        }
-      }
-    },
-    "Arrows move · Return digs · F flags — ⌘/ for all shortcuts" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrows move · Return digs · F flags — ⌘/ for all shortcuts"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nuolet siirtävät · Return kaivaa · F liputtaa — ⌘/ näyttää kaikki"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "矢印で移動 · Returnで掘る · Fで旗 — ⌘/で一覧"
-          }
-        }
-      }
-    },
-    "Barracks (home)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Barracks (home)"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kasarmi (koti)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "兵舎(ホーム)"
-          }
-        }
-      }
-    },
-    "Close the screen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close the screen"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sulje näkymä"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "画面を閉じる"
-          }
-        }
-      }
-    },
-    "Dig or chord" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dig or chord"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kaiva tai alueavaus"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "掘る/同時開け"
-          }
-        }
-      }
-    },
-    "Dig — or chord a revealed number" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dig — or chord a revealed number"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kaiva — tai alueavaus avatusta numerosta"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "掘る — 開いた数字なら同時開け"
-          }
-        }
-      }
-    },
-    "Edit the selection · flip Flat/Round" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit the selection · flip Flat/Round"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Muokkaa valintaa · vaihda Litteä/Pyöreä"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選択を編集 · フラット/ラウンド切替"
-          }
-        }
-      }
-    },
-    "In lists and pickers" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In lists and pickers"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Listoissa ja valitsimissa"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "リストと選択画面で"
-          }
-        }
-      }
-    },
-    "Keyboard Shortcuts" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keyboard Shortcuts"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pikanäppäimet"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "キーボードショートカット"
-          }
-        }
-      }
-    },
-    "Move down" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move down"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siirry alas"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "下へ移動"
-          }
-        }
-      }
-    },
-    "Move left" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move left"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siirry vasemmalle"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "左へ移動"
-          }
-        }
-      }
-    },
-    "Move right" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move right"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siirry oikealle"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "右へ移動"
-          }
-        }
-      }
-    },
-    "Move the cursor" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move the cursor"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siirrä kohdistinta"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カーソルを移動"
-          }
-        }
-      }
-    },
-    "Move the selection" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move the selection"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siirrä valintaa"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選択を移動"
-          }
-        }
-      }
-    },
-    "Move up" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move up"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siirry ylös"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上へ移動"
-          }
-        }
-      }
-    },
-    "Next control group" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next control group"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seuraava säädinryhmä"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "次の操作グループへ"
-          }
-        }
-      }
-    },
-    "On the board" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On the board"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kentällä"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "盤面で"
-          }
-        }
-      }
-    },
-    "Pause and resume" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause and resume"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tauko ja jatka"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "一時停止/再開"
-          }
-        }
-      }
-    },
-    "Pick the family or tab" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pick the family or tab"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valitse perhe tai välilehti"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "種類/タブを選択"
-          }
-        }
-      }
-    },
-    "Plant or clear a flag" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plant or clear a flag"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aseta tai poista lippu"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "旗を立てる/外す"
-          }
-        }
-      }
-    },
-    "Play the daily challenge 1 / 7 / 30 days running." : {
-      "comment" : "daily.streak requirement",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pelaa päivähaaste 1 / 7 / 30 päivänä putkeen."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "デイリーチャレンジを1／7／30日連続でプレイする。"
-          }
-        }
-      }
-    },
-    "Play the selected board" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play the selected board"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pelaa valittua kenttää"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選択した盤面をプレイ"
-          }
-        }
-      }
-    },
-    "Restart the board" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restart the board"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aloita kenttä alusta"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "盤面をやり直す"
-          }
-        }
-      }
-    },
-    "Roll Call" : {
-      "comment" : "daily.streak medal title",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nimenhuuto"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "点呼"
-          }
-        }
-      }
-    },
-    "Row %1$lld, column %2$lld: %3$@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Row %1$lld, column %2$lld: %3$@"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rivi %1$lld, sarake %2$lld: %3$@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld行 %2$lld列:%3$@"
-          }
-        }
-      }
-    },
-    "Switch dig/flag mode" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Switch dig/flag mode"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vaihda kaivu-/lipputilaa"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "掘り/旗モード切替"
-          }
-        }
-      }
-    },
-    "This reference" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This reference"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tämä ohje"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この一覧"
-          }
-        }
-      }
-    },
-    "Today" : {
-      "comment" : "Daily win-panel ribbon headline (JA keeps the manga kanji)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tänään"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "今日"
-          }
-        }
-      }
-    },
-    "Today's best! Daily challenge cleared in %@" : {
-      "comment" : "Win panel a11y: new daily best time",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Päivän paras! Päivähaaste selvitetty ajassa %@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本日のベスト！デイリーチャレンジを%@でクリア"
-          }
-        }
-      }
-    },
-    "Today's orders" : {
-      "comment" : "Daily challenge: Home card + review title",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Päiväkäsky"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本日の任務"
-          }
-        }
-      }
-    },
-    "Toggle minimap size" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toggle minimap size"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vaihda pienoiskartan kokoa"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ミニマップの大きさ切替"
-          }
-        }
-      }
-    },
-    "Toggle the focused control" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toggle the focused control"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kytke valittu säädin"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選択中の操作を切替"
-          }
-        }
-      }
-    },
-    "Zoom the board" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zoom the board"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zoomaa kenttää"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "盤面をズーム"
-          }
-        }
-      }
-    },
-    "flagged" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "flagged"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "liputettu"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "旗付き"
-          }
-        }
-      }
-    },
-    "hidden" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "hidden"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "avaamaton"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未開封"
-          }
-        }
-      }
-    },
-    "mine" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "mine"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "miina"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "地雷"
-          }
-        }
-      }
-    },
-    "open, %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "open, %lld"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "avattu, %lld"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開封、%lld"
-          }
-        }
-      }
-    },
-    "open, clear" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "open, clear"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "avattu, tyhjä"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開封、空白"
-          }
-        }
-      }
-    },
-    "question mark" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "question mark"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kysymysmerkki"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "はてなマーク"
-          }
-        }
-      }
+    "" : {
+
     },
     "—" : {
       "comment" : "A placeholder value for the best progress of a game.",
       "isCommentAutoGenerated" : true
+    },
+    "(next: %@)" : {
+      "comment" : "Decoration detail: next milestone tier threshold",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(seuraava: %@)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(次: %@)"
+          }
+        }
+      }
+    },
+    "%@ disarmed" : {
+      "comment" : "Decoration detail: current mines-disarmed total",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ vaarattomaksi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@個処理"
+          }
+        }
+      }
+    },
+    "%@ tiles opened" : {
+      "comment" : "Decoration detail: current tiles-opened total",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ avausta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@マス開封"
+          }
+        }
+      }
+    },
+    "%@ won" : {
+      "comment" : "Decoration detail: current wins toward the milestone",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ voitettu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@勝"
+          }
+        }
+      }
     },
     "%@, %lld by %lld, %lld mines remaining, %@" : {
       "comment" : "A voice-over summary of the game board. The argument is the string “Won”, the string “Lost”, the string “In progress”, or the string “Ready”.",
@@ -935,23 +173,6 @@
         }
       }
     },
-    "%@ disarmed" : {
-      "comment" : "Decoration detail: current mines-disarmed total",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ vaarattomaksi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@個処理"
-          }
-        }
-      }
-    },
     "%lld left" : {
       "comment" : "Loss pill: safe tiles still unopened when the cleared % would round to 100",
       "localizations" : {
@@ -965,23 +186,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "残り%lld"
-          }
-        }
-      }
-    },
-    "%@ tiles opened" : {
-      "comment" : "Decoration detail: current tiles-opened total",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ avausta"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@マス開封"
           }
         }
       }
@@ -1030,36 +234,19 @@
         }
       }
     },
-    "%@ won" : {
-      "comment" : "Decoration detail: current wins toward the milestone",
+    "%lld/%lld cleared" : {
+      "comment" : "Score list size subheader: progress toward the full clear (won configs / total)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ voitettu"
+            "value" : "%lld/%lld selvitetty"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@勝"
-          }
-        }
-      }
-    },
-    "%lld\/%lld cleared" : {
-      "comment" : "Score list size subheader: progress toward the full clear (won configs \/ total)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld\/%lld selvitetty"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld\/%lld クリア"
+            "value" : "%lld/%lld クリア"
           }
         }
       }
@@ -1115,23 +302,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld分"
-          }
-        }
-      }
-    },
-    "(next: %@)" : {
-      "comment" : "Decoration detail: next milestone tier threshold",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "(seuraava: %@)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "(次: %@)"
           }
         }
       }
@@ -1212,7 +382,7 @@
       }
     },
     "A MIRACLE! (%@)" : {
-      "comment" : "Guess toast, top tier (survival ≤ 1\/4) — intensity peak, caps intended",
+      "comment" : "Guess toast, top tier (survival ≤ 1/4) — intensity peak, caps intended",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1335,7 +505,7 @@
       }
     },
     "Add rival?" : {
-      "comment" : "Receive prompt title: confirm adding a scanned\/linked rival",
+      "comment" : "Receive prompt title: confirm adding a scanned/linked rival",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1440,8 +610,30 @@
         }
       }
     },
+    "Anywhere" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anywhere"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaikkialla"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "どこでも"
+          }
+        }
+      }
+    },
     "Appearance" : {
-      "comment" : "Settings section: light\/dark\/system",
+      "comment" : "Settings section: light/dark/system",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1457,24 +649,46 @@
         }
       }
     },
-    "Arrows or WASD move the cursor, Enter digs, F flags, Space switches dig\/flag. Everything else works from the keyboard too — press ⌘\/ for the full reference." : {
+    "Arrows move · Return digs · F flags — ⌘/ for all shortcuts" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arrows or WASD move the cursor, Enter digs, F flags, Space switches dig\/flag. Everything else works from the keyboard too — press ⌘\/ for the full reference."
+            "value" : "Arrows move · Return digs · F flags — ⌘/ for all shortcuts"
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nuolet tai WASD liikuttavat kohdistinta, Enter kaivaa, F liputtaa, välilyönti vaihtaa kaivuun ja liputuksen välillä. Kaikki muukin toimii näppäimistöltä – paina ⌘\/ nähdäksesi koko luettelon."
+            "value" : "Nuolet siirtävät · Return kaivaa · F liputtaa — ⌘/ näyttää kaikki"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "矢印キーまたはWASDでカーソルを移動、Enterで掘り、Fで旗を立て、スペースで掘る／旗を切替。他の操作もすべてキーボードで使える——⌘\/で一覧を表示。"
+            "value" : "矢印で移動 · Returnで掘る · Fで旗 — ⌘/で一覧"
+          }
+        }
+      }
+    },
+    "Arrows or WASD move the cursor, Enter digs, F flags, Space switches dig/flag. Everything else works from the keyboard too — press ⌘/ for the full reference." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrows or WASD move the cursor, Enter digs, F flags, Space switches dig/flag. Everything else works from the keyboard too — press ⌘/ for the full reference."
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuolet tai WASD liikuttavat kohdistinta, Enter kaivaa, F liputtaa, välilyönti vaihtaa kaivuun ja liputuksen välillä. Kaikki muukin toimii näppäimistöltä – paina ⌘/ nähdäksesi koko luettelon."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "矢印キーまたはWASDでカーソルを移動、Enterで掘り、Fで旗を立て、スペースで掘る／旗を切替。他の操作もすべてキーボードで使える——⌘/で一覧を表示。"
           }
         }
       }
@@ -1514,7 +728,7 @@
       }
     },
     "Barracks" : {
-      "comment" : "In-game Home button tooltip\/a11y — the army name for the home screen",
+      "comment" : "In-game Home button tooltip/a11y — the army name for the home screen",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1526,6 +740,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "兵舎"
+          }
+        }
+      }
+    },
+    "Barracks (home)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barracks (home)"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kasarmi (koti)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "兵舎(ホーム)"
           }
         }
       }
@@ -1758,7 +994,7 @@
       }
     },
     "Breakdown" : {
-      "comment" : "Career: the play-distribution block's title (bars by family\/size\/density)",
+      "comment" : "Career: the play-distribution block's title (bars by family/size/density)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1922,7 +1158,7 @@
       }
     },
     "Chording" : {
-      "comment" : "Help section title; FI matches the stats vocabulary (Alueavaukset \/ ilman alueavausta)",
+      "comment" : "Help section title; FI matches the stats vocabulary (Alueavaukset / ilman alueavausta)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -1954,6 +1190,23 @@
         }
       }
     },
+    "Clear all high scores?" : {
+      "comment" : "Confirmation dialog title before resetting scores",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tyhjennetäänkö kaikki tulokset?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべての記録を消去しますか？"
+          }
+        }
+      }
+    },
     "Clear Expert in under three minutes." : {
       "localizations" : {
         "en" : {
@@ -1972,23 +1225,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "エキスパートを3分以内にクリア。"
-          }
-        }
-      }
-    },
-    "Clear all high scores?" : {
-      "comment" : "Confirmation dialog title before resetting scores",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tyhjennetäänkö kaikki tulokset?"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "すべての記録を消去しますか？"
           }
         }
       }
@@ -2100,6 +1336,28 @@
         }
       }
     },
+    "Close the screen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close the screen"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sulje näkymä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面を閉じる"
+          }
+        }
+      }
+    },
     "coin flip" : {
       "comment" : "Win pill stamp, coin-flip tier (uppercased in UI)",
       "localizations" : {
@@ -2141,7 +1399,7 @@
       }
     },
     "Coin flip! (%@)" : {
-      "comment" : "Guess toast, coin-flip tier (survival ≤ 1\/2)",
+      "comment" : "Guess toast, coin-flip tier (survival ≤ 1/2)",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2159,6 +1417,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "一か八か！（%@）"
+          }
+        }
+      }
+    },
+    "collapsed, %lld of %lld earned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "collapsed, %lld of %lld earned"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "supistettu, %lld/%lld ansaittu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折りたたみ中、%lld/%lld獲得"
           }
         }
       }
@@ -2433,6 +1713,23 @@
         }
       }
     },
+    "daily first" : {
+      "comment" : "Daily win ribbon eyebrow: first clear of the day",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "päivän avaus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日初"
+          }
+        }
+      }
+    },
     "Daily orders" : {
       "comment" : "Career segment: daily-challenge rollup",
       "localizations" : {
@@ -2574,28 +1871,6 @@
         }
       }
     },
-    "Decorations" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Decorations"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kunniamerkit"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "勲章"
-          }
-        }
-      }
-    },
     "Delete squad" : {
       "localizations" : {
         "en" : {
@@ -2653,6 +1928,28 @@
         }
       }
     },
+    "Dig — or chord a revealed number" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dig — or chord a revealed number"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaiva — tai alueavaus avatusta numerosta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "掘る — 開いた数字なら同時開け"
+          }
+        }
+      }
+    },
     "Dig and flag" : {
       "localizations" : {
         "fi" : {
@@ -2686,19 +1983,41 @@
         }
       }
     },
-    "Disarm 1,000 \/ 10,000 \/ 100,000 mines." : {
-      "comment" : "Achievement description (Decorations grid + future ASC)",
+    "Dig or chord" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dig or chord"
+          }
+        },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pura 1 000 \/ 10 000 \/ 100 000 miinaa."
+            "value" : "Kaiva tai alueavaus"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "地雷を1000 \/ 1万 \/ 10万個処理する。"
+            "value" : "掘る/同時開け"
+          }
+        }
+      }
+    },
+    "Disarm 1,000 / 10,000 / 100,000 mines." : {
+      "comment" : "Achievement description (Decorations grid + future ASC)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pura 1 000 / 10 000 / 100 000 miinaa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地雷を1000 / 1万 / 10万個処理する。"
           }
         }
       }
@@ -2799,45 +2118,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ライバルのQR画像をここにドラッグするか、選択してください。"
-          }
-        }
-      }
-    },
-    "collapsed, %lld of %lld earned" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "collapsed, %lld of %lld earned"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "supistettu, %lld/%lld ansaittu"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "折りたたみ中、%lld/%lld獲得"
-          }
-        }
-      }
-    },
-    "daily first" : {
-      "comment" : "Daily win ribbon eyebrow: first clear of the day",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "päivän avaus"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本日初"
           }
         }
       }
@@ -2943,13 +2223,13 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ansaittu, taso %lld\/%lld"
+            "value" : "Ansaittu, taso %lld/%lld"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "獲得済み・段階%lld\/%lld"
+            "value" : "獲得済み・段階%lld/%lld"
           }
         }
       }
@@ -3016,6 +2296,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分隊を編集"
+          }
+        }
+      }
+    },
+    "Edit the selection · flip Flat/Round" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit the selection · flip Flat/Round"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muokkaa valintaa · vaihda Litteä/Pyöreä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択を編集 · フラット/ラウンド切替"
           }
         }
       }
@@ -3132,40 +2434,6 @@
         }
       }
     },
-    "Expert Sweep" : {
-      "comment" : "Achievement title (see ROADMAP Progression spec)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salamaraivaus"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "エキスパート速攻"
-          }
-        }
-      }
-    },
-    "Family" : {
-      "comment" : "Breakdown axis: board family (Basic\/Grid\/Hive)",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tyyppi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "種類"
-          }
-        }
-      }
-    },
     "expanded" : {
       "localizations" : {
         "en" : {
@@ -3188,19 +2456,36 @@
         }
       }
     },
-    "first clear" : {
-      "comment" : "Result-panel pill: the first time this board config is cleared",
+    "Expert Sweep" : {
+      "comment" : "Achievement title (see ROADMAP Progression spec)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ensimmäinen läpäisy"
+            "value" : "Salamaraivaus"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "初クリア"
+            "value" : "エキスパート速攻"
+          }
+        }
+      }
+    },
+    "Family" : {
+      "comment" : "Breakdown axis: board family (Basic/Grid/Hive)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tyyppi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "種類"
           }
         }
       }
@@ -3218,6 +2503,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "野戦作業"
+          }
+        }
+      }
+    },
+    "first clear" : {
+      "comment" : "Result-panel pill: the first time this board config is cleared",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ensimmäinen läpäisy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初クリア"
           }
         }
       }
@@ -3269,6 +2571,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "旗・同時開け・掘り、そして結果の効果音。iPhoneでは着信/サイレントスイッチでも消音できます。"
+          }
+        }
+      }
+    },
+    "flagged" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "flagged"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "liputettu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旗付き"
           }
         }
       }
@@ -3581,6 +2905,28 @@
         }
       }
     },
+    "hidden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hidden"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "avaamaton"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未開封"
+          }
+        }
+      }
+    },
     "Hidden decoration" : {
       "comment" : "A11y + detail label for a not-yet-earned hidden feat",
       "localizations" : {
@@ -3682,6 +3028,28 @@
         }
       }
     },
+    "In lists and pickers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In lists and pickers"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listoissa ja valitsimissa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リストと選択画面で"
+          }
+        }
+      }
+    },
     "In progress" : {
       "comment" : "Game state: a game is underway",
       "localizations" : {
@@ -3722,7 +3090,7 @@
       }
     },
     "Input mode" : {
-      "comment" : "Accessibility label for the reveal\/flag toggle",
+      "comment" : "Accessibility label for the reveal/flag toggle",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -3791,6 +3159,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "キーボード操作"
+          }
+        }
+      }
+    },
+    "Keyboard Shortcuts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard Shortcuts"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pikanäppäimet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キーボードショートカット"
           }
         }
       }
@@ -3926,7 +3316,7 @@
       }
     },
     "Long shot! (%@)" : {
-      "comment" : "Guess toast, long-shot tier (survival ≤ 1\/3)",
+      "comment" : "Guess toast, long-shot tier (survival ≤ 1/3)",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4055,7 +3445,7 @@
       }
     },
     "Lucky guesses" : {
-      "comment" : "Record stat row: forced guesses survived \/ faced (value like 2\/5 (40%))",
+      "comment" : "Record stat row: forced guesses survived / faced (value like 2/5 (40%))",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4133,6 +3523,28 @@
         }
       }
     },
+    "mine" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mine"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "miina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地雷"
+          }
+        }
+      }
+    },
     "Minefield cleared" : {
       "comment" : "VoiceOver label on the win result screen",
       "localizations" : {
@@ -4185,7 +3597,7 @@
       }
     },
     "Mines remaining" : {
-      "comment" : "Accessibility label for the flag\/mine counter",
+      "comment" : "Accessibility label for the flag/mine counter",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -4236,6 +3648,138 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ウェブで詳しく"
+          }
+        }
+      }
+    },
+    "Move down" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move down"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirry alas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下へ移動"
+          }
+        }
+      }
+    },
+    "Move left" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move left"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirry vasemmalle"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左へ移動"
+          }
+        }
+      }
+    },
+    "Move right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move right"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirry oikealle"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右へ移動"
+          }
+        }
+      }
+    },
+    "Move the cursor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move the cursor"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirrä kohdistinta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カーソルを移動"
+          }
+        }
+      }
+    },
+    "Move the selection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move the selection"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirrä valintaa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択を移動"
+          }
+        }
+      }
+    },
+    "Move up" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move up"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirry ylös"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上へ移動"
           }
         }
       }
@@ -4361,7 +3905,7 @@
       }
     },
     "New game" : {
-      "comment" : "Tooltip\/label for the new-game button",
+      "comment" : "Tooltip/label for the new-game button",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
@@ -4449,6 +3993,45 @@
         }
       }
     },
+    "Next control group" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next control group"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuraava säädinryhmä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次の操作グループへ"
+          }
+        }
+      }
+    },
+    "Next month" : {
+      "comment" : "Calendar navigation",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuraava kuukausi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翌月"
+          }
+        }
+      }
+    },
     "No coin flips — logic wins" : {
       "comment" : "Drills tagline (playful)",
       "localizations" : {
@@ -4478,23 +4061,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "この盤面のプレイ記録はまだありません。"
-          }
-        }
-      }
-    },
-    "Next month" : {
-      "comment" : "Calendar navigation",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seuraava kuukausi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "翌月"
           }
         }
       }
@@ -4657,23 +4223,6 @@
         }
       }
     },
-    "not won" : {
-      "comment" : "A11y reading of the dash in a head-to-head time column",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ei voitettu"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未クリア"
-          }
-        }
-      }
-    },
     "Not now" : {
       "localizations" : {
         "en" : {
@@ -4735,23 +4284,62 @@
         }
       }
     },
-    "OK" : {
-      "comment" : "A button label.",
-      "isCommentAutoGenerated" : true
-    },
-    "Open 10,000 \/ 100,000 \/ 1,000,000 tiles." : {
-      "comment" : "Achievement description (Decorations grid + future ASC)",
+    "not won" : {
+      "comment" : "A11y reading of the dash in a head-to-head time column",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avaa 10 000 \/ 100 000 \/ 1 000 000 ruutua tai kennoa."
+            "value" : "ei voitettu"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1万 \/ 10万 \/ 100万マスを開ける。"
+            "value" : "未クリア"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "comment" : "A button label.",
+      "isCommentAutoGenerated" : true
+    },
+    "On the board" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the board"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kentällä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "盤面で"
+          }
+        }
+      }
+    },
+    "Open 10,000 / 100,000 / 1,000,000 tiles." : {
+      "comment" : "Achievement description (Decorations grid + future ASC)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa 10 000 / 100 000 / 1 000 000 ruutua tai kennoa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1万 / 10万 / 100万マスを開ける。"
           }
         }
       }
@@ -4800,6 +4388,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "両方の端末でこれを開き、相手の名前をタップ。スコアカードを一度に交換 — データは その場から出ない。"
+          }
+        }
+      }
+    },
+    "open, %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "open, %lld"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "avattu, %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開封、%lld"
+          }
+        }
+      }
+    },
+    "open, clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "open, clear"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "avattu, tyhjä"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開封、空白"
           }
         }
       }
@@ -4943,6 +4575,28 @@
         }
       }
     },
+    "Pause and resume" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause and resume"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tauko ja jatka"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一時停止/再開"
+          }
+        }
+      }
+    },
     "Paused" : {
       "comment" : "Overlay title shown while the game is paused",
       "localizations" : {
@@ -4956,6 +4610,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "一時停止中"
+          }
+        }
+      }
+    },
+    "Pick the family or tab" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick the family or tab"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valitse perhe tai välilehti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "種類/タブを選択"
+          }
+        }
+      }
+    },
+    "Plant or clear a flag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plant or clear a flag"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aseta tai poista lippu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旗を立てる/外す"
           }
         }
       }
@@ -5007,6 +4705,45 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "効果音を再生"
+          }
+        }
+      }
+    },
+    "Play the daily challenge 1 / 7 / 30 days running." : {
+      "comment" : "daily.streak requirement",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelaa päivähaaste 1 / 7 / 30 päivänä putkeen."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デイリーチャレンジを1／7／30日連続でプレイする。"
+          }
+        }
+      }
+    },
+    "Play the selected board" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play the selected board"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelaa valittua kenttää"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択した盤面をプレイ"
           }
         }
       }
@@ -5139,6 +4876,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "QRコード"
+          }
+        }
+      }
+    },
+    "question mark" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "question mark"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kysymysmerkki"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "はてなマーク"
           }
         }
       }
@@ -5427,6 +5186,28 @@
         }
       }
     },
+    "Restart the board" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart the board"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aloita kenttä alusta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "盤面をやり直す"
+          }
+        }
+      }
+    },
     "Resume" : {
       "comment" : "Launch dialog: resume the saved game",
       "localizations" : {
@@ -5513,6 +5294,45 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ライバル"
+          }
+        }
+      }
+    },
+    "Roll Call" : {
+      "comment" : "daily.streak medal title",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimenhuuto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点呼"
+          }
+        }
+      }
+    },
+    "Row %1$lld, column %2$lld: %3$@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row %1$lld, column %2$lld: %3$@"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rivi %1$lld, sarake %2$lld: %3$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld行 %2$lld列:%3$@"
           }
         }
       }
@@ -6093,6 +5913,28 @@
         }
       }
     },
+    "Switch dig/flag mode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch dig/flag mode"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaihda kaivu-/lipputilaa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "掘り/旗モード切替"
+          }
+        }
+      }
+    },
     "Sync" : {
       "comment" : "Scoreboard footer: sync toggle label (short)",
       "localizations" : {
@@ -6448,6 +6290,28 @@
         }
       }
     },
+    "This reference" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This reference"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tämä ohje"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この一覧"
+          }
+        }
+      }
+    },
     "This removes the squad. Your rivals and their scores stay." : {
       "localizations" : {
         "en" : {
@@ -6555,6 +6419,79 @@
         }
       }
     },
+    "Today" : {
+      "comment" : "Daily win-panel ribbon headline (JA keeps the manga kanji)",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tänään"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日"
+          }
+        }
+      }
+    },
+    "Today's best! Daily challenge cleared in %@" : {
+      "comment" : "Win panel a11y: new daily best time",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivän paras! Päivähaaste selvitetty ajassa %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日のベスト！デイリーチャレンジを%@でクリア"
+          }
+        }
+      }
+    },
+    "Today's orders" : {
+      "comment" : "Daily challenge: Home card + review title",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päiväkäsky"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日の任務"
+          }
+        }
+      }
+    },
+    "Toggle minimap size" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle minimap size"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaihda pienoiskartan kokoa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ミニマップの大きさ切替"
+          }
+        }
+      }
+    },
     "Toggle side" : {
       "comment" : "Settings header for the floating toggle’s corner",
       "localizations" : {
@@ -6568,6 +6505,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "切替ボタンの位置"
+          }
+        }
+      }
+    },
+    "Toggle the focused control" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle the focused control"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kytke valittu säädin"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択中の操作を切替"
           }
         }
       }
@@ -6640,23 +6599,6 @@
         }
       }
     },
-    "UNLOCKED" : {
-      "comment" : "Result-panel sticker headline when a win opens new content",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AVATTU"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "解放！"
-          }
-        }
-      }
-    },
     "Unlock all boards" : {
       "comment" : "Settings: unlock-all toggle label",
       "localizations" : {
@@ -6670,6 +6612,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "すべての盤面を解放"
+          }
+        }
+      }
+    },
+    "UNLOCKED" : {
+      "comment" : "Result-panel sticker headline when a win opens new content",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AVATTU"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解放！"
           }
         }
       }
@@ -6800,23 +6759,6 @@
         }
       }
     },
-    "Vibrate on taps" : {
-      "comment" : "Settings: haptics toggle label",
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Värinä napautuksista"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タップで振動"
-          }
-        }
-      }
-    },
     "via iCloud" : {
       "comment" : "Sync status: on + signed in (short, after toggle)",
       "localizations" : {
@@ -6830,6 +6772,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iCloud経由"
+          }
+        }
+      }
+    },
+    "Vibrate on taps" : {
+      "comment" : "Settings: haptics toggle label",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Värinä napautuksista"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タップで振動"
           }
         }
       }
@@ -6872,19 +6831,19 @@
         }
       }
     },
-    "Win 10 \/ 100 \/ 1,000 boards." : {
+    "Win 10 / 100 / 1,000 boards." : {
       "comment" : "Achievement description (Decorations grid + future ASC)",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voita 10 \/ 100 \/ 1 000 kenttää."
+            "value" : "Voita 10 / 100 / 1 000 kenttää."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "10 \/ 100 \/ 1000回クリアする。"
+            "value" : "10 / 100 / 1000回クリアする。"
           }
         }
       }
@@ -7423,6 +7382,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "あなたが付けた名前（任意）"
+          }
+        }
+      }
+    },
+    "Zoom the board" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom the board"
+          }
+        },
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoomaa kenttää"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "盤面をズーム"
           }
         }
       }
