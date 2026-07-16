@@ -22,6 +22,8 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 26 — 2026-07-16
+
 - **Clearer daily start prompt.** The daily challenge's Start screen now
   says "take your time" instead of "study freely" — there's nothing to
   study on a fresh board; the point is the clock hasn't started yet.
