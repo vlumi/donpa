@@ -62,6 +62,28 @@ screenshots: Donpa.xcodeproj  ## Capture App Store / website screenshots (simula
 perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a heavy XXXL board
 	@Scripts/perf-profile.sh
 
+# App Store Connect achievement tooling. The runner self-manages a venv (deps
+# in Scripts/asc/requirements.txt); achievements.json is the source of truth.
+.PHONY: asc-status
+asc-status:  ## List Game Center achievements + completeness (reads ASC)
+	@Scripts/asc/run.sh status
+
+.PHONY: asc-sync
+asc-sync:  ## Show what differs between achievements.json and ASC (dry run)
+	@Scripts/asc/run.sh sync $(ARGS)
+
+.PHONY: asc-sync-apply
+asc-sync-apply:  ## Push achievements.json text/points changes to ASC (add ARGS="--images ..." for images)
+	@Scripts/asc/run.sh sync --apply $(ARGS)
+
+.PHONY: asc-listing
+asc-listing:  ## Show what differs between listing.json and the ASC App Store listing (dry run)
+	@Scripts/asc/run.sh listing $(ARGS)
+
+.PHONY: asc-listing-apply
+asc-listing-apply:  ## Push listing.json (description/keywords/etc.) to the ASC listing
+	@Scripts/asc/run.sh listing --apply $(ARGS)
+
 # ── Release lane ──────────────────────────────────────────────────────────────
 # The cut is split by concern, one script each, chained here in order:
 #   preflight → publish → tag → distribute
