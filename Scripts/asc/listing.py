@@ -35,9 +35,25 @@ def patch_localization(asc, kind, loc_id, want, live_attrs, fields, apply, label
     if not changes:
         return 0
     print(f"{label}: {list(changes)}")
-    if apply:
-        asc.patch(f"/{kind}/{loc_id}", {
-            "data": {"type": kind, "id": loc_id, "attributes": changes}})
+    if not apply:
+        return 1
+    # Some fields lock once a build is in review/processing (notably whatsNew).
+    # A PATCH is atomic, so one locked field would reject the whole set — so on
+    # a STATE_ERROR we drop the field(s) it names and retry the editable rest,
+    # reporting what was skipped rather than failing the run.
+    attrs = dict(changes)
+    while attrs:
+        try:
+            asc.patch(f"/{kind}/{loc_id}", {
+                "data": {"type": kind, "id": loc_id, "attributes": attrs}})
+            return 1
+        except RuntimeError as err:
+            locked = [f for f in list(attrs) if f"'{f}'" in str(err)]
+            if not locked or "409" not in str(err):
+                raise
+            for f in locked:
+                attrs.pop(f)
+            print(f"  ↳ locked, skipped: {locked} (editable fields still written)")
     return 1
 
 
@@ -67,10 +83,19 @@ def main():
             asc, "appInfoLocalizations", loc["id"], want, loc["attributes"],
             APPINFO_FIELDS, args.apply, f"appInfo [{locale}]")
 
-    # Version-level: written to EVERY editable version (iOS + macOS 1.0.0).
-    versions = asc.get(f"/apps/{app_id}/appStoreVersions?limit=10")["data"]
+    # Version-level: written to EVERY editable version (iOS + macOS).
+    versions = asc.get(f"/apps/{app_id}/appStoreVersions?limit=20")["data"]
     editable = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED",
                 "METADATA_REJECTED", "PENDING_DEVELOPER_RELEASE"}
+    released = {"READY_FOR_SALE", "PENDING_DEVELOPER_RELEASE", "REPLACED_WITH_NEW_VERSION",
+                "REMOVED_FROM_SALE"}
+    # `whatsNew` is release notes — it doesn't exist for a first release (no
+    # prior public version to describe changes from) and Apple locks it there.
+    # Include it only once the app has ever been released.
+    has_release = any(v["attributes"]["appStoreState"] in released for v in versions)
+    fields = VERSION_FIELDS if has_release else [f for f in VERSION_FIELDS if f != "whatsNew"]
+    if not has_release:
+        print("(first release — 'whatsNew' omitted; it applies to updates only)\n")
     for ver in versions:
         state = ver["attributes"]["appStoreState"]
         platform = ver["attributes"]["platform"]
@@ -86,7 +111,7 @@ def main():
                 continue
             changed += patch_localization(
                 asc, "appStoreVersionLocalizations", loc["id"], want,
-                loc["attributes"], VERSION_FIELDS, args.apply,
+                loc["attributes"], fields, args.apply,
                 f"{platform} [{locale}]")
 
     print(f"\n{changed} change(s).")
