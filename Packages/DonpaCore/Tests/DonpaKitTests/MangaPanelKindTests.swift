@@ -114,4 +114,16 @@ final class MangaPanelKindTests: XCTestCase {
             MangaPanelView.Kind.record(centiseconds: 1234, improvedBy: 10).a11yLabel().contains(
                 TimeFormat.mmsst(centiseconds: 1234)))
     }
+
+    func testDailyLabelsReframeAwayFromHiscore() {
+        // A daily result must never speak as an all-time record — it's the
+        // day's own competition.
+        XCTAssertEqual(
+            MangaPanelView.Kind.win.a11yLabel(isDaily: true), "Daily challenge cleared")
+        let dailyRecord = MangaPanelView.Kind.record(centiseconds: 1234, improvedBy: 10)
+            .a11yLabel(isDaily: true)
+        XCTAssertTrue(dailyRecord.contains("Today's best"))
+        XCTAssertFalse(dailyRecord.contains("New record"))
+        XCTAssertTrue(dailyRecord.contains(TimeFormat.mmsst(centiseconds: 1234)))
+    }
 }

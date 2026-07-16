@@ -22,6 +22,12 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **A daily win looks like a daily win.** The result screen now marks a
+  daily-challenge clear as its own thing — a "daily" tag, and a "today's
+  best" ribbon (not the all-time "new record" flourish) when you beat
+  your day's time — so a memorized shared board never masquerades as a
+  personal hiscore.
+
 ### build 25 — 2026-07-15
 
 - **The Daily Challenge arrives.** One shared board per day — same layout,
