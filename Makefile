@@ -55,6 +55,10 @@ test:  ## Run the package logic tests (no Xcode project needed)
 uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 	@Scripts/uitest.sh
 
+.PHONY: screenshots
+screenshots: Donpa.xcodeproj  ## Capture App Store / website screenshots (simulator, seeded demo data)
+	@Scripts/screenshots.sh
+
 perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a heavy XXXL board
 	@Scripts/perf-profile.sh
 
