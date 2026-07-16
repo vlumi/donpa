@@ -1,15 +1,23 @@
 import DonpaCore
 import Foundation
+import SwiftUI
 
 /// Populates the stores with believable demo data for the screenshot harness
 /// (`-uitest-demo`), so gallery and App Store captures show a real player's
 /// app — scores across boards, a couple of rivals, a daily streak — rather
 /// than empty state. Never runs outside that launch arg; ships inert.
 @MainActor
-enum DemoSeed {
-    static var isRequested: Bool {
+public enum DemoSeed {
+    public static var isRequested: Bool {
         ProcessInfo.processInfo.arguments.contains("-uitest-demo")
     }
+
+    /// The app rides the SYSTEM accent by design (colour is never the sole
+    /// cue — see the scoreboard-highlight decision), so captures would inherit
+    /// the machine's personal Highlight colour (a red Mac, say). Under the
+    /// screenshot arg only, pin a neutral blue so the store images are
+    /// deterministic on any machine. Real users keep their system accent.
+    static var screenshotAccent: Color? { isRequested ? .blue : nil }
 
     /// Seed once at launch. Times are hand-picked to look earned, not random,
     /// and to sort into a satisfying spread on the Service Record.
@@ -50,16 +58,31 @@ enum DemoSeed {
             Run(config: .hive(.m, .normal, .flat), best: 6_240, wins: 4, threeBV: 121),
         ]
         for run in runs {
+            // Coherent counters: one outcome + one activity flush PER game, so
+            // games ≈ wins+losses, and tiles/flags/playtime aren't left at zero.
+            // The board's own geometry sets believable per-game magnitudes.
+            let safeTiles = run.config.width * run.config.height - run.config.mineCount
+            let losses = max(1, run.wins / 6)
             _ = scoreboard.submit(run.best, for: run.config, threeBV: run.threeBV)
-            for _ in 0..<run.wins {
-                _ = scoreboard.submit(run.best + 600, for: run.config, threeBV: run.threeBV)
+            for i in 0..<run.wins {
+                if i > 0 {
+                    _ = scoreboard.submit(run.best + 600, for: run.config, threeBV: run.threeBV)
+                }
+                scoreboard.recordGameOutcome(
+                    for: run.config, won: true, minesHit: 0,
+                    minesDisarmed: run.config.mineCount, chordsUsed: run.wins / 4)
+                scoreboard.recordActivity(
+                    for: run.config, tilesOpened: safeTiles,
+                    flagsPlaced: run.config.mineCount, playtimeCentiseconds: run.best + 400)
             }
-            scoreboard.recordGameOutcome(
-                for: run.config, won: true, minesHit: 0,
-                minesDisarmed: run.config.mineCount, chordsUsed: run.wins)
-            // A few losses too, so the career reads like real play.
-            scoreboard.recordGameOutcome(
-                for: run.config, won: false, minesHit: 1, minesDisarmed: 0, chordsUsed: 1)
+            for _ in 0..<losses {
+                scoreboard.recordGameOutcome(
+                    for: run.config, won: false, minesHit: 1,
+                    minesDisarmed: run.config.mineCount / 2, chordsUsed: 1)
+                scoreboard.recordActivity(
+                    for: run.config, tilesOpened: safeTiles / 2,
+                    flagsPlaced: run.config.mineCount / 2, playtimeCentiseconds: run.best / 2)
+            }
         }
     }
 
@@ -111,6 +134,18 @@ enum DemoSeed {
                 .init(
                     won: true, centiseconds: 1_500 + back * 120, threeBV: 40, progress: 1,
                     live: true))
+        }
+    }
+}
+
+extension View {
+    /// Applies the deterministic screenshot accent when capturing; a no-op in
+    /// normal use (the app keeps the system accent).
+    @ViewBuilder public func screenshotAccent() -> some View {
+        if let accent = DemoSeed.screenshotAccent {
+            tint(accent)
+        } else {
+            self
         }
     }
 }

@@ -18,6 +18,8 @@ struct SharePickerButton: View {
             } icon: {
                 Image(systemName: "square.and.arrow.up")
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity)
         }
         .background(AnchorRepresentable(view: anchor))
@@ -47,6 +49,8 @@ struct ShareLinkButton: View {
             } icon: {
                 Image(systemName: "square.and.arrow.up")
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity)
         }
     }

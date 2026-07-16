@@ -45,6 +45,7 @@ extension GameContent {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("daily.cancel")
                     .keyboardShortcut(.cancelAction)
                 }
                 .padding(20)

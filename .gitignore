@@ -38,3 +38,6 @@ perf-out/
 
 # Python bytecode from the ASC tooling venv
 __pycache__/
+
+# Captured App Store screenshots (uploaded to ASC, not committed)
+screenshots/
