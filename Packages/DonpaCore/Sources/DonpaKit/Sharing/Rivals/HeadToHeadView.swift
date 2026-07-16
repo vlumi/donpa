@@ -259,7 +259,9 @@ struct HeadToHeadView: View {
             // them, so the delta unambiguously reads as *yours* (not the rival's).
             VStack(alignment: .trailing, spacing: 1) {
                 time(row.yourBest, winner: row.lead == .you)
-                if let gap = row.gap, gap != 0 { gapLabel(gap) }
+                if let mine = row.yourBest, let theirs = row.theirBest {
+                    gapLabel(mine: mine, theirs: theirs)
+                }
                 PaceText(pace: row.yourBestPace)
             }
             .frame(width: yourColumnWidth, alignment: .trailing)
@@ -297,14 +299,16 @@ struct HeadToHeadView: View {
     }
 
     /// Your signed gap vs. theirs: −faster (green), +slower (red). Placed under YOUR
-    /// time so it clearly describes you.
-    private func gapLabel(_ gap: Int) -> some View {
-        let faster = gap < 0
-        let text = (faster ? "−" : "+") + TimeFormat.mmsst(centiseconds: abs(gap))
-        return Text(verbatim: text)
-            .font(.caption2.monospaced())
-            .numericCell()
-            .foregroundStyle(faster ? Color.green : Color.red)
+    /// time so it clearly describes you. Empty (nothing shown) when the two times
+    /// display the same tenth.
+    @ViewBuilder private func gapLabel(mine: Int, theirs: Int) -> some View {
+        let text = TimeFormat.signedGap(mine: mine, theirs: theirs)
+        if !text.isEmpty {
+            Text(verbatim: text)
+                .font(.caption2.monospaced())
+                .numericCell()
+                .foregroundStyle(mine < theirs ? Color.green : Color.red)
+        }
     }
 
     /// A time as VoiceOver text — the formatted best, or "not won" for the dash.

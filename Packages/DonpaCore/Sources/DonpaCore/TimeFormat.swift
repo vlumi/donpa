@@ -17,12 +17,32 @@ public enum TimeFormat {
         return String(format: "%d:%02d.%d", minutes, seconds, frac)
     }
 
-    /// The improvement AS DISPLAYED: delta of truncated tenths (in centiseconds,
-    /// for the shared formatter), nil when the shown value didn't visibly change —
-    /// a raw-centisecond delta can contradict the screen (18.24s → 18.15s reads
-    /// "0.0s" while the shown best went 18.2 → 18.1).
+    /// The signed difference of two times AS DISPLAYED: each truncated to its
+    /// tenth before subtracting, so the result can never contradict the two
+    /// times on screen (hidden centisecond precision would read as a rounding
+    /// error). Result is in centiseconds — always a whole-tenth multiple — for
+    /// the shared formatter. `b - a`, so a faster `b` is negative.
+    ///
+    /// The one rule for every displayed time comparison — record banners,
+    /// rival gaps, and anywhere else two shown times are diffed.
+    public static func displayedDelta(_ a: Int, _ b: Int) -> Int {
+        (b / 10 - a / 10) * 10
+    }
+
+    /// The improvement AS DISPLAYED (positive centiseconds), nil when the shown
+    /// value didn't visibly change — 18.24 → 18.15 shows one tenth faster, but
+    /// 18.24 → 18.21 both read 18.2, so no pill.
     public static func displayedImprovement(from prior: Int, to new: Int) -> Int? {
-        let deltaTenths = prior / 10 - new / 10
-        return deltaTenths > 0 ? deltaTenths * 10 : nil
+        let delta = displayedDelta(new, prior)  // prior − new: positive = faster
+        return delta > 0 ? delta : nil
+    }
+
+    /// A signed displayed gap as `±m:ss.t`, from the two raw times. Quantizes to
+    /// displayed tenths (so it matches the times on screen), then signs it —
+    /// `mine` faster than `theirs` reads negative. Empty for a shown tie.
+    public static func signedGap(mine: Int, theirs: Int) -> String {
+        let gap = displayedDelta(theirs, mine)  // mine − theirs: negative = faster
+        guard gap != 0 else { return "" }
+        return (gap < 0 ? "−" : "+") + mmsst(centiseconds: abs(gap))
     }
 }

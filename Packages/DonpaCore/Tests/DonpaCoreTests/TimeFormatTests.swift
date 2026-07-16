@@ -61,4 +61,25 @@ final class TimeFormatTests: XCTestCase {
         // Multi-tenth improvements pass through: 20.0 → 18.1 displays as 1.9 faster.
         XCTAssertEqual(TimeFormat.displayedImprovement(from: 2000, to: 1810), 190)
     }
+
+    func testDisplayedDelta() {
+        // Each side truncates to its tenth BEFORE subtracting, so the result
+        // matches the two times on screen. 1.56 and 1.62 both display two
+        // tenths apart? No — 1.5 vs 1.6 = one tenth, whatever the hidden cs.
+        XCTAssertEqual(TimeFormat.displayedDelta(156, 162), 10)
+        XCTAssertEqual(TimeFormat.displayedDelta(162, 156), -10)
+        // Same displayed tenth → zero, no phantom sub-tenth diff.
+        XCTAssertEqual(TimeFormat.displayedDelta(154, 159), 0)
+    }
+
+    func testSignedGap() {
+        // Built from the two RAW times, quantized to displayed tenths: 1.5 vs
+        // 1.6 reads one tenth even though the raw diff is smaller.
+        XCTAssertEqual(TimeFormat.signedGap(mine: 156, theirs: 162), "−0:00.1")
+        XCTAssertEqual(TimeFormat.signedGap(mine: 162, theirs: 156), "+0:00.1")
+        // Same displayed tenth → nothing (no signed "0.0").
+        XCTAssertEqual(TimeFormat.signedGap(mine: 154, theirs: 159), "")
+        // A whole-tenth gap keeps its magnitude and sign.
+        XCTAssertEqual(TimeFormat.signedGap(mine: 800, theirs: 950), "−0:01.5")
+    }
 }

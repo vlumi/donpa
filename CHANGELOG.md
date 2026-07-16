@@ -22,6 +22,11 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Time comparisons match what's on screen.** A rival gap or record
+  improvement is now figured from the times as displayed (to the tenth),
+  so it can never show a signed "0:00.0" or a delta that seems to
+  disagree with the two times beside it.
+
 - **A daily win looks like a daily win.** The result screen now marks a
   daily-challenge clear as its own thing — a "daily" tag, and a "today's
   best" ribbon (not the all-time "new record" flourish) when you beat
