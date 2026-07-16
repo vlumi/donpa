@@ -1,0 +1,5 @@
+# App Store Connect achievement tooling (status.py, sync.py).
+# Install into a venv — Homebrew's Python is externally-managed, so a bare
+# `pip install` is refused. See README.md in this directory.
+pyjwt>=2.8
+cryptography>=42

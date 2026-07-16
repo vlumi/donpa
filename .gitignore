@@ -35,3 +35,6 @@ Scripts/.asc-config
 
 # Perf-probe output (traces + summaries) — local only
 perf-out/
+
+# Python bytecode from the ASC tooling venv
+__pycache__/

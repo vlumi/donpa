@@ -1,0 +1,707 @@
+{
+  "_comment": "Canonical Game Center achievement definitions for App Store Connect. Single source for the fill-in sheet AND the ASC sync script (Scripts/asc/sync.py). Edit HERE, never in the ASC UI. IDs are locked once the release is live; points/text/images stay tunable.",
+  "bundleId": "fi.misaki.donpa",
+  "expectedLocales": [
+    "en-US",
+    "fi",
+    "ja"
+  ],
+  "achievements": [
+    {
+      "id": "fi.misaki.donpa.win.first",
+      "points": 5,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.win.first.png",
+      "localizations": {
+        "en-US": {
+          "title": "Boots On",
+          "beforeEarned": "Win your first board.",
+          "afterEarned": "First board down. Welcome to the front."
+        },
+        "fi": {
+          "title": "Saappaat jalkaan",
+          "beforeEarned": "Voita ensimmäinen kenttäsi.",
+          "afterEarned": "Ensimmäinen kenttä selvä. Tervetuloa rintamalle."
+        },
+        "ja": {
+          "title": "初陣",
+          "beforeEarned": "初めての盤面をクリアする。",
+          "afterEarned": "初めての盤面を制覇。前線へようこそ。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.hive.first",
+      "points": 10,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.hive.first.png",
+      "localizations": {
+        "en-US": {
+          "title": "Into the Hive",
+          "beforeEarned": "Win your first Hive board.",
+          "afterEarned": "Your first Hive board, cleared."
+        },
+        "fi": {
+          "title": "Kennostoon",
+          "beforeEarned": "Voita ensimmäinen kenno-kenttä.",
+          "afterEarned": "Ensimmäinen kenno-kenttä selvitetty."
+        },
+        "ja": {
+          "title": "ハイブ初制覇",
+          "beforeEarned": "ハイブの盤面を初クリアする。",
+          "afterEarned": "初めてのハイブ盤面を制覇。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.round.first",
+      "points": 10,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.round.first.png",
+      "localizations": {
+        "en-US": {
+          "title": "Full Circle",
+          "beforeEarned": "Win a board with Round edges — the world wraps around.",
+          "afterEarned": "You cleared a wrapping board. All the way around."
+        },
+        "fi": {
+          "title": "Täysi kierros",
+          "beforeEarned": "Voita pyöreä kenttä — maailma kiertyy ympäri.",
+          "afterEarned": "Pyöreä kenttä selvä — koko kierros."
+        },
+        "ja": {
+          "title": "世界一周",
+          "beforeEarned": "ラウンドの盤面をクリアする — 端は反対側へつながる。",
+          "afterEarned": "ラウンド盤面を制覇。ぐるり一周。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.luck.coinflip",
+      "points": 15,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.luck.coinflip.png",
+      "localizations": {
+        "en-US": {
+          "title": "Coin Flip",
+          "beforeEarned": "Survive a forced guess at even odds or worse.",
+          "afterEarned": "You called the coin flip and lived."
+        },
+        "fi": {
+          "title": "Kolikonheitto",
+          "beforeEarned": "Selviä korkeintaan tasakertoimen pakkoarvauksesta.",
+          "afterEarned": "Selvisit kolikonheitosta hengissä."
+        },
+        "ja": {
+          "title": "コイントス",
+          "beforeEarned": "五分五分以下の強制推測を生き延びる。",
+          "afterEarned": "コイントスを制して生還。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.drills.l",
+      "points": 20,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.drills.l.png",
+      "localizations": {
+        "en-US": {
+          "title": "Graduation Exercise",
+          "beforeEarned": "Win a Drills board at size L.",
+          "afterEarned": "Drills cleared at size L. Graduated."
+        },
+        "fi": {
+          "title": "Loppukoe",
+          "beforeEarned": "Voita Sohan L-kenttä.",
+          "afterEarned": "Sohan L-kenttä selvä. Valmistuit."
+        },
+        "ja": {
+          "title": "卒業演習",
+          "beforeEarned": "演習のLサイズでクリアする。",
+          "afterEarned": "演習Lサイズを制覇。卒業だ。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.trifecta",
+      "points": 25,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.trifecta.png",
+      "localizations": {
+        "en-US": {
+          "title": "The Classics",
+          "beforeEarned": "Win Beginner, Intermediate and Expert.",
+          "afterEarned": "Beginner, Intermediate, Expert — all three cleared."
+        },
+        "fi": {
+          "title": "Klassikot",
+          "beforeEarned": "Voita aloittelija, keskitaso ja asiantuntija.",
+          "afterEarned": "Aloittelija, keskitaso ja asiantuntija — kaikki kolme selvä."
+        },
+        "ja": {
+          "title": "クラシック三冠",
+          "beforeEarned": "初級・中級・上級をすべてクリアする。",
+          "afterEarned": "初級・中級・上級、三冠達成。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.purity.noflag",
+      "points": 30,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.purity.noflag.png",
+      "localizations": {
+        "en-US": {
+          "title": "Bare Hands",
+          "beforeEarned": "Win without placing a single flag — M or larger, Sapper or denser.",
+          "afterEarned": "Cleared without a single flag. Bare hands."
+        },
+        "fi": {
+          "title": "Paljain käsin",
+          "beforeEarned": "Voita asettamatta yhtään lippua — vähintään M, vähintään pioneeri.",
+          "afterEarned": "Selvitit ilman ainoatakaan lippua. Paljain käsin."
+        },
+        "ja": {
+          "title": "素手で",
+          "beforeEarned": "旗を一本も立てずにクリアする — M以上・工兵以上。",
+          "afterEarned": "旗ゼロで制覇。素手の証。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.fullclear.size",
+      "points": 35,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.fullclear.size.png",
+      "localizations": {
+        "en-US": {
+          "title": "Sector Secure",
+          "beforeEarned": "Win every rank of one size.",
+          "afterEarned": "Every rank of one size — sector secure."
+        },
+        "fi": {
+          "title": "Sektori varmistettu",
+          "beforeEarned": "Voita yhden koon kaikki tasot.",
+          "afterEarned": "Yhden koon kaikki tasot — sektori varmistettu."
+        },
+        "ja": {
+          "title": "区域制圧",
+          "beforeEarned": "1つのサイズの全難易度をクリアする。",
+          "afterEarned": "1サイズの全難易度を制圧。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.trifecta.time",
+      "points": 50,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.trifecta.time.png",
+      "localizations": {
+        "en-US": {
+          "title": "Hat Trick",
+          "beforeEarned": "The classic trifecta with combined bests under 5:00.",
+          "afterEarned": "The trifecta, under five minutes combined. Hat trick."
+        },
+        "fi": {
+          "title": "Hattutemppu",
+          "beforeEarned": "Klassikkokolmikko alle viidessä minuutissa.",
+          "afterEarned": "Kolmikko alle viidessä minuutissa. Hattutemppu."
+        },
+        "ja": {
+          "title": "ハットトリック",
+          "beforeEarned": "三冠の合計ベストを5分未満にする。",
+          "afterEarned": "三冠合計5分未満。ハットトリック。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.speed.expert",
+      "points": 60,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.speed.expert.png",
+      "localizations": {
+        "en-US": {
+          "title": "Expert Sweep",
+          "beforeEarned": "Clear Expert in under three minutes.",
+          "afterEarned": "Expert, cleared under three minutes."
+        },
+        "fi": {
+          "title": "Salamaraivaus",
+          "beforeEarned": "Selvitä Expert alle kolmessa minuutissa.",
+          "afterEarned": "Expert selvä alle kolmessa minuutissa."
+        },
+        "ja": {
+          "title": "エキスパート速攻",
+          "beforeEarned": "エキスパートを3分以内にクリア。",
+          "afterEarned": "エキスパートを3分未満で制覇。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.hive.insane",
+      "points": 65,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.hive.insane.png",
+      "localizations": {
+        "en-US": {
+          "title": "Hornet's Nest",
+          "beforeEarned": "Win a Hive board at Legend, M or larger.",
+          "afterEarned": "A Legend Hive, M or larger — nest cleared."
+        },
+        "fi": {
+          "title": "Herhiläispesä",
+          "beforeEarned": "Voita kenno-legenda vähintään koolla M.",
+          "afterEarned": "Kenno-legenda vähintään koolla M — pesä raivattu."
+        },
+        "ja": {
+          "title": "スズメバチの巣",
+          "beforeEarned": "ハイブのM以上を伝説でクリアする。",
+          "afterEarned": "M以上のハイブを伝説で制覇。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.insane.win",
+      "points": 75,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.insane.win.png",
+      "localizations": {
+        "en-US": {
+          "title": "Stuff of Legends",
+          "beforeEarned": "Win a Legend board, M or larger.",
+          "afterEarned": "A Legend board, M or larger. The stuff of legends."
+        },
+        "fi": {
+          "title": "Legendojen ainesta",
+          "beforeEarned": "Voita legenda vähintään koolla M.",
+          "afterEarned": "Legenda vähintään koolla M. Legendojen ainesta."
+        },
+        "ja": {
+          "title": "生ける伝説",
+          "beforeEarned": "M以上の盤面を伝説でクリアする。",
+          "afterEarned": "M以上を伝説で制覇。生ける伝説。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.lunatic.win",
+      "points": 100,
+      "hidden": false,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.lunatic.win.png",
+      "localizations": {
+        "en-US": {
+          "title": "Full Moon",
+          "beforeEarned": "Win a Lunatic board — any size.",
+          "afterEarned": "A Lunatic board, cleared. The moon is full."
+        },
+        "fi": {
+          "title": "Täysikuu",
+          "beforeEarned": "Voita mielipuoli-kenttä.",
+          "afterEarned": "Mielipuoli-kenttä selvä. Kuu on täysi."
+        },
+        "ja": {
+          "title": "満月",
+          "beforeEarned": "ルナティックでクリアする — サイズは自由。",
+          "afterEarned": "ルナティックを制覇。月は満ちた。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.wins.10",
+      "points": 10,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.wins.10.png",
+      "localizations": {
+        "en-US": {
+          "title": "Campaigner (Bronze)",
+          "beforeEarned": "Win 10 boards.",
+          "afterEarned": "10 boards won."
+        },
+        "fi": {
+          "title": "Sotaretkeläinen (pronssi)",
+          "beforeEarned": "Voita 10 kenttää.",
+          "afterEarned": "10 kenttää voitettu."
+        },
+        "ja": {
+          "title": "歴戦（銅）",
+          "beforeEarned": "10盤面クリアする。",
+          "afterEarned": "10盤面クリア。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.wins.100",
+      "points": 35,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.wins.100.png",
+      "localizations": {
+        "en-US": {
+          "title": "Campaigner (Silver)",
+          "beforeEarned": "Win 100 boards.",
+          "afterEarned": "100 boards won."
+        },
+        "fi": {
+          "title": "Sotaretkeläinen (hopea)",
+          "beforeEarned": "Voita 100 kenttää.",
+          "afterEarned": "100 kenttää voitettu."
+        },
+        "ja": {
+          "title": "歴戦（銀）",
+          "beforeEarned": "100盤面クリアする。",
+          "afterEarned": "100盤面クリア。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.wins.1000",
+      "points": 75,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.wins.1000.png",
+      "localizations": {
+        "en-US": {
+          "title": "Campaigner (Gold)",
+          "beforeEarned": "Win 1,000 boards.",
+          "afterEarned": "1,000 boards won."
+        },
+        "fi": {
+          "title": "Sotaretkeläinen (kulta)",
+          "beforeEarned": "Voita 1 000 kenttää.",
+          "afterEarned": "1 000 kenttää voitettu."
+        },
+        "ja": {
+          "title": "歴戦（金）",
+          "beforeEarned": "1,000盤面クリアする。",
+          "afterEarned": "1,000盤面クリア。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.tiles.10000",
+      "points": 10,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.tiles.10000.png",
+      "localizations": {
+        "en-US": {
+          "title": "Ground Covered (Bronze)",
+          "beforeEarned": "Open 10,000 tiles.",
+          "afterEarned": "10,000 tiles opened."
+        },
+        "fi": {
+          "title": "Kilometrejä takana (pronssi)",
+          "beforeEarned": "Avaa 10 000 ruutua.",
+          "afterEarned": "10 000 ruutua avattu."
+        },
+        "ja": {
+          "title": "開拓者（銅）",
+          "beforeEarned": "10,000マス開く。",
+          "afterEarned": "10,000マス開放。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.tiles.100000",
+      "points": 35,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.tiles.100000.png",
+      "localizations": {
+        "en-US": {
+          "title": "Ground Covered (Silver)",
+          "beforeEarned": "Open 100,000 tiles.",
+          "afterEarned": "100,000 tiles opened."
+        },
+        "fi": {
+          "title": "Kilometrejä takana (hopea)",
+          "beforeEarned": "Avaa 100 000 ruutua.",
+          "afterEarned": "100 000 ruutua avattu."
+        },
+        "ja": {
+          "title": "開拓者（銀）",
+          "beforeEarned": "100,000マス開く。",
+          "afterEarned": "100,000マス開放。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.tiles.1000000",
+      "points": 75,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.tiles.1000000.png",
+      "localizations": {
+        "en-US": {
+          "title": "Ground Covered (Gold)",
+          "beforeEarned": "Open 1,000,000 tiles.",
+          "afterEarned": "1,000,000 tiles opened."
+        },
+        "fi": {
+          "title": "Kilometrejä takana (kulta)",
+          "beforeEarned": "Avaa 1 000 000 ruutua.",
+          "afterEarned": "1 000 000 ruutua avattu."
+        },
+        "ja": {
+          "title": "開拓者（金）",
+          "beforeEarned": "1,000,000マス開く。",
+          "afterEarned": "1,000,000マス開放。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.disarmed.1000",
+      "points": 10,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.disarmed.1000.png",
+      "localizations": {
+        "en-US": {
+          "title": "Bomb Squad (Bronze)",
+          "beforeEarned": "Disarm 1,000 mines.",
+          "afterEarned": "1,000 mines disarmed."
+        },
+        "fi": {
+          "title": "Pommiryhmä (pronssi)",
+          "beforeEarned": "Pura 1 000 miinaa.",
+          "afterEarned": "1 000 miinaa purettu."
+        },
+        "ja": {
+          "title": "爆発物処理班（銅）",
+          "beforeEarned": "1,000個の地雷を処理する。",
+          "afterEarned": "1,000個処理。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.disarmed.10000",
+      "points": 35,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.disarmed.10000.png",
+      "localizations": {
+        "en-US": {
+          "title": "Bomb Squad (Silver)",
+          "beforeEarned": "Disarm 10,000 mines.",
+          "afterEarned": "10,000 mines disarmed."
+        },
+        "fi": {
+          "title": "Pommiryhmä (hopea)",
+          "beforeEarned": "Pura 10 000 miinaa.",
+          "afterEarned": "10 000 miinaa purettu."
+        },
+        "ja": {
+          "title": "爆発物処理班（銀）",
+          "beforeEarned": "10,000個の地雷を処理する。",
+          "afterEarned": "10,000個処理。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.miles.disarmed.100000",
+      "points": 75,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.miles.disarmed.100000.png",
+      "localizations": {
+        "en-US": {
+          "title": "Bomb Squad (Gold)",
+          "beforeEarned": "Disarm 100,000 mines.",
+          "afterEarned": "100,000 mines disarmed."
+        },
+        "fi": {
+          "title": "Pommiryhmä (kulta)",
+          "beforeEarned": "Pura 100 000 miinaa.",
+          "afterEarned": "100 000 miinaa purettu."
+        },
+        "ja": {
+          "title": "爆発物処理班（金）",
+          "beforeEarned": "100,000個の地雷を処理する。",
+          "afterEarned": "100,000個処理。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.daily.streak.1",
+      "points": 10,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.daily.streak.1.png",
+      "localizations": {
+        "en-US": {
+          "title": "Roll Call (Bronze)",
+          "beforeEarned": "Play the daily challenge 1 day.",
+          "afterEarned": "Daily challenge answered — day one."
+        },
+        "fi": {
+          "title": "Nimenhuuto (pronssi)",
+          "beforeEarned": "Pelaa päivähaaste yhtenä päivänä.",
+          "afterEarned": "Päivähaaste pelattu — ensimmäinen päivä."
+        },
+        "ja": {
+          "title": "点呼（銅）",
+          "beforeEarned": "デイリーチャレンジを1日プレイする。",
+          "afterEarned": "デイリー、初日クリア。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.daily.streak.7",
+      "points": 35,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.daily.streak.7.png",
+      "localizations": {
+        "en-US": {
+          "title": "Roll Call (Silver)",
+          "beforeEarned": "Play the daily challenge 7 days running.",
+          "afterEarned": "Seven days running."
+        },
+        "fi": {
+          "title": "Nimenhuuto (hopea)",
+          "beforeEarned": "Pelaa päivähaaste 7 päivää putkeen.",
+          "afterEarned": "Seitsemän päivää putkeen."
+        },
+        "ja": {
+          "title": "点呼（銀）",
+          "beforeEarned": "デイリーチャレンジを7日連続でプレイする。",
+          "afterEarned": "7日連続達成。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.daily.streak.30",
+      "points": 65,
+      "hidden": false,
+      "showProgress": true,
+      "image": "fi.misaki.donpa.daily.streak.30.png",
+      "localizations": {
+        "en-US": {
+          "title": "Roll Call (Gold)",
+          "beforeEarned": "Play the daily challenge 30 days running.",
+          "afterEarned": "Thirty days running. Reporting for duty."
+        },
+        "fi": {
+          "title": "Nimenhuuto (kulta)",
+          "beforeEarned": "Pelaa päivähaaste 30 päivää putkeen.",
+          "afterEarned": "Kolmekymmentä päivää putkeen."
+        },
+        "ja": {
+          "title": "点呼（金）",
+          "beforeEarned": "デイリーチャレンジを30日連続でプレイする。",
+          "afterEarned": "30日連続。皆勤の証。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.hidden.second",
+      "points": 5,
+      "hidden": true,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.hidden.second.png",
+      "localizations": {
+        "en-US": {
+          "title": "Beginner's Unluck",
+          "beforeEarned": "Lose on your second reveal.",
+          "afterEarned": "Lost on the second reveal. Rotten luck."
+        },
+        "fi": {
+          "title": "Aloittelijan epäonni",
+          "beforeEarned": "Häviä toisella avauksella.",
+          "afterEarned": "Hävisit toisella avauksella. Karmea tuuri."
+        },
+        "ja": {
+          "title": "二歩目",
+          "beforeEarned": "2回目の開放で負ける。",
+          "afterEarned": "二歩目で爆死。とんだ不運。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.hidden.thirteen",
+      "points": 5,
+      "hidden": true,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.hidden.thirteen.png",
+      "localizations": {
+        "en-US": {
+          "title": "Cursed Time",
+          "beforeEarned": "Win with a final time of 13.x seconds.",
+          "afterEarned": "Won at 13-point-something. Cursed."
+        },
+        "fi": {
+          "title": "Pahan onnen minuutti",
+          "beforeEarned": "Voita loppuajalla 13,x sekuntia.",
+          "afterEarned": "Voitit ajalla 13,x sekuntia. Kirottua."
+        },
+        "ja": {
+          "title": "呪いの13秒",
+          "beforeEarned": "最終タイム13.x秒でクリアする。",
+          "afterEarned": "13.x秒でクリア。呪われしタイム。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.hidden.soclose",
+      "points": 10,
+      "hidden": true,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.hidden.soclose.png",
+      "localizations": {
+        "en-US": {
+          "title": "So Close",
+          "beforeEarned": "Lose with 99% or more cleared.",
+          "afterEarned": "Lost at 99%+. So close."
+        },
+        "fi": {
+          "title": "Niin lähellä",
+          "beforeEarned": "Häviä 99 % tai enemmän selvitettynä.",
+          "afterEarned": "Hävisit 99 %+ selvitettynä. Niin lähellä."
+        },
+        "ja": {
+          "title": "あと一歩",
+          "beforeEarned": "99%以上開いた状態で負ける。",
+          "afterEarned": "99%超で敗北。あと一歩。"
+        }
+      }
+    },
+    {
+      "id": "fi.misaki.donpa.hidden.overtime",
+      "points": 10,
+      "hidden": true,
+      "showProgress": false,
+      "image": "fi.misaki.donpa.hidden.overtime.png",
+      "localizations": {
+        "en-US": {
+          "title": "Overtime",
+          "beforeEarned": "Win a board after more than 999 seconds.",
+          "afterEarned": "Won after 999+ seconds. Overtime."
+        },
+        "fi": {
+          "title": "Jatkoaika",
+          "beforeEarned": "Voita kenttä yli 999 sekunnissa.",
+          "afterEarned": "Voitit yli 999 sekunnissa. Jatkoaika."
+        },
+        "ja": {
+          "title": "延長戦",
+          "beforeEarned": "999秒を超えてクリアする。",
+          "afterEarned": "999秒超えでクリア。延長戦。"
+        }
+      }
+    }
+  ]
+}
