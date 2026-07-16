@@ -5517,19 +5517,19 @@
         }
       }
     },
-    "Same board for everyone — study freely; the clock starts on Start." : {
+    "Same board for everyone — take your time; the clock starts on Start." : {
       "comment" : "Daily review explainer",
       "localizations" : {
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sama kenttä kaikille — tutki rauhassa; kello käynnistyy Aloita-napista."
+            "value" : "Sama kenttä kaikille — kaikessa rauhassa; kello käynnistyy Aloita-napista."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "全員同じ盤面 — じっくり確認できます。開始を押すと計測が始まります。"
+            "value" : "全員同じ盤面 — ごゆっくり。スタートを押すと計測が始まります。"
           }
         }
       }
