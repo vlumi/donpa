@@ -22,6 +22,8 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 27 — 2026-07-17
+
 - **Appearance setting applies everywhere.** Changing Light / Dark / System
   now repaints the Settings, Mess hall, Service Record, and other sheets
   too — including switching back to System — instead of leaving them on the
