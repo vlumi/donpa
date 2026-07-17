@@ -212,30 +212,70 @@ extension MedalView {
     }
 
     /// The classic Minesweeper reset-button smiley — the face of "The Classics".
-    static func smiley(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
+    /// `laughing` swaps the dot eyes for happy arcs and opens the grin, for the
+    /// timed variant.
+    static func smiley(
+        in ctx: GraphicsContext, side s: CGFloat, ink: Color, laughing: Bool = false
+    ) {
         let inset = s * 0.10
         let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
         let c = CGPoint(x: s / 2, y: s / 2)
         ctx.stroke(
             Path(ellipseIn: rect), with: .color(ink), style: StrokeStyle(lineWidth: s * 0.07))
-        // Two dot eyes.
-        let eyeR = s * 0.05
-        for dx in [-s * 0.15, s * 0.15] {
-            let e = CGPoint(x: c.x + dx, y: c.y - s * 0.08)
-            ctx.fill(
-                Path(
-                    ellipseIn: CGRect(
-                        x: e.x - eyeR, y: e.y - eyeR, width: eyeR * 2, height: eyeR * 2)),
-                with: .color(ink))
+        let eyeY = c.y - s * 0.09
+        if laughing {
+            // Happy squinting eyes: two small upward arcs (∩-shaped).
+            for dx in [-s * 0.15, s * 0.15] {
+                var eye = Path()
+                eye.addArc(
+                    center: CGPoint(x: c.x + dx, y: eyeY), radius: s * 0.07,
+                    startAngle: .degrees(200), endAngle: .degrees(340), clockwise: false)
+                ctx.stroke(
+                    eye, with: .color(ink),
+                    style: StrokeStyle(lineWidth: s * 0.05, lineCap: .round))
+            }
+        } else {
+            let eyeR = s * 0.05
+            for dx in [-s * 0.15, s * 0.15] {
+                let e = CGPoint(x: c.x + dx, y: eyeY)
+                ctx.fill(
+                    Path(
+                        ellipseIn: CGRect(
+                            x: e.x - eyeR, y: e.y - eyeR, width: eyeR * 2, height: eyeR * 2)),
+                    with: .color(ink))
+            }
         }
-        // An upturned smile arc.
         var mouth = Path()
-        let mr = s * 0.20
+        let mr = s * (laughing ? 0.24 : 0.20)
         mouth.addArc(
-            center: CGPoint(x: c.x, y: c.y + s * 0.02), radius: mr,
-            startAngle: .degrees(25), endAngle: .degrees(155), clockwise: false)
+            center: CGPoint(x: c.x, y: c.y + s * (laughing ? 0.0 : 0.02)), radius: mr,
+            startAngle: .degrees(laughing ? 10 : 25), endAngle: .degrees(laughing ? 170 : 155),
+            clockwise: false)
+        if laughing {
+            // Close the open grin with a lip so it reads as a laugh, not a bowl.
+            mouth.closeSubpath()
+            ctx.fill(mouth, with: .color(ink))
+        } else {
+            ctx.stroke(
+                mouth, with: .color(ink), style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+        }
+    }
+
+    /// The Classics smiley shoved forward with trailing speed lines — "fast".
+    static func speedSmiley(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
+        // Trailing stripes behind (left of) the face.
+        var stripes = Path()
+        for (y, len) in [(0.34, 0.22), (0.50, 0.30), (0.66, 0.22)] {
+            stripes.move(to: CGPoint(x: s * 0.02, y: s * y))
+            stripes.addLine(to: CGPoint(x: s * (0.02 + len), y: s * y))
+        }
         ctx.stroke(
-            mouth, with: .color(ink), style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+            stripes, with: .color(ink.opacity(0.55)),
+            style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+        // The face, nudged right to make room for the stripes.
+        var face = ctx
+        face.translateBy(x: s * 0.16, y: 0)
+        smiley(in: face, side: s * 0.86, ink: ink, laughing: true)
     }
 
     static func label(

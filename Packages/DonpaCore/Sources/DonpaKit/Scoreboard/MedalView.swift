@@ -149,16 +149,7 @@ struct MedalView: View {
         .luckCoinFlip: { coin(in: $0, side: $1, label: "1/2", ink: $2) },
         .fullClearSize: { BoardGlyph.draw(.grid, in: $0, side: $1, color: $2) },
         .trifecta: { smiley(in: $0, side: $1, ink: $2) },
-        .trifectaTime: { ctx, s, ink in
-            // The Classics smiley lower-left, a clean stopwatch upper-right in
-            // its own sub-context (a cramped corner clock didn't read as one).
-            var face = ctx
-            face.translateBy(x: -s * 0.12, y: s * 0.16)
-            smiley(in: face, side: s * 0.74, ink: ink)
-            var watch = ctx
-            watch.translateBy(x: s * 0.50, y: s * 0.02)
-            stopwatch(in: watch, side: s * 0.48, ink: ink)
-        },
+        .trifectaTime: { speedSmiley(in: $0, side: $1, ink: $2) },
         .milesWins: { MangaIcon.draw(.flag, in: $0, side: $1, color: $2) },
         .milesTiles: { ctx, s, ink in
             bootAsset(
