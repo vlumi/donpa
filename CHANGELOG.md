@@ -37,6 +37,10 @@ entries land under Unreleased as they merge.
   hall's Share link / QR code labels no longer wrap or truncate — they
   stay on one line, shrinking a hair if needed.
 
+- **Medal tiers read at a glance.** Gold, silver, and bronze now differ in
+  both hue and lightness, so the tiers stay distinct in dark mode and at
+  small sizes instead of muddying together.
+
 ### build 26 — 2026-07-16
 
 - **Clearer daily start prompt.** The daily challenge's Start screen now
