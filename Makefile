@@ -75,6 +75,13 @@ perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a 
 
 # App Store Connect achievement tooling. The runner self-manages a venv (deps
 # in Scripts/asc/requirements.txt); achievements.json is the source of truth.
+.PHONY: asc-medals
+asc-medals:  ## Render the 29 achievement medal PNGs into Scripts/asc/medals
+	@DONPA_MEDAL_ASC="$(CURDIR)/Scripts/asc/medals" DONPA_REPO_ROOT="$(CURDIR)" \
+		swift test --package-path Packages/DonpaCore \
+		--filter MedalGalleryRender/testRenderASCImages
+	@echo "Rendered $$(ls Scripts/asc/medals/*.png | wc -l | tr -d ' ') medals."
+
 .PHONY: asc-status
 asc-status:  ## List Game Center achievements + completeness (reads ASC)
 	@Scripts/asc/run.sh status

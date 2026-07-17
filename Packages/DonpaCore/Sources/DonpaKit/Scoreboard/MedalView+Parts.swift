@@ -139,14 +139,14 @@ extension MedalView {
         ctx.stroke(
             rings, with: .color(ink),
             style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
-        // The check, over the day area.
+        // The check, floated in the day area with a margin off every edge.
         var check = Path()
-        check.move(to: CGPoint(x: page.minX + page.width * 0.22, y: page.minY + s * 0.38))
-        check.addLine(to: CGPoint(x: page.minX + page.width * 0.42, y: page.maxY - s * 0.10))
-        check.addLine(to: CGPoint(x: page.maxX - page.width * 0.12, y: page.minY + s * 0.24))
+        check.move(to: CGPoint(x: page.minX + page.width * 0.28, y: page.minY + s * 0.40))
+        check.addLine(to: CGPoint(x: page.minX + page.width * 0.44, y: page.maxY - s * 0.16))
+        check.addLine(to: CGPoint(x: page.maxX - page.width * 0.22, y: page.minY + s * 0.30))
         ctx.stroke(
             check, with: .color(ink),
-            style: StrokeStyle(lineWidth: s * 0.09, lineCap: .round, lineJoin: .round))
+            style: StrokeStyle(lineWidth: s * 0.085, lineCap: .round, lineJoin: .round))
     }
 
     /// A drawn lemniscate — the ∞ glyph doesn't centre optically.
@@ -209,6 +209,33 @@ extension MedalView {
         let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
         ctx.stroke(
             Path(ellipseIn: rect), with: .color(ink), style: StrokeStyle(lineWidth: s * 0.07))
+    }
+
+    /// The classic Minesweeper reset-button smiley — the face of "The Classics".
+    static func smiley(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
+        let inset = s * 0.10
+        let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
+        let c = CGPoint(x: s / 2, y: s / 2)
+        ctx.stroke(
+            Path(ellipseIn: rect), with: .color(ink), style: StrokeStyle(lineWidth: s * 0.07))
+        // Two dot eyes.
+        let eyeR = s * 0.05
+        for dx in [-s * 0.15, s * 0.15] {
+            let e = CGPoint(x: c.x + dx, y: c.y - s * 0.08)
+            ctx.fill(
+                Path(
+                    ellipseIn: CGRect(
+                        x: e.x - eyeR, y: e.y - eyeR, width: eyeR * 2, height: eyeR * 2)),
+                with: .color(ink))
+        }
+        // An upturned smile arc.
+        var mouth = Path()
+        let mr = s * 0.20
+        mouth.addArc(
+            center: CGPoint(x: c.x, y: c.y + s * 0.02), radius: mr,
+            startAngle: .degrees(25), endAngle: .degrees(155), clockwise: false)
+        ctx.stroke(
+            mouth, with: .color(ink), style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
     }
 
     static func label(
