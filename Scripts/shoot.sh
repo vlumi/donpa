@@ -30,7 +30,8 @@ capture() {  # $1 = output file
         screencapture -o -x -l"$WINDOW_ID" "$1"
     else
         # By UDID — `booted` grabs an arbitrary device with several sims open.
-        xcrun simctl io "${SIM_UDID:-booted}" screenshot "$1" >/dev/null
+        # --display=internal silences the "No display specified" note.
+        xcrun simctl io "${SIM_UDID:-booted}" screenshot --display=internal "$1" >/dev/null
     fi
 }
 
