@@ -46,17 +46,19 @@ SHOTS = [
      "Resume the Hive save — a hex board mid-solve, so the non-square shape "
      "reads at a glance."),
     ("new-game", False,
-     "Open New Game; show the family / size / edge picker with a family "
-     "selected."),
+     "FROM WITHIN A GAME (board behind, never the title art), open New Game; "
+     "show the family / size / edge picker with a family selected."),
     ("mid-game", False,
      "Resume the Beginner save — a clean, part-cleared square board mid-solve."),
     ("service-record", False,
-     "Open the Service Record and EXPAND a cleared board's row, so the top-5 "
-     "times and pace show — the stats-nerd shot."),
+     "From within a game, open the Service Record (medal button) and EXPAND a "
+     "cleared board's row — top-5 times, pace, the rival ladder."),
     ("daily", False,
-     "Open the daily calendar showing the streak, then the day's result."),
+     "The daily REVIEW screen: start the daily from Home — board + Start "
+     "overlay, no title art. (The calendar only opens over Home's art.)"),
     ("rivalry", False,
-     "Open the Mess hall on the Rivals tab — the share card and rivals list."),
+     "From within a game (⌘B on Mac), open the Mess hall on the Rivals tab — "
+     "share card + rivals list, board behind."),
 ]
 
 
