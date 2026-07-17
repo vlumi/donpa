@@ -28,9 +28,13 @@ public struct GameView: View {
     private var scene: BoardScene { sceneHolder.scene }
     /// Shared with `GameContent` (the writer). Must be stable `@State`: under
     /// `-uitest-clean` a recomputed `ephemeral()` would mint a NEW dir per
-    /// access, so reader and writer would never see each other's saves.
+    /// access, so reader and writer would never see each other's saves. The
+    /// demo uses a FIXED temp dir so hand-staged boards survive quit for
+    /// `make demo-freeze`; plain UI tests keep the unique-per-launch dir.
     @State private var saveStore: SaveStore =
-        SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
+        DemoSeed.isRequested
+        ? SaveStore.demoFixed()
+        : SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
     private var resumeStore: SaveStore { saveStore }
     /// Cached, refreshed only when a surface that shows them (re)opens — NOT
     /// per body eval: `summaries()` parses every save file, and an XXXL save
@@ -45,12 +49,13 @@ public struct GameView: View {
     @State private var didSeedDemo = false
 
     public init(config: GameConfig = .beginner) {
-        let syncOn =
-            UserDefaults.standard.object(forKey: Settings.syncScoresKey) as? Bool ?? false
         self.init(
             viewModel: GameViewModel(config: config),
-            scoreboard: Scoreboard(cloud: UbiquitousStatsStore(), syncEnabled: syncOn),
-            settings: Settings(),
+            scoreboard: Scoreboard(
+                defaults: LaunchStores.defaults,
+                cloud: LaunchStores.isClean ? nil : UbiquitousStatsStore(),
+                syncEnabled: LaunchStores.syncScores),
+            settings: Settings(defaults: LaunchStores.defaults),
             navigator: Navigator())
     }
 
@@ -69,24 +74,30 @@ public struct GameView: View {
             settings.shareNameStore = ShareIdentityStore()
         }
         // Friends and feats sync under the SAME syncScores gate as the
-        // scoreboard — one social picture.
-        let syncOn =
-            UserDefaults.standard.object(forKey: Settings.syncScoresKey) as? Bool ?? false
+        // scoreboard — one social picture. Everything routes through
+        // LaunchStores so `-uitest-clean` swaps to ephemeral storage, no cloud.
+        let clean = LaunchStores.isClean
+        let defaults = LaunchStores.defaults
+        let syncOn = LaunchStores.syncScores
+        let deviceID = DeviceID.current(in: defaults)
         let achievementStore = AchievementStore(
-            cloud: UbiquitousAchievementsStore(), syncEnabled: syncOn)
+            defaults: defaults,
+            cloud: clean ? nil : UbiquitousAchievementsStore(), syncEnabled: syncOn)
         _achievements = StateObject(wrappedValue: achievementStore)
         _gameCenter = StateObject(
             wrappedValue: GameCenterReporter(
-                prefs: GameCenterPrefs(), achievements: achievementStore,
+                prefs: GameCenterPrefs(defaults: defaults, kvs: clean ? nil : .default),
+                achievements: achievementStore,
                 scoreboard: scoreboard))
         _friends = StateObject(
             wrappedValue: FriendsStore(
-                cloud: UbiquitousFriendsStore(),
-                deviceID: DeviceID.current(), syncEnabled: syncOn))
+                directory: clean ? LaunchStores.ephemeralFriendsDir() : nil,
+                cloud: clean ? nil : UbiquitousFriendsStore(),
+                deviceID: deviceID, syncEnabled: syncOn))
         _dailyStore = StateObject(
             wrappedValue: DailyStore(
-                cloud: UbiquitousDailyStore(),
-                deviceID: DeviceID.current(), syncEnabled: syncOn))
+                cloud: clean ? nil : UbiquitousDailyStore(),
+                deviceID: deviceID, syncEnabled: syncOn, defaults: defaults))
         _sceneHolder = StateObject(wrappedValue: SceneHolder(viewModel: viewModel))
         // -donpa.gates.fresh: only session wins count, so a veteran tester
         // experiences the fresh ladder without touching their records.

@@ -36,6 +36,16 @@ public struct SaveStore {
         return SaveStore(directory: dir, fileManager: fileManager)
     }
 
+    /// The screenshot demo's store: isolated like `ephemeral`, but at a FIXED
+    /// temp path so boards staged in one run (flags placed by hand) survive
+    /// quit and can be copied out by `make demo-freeze`.
+    public static func demoFixed(fileManager: FileManager = .default) -> SaveStore {
+        let dir = fileManager.temporaryDirectory
+            .appendingPathComponent("donpa-demo", isDirectory: true)
+        try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+        return SaveStore(directory: dir, fileManager: fileManager)
+    }
+
     public static var isUITestCleanLaunch: Bool {
         ProcessInfo.processInfo.arguments.contains("-uitest-clean")
     }

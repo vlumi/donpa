@@ -91,6 +91,11 @@ def main():
     shots = shots_for(platform)
     names = [name for name, _ in shots]
 
+    if "--plain" in flagset:  # machine-readable, for Scripts/shoot.sh
+        for name, desc in shots:
+            print(f"{name}\t{desc}")
+        return
+
     if "--list" in flagset or len(args) < 2:
         print(f"Capture these {len(shots)} shots for {platform}, in this order:\n")
         for i, (name, desc) in enumerate(shots, 1):

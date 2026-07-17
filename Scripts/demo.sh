@@ -1,40 +1,42 @@
 #!/usr/bin/env bash
-# Launch the app in DEMO mode — seeded data + a fixed blue accent (-uitest-demo)
-# and an isolated store (-uitest-clean), for taking App Store screenshots by
-# hand. Build first (make build-iphone/ipad is implied via the simulator run;
-# Mac uses the built .app). Usage:
-#   PLATFORM=iphone Scripts/demo.sh   # boot a sim + launch (default)
-#   PLATFORM=ipad   Scripts/demo.sh
-#   PLATFORM=mac    Scripts/demo.sh   # launch the built Mac app
-# Then capture: simulator ⌘S (iOS/iPad), or Scripts/grab-mac-shot.sh <name> (Mac).
+# Launch the app in DEMO mode — seeded data + a fixed blue accent, isolated
+# storage (-uitest-clean routes EVERY store to an ephemeral suite, never the
+# real player's data), starting in Light. For App Store screenshots: prefer
+# `make shots` (guided, captures for you); this script is the bare launcher.
+#   PLATFORM=iphone|ipad|mac  which target                (default iphone)
+#   DEMO_LANG=en|fi|ja        UI language for this launch (default en)
+# When boards hand-staged via `make demo-freeze` are committed under
+# Scripts/asc/demo-saves, they're copied into the app's demo save dir before
+# launch (the sandboxed app can't read the repo itself).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-REPO_ROOT="$(pwd)"
-# The app reads committed demo saves from $DONPA_REPO_ROOT/Scripts/asc/demo-saves
-# (dev-only; not in the shipped bundle). Passed to the Mac app via the inherited
-# env, and to the simulator via SIMCTL_CHILD_ (simctl forwards those, stripped).
-export DONPA_REPO_ROOT="$REPO_ROOT"
-export SIMCTL_CHILD_DONPA_REPO_ROOT="$REPO_ROOT"
 
 PLATFORM="${PLATFORM:-iphone}"
-# DEMO_LANG picks the UI language for this run (en|fi|ja) — a distinct name so
-# it never collides with the shell's own LANG. Each language is its own clean
-# launch; the seed is identical, so only the language differs.
 DEMO_LANG="${DEMO_LANG:-en}"
 case "$DEMO_LANG" in
     en | fi | ja) ;;
     *) echo "DEMO_LANG must be en | fi | ja (got '$DEMO_LANG')" >&2; exit 2 ;;
 esac
 ARGS=(-uitest-clean -uitest-demo -AppleLanguages "($DEMO_LANG)")
-# DUMP=1 freezes each board you resume+edit (flags and all) to
-# ~/Desktop/donpa-demo-saves/<config>.json on autosave/quit — hand those back
-# to ship as the seeded saves.
-[ "${DUMP:-0}" = "1" ] && ARGS+=(-uitest-dump-saves)
 BUNDLE="fi.misaki.donpa"
+COMMITTED_SAVES="Scripts/asc/demo-saves"
 
 pick_udid() {  # $1 = name pattern
     xcrun simctl list devices available | grep -E "$1" \
         | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}" | tail -1
+}
+
+# Wipe the app's fixed demo save dir ($1) and, if hand-staged boards are
+# committed, copy them in and mark the dir authoritative (-uitest-staged-saves).
+stage_saves() {
+    local dir="$1"
+    rm -rf "$dir"
+    mkdir -p "$dir"
+    if compgen -G "$COMMITTED_SAVES/save-*.json" >/dev/null; then
+        cp "$COMMITTED_SAVES"/*.json "$dir/"
+        ARGS+=(-uitest-staged-saves)
+        echo "Staged $(ls "$COMMITTED_SAVES"/save-*.json | wc -l | tr -d ' ') committed demo board(s)."
+    fi
 }
 
 # Print the ordered shot list for this platform so the capture checklist is
@@ -51,11 +53,10 @@ case "$PLATFORM" in
         app=$(find ~/Library/Developer/Xcode/DerivedData/Donpa-*/Build/Products/Debug \
             -maxdepth 1 -name "Donpa Squad.app" 2>/dev/null | head -1)
         [ -n "$app" ] || { echo "Build the Mac app first (make build-mac)." >&2; exit 1; }
+        stage_saves "$HOME/Library/Containers/$BUNDLE/Data/tmp/donpa-demo/saves"
         echo "Launching demo Mac app (fixed 1440×900 window)…"
         open "$app" --args "${ARGS[@]}"
         print_shots
-        echo
-        echo "Capture each window with ⌘⇧4-space (or screencapture -w)."
         exit 0 ;;
     *) echo "PLATFORM must be iphone | ipad | mac" >&2; exit 2 ;;
 esac
@@ -69,8 +70,9 @@ open -a Simulator
 app="$(find ~/Library/Developer/Xcode/DerivedData/Donpa-*/Build/Products/Debug-iphonesimulator \
     -maxdepth 1 -name "Donpa Squad.app" 2>/dev/null | head -1)"
 [ -d "$app" ] || { echo "Build the app first (make build-ios)." >&2; exit 1; }
+xcrun simctl terminate "$udid" "$BUNDLE" >/dev/null 2>&1 || true
 xcrun simctl install "$udid" "$app"
-xcrun simctl launch "$udid" "$BUNDLE" "${ARGS[@]}"
+container=$(xcrun simctl get_app_container "$udid" "$BUNDLE" data 2>/dev/null || true)
+[ -n "$container" ] && stage_saves "$container/tmp/donpa-demo/saves"
+xcrun simctl launch "$udid" "$BUNDLE" "${ARGS[@]}" >/dev/null
 print_shots
-echo
-echo "Capture each with the simulator's ⌘S (Save Screen)."

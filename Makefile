@@ -55,13 +55,21 @@ test:  ## Run the package logic tests (no Xcode project needed)
 uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 	@Scripts/uitest.sh
 
-# Launch in demo mode (seeded data + fixed accent, starts in Light) for MANUAL
-# App Store screenshots — see Scripts/asc/SCREENSHOTS.md for the shot list.
-# Capture with the simulator's ⌘S (iOS/iPad) or Scripts/grab-mac-shot.sh (Mac).
-# Pick the UI language with DEMO_LANG=en|fi|ja (default en), e.g.
-#   make demo-mac DEMO_LANG=fi
-# DUMP=1 freezes each board you resume+flag to ~/Desktop/donpa-demo-saves/ —
-# copy those into Scripts/asc/demo-saves/ to ship them as the seeded games.
+# App Store screenshots — see Scripts/asc/SCREENSHOTS.md. `make shots` is the
+# whole flow: it launches the demo per language, prompts what to stage, and
+# captures each shot itself, canonically named under shots/<platform>/<lang>/.
+# The demo-* targets just launch the app for freehand poking.
+.PHONY: shots
+shots:  ## Guided screenshot capture: PLATFORM=iphone|ipad|mac [LANGS=en,fi,ja] [OUT=shots]
+	@Scripts/shoot.sh
+
+.PHONY: demo-freeze
+demo-freeze:  ## Commit the Mac demo's current boards as the seeded saves (stage in-app, quit, run this)
+	@src="$$HOME/Library/Containers/fi.misaki.donpa/Data/tmp/donpa-demo/saves"; \
+	ls "$$src"/save-*.json >/dev/null 2>&1 || { echo "No demo saves found — stage boards in 'make demo-mac' first."; exit 1; }; \
+	cp -v "$$src"/*.json Scripts/asc/demo-saves/
+	@echo "Frozen. Commit Scripts/asc/demo-saves to ship these boards."
+
 .PHONY: demo-iphone
 demo-iphone: build-ios  ## Launch the iPhone simulator in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=iphone Scripts/demo.sh

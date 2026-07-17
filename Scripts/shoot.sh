@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# Guided App Store screenshot capture. Walks every language × every shot:
+# launches the demo, tells you what to stage, and CAPTURES for you — no ⌘S, no
+# renaming, no file shuffling. Output lands canonically named at
+#   <OUT>/<platform>/<lang>/<shot>-<platform>.png
+# ready for the ASC upload.
+#   PLATFORM=iphone|ipad|mac   (default iphone)
+#   LANGS=en,fi,ja             (default en,fi,ja)
+#   OUT=shots                  (default ./shots)
+# Mac note: window capture needs Screen Recording permission for your terminal
+# (System Settings ▸ Privacy) — macOS prompts on first use.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+PLATFORM="${PLATFORM:-iphone}"
+LANGS="${LANGS:-en,fi,ja}"
+OUT="${OUT:-shots}"
+BUNDLE="fi.misaki.donpa"
+APP_NAME="Donpa Squad"
+
+case "$PLATFORM" in
+    mac) make build-mac >/dev/null ;;
+    iphone | ipad) make build-ios >/dev/null ;;
+    *) echo "PLATFORM must be iphone | ipad | mac" >&2; exit 2 ;;
+esac
+
+capture() {  # $1 = output file
+    mkdir -p "$(dirname "$1")"
+    if [ "$PLATFORM" = mac ]; then
+        screencapture -o -x -l"$WINDOW_ID" "$1"
+    else
+        xcrun simctl io booted screenshot "$1" >/dev/null
+    fi
+}
+
+mac_window_id() {
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        if id=$(swift Scripts/asc/window-id.swift "$APP_NAME" 2>/dev/null); then
+            echo "$id"; return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
+quit_app() {
+    if [ "$PLATFORM" = mac ]; then
+        osascript -e "quit app \"$APP_NAME\"" >/dev/null 2>&1 || true
+    else
+        xcrun simctl terminate booted "$BUNDLE" >/dev/null 2>&1 || true
+    fi
+}
+
+IFS=',' read -ra langs <<< "$LANGS"
+total=$(python3 Scripts/asc/organize-shots.py "$PLATFORM" --plain | wc -l | tr -d ' ')
+
+for lang in "${langs[@]}"; do
+    echo ""
+    echo "━━━ $PLATFORM / $lang — launching demo ━━━"
+    DEMO_LANG="$lang" PLATFORM="$PLATFORM" Scripts/demo.sh >/dev/null
+    if [ "$PLATFORM" = mac ]; then
+        WINDOW_ID=$(mac_window_id) || { echo "App window never appeared." >&2; exit 1; }
+    else
+        sleep 3  # let the launch settle before the first stage prompt
+    fi
+
+    i=0
+    while IFS=$'\t' read -r name desc; do
+        i=$((i + 1))
+        file="$OUT/$PLATFORM/$lang/${name}-${PLATFORM}.png"
+        echo ""
+        echo "[$lang $i/$total] $name"
+        echo "  $desc"
+        printf "  ⏎ capture · s skip · q quit: "
+        read -r reply </dev/tty
+        [ "$reply" = q ] && { quit_app; exit 0; }
+        [ "$reply" = s ] && continue
+        while :; do
+            capture "$file"
+            printf "  saved %s — ⏎ next · r retake: " "$file"
+            read -r again </dev/tty
+            [ "$again" = r ] || break
+        done
+    done < <(python3 Scripts/asc/organize-shots.py "$PLATFORM" --plain)
+
+    quit_app
+done
+
+echo ""
+echo "Done. Sets under $OUT/$PLATFORM/ — hand that folder over for the ASC upload."

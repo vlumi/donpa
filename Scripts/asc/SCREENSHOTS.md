@@ -10,33 +10,48 @@ the packaging. The demo seeds a couple of resumable in-progress games, so a
 gameplay shot is a tap on the Continue list — no live setup, identical every
 launch.
 
-## Workflow
+## Workflow — one command
 
-1. `make demo-iphone` (or `demo-ipad` / `demo-mac`) — builds, launches the app
-   in demo mode, and prints the annotated shot list. Mac opens at a fixed
-   1440×900 window (reproducible across runs — no manual resizing).
-   Pick the language with `DEMO_LANG=en|fi|ja` (default `en`), e.g.
-   `make demo-mac DEMO_LANG=fi`. Each language is its own clean launch.
-   **macOS accent:** the Mac uses the *system* accent for its selection/
-   highlight colour, which the app can't override — set System Settings ▸
-   Appearance ▸ Accent to **Blue** before shooting Mac, for consistency with
-   the iOS sets. (iOS/iPad are pinned to blue by the demo automatically.)
-2. Capture in the printed order: simulator **⌘S** (iOS/iPad), or **⌘⇧4-space**
-   on the Mac window. **Where to put the files:** one folder per platform —
-   dump every raw shot straight into it, in capture order (no subfolders; the
-   organizer sorts by capture order and makes the subfolders itself).
-3. The demo starts in **Light**. Shots 1–2 are the same board: shoot **big-map**
-   in Light, flip Settings ▸ Appearance to **Dark**, shoot **big-map-dark**,
-   flip back to Light, then carry on. Everything else is Light.
-4. **Every language needs its own full set** (a JP listing must show JP
-   screenshots — never English ones). Relaunch with `DEMO_LANG=fi`, then `ja`,
-   and shoot the SAME shot list each time, all **back-to-back into one folder**
-   in language order: en set, then fi set, then ja set.
-5. Organize:
-   - one language → `make asc-shots DIR=<folder> PLATFORM=mac`
-   - several → `make asc-shots DIR=<folder> PLATFORM=mac LANGS=en,fi,ja`
-     (splits into `<folder>/en/…`, `/fi/…`, `/ja/…`, canonically named).
-6. Hand the folder over for the ASC upload.
+```sh
+make shots PLATFORM=mac        # or iphone / ipad; LANGS=en,fi,ja by default
+```
+
+It builds, then for each language: launches the demo, walks the shot list —
+*"stage this, press ⏎"* — and **captures each shot itself** (window grab on
+Mac, `simctl` on the simulators), straight to
+`shots/<platform>/<lang>/<shot>-<platform>.png`. Retake with `r`, skip with
+`s`. No ⌘S, no renaming, no moving files: `shots/` is the handoff for the ASC
+upload.
+
+Before a Mac run, once:
+
+- Set System Settings ▸ Appearance ▸ Accent to **Blue** — the Mac's selection
+  colour comes from the system and the app can't pin it (iOS is pinned
+  automatically).
+- The first window grab asks for Screen Recording permission for your
+  terminal; grant it and re-run.
+
+During the run: the demo starts in **Light**. Shots 1–2 are the same board —
+capture **big-map** in Light, flip Settings ▸ Appearance to **Dark** in-app,
+capture **big-map-dark**, flip back. Every language gets the same full set, in
+that language (a JP listing must never show English screenshots).
+
+Manual fallback (freehand capture, then rename by capture order):
+`make demo-mac DEMO_LANG=fi` to just launch, then
+`make asc-shots DIR=<folder> PLATFORM=mac [LANGS=en,fi,ja]`.
+
+## Demo isolation & the seeded boards
+
+`-uitest-clean` routes **every** store (scores, rivals, daily, settings,
+saves) to wiped ephemeral storage with no iCloud — demo runs can't touch real
+player data. The Continue list is seeded with three fixed in-progress boards
+(XXL, Hive, Beginner), so gameplay shots are a tap on Continue, identical in
+every language.
+
+To replace the generated boards with hand-staged ones (your own flag
+placement): `make demo-mac`, arrange the boards in-app, quit, then
+`make demo-freeze` — it copies the boards into `Scripts/asc/demo-saves/`;
+commit them and every later demo launch (all platforms) resumes exactly those.
 
 ## Sizes
 

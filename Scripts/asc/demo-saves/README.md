@@ -1,15 +1,16 @@
 # Demo saves (screenshot harness)
 
-Hand-crafted in-progress games for the App Store demo, dumped from a real
-played board (flags placed by hand) so the seeded "Continue" list resumes
-exactly those boards.
+Hand-staged in-progress games for the App Store demo: boards arranged in the
+app itself (flags where you put them), frozen here, and resumed verbatim by
+every demo launch — identical in all languages and on all platforms.
 
-**These are dev-only** — read via `DONPA_REPO_ROOT` when the demo scripts run,
-never bundled into the shipped app.
+**Dev-only.** The demo *scripts* copy these into the app's isolated demo save
+directory before launch; nothing here is bundled into the shipped app, and the
+app never reads the repo.
 
 ## Regenerate
-1. `make demo-mac DUMP=1`
-2. Resume a board, place flags / reveal as you want it to look, then ⌘Q (or
-   background it) — each board writes to `~/Desktop/donpa-demo-saves/<config>.json`.
-3. Copy the JSON(s) here and commit. `DemoSeed` loads them verbatim; delete one
-   to fall back to the generated board for that config.
+
+1. `make demo-mac` — resume/arrange the boards exactly as they should look.
+2. Quit the app (⌘Q — the exit autosave writes the final state).
+3. `make demo-freeze` — copies the boards here.
+4. Commit. Delete the files to fall back to the generated default boards.
