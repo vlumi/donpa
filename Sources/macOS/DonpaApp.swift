@@ -5,10 +5,13 @@ import SwiftUI
 @main
 struct DonpaApp: App {
     @StateObject private var viewModel = GameViewModel()
+    // LaunchStores is the single isolation gate: under -uitest-clean these
+    // swap to a wiped ephemeral suite with no cloud (see LaunchStores).
     @StateObject private var scoreboard = Scoreboard(
-        cloud: UbiquitousStatsStore(),
-        syncEnabled: UserDefaults.standard.object(forKey: "donpa.syncScores") as? Bool ?? false)
-    @StateObject private var settings = Settings()
+        defaults: LaunchStores.defaults,
+        cloud: LaunchStores.isClean ? nil : UbiquitousStatsStore(),
+        syncEnabled: LaunchStores.syncScores)
+    @StateObject private var settings = Settings(defaults: LaunchStores.defaults)
     @StateObject private var navigator = Navigator()
     @State private var showingAbout = false
 

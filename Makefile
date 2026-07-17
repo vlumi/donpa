@@ -55,19 +55,31 @@ test:  ## Run the package logic tests (no Xcode project needed)
 uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 	@Scripts/uitest.sh
 
-# Launch in demo mode (seeded data + fixed accent) for MANUAL App Store
-# screenshots — see Scripts/asc/SCREENSHOTS.md for the shot list. Capture with
-# the simulator's ⌘S (iOS/iPad) or Scripts/grab-mac-shot.sh (Mac).
+# App Store screenshots — see Scripts/asc/SCREENSHOTS.md. `make shots` is the
+# whole flow: it launches the demo per language, prompts what to stage, and
+# captures each shot itself, canonically named under shots/<platform>/<lang>/.
+# The demo-* targets just launch the app for freehand poking.
+.PHONY: shots
+shots:  ## Guided screenshot capture: PLATFORM=iphone|ipad|mac [LANGS=en,fi,ja] [OUT=shots]
+	@Scripts/shoot.sh
+
+.PHONY: demo-freeze
+demo-freeze:  ## Commit the Mac demo's current boards as the seeded saves (stage in-app, quit, run this)
+	@src="$$HOME/Library/Containers/fi.misaki.donpa/Data/tmp/donpa-demo/saves"; \
+	ls "$$src"/save-*.json >/dev/null 2>&1 || { echo "No demo saves found — stage boards in 'make demo-mac' first."; exit 1; }; \
+	cp -v "$$src"/*.json Scripts/asc/demo-saves/
+	@echo "Frozen. Commit Scripts/asc/demo-saves to ship these boards."
+
 .PHONY: demo-iphone
-demo-iphone: build-ios  ## Launch the iPhone simulator in demo mode (manual screenshots)
+demo-iphone: build-ios  ## Launch the iPhone simulator in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=iphone Scripts/demo.sh
 
 .PHONY: demo-ipad
-demo-ipad: build-ios  ## Launch the iPad simulator in demo mode (manual screenshots)
+demo-ipad: build-ios  ## Launch the iPad simulator in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=ipad Scripts/demo.sh
 
 .PHONY: demo-mac
-demo-mac: build-mac  ## Launch the Mac app in demo mode (manual screenshots)
+demo-mac: build-mac  ## Launch the Mac app in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=mac Scripts/demo.sh
 
 perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a heavy XXXL board
@@ -111,8 +123,16 @@ asc-release-apply:  ## Add all achievements to review (create release records)
 	@Scripts/asc/run.sh sync --release --apply
 
 .PHONY: asc-shots
-asc-shots:  ## Rename raw screenshots by capture order: DIR=<folder> PLATFORM=iphone|ipad|mac
-	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR)
+asc-shots:  ## Rename raw screenshots by capture order: DIR=<folder> PLATFORM=iphone|ipad|mac [LANGS=en,fi,ja]
+	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR) $(if $(LANGS),--langs=$(LANGS),)
+
+.PHONY: asc-screens
+asc-screens:  ## Show what the shots/ tree would upload to the ASC listings (dry run)
+	@Scripts/asc/run.sh screens $(ARGS)
+
+.PHONY: asc-screens-apply
+asc-screens-apply:  ## Replace + upload the shots/ tree to the ASC listings
+	@Scripts/asc/run.sh screens --apply $(ARGS)
 
 # ── Release lane ──────────────────────────────────────────────────────────────
 # The cut is split by concern, one script each, chained here in order:

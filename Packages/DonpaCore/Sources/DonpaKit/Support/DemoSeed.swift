@@ -22,11 +22,79 @@ public enum DemoSeed {
     /// Seed once at launch. Times are hand-picked to look earned, not random,
     /// and to sort into a satisfying spread on the Service Record.
     static func apply(
-        scoreboard: Scoreboard, friends: FriendsStore, daily: DailyStore, settings: Settings
+        scoreboard: Scoreboard, friends: FriendsStore, daily: DailyStore, settings: Settings,
+        saveStore: SaveStore
     ) {
+        // Start in Light every launch so the light screenshot set is captured
+        // deliberately (then switch to Dark in-app for the dark set), rather
+        // than inheriting whatever the capture machine happens to be in.
+        settings.appearance = .light
         seedScores(scoreboard)
         seedRivals(friends, settings: settings)
         seedDaily(daily)
+        seedSaves(saveStore)
+    }
+
+    /// A couple of fixed in-progress games so the demo Home shows a real
+    /// "Continue" list and a tap resumes a genuine mid-game board — no live
+    /// clicking to set up, and identical every launch (any language) because
+    /// each save is built deterministically from a seed + scripted reveals.
+    private struct SavedGame {
+        let config: GameConfig
+        let seed: UInt64
+        let reveals: [Coord]
+        let flags: [Coord]
+        let elapsed: Int
+    }
+
+    private static func seedSaves(_ store: SaveStore) {
+        // The demo scripts own the save dir (SaveStore.demoFixed — a fixed
+        // container path the shell can reach): they wipe it and, when boards
+        // hand-staged via `make demo-freeze` are committed, copy those in
+        // before launch — the sandboxed app couldn't read the repo itself.
+        // `-uitest-staged-saves` says the dir is already authoritative;
+        // otherwise generate the default boards.
+        guard !ProcessInfo.processInfo.arguments.contains("-uitest-staged-saves") else {
+            return
+        }
+        generateSaves(into: store)
+    }
+
+    private static func generateSaves(into store: SaveStore) {
+        let games: [SavedGame] = [
+            // A partly-cleared Beginner: the familiar square board mid-solve.
+            SavedGame(
+                config: .beginner, seed: 635, reveals: [Coord(4, 4)],
+                flags: [Coord(3, 0), Coord(6, 0)], elapsed: 2_340),
+            // A Hive (hex) board so the Continue list shows a second board type
+            // and the variant-board screenshot resumes rather than sets up.
+            SavedGame(
+                config: .hive(.s, .normal, .flat), seed: 5, reveals: [Coord(8, 8)],
+                flags: [Coord(0, 0)], elapsed: 5_110),
+            // A vast XXL board (256²) so the big-map / scale shot is a resume
+            // too — identical across languages, no hand setup. A single central
+            // reveal opens a region to zoom out from.
+            SavedGame(
+                config: .grid(.xxl, .normal, .flat), seed: 42, reveals: [Coord(128, 128)],
+                flags: [], elapsed: 18_450),
+        ]
+        for g in games {
+            var rng = SeededGenerator(seed: g.seed)
+            var game = Game(config: g.config)
+            game.placeMinesEagerly(using: &rng)
+            for c in g.reveals { game.reveal(c, using: &rng) }
+            for c in g.flags { game.toggleFlag(c) }
+            guard
+                let snapshot = GameSnapshot(
+                    game: game, config: g.config, elapsedCentiseconds: g.elapsed)
+            else { continue }
+            store.save(snapshot)
+        }
+    }
+
+    /// A deterministic past moment for backdating seeded history.
+    private static func daysAgo(_ days: Int, hour: Int) -> Date {
+        Date(timeIntervalSinceNow: -Double(days * 86_400 + hour * 3_600))
     }
 
     /// One seeded board result: a best time, a win count, and the 3BV that
@@ -44,29 +112,53 @@ public enum DemoSeed {
         let best: Int
     }
 
-    /// Best times + a plausible win/loss history across a representative
-    /// spread of the config matrix (the presets, a couple of Grid/Hive sizes).
+    /// A veteran's record in numbers: small boards played heavily, coverage
+    /// thinning as sizes grow, zeros only at the XXL+ frontier — every family
+    /// tab opens onto life.
+    private static let runs: [Run] = [
+        Run(config: .practice(.xs), best: 700, wins: 15, threeBV: 9),
+        Run(config: .practice(.s), best: 2_600, wins: 8, threeBV: 38),
+        Run(config: .practice(.m), best: 9_800, wins: 3, threeBV: 150),
+        Run(config: .basic(.beginner), best: 812, wins: 40, threeBV: 22),
+        Run(config: .basic(.intermediate), best: 4_355, wins: 18, threeBV: 96),
+        Run(config: .basic(.expert), best: 11_920, wins: 9, threeBV: 214),
+        Run(config: .grid(.xs, .easy, .flat), best: 600, wins: 5, threeBV: 8),
+        Run(config: .grid(.xs, .normal, .flat), best: 950, wins: 26, threeBV: 12),
+        Run(config: .grid(.xs, .hard, .flat), best: 1_420, wins: 7, threeBV: 16),
+        Run(config: .grid(.s, .normal, .flat), best: 1_640, wins: 12, threeBV: 38),
+        Run(config: .grid(.s, .hard, .flat), best: 2_890, wins: 4, threeBV: 52),
+        Run(config: .grid(.m, .normal, .flat), best: 7_150, wins: 8, threeBV: 152),
+        Run(config: .grid(.m, .hard, .flat), best: 8_770, wins: 5, threeBV: 168),
+        Run(config: .grid(.l, .normal, .flat), best: 36_500, wins: 2, threeBV: 640),
+        Run(config: .grid(.xl, .normal, .flat), best: 160_000, wins: 1, threeBV: 2_600),
+        Run(config: .grid(.xs, .normal, .round), best: 1_110, wins: 6, threeBV: 13),
+        Run(config: .grid(.s, .normal, .round), best: 2_010, wins: 7, threeBV: 41),
+        Run(config: .hive(.xs, .normal, .flat), best: 1_190, wins: 9, threeBV: 14),
+        Run(config: .hive(.s, .normal, .flat), best: 1_890, wins: 10, threeBV: 44),
+        Run(config: .hive(.s, .hard, .flat), best: 3_150, wins: 3, threeBV: 60),
+        Run(config: .hive(.m, .normal, .flat), best: 6_240, wins: 4, threeBV: 121),
+        Run(config: .hive(.s, .normal, .round), best: 2_480, wins: 2, threeBV: 47),
+    ]
+
     private static func seedScores(_ scoreboard: Scoreboard) {
-        let runs: [Run] = [
-            Run(config: .basic(.beginner), best: 812, wins: 40, threeBV: 22),
-            Run(config: .basic(.intermediate), best: 4_355, wins: 18, threeBV: 96),
-            Run(config: .basic(.expert), best: 11_920, wins: 9, threeBV: 214),
-            Run(config: .grid(.s, .normal, .flat), best: 1_640, wins: 12, threeBV: 38),
-            Run(config: .grid(.m, .hard, .flat), best: 8_770, wins: 5, threeBV: 168),
-            Run(config: .grid(.s, .normal, .round), best: 2_010, wins: 7, threeBV: 41),
-            Run(config: .hive(.s, .normal, .flat), best: 1_890, wins: 10, threeBV: 44),
-            Run(config: .hive(.m, .normal, .flat), best: 6_240, wins: 4, threeBV: 121),
-        ]
         for run in runs {
             // Coherent counters: one outcome + one activity flush PER game, so
             // games ≈ wins+losses, and tiles/flags/playtime aren't left at zero.
             // The board's own geometry sets believable per-game magnitudes.
             let safeTiles = run.config.width * run.config.height - run.config.mineCount
             let losses = max(1, run.wins / 6)
-            _ = scoreboard.submit(run.best, for: run.config, threeBV: run.threeBV)
+            _ = scoreboard.submit(
+                run.best, for: run.config, at: daysAgo(3, hour: 5), threeBV: run.threeBV)
             for i in 0..<run.wins {
                 if i > 0 {
-                    _ = scoreboard.submit(run.best + 600, for: run.config, threeBV: run.threeBV)
+                    // Spread times AND dates deterministically so the top-5
+                    // list reads as a real history — varied times achieved
+                    // across weeks, not one number stamped "29 seconds ago".
+                    let over = 250 + (i * 217) % 1_400
+                    _ = scoreboard.submit(
+                        run.best + over, for: run.config,
+                        at: daysAgo(1 + (i * 37) % 88, hour: (i * 13) % 24),
+                        threeBV: run.threeBV)
                 }
                 scoreboard.recordGameOutcome(
                     for: run.config, won: true, minesHit: 0,
@@ -90,12 +182,17 @@ public enum DemoSeed {
     /// real shares), each with a handful of times so the head-to-head reads.
     private static func seedRivals(_ friends: FriendsStore, settings: Settings) {
         settings.shareName = "You"
+        // Coverage overlaps the seeded configs so expanded rows show a rival
+        // ladder — some times beat yours, some don't (a rivalry, not a rout).
         let rosters: [(name: String, scores: [RivalScore])] = [
             (
                 "Aoi",
                 [
                     RivalScore(config: .basic(.beginner), best: 744),
                     RivalScore(config: .basic(.expert), best: 13_050),
+                    RivalScore(config: .grid(.xs, .normal, .flat), best: 880),
+                    RivalScore(config: .grid(.s, .normal, .flat), best: 1_590),
+                    RivalScore(config: .grid(.m, .normal, .flat), best: 6_800),
                     RivalScore(config: .hive(.s, .normal, .flat), best: 2_120),
                 ]
             ),
@@ -104,19 +201,34 @@ public enum DemoSeed {
                 [
                     RivalScore(config: .basic(.beginner), best: 905),
                     RivalScore(config: .basic(.intermediate), best: 3_980),
+                    RivalScore(config: .grid(.xs, .normal, .flat), best: 1_020),
                     RivalScore(config: .grid(.m, .hard, .flat), best: 8_010),
+                    RivalScore(config: .grid(.l, .normal, .flat), best: 39_500),
+                    RivalScore(config: .hive(.xs, .normal, .flat), best: 1_260),
+                ]
+            ),
+            (
+                "Mio",
+                [
+                    RivalScore(config: .basic(.beginner), best: 1_150),
+                    RivalScore(config: .grid(.xs, .normal, .flat), best: 1_400),
+                    RivalScore(config: .grid(.s, .normal, .flat), best: 2_350),
+                    RivalScore(config: .hive(.s, .normal, .flat), best: 2_600),
                 ]
             ),
         ]
-        for roster in rosters {
+        for (index, roster) in rosters.enumerated() {
             let identity = ShareIdentity()
             let scores = roster.scores.map { entry in
                 SharedConfigScore(
                     key: entry.config.storageKey, best: entry.best, wins: 5,
                     bestProgress: nil, recentPace: nil, bestPace: nil)
             }
+            // Backdated a staggered few days so "received …" reads as a
+            // relationship, not three shares seeded seconds ago.
             if let payload = try? identity.makePayload(
-                name: roster.name, scores: scores, career: nil, issuedAt: Date())
+                name: roster.name, scores: scores, career: nil,
+                issuedAt: daysAgo(2 + index * 3, hour: 7 * (index + 1)))
             {
                 _ = friends.apply(payload)
             }
@@ -140,10 +252,15 @@ public enum DemoSeed {
 
 extension View {
     /// Applies the deterministic screenshot accent when capturing; a no-op in
-    /// normal use (the app keeps the system accent).
+    /// normal use (the app keeps the system accent). Sets both `tint` and
+    /// `accentColor` so SwiftUI controls and `Color.accentColor` fills pin to
+    /// blue on iOS. macOS is the exception: AppKit resolves the selection/
+    /// control accent from the SYSTEM setting regardless, so for Mac captures
+    /// set the machine's accent to Blue (System Settings ▸ Appearance) — see
+    /// SCREENSHOTS.md. The tint here still fixes the SwiftUI-drawn accents.
     @ViewBuilder public func screenshotAccent() -> some View {
         if let accent = DemoSeed.screenshotAccent {
-            tint(accent)
+            tint(accent).accentColor(accent)
         } else {
             self
         }

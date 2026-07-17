@@ -32,5 +32,6 @@ case "$cmd" in
     sync) exec "$PY" sync.py "$@" ;;
     listing) exec "$PY" listing.py "$@" ;;
     organize) exec "$PY" organize-shots.py "$@" ;;
-    *) echo "usage: run.sh {status|sync|listing|organize} [args]" >&2; exit 2 ;;
+    screens) exec "$PY" screenshots.py "$@" ;;
+    *) echo "usage: run.sh {status|sync|listing|organize|screens} [args]" >&2; exit 2 ;;
 esac
