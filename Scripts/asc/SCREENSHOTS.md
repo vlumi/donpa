@@ -17,16 +17,21 @@ launch.
    1440×900 window (reproducible across runs — no manual resizing).
    Pick the language with `DEMO_LANG=en|fi|ja` (default `en`), e.g.
    `make demo-mac DEMO_LANG=fi`. Each language is its own clean launch.
+   **macOS accent:** the Mac uses the *system* accent for its selection/
+   highlight colour, which the app can't override — set System Settings ▸
+   Appearance ▸ Accent to **Blue** before shooting Mac, for consistency with
+   the iOS sets. (iOS/iPad are pinned to blue by the demo automatically.)
 2. Capture in the printed order: simulator **⌘S** (iOS/iPad), or **⌘⇧4-space**
-   on the Mac window. **Where to put the files:** one folder per platform is
-   enough — dump every raw shot straight into it (subfolders aren't needed;
-   the organizer sorts by capture order, so just don't reorder them).
-3. The demo starts in **Light**: shoot the full set in Light. Then, for one
-   dark-mode taster, switch to **Dark** (in-app Settings ▸ Appearance) and
-   re-shoot just shot 1 (big-map) — a full dark set isn't worth the effort.
-4. **Languages:** to ship localized shots, relaunch with `DEMO_LANG=fi` (then
-   `ja`) and shoot each language's full set **back-to-back into the same
-   folder** — en set, then fi set, then ja set, in order.
+   on the Mac window. **Where to put the files:** one folder per platform —
+   dump every raw shot straight into it, in capture order (no subfolders; the
+   organizer sorts by capture order and makes the subfolders itself).
+3. The demo starts in **Light**. Shots 1–2 are the same board: shoot **big-map**
+   in Light, flip Settings ▸ Appearance to **Dark**, shoot **big-map-dark**,
+   flip back to Light, then carry on. Everything else is Light.
+4. **Every language needs its own full set** (a JP listing must show JP
+   screenshots — never English ones). Relaunch with `DEMO_LANG=fi`, then `ja`,
+   and shoot the SAME shot list each time, all **back-to-back into one folder**
+   in language order: en set, then fi set, then ja set.
 5. Organize:
    - one language → `make asc-shots DIR=<folder> PLATFORM=mac`
    - several → `make asc-shots DIR=<folder> PLATFORM=mac LANGS=en,fi,ja`
@@ -39,25 +44,26 @@ iPhone 6.9" (1320×2868) · iPad 13" (2064×2752) · Mac 1440×900.
 
 ## The shots — ordered by persuasion (the carousel shows ~3, so front-load)
 
-1. **million-cell map** — THE opener. Resume the Grid save (or start an
-   XXL/XXXL board), open a big region, zoom out so the minimap + sheer scale
-   fill the frame. Nobody expects this from minesweeper — lead with spectacle.
-2. **a variant board** — resume the seeded **Hive** (hex) game, showing the hex
-   numbers. The mechanical hook: "boards you haven't played." (Or start a
-   **Round** wrap-around board if you'd rather show the wrap.)
-3. **New Game picker** — families × sizes × edges × difficulties laid out. The
-   "look how much is here" shot; proves 1–2 weren't one-offs.
-4. **a clean mid-game** — resume the seeded **Beginner** game: a normal board
+1. **big map** — THE opener. Resume the seeded **XXL** save, zoom out so the
+   minimap + sheer scale fill the frame. Nobody expects this from minesweeper
+   — lead with spectacle.
+2. **big map, Dark** — the same board with Appearance set to Dark: the one
+   dark-mode taster, so the listing shows the app isn't light-only.
+3. **a variant board** — resume the seeded **Hive** (hex) game, showing the hex
+   numbers. The mechanical hook: "boards you haven't played."
+4. **New Game picker** — families × sizes × edges × difficulties laid out. The
+   "look how much is here" shot; proves the earlier boards weren't one-offs.
+5. **a clean mid-game** — resume the seeded **Beginner** game: a normal board
    part-cleared, numbers and flags showing. The core loop, legible.
-5. **Service Record** — Tour of Duty, scrolled to show a pace figure and the
+6. **Service Record** — Tour of Duty, scrolled to show a pace figure and the
    Daily orders / streak section. "It tracks your skill; it has depth."
-6. **daily challenge** — the calendar (via History) or the review screen. "One
+7. **daily challenge** — the calendar (via History) or the review screen. "One
    shared board a day, a reason to come back."
-7. **rivalry** *(iPhone only)* — the Mess hall, rivals list + share row. Skip on
+8. **rivalry** *(iPhone only)* — the Mess hall, rivals list + share row. Skip on
    iPad (small centred sheet, dead space) — use another board shot there.
 
-Avoid the home/title screen in every set (the AI title art). Shoot the set in
-Light; add one Dark re-shoot of shot 1 (big-map) as a dark-mode taster.
+Avoid the home/title screen in every set (the AI title art). Every language
+gets this same set, in that language.
 
 Optional captions (add in ASC), one concrete idea each: "A million cells." ·
 "The world wraps around." · "Square, hex, flat or round." · "A new board every

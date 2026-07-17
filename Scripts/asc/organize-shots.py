@@ -32,12 +32,16 @@ import os
 import sys
 
 # Canonical shots in capture order (see SCREENSHOTS.md). Each: (name,
-# iphone_only, what-to-capture). `iphone_only` marks shots skipped on iPad/Mac
-# (the Mess hall reads poorly as a centred sheet).
+# iphone_only, what-to-capture). `iphone_only` skips iPad/Mac (the Mess hall
+# reads poorly as a centred sheet). Every language gets this SAME full set, in
+# that language — a JP listing must show JP screenshots, not English ones.
 SHOTS = [
     ("big-map", False,
-     "New Game ▸ start an XXL/XXXL board, open a region, then zoom out so the "
-     "minimap and sheer scale fill the screen — the scale hook."),
+     "Resume the XXL save and zoom out so the minimap and sheer scale fill the "
+     "screen — the scale hook."),
+    ("big-map-dark", False,
+     "The SAME big-map shot in Dark: flip Settings ▸ Appearance to Dark, "
+     "re-frame, capture, flip back to Light. The dark-mode taster."),
     ("variant-board", False,
      "Resume the Hive save — a hex board mid-solve, so the non-square shape "
      "reads at a glance."),
@@ -92,13 +96,14 @@ def main():
         for i, (name, desc) in enumerate(shots, 1):
             print(f"  {i}. {name}-{platform}.png")
             print(f"     {desc}")
-        print("\nThe demo starts in Light — shoot the full set in Light. Then, "
-              "for one\ndark-mode taster, switch to Dark (in-app Settings ▸ "
-              "Appearance) and re-shoot\njust shot 1 (big-map).")
+        print("\nShots 1 (big-map, Light) and 2 (big-map-dark) are the same "
+              "board:\nshoot 1, flip Settings ▸ Appearance to Dark, shoot 2, "
+              "flip back to Light,\nthen carry on. Everything else is Light.")
         print("\nOne language: drop that set's raw files in a folder, then:\n"
               f"  Scripts/asc/organize-shots.py {platform} <dir>")
-        print("Several: shoot each language's set back-to-back (e.g. en, fi, "
-              "ja),\ndump all in one folder, then:\n"
+        print(f"Several: shoot the SAME {len(shots)} shots in each language "
+              "(each listing needs\nits own localized set), all into one "
+              "folder in language order:\n"
               f"  Scripts/asc/organize-shots.py {platform} <dir> --langs=en,fi,ja")
         return
 
@@ -110,7 +115,7 @@ def main():
         if "--by-mtime" in flagset else str.lower)
     raw.sort(key=key)
 
-    # One flat set, or several language sets back-to-back.
+    # One flat set, or several equal-size language sets back-to-back.
     groups = langs or [None]
     expected = len(names) * len(groups)
     if len(raw) != expected:

@@ -58,6 +58,12 @@ public enum DemoSeed {
             SavedGame(
                 config: .hive(.s, .normal, .flat), seed: 5, reveals: [Coord(8, 8)],
                 flags: [Coord(0, 0)], elapsed: 5_110),
+            // A vast XXL board (256²) so the big-map / scale shot is a resume
+            // too — identical across languages, no hand setup. A single central
+            // reveal opens a region to zoom out from.
+            SavedGame(
+                config: .grid(.xxl, .normal, .flat), seed: 42, reveals: [Coord(128, 128)],
+                flags: [], elapsed: 18_450),
         ]
         for g in games {
             var rng = SeededGenerator(seed: g.seed)
@@ -184,10 +190,12 @@ public enum DemoSeed {
 
 extension View {
     /// Applies the deterministic screenshot accent when capturing; a no-op in
-    /// normal use (the app keeps the system accent). Both `tint` (controls) and
-    /// `accentColor` (the many `Color.accentColor` fills/strokes) are set — on
-    /// macOS `tint` alone doesn't reach `Color.accentColor`, which otherwise
-    /// resolves to the machine's system accent and defeats the fixed blue.
+    /// normal use (the app keeps the system accent). Sets both `tint` and
+    /// `accentColor` so SwiftUI controls and `Color.accentColor` fills pin to
+    /// blue on iOS. macOS is the exception: AppKit resolves the selection/
+    /// control accent from the SYSTEM setting regardless, so for Mac captures
+    /// set the machine's accent to Blue (System Settings ▸ Appearance) — see
+    /// SCREENSHOTS.md. The tint here still fixes the SwiftUI-drawn accents.
     @ViewBuilder public func screenshotAccent() -> some View {
         if let accent = DemoSeed.screenshotAccent {
             tint(accent).accentColor(accent)
