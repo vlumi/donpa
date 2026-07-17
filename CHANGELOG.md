@@ -49,8 +49,9 @@ entries land under Unreleased as they merge.
   against a colored fill.
 
 - **Sharper achievement art.** The Classics decoration is now the familiar
-  smiley; the timed variant pairs it with a clearer stopwatch; and Roll
-  Call's calendar check no longer crowds its edge.
+  smiley, and its timed variant a laughing smiley with speed lines. Roll
+  Call's calendar check sits inside its page, medal numbers are properly
+  centred, and the labels read cleaner (a plain "13", a "50" coin).
 
 ### build 26 — 2026-07-16
 
