@@ -126,6 +126,14 @@ asc-release-apply:  ## Add all achievements to review (create release records)
 asc-shots:  ## Rename raw screenshots by capture order: DIR=<folder> PLATFORM=iphone|ipad|mac [LANGS=en,fi,ja]
 	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR) $(if $(LANGS),--langs=$(LANGS),)
 
+.PHONY: asc-screens
+asc-screens:  ## Show what the shots/ tree would upload to the ASC listings (dry run)
+	@Scripts/asc/run.sh screens $(ARGS)
+
+.PHONY: asc-screens-apply
+asc-screens-apply:  ## Replace + upload the shots/ tree to the ASC listings
+	@Scripts/asc/run.sh screens --apply $(ARGS)
+
 # ── Release lane ──────────────────────────────────────────────────────────────
 # The cut is split by concern, one script each, chained here in order:
 #   preflight → publish → tag → distribute
