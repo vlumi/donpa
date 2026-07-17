@@ -37,10 +37,10 @@ entries land under Unreleased as they merge.
   hall's Share link / QR code labels no longer wrap or truncate — they
   stay on one line, shrinking a hair if needed.
 
-- **Medal tiers read at a glance.** Gold, silver, and bronze now differ in
-  both hue and lightness, so the tiers stay distinct in dark mode and at
-  small sizes instead of muddying together, and each medal's emblem keeps
-  its contrast against the disc — no more washed-out glyph on silver.
+- **Medal tiers read at a glance.** The tier now colors the medal's metal
+  frame — its ring and horns — in gold, silver, or bronze, over a neutral
+  disc, so the tiers are unmistakable in both light and dark mode while the
+  emblem stays crisp instead of washing out against a colored fill.
 
 ### build 26 — 2026-07-16
 
