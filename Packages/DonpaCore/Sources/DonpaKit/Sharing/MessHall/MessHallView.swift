@@ -57,16 +57,13 @@ struct MessHallView: View {
         case name, career, nearby, shareLink, qr, tabs, addRival, newSquad, rows, sync
     }
 
-    /// The rival whose detail (edit) sheet is open, or nil.
+    /// The open sheet's subject, or nil: editing (rival/group detail) vs
+    /// comparing (head-to-head). One of each pair is live at a time.
     @State var editingRival: Friend?
-    /// The rival being compared head-to-head, or nil.
     @State var comparingRival: Friend?
-    /// The group being edited (name / members / delete), or nil.
     @State var editingGroup: FriendGroup?
-    /// The group being compared head-to-head, or nil.
     @State var comparingGroup: FriendGroup?
-    /// A new group's name field (Groups tab).
-    @State private var newGroupName = ""
+    @State private var newGroupName = ""  // the Squads tab's new-squad field
 
     /// Rivals alphabetical; ties broken by key for a stable order.
     var rivals: [Friend] {
@@ -80,14 +77,14 @@ struct MessHallView: View {
     var body: some View {
         chrome
             .escDismisses { dismiss() }
-            .sheet(isPresented: $scanning) {
+            .appearanceSheet(isPresented: $scanning, settings) {
                 AddFriendSheet { url in
                     scanning = false
                     dismiss()  // close the Mess hall so the prompt shows at root
                     onScanned?(url)
                 }
             }
-            .sheet(item: $nearbyURL) { payload in
+            .appearanceSheet(item: $nearbyURL, settings) { payload in
                 // Same payload the QR carries; same receive path a scan takes.
                 NearbyExchangeView(
                     displayName: settings.shareName.isEmpty
@@ -101,8 +98,10 @@ struct MessHallView: View {
                     onScanned?(received)
                 }
             }
-            .sheet(item: $editingRival) { FriendDetailView(friend: $0, friends: friends) }
-            .sheet(item: $comparingRival) { rival in
+            .appearanceSheet(item: $editingRival, settings) {
+                FriendDetailView(friend: $0, friends: friends)
+            }
+            .appearanceSheet(item: $comparingRival, settings) { rival in
                 HeadToHeadView(
                     scoreboard: scoreboard, opponentName: rival.displayName,
                     result: FriendRanking.headToHead(with: rival, scoreboard: scoreboard),
@@ -114,8 +113,10 @@ struct MessHallView: View {
                         yours: dailyStore.displayRecords, theirs: rival.dailies),
                     onPlay: play)
             }
-            .sheet(item: $editingGroup) { GroupEditView(group: $0, friends: friends) }
-            .sheet(item: $comparingGroup) { group in
+            .appearanceSheet(item: $editingGroup, settings) {
+                GroupEditView(group: $0, friends: friends)
+            }
+            .appearanceSheet(item: $comparingGroup, settings) { group in
                 HeadToHeadView(
                     scoreboard: scoreboard, opponentName: group.name,
                     result: FriendRanking.headToHead(

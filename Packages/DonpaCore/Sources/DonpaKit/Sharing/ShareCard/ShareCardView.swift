@@ -83,7 +83,7 @@ struct ShareCardView: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.primary.opacity(0.05))
         )
-        .sheet(isPresented: $enlarged) {
+        .appearanceSheet(isPresented: $enlarged, settings) {
             QRZoomSheet(qr: qr, name: trimmedName, link: link)
         }
         .onAppear {

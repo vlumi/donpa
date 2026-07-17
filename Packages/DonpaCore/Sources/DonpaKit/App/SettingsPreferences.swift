@@ -51,6 +51,65 @@ public enum AppearancePreference: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+extension View {
+    /// Force `scheme` onto this view. Sheets present in a fresh environment that
+    /// does NOT inherit the presenter's `.preferredColorScheme`, so a sheet
+    /// would follow the SYSTEM appearance and ignore a Light/Dark override —
+    /// apply this to each sheet's content. Always a CONCRETE scheme, never nil:
+    /// `.preferredColorScheme(nil)` on a live sheet goes inert without releasing
+    /// the previously-forced value, so `.system` would stick on the last choice.
+    func forcedAppearance(_ scheme: ColorScheme) -> some View {
+        preferredColorScheme(scheme)
+    }
+
+    /// A `.sheet` whose content is pinned to the app's chosen appearance —
+    /// otherwise the sheet follows the system, ignoring a Light/Dark override.
+    public func appearanceSheet<C: View>(
+        isPresented: Binding<Bool>, _ settings: Settings, @ViewBuilder content: @escaping () -> C
+    ) -> some View {
+        modifier(AppearanceSheet(settings: settings, isPresented: isPresented, sheet: content))
+    }
+
+    /// `.sheet(item:)` variant of `appearanceSheet`.
+    public func appearanceSheet<Item: Identifiable, C: View>(
+        item: Binding<Item?>, _ settings: Settings,
+        @ViewBuilder content: @escaping (Item) -> C
+    ) -> some View {
+        modifier(AppearanceSheetItem(settings: settings, item: item, sheet: content))
+    }
+}
+
+/// The presenter's `@Environment(\.colorScheme)` is authoritative for `.system`
+/// (inside the sheet it already reflects whatever we force), so resolve the
+/// concrete scheme HERE and pin it onto the sheet content.
+private struct AppearanceSheet<C: View>: ViewModifier {
+    @ObservedObject var settings: Settings
+    @Environment(\.colorScheme) private var systemScheme
+    let isPresented: Binding<Bool>
+    @ViewBuilder let sheet: () -> C
+
+    func body(content: Content) -> some View {
+        content.sheet(isPresented: isPresented) {
+            sheet().forcedAppearance(
+                settings.appearance.resolvedScheme(systemFallback: systemScheme))
+        }
+    }
+}
+
+private struct AppearanceSheetItem<Item: Identifiable, C: View>: ViewModifier {
+    @ObservedObject var settings: Settings
+    @Environment(\.colorScheme) private var systemScheme
+    let item: Binding<Item?>
+    @ViewBuilder let sheet: (Item) -> C
+
+    func body(content: Content) -> some View {
+        content.sheet(item: item) { value in
+            sheet(value).forcedAppearance(
+                settings.appearance.resolvedScheme(systemFallback: systemScheme))
+        }
+    }
+}
+
 /// Which bottom corner the floating reveal/flag toggle sits in. Default `.left`:
 /// a right-handed player taps with the right hand and reaches the toggle with the
 /// left. Switchable in Settings.
