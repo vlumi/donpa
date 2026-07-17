@@ -39,6 +39,5 @@ perf-out/
 # Python bytecode from the ASC tooling venv
 __pycache__/
 
-# Captured App Store screenshots (uploaded to ASC, not committed)
+# Abandoned manual-capture dir (the committed store set lives in shots/)
 screenshots/
-shots/
