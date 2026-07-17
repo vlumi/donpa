@@ -53,7 +53,7 @@ esac
 udid=$(pick_udid "$pat")
 [ -n "$udid" ] || { echo "No simulator matching /$pat/ installed." >&2; exit 1; }
 name=$(xcrun simctl list devices available | grep "$udid" | sed -E 's/ *\(.*//' | xargs)
-echo "Booting $name…"
+echo "Booting ${name}…"
 xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1 || true
 open -a Simulator
 app="$(find ~/Library/Developer/Xcode/DerivedData/Donpa-*/Build/Products/Debug-iphonesimulator \
