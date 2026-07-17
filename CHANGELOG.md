@@ -22,6 +22,8 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+### build 28 — 2026-07-18
+
 - **New Game dims like everything else.** The picker's backdrop now
   matches the sheets' dimming instead of a noticeably darker wash.
 
