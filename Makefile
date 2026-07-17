@@ -60,6 +60,8 @@ uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 # Capture with the simulator's ⌘S (iOS/iPad) or Scripts/grab-mac-shot.sh (Mac).
 # Pick the UI language with DEMO_LANG=en|fi|ja (default en), e.g.
 #   make demo-mac DEMO_LANG=fi
+# DUMP=1 freezes each board you resume+flag to ~/Desktop/donpa-demo-saves/ —
+# copy those into Scripts/asc/demo-saves/ to ship them as the seeded games.
 .PHONY: demo-iphone
 demo-iphone: build-ios  ## Launch the iPhone simulator in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=iphone Scripts/demo.sh

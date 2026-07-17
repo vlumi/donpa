@@ -12,6 +12,28 @@ public enum DemoSeed {
         ProcessInfo.processInfo.arguments.contains("-uitest-demo")
     }
 
+    /// `-uitest-dump-saves`: mirror each autosaved demo game to a JSON file on
+    /// the Desktop, so a board you've flagged by hand can be frozen and shipped
+    /// verbatim as a seed (hand the files back to embed under Resources).
+    static var isDumpingSaves: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uitest-dump-saves")
+    }
+
+    /// Write the in-progress `snapshot` (flags and all) to
+    /// ~/Desktop/donpa-demo-saves/<configKey>.json. macOS only (that's where
+    /// boards are set up for capture); a no-op elsewhere and unless dumping.
+    public static func dumpSave(_ snapshot: GameSnapshot) {
+        guard isDumpingSaves else { return }
+        #if os(macOS)
+        let dir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Desktop/donpa-demo-saves", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let safe = snapshot.config.storageKey.replacingOccurrences(of: "|", with: "_")
+        guard let data = try? JSONEncoder().encode(snapshot) else { return }
+        try? data.write(to: dir.appendingPathComponent("\(safe).json"))
+        #endif
+    }
+
     /// The app rides the SYSTEM accent by design (colour is never the sole
     /// cue — see the scoreboard-highlight decision), so captures would inherit
     /// the machine's personal Highlight colour (a red Mac, say). Under the
@@ -48,6 +70,40 @@ public enum DemoSeed {
     }
 
     private static func seedSaves(_ store: SaveStore) {
+        // Prefer hand-crafted saves committed under Scripts/asc/demo-saves (the
+        // boards you flagged yourself, dumped via -uitest-dump-saves) — they
+        // carry your exact flag placement. Fall back to generating boards from
+        // seeds when none are committed. Repo-relative, resolved via
+        // DONPA_REPO_ROOT (set by the demo scripts); never in the shipped app.
+        if loadCommittedSaves(into: store) { return }
+        generateSaves(into: store)
+    }
+
+    private static func committedSavesDir() -> URL? {
+        guard let root = ProcessInfo.processInfo.environment["DONPA_REPO_ROOT"] else { return nil }
+        let dir = URL(fileURLWithPath: root)
+            .appendingPathComponent("Scripts/asc/demo-saves", isDirectory: true)
+        return FileManager.default.fileExists(atPath: dir.path) ? dir : nil
+    }
+
+    private static func loadCommittedSaves(into store: SaveStore) -> Bool {
+        guard let dir = committedSavesDir(),
+            let files = try? FileManager.default.contentsOfDirectory(
+                at: dir, includingPropertiesForKeys: nil),
+            !files.isEmpty
+        else { return false }
+        var loaded = 0
+        for url in files where url.pathExtension == "json" {
+            guard let data = try? Data(contentsOf: url),
+                let snapshot = try? JSONDecoder().decode(GameSnapshot.self, from: data)
+            else { continue }
+            store.save(snapshot)
+            loaded += 1
+        }
+        return loaded > 0
+    }
+
+    private static func generateSaves(into store: SaveStore) {
         let games: [SavedGame] = [
             // A partly-cleared Beginner: the familiar square board mid-solve.
             SavedGame(

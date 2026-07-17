@@ -304,6 +304,7 @@ struct GameContent: View {
                 guard let snapshot = GameSnapshot(inputs: inputs) else { return }
                 await saveWriter.write(snapshot)
                 await MainActor.run { navigator.savesChanged &+= 1 }
+                await MainActor.run { DemoSeed.dumpSave(snapshot) }
             }
         } else if viewModel.isPrimedBoard {
             // The player never touched the launch-primed placeholder, so its
@@ -347,6 +348,7 @@ struct GameContent: View {
         defer { navigator.savesChanged &+= 1 }
         if let snapshot = viewModel.snapshot() {
             saveStore.save(snapshot)
+            DemoSeed.dumpSave(snapshot)  // -uitest-dump-saves: freeze this board to disk
         } else if !viewModel.isPrimedBoard {  // never clear for the placeholder
             saveStore.clear(config: viewModel.config)
         }

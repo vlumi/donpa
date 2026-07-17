@@ -9,6 +9,12 @@
 # Then capture: simulator ⌘S (iOS/iPad), or Scripts/grab-mac-shot.sh <name> (Mac).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+REPO_ROOT="$(pwd)"
+# The app reads committed demo saves from $DONPA_REPO_ROOT/Scripts/asc/demo-saves
+# (dev-only; not in the shipped bundle). Passed to the Mac app via the inherited
+# env, and to the simulator via SIMCTL_CHILD_ (simctl forwards those, stripped).
+export DONPA_REPO_ROOT="$REPO_ROOT"
+export SIMCTL_CHILD_DONPA_REPO_ROOT="$REPO_ROOT"
 
 PLATFORM="${PLATFORM:-iphone}"
 # DEMO_LANG picks the UI language for this run (en|fi|ja) — a distinct name so
@@ -20,6 +26,10 @@ case "$DEMO_LANG" in
     *) echo "DEMO_LANG must be en | fi | ja (got '$DEMO_LANG')" >&2; exit 2 ;;
 esac
 ARGS=(-uitest-clean -uitest-demo -AppleLanguages "($DEMO_LANG)")
+# DUMP=1 freezes each board you resume+edit (flags and all) to
+# ~/Desktop/donpa-demo-saves/<config>.json on autosave/quit — hand those back
+# to ship as the seeded saves.
+[ "${DUMP:-0}" = "1" ] && ARGS+=(-uitest-dump-saves)
 BUNDLE="fi.misaki.donpa"
 
 pick_udid() {  # $1 = name pattern
