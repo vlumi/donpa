@@ -376,7 +376,9 @@ private struct ReceivePrompt: ViewModifier {
                             ownKey: ShareIdentityStore().identity()?.publicKey)
                         navigator.afterDismiss { navigator.incomingShare = incoming }
                     },
-                    onPlay: { navigator.playConfigRequested = $0 })
+                    onPlay: { navigator.playConfigRequested = $0 }
+                )
+                .pageSizedOnPad()
             }
     }
 

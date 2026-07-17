@@ -157,7 +157,9 @@ struct GameContent: View {
             autosaveBlocking()  // exiting; the write must finish inline
         }
         #endif
-        .appearanceSheet(isPresented: $navigator.showingScores, settings) { scoreboardSheet }
+        .appearanceSheet(isPresented: $navigator.showingScores, settings) {
+            scoreboardSheet.pageSizedOnPad()
+        }
         // Browsing (scores, rivals, the New Game popup) shouldn't cost clock
         // time; each surface resumes only ITS OWN pause. Starting from the
         // popup is safe: newGame/restore leave isPaused false — resume no-ops.

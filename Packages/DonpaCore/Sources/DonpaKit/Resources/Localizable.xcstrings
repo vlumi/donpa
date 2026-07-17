@@ -3585,7 +3585,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Räjäytetyt miinat"
+            "value" : "Miinaosumat"
           }
         },
         "ja" : {
@@ -4196,7 +4196,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voitot ilman alueavausta"
+            "value" : "Ilman alueavausta"
           }
         },
         "ja" : {
@@ -4212,7 +4212,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voitot ilman lippuja"
+            "value" : "Ilman lippuja"
           }
         },
         "ja" : {
@@ -4991,7 +4991,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Viime pelien tahti"
+            "value" : "Nykytahti"
           }
         },
         "ja" : {

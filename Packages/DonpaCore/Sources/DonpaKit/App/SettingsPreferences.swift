@@ -4,6 +4,9 @@ import SwiftUI
 #if canImport(AppKit)
 import AppKit
 #endif
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// User-chosen appearance. `.system` follows the device setting.
 public enum AppearancePreference: String, CaseIterable, Identifiable, Sendable {
@@ -76,6 +79,21 @@ extension View {
         @ViewBuilder content: @escaping (Item) -> C
     ) -> some View {
         modifier(AppearanceSheetItem(settings: settings, item: item, sheet: content))
+    }
+
+    /// Page-size a dense sheet on iPad (iOS 18+) — the default form sheet is
+    /// cramped for the Record's stats tables and the Mess hall. iPhone and Mac
+    /// are untouched; earlier iPadOS keeps the form sheet.
+    @ViewBuilder func pageSizedOnPad() -> some View {
+        #if os(iOS)
+        if #available(iOS 18.0, *), UIDevice.current.userInterfaceIdiom == .pad {
+            presentationSizing(.page)
+        } else {
+            self
+        }
+        #else
+        self
+        #endif
     }
 }
 
