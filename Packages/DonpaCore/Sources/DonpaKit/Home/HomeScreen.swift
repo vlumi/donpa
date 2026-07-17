@@ -115,7 +115,7 @@ struct HomeScreen: View {
                 }
                 .padding(16)
             }
-            .sheet(isPresented: $showAll) { inProgressSheet }
+            .appearanceSheet(isPresented: $showAll, settings) { inProgressSheet }
             #if os(macOS)
             .background(
                 // Conditional: Home stays mounted (opacity 0) under the game,

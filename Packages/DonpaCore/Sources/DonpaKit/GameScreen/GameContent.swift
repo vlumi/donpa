@@ -154,7 +154,7 @@ struct GameContent: View {
             autosaveBlocking()  // exiting; the write must finish inline
         }
         #endif
-        .sheet(isPresented: $navigator.showingScores) { scoreboardSheet }
+        .appearanceSheet(isPresented: $navigator.showingScores, settings) { scoreboardSheet }
         // Browsing scores shouldn't cost clock time; resume only OUR pause.
         .onChangeCompat(of: navigator.showingScores) { showing in
             if showing {
@@ -180,23 +180,21 @@ struct GameContent: View {
                 viewModel.resume()
             }
         }
-        .sheet(isPresented: $navigator.showingSettings) {
+        .appearanceSheet(isPresented: $navigator.showingSettings, settings) {
             SettingsView(settings: settings, scoreboard: scoreboard)
         }
-        .sheet(isPresented: $navigator.showingAbout) {
+        .appearanceSheet(isPresented: $navigator.showingAbout, settings) {
             // Two sheet swaps in one runloop turn race; defer the second a tick.
             AboutView(onHowTo: {
                 navigator.showingAbout = false
                 navigator.afterDismiss { navigator.showingHowTo = true }
             })
         }
-        .sheet(isPresented: $navigator.showingHowTo) {
-            HowToPlayView()
-        }
-        .sheet(isPresented: $navigator.showingShortcuts) {
+        .appearanceSheet(isPresented: $navigator.showingHowTo, settings) { HowToPlayView() }
+        .appearanceSheet(isPresented: $navigator.showingShortcuts, settings) {
             KeyboardShortcutsView()
         }
-        .sheet(isPresented: $navigator.showingDailyCalendar) {
+        .appearanceSheet(isPresented: $navigator.showingDailyCalendar, settings) {
             DailyCalendarView(dailyStore: dailyStore) { board in
                 navigator.showingDailyCalendar = false
                 startDailyBoard(board)

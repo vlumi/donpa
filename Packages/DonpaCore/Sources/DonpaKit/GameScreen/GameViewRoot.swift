@@ -354,7 +354,7 @@ private struct ReceivePrompt: ViewModifier {
 
     private func sheets(_ content: Content) -> some View {
         content
-            .sheet(item: sheetBinding) { incoming in
+            .appearanceSheet(item: sheetBinding, settings) { incoming in
                 ReceiveShareView(
                     incoming: incoming, friends: friends,
                     onDone: { navigator.incomingShare = nil },
@@ -365,7 +365,7 @@ private struct ReceivePrompt: ViewModifier {
                         navigator.afterDismiss { navigator.showingMessHall = true }
                     })
             }
-            .sheet(isPresented: $navigator.showingMessHall) {
+            .appearanceSheet(isPresented: $navigator.showingMessHall, settings) {
                 MessHallView(
                     friends: friends, scoreboard: scoreboard, settings: settings,
                     dailyStore: dailyStore,

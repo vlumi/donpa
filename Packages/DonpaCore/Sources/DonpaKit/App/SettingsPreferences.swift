@@ -51,6 +51,32 @@ public enum AppearancePreference: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+extension View {
+    /// Force the app's chosen appearance onto this view. Sheets present in a
+    /// fresh environment that does NOT inherit the presenter's
+    /// `.preferredColorScheme`, so a sheet would follow the SYSTEM appearance
+    /// and ignore a Light/Dark override — apply this to each sheet's content.
+    public func forcedAppearance(_ settings: Settings) -> some View {
+        preferredColorScheme(settings.appearance.colorScheme)
+    }
+
+    /// A `.sheet` whose content is pinned to the app's chosen appearance —
+    /// otherwise the sheet follows the system, ignoring a Light/Dark override.
+    public func appearanceSheet<C: View>(
+        isPresented: Binding<Bool>, _ settings: Settings, @ViewBuilder content: @escaping () -> C
+    ) -> some View {
+        sheet(isPresented: isPresented) { content().forcedAppearance(settings) }
+    }
+
+    /// `.sheet(item:)` variant of `appearanceSheet`.
+    public func appearanceSheet<Item: Identifiable, C: View>(
+        item: Binding<Item?>, _ settings: Settings,
+        @ViewBuilder content: @escaping (Item) -> C
+    ) -> some View {
+        sheet(item: item) { content($0).forcedAppearance(settings) }
+    }
+}
+
 /// Which bottom corner the floating reveal/flag toggle sits in. Default `.left`:
 /// a right-handed player taps with the right hand and reaches the toggle with the
 /// left. Switchable in Settings.

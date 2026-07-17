@@ -36,7 +36,7 @@ struct DonpaApp: App {
                     WindowSizer.growToFit(for: viewModel.config)
                 }
             }
-            .sheet(isPresented: $showingAbout) { AboutView() }
+            .appearanceSheet(isPresented: $showingAbout, settings) { AboutView() }
         }
         .commands {
             // About stays macOS-local — its menu slot is an AppKit concept; the
