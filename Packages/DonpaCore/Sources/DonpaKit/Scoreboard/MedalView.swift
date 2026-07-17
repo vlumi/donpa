@@ -35,12 +35,19 @@ struct MedalView: View {
         let radius = s * 0.34
         let lw = s * 0.05
 
-        // A filled tier disc is always pale (pale base + metal at 65%), so the
-        // emblem and disc outline on it take a fixed dark ink — following
-        // `Color.primary` would put white-on-silver in dark mode. The horns sit
-        // OUTSIDE the disc on the app background, so they keep `ink`.
-        let hasDisc = earned && id.tierThresholds != nil
-        let discInk = hasDisc ? Color(white: 0.15) : ink
+        // The tier colors the medal's METAL — its ring and contact horns — not
+        // a wash behind the emblem, so the frame reads as gold/silver/bronze
+        // while the emblem keeps a neutral, high-contrast disc to sit on. The
+        // interior is a fixed pale disc, so the emblem takes a fixed dark ink
+        // (following Color.primary would flip it white on the pale disc in dark
+        // mode). A one-shot feat has no ladder, so earning it is gold. Only an
+        // UNEARNED medal falls back to the plain silhouette `ink`.
+        let tierMetal =
+            earned
+            ? Self.metal(for: earnedTier, of: id.tierThresholds?.count ?? earnedTier)
+            : nil
+        let frameInk = tierMetal ?? ink
+        let discInk = tierMetal != nil ? Color(white: 0.15) : ink
 
         // The chassis is an abstract naval mine: eight stubby contact horns.
         var horns = Path()
@@ -56,24 +63,22 @@ struct MedalView: View {
             horns.addLine(to: to)
         }
         ctx.stroke(
-            horns, with: .color(ink),
+            horns, with: .color(frameInk),
             style: StrokeStyle(lineWidth: lw * 1.5, lineCap: .round))
 
         let disc = Path(
             ellipseIn: CGRect(
                 x: center.x - radius, y: center.y - radius,
                 width: radius * 2, height: radius * 2))
-        if earned, let thresholds = id.tierThresholds {
-            // Fill over an opaque pale disc so the tier metal reads the SAME in
-            // light and dark mode (a translucent fill over the scheme-flipped
-            // tile muddied bronze/silver/gold together, worst in dark mode),
-            // and at a strength where the hue actually carries.
+        if tierMetal != nil {
+            // A neutral pale interior in both schemes, so the emblem always has
+            // a light ground to read against; the ring below carries the tier.
             ctx.fill(disc, with: .color(Color(white: 0.94)))
-            ctx.fill(
-                disc,
-                with: .color(Self.metal(for: earnedTier, of: thresholds.count).opacity(0.65)))
         }
-        ctx.stroke(disc, with: .color(discInk), style: StrokeStyle(lineWidth: lw))
+        // The ring is drawn thicker on a tiered medal so the metal band shows.
+        ctx.stroke(
+            disc, with: .color(frameInk),
+            style: StrokeStyle(lineWidth: tierMetal != nil ? lw * 1.8 : lw))
 
         let emblemSide = radius * 1.15
         var inner = ctx
