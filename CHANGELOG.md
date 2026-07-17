@@ -22,6 +22,14 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **A browsed daily stays put.** Opening the daily challenge's start
+  prompt and then starting a plain game from the Service Record's history
+  or a rival's list no longer drags the daily's Start/Cancel prompt (and
+  its untimed first look) onto that game.
+
+- **Roomier rival highlight.** The Mess hall's keyboard-focus ring no
+  longer hugs the row text.
+
 ### build 27 — 2026-07-17
 
 - **Appearance setting applies everywhere.** Changing Light / Dark / System

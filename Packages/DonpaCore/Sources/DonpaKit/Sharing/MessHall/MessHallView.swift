@@ -419,9 +419,9 @@ extension MessHallView {
 }
 
 extension MessHallView {
-    /// The keyboard-focus ring for a list row (inert off macOS).
+    /// A list row's keyboard-focus ring (inert off macOS); at inset 2 it hugged.
     func keyFocusRing(_ index: Int) -> FocusRing {
-        FocusRing(focused: keys.zone == .rows && keys.index == index, inset: 2)
+        FocusRing(focused: keys.zone == .rows && keys.index == index, inset: 6)
     }
 
     /// The Tab-focus ring for a header zone (inert off macOS).
