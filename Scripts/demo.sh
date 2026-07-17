@@ -63,6 +63,9 @@ esac
 
 udid=$(pick_udid "$pat")
 [ -n "$udid" ] || { echo "No simulator matching /$pat/ installed." >&2; exit 1; }
+# Tell the caller (shoot.sh) WHICH device we picked — `booted` is ambiguous
+# with several simulators open, and screenshots must hit this one.
+[ -n "${DONPA_UDID_FILE:-}" ] && echo "$udid" > "$DONPA_UDID_FILE"
 name=$(xcrun simctl list devices available | grep "$udid" | sed -E 's/ *\(.*//' | xargs)
 echo "Booting ${name}…"
 xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1 || true

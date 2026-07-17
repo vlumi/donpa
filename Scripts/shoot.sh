@@ -29,7 +29,8 @@ capture() {  # $1 = output file
     if [ "$PLATFORM" = mac ]; then
         screencapture -o -x -l"$WINDOW_ID" "$1"
     else
-        xcrun simctl io booted screenshot "$1" >/dev/null
+        # By UDID — `booted` grabs an arbitrary device with several sims open.
+        xcrun simctl io "${SIM_UDID:-booted}" screenshot "$1" >/dev/null
     fi
 }
 
@@ -66,7 +67,7 @@ quit_app() {
         sleep 1
         pgrep -xq "$APP_NAME" && { killall -9 "$APP_NAME" || true; sleep 1; }
     else
-        xcrun simctl terminate booted "$BUNDLE" >/dev/null 2>&1 || true
+        xcrun simctl terminate "${SIM_UDID:-booted}" "$BUNDLE" >/dev/null 2>&1 || true
     fi
     return 0
 }
@@ -78,12 +79,16 @@ for lang in "${langs[@]}"; do
     echo ""
     echo "━━━ $PLATFORM / $lang — launching demo ━━━"
     quit_app  # a lingering instance would swallow the new language's args
-    DEMO_LANG="$lang" PLATFORM="$PLATFORM" Scripts/demo.sh >/dev/null
+    udid_file=$(mktemp)
+    DEMO_LANG="$lang" PLATFORM="$PLATFORM" DONPA_UDID_FILE="$udid_file" \
+        Scripts/demo.sh >/dev/null
     if [ "$PLATFORM" = mac ]; then
         WINDOW_ID=$(mac_window_id) || { echo "App window never appeared." >&2; exit 1; }
     else
+        SIM_UDID=$(cat "$udid_file" 2>/dev/null || true)
         sleep 3  # let the launch settle before the first stage prompt
     fi
+    rm -f "$udid_file"
 
     i=0
     while IFS=$'\t' read -r name desc; do
