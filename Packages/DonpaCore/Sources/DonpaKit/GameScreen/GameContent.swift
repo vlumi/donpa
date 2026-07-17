@@ -288,6 +288,9 @@ struct GameContent: View {
         navigator.playConfigRequested = nil
         navigator.showingScores = false
         navigator.showingMessHall = false  // a head-to-head rematch arrives from here
+        // Like every other start path: an armed-but-unplayed daily must not
+        // leak its start prompt onto this plain game.
+        navigator.activeDaily = nil
         settings.adopt(config)
         viewModel.newGame(config: config)
         navigator.showingTitle = false
