@@ -204,13 +204,6 @@ extension MedalView {
             style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
     }
 
-    static func circleFace(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
-        let inset = s * 0.10
-        let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
-        ctx.stroke(
-            Path(ellipseIn: rect), with: .color(ink), style: StrokeStyle(lineWidth: s * 0.07))
-    }
-
     /// The classic Minesweeper reset-button smiley — the face of "The Classics".
     /// `laughing` swaps the dot eyes for happy arcs and opens the grin, for the
     /// timed variant.
@@ -282,10 +275,20 @@ extension MedalView {
         _ text: String, in ctx: GraphicsContext, side s: CGFloat, ink: Color,
         scale: CGFloat = 0.5
     ) {
-        ctx.draw(
+        // Measure the resolved text (unconstrained box, so nothing wraps) and
+        // place its top-leading corner from the true size — centres it the same
+        // in the live Canvas and the ImageRenderer export. The small downward
+        // bias optically centres numerals, whose layout box carries descender
+        // padding they don't fill.
+        let resolved = ctx.resolve(
             Text(verbatim: text)
                 .font(.system(size: s * scale, weight: .black, design: .rounded))
-                .foregroundColor(ink),
-            at: CGPoint(x: s / 2, y: s / 2))
+                .foregroundColor(ink))
+        let size = resolved.measure(in: CGSize(width: s * 4, height: s * 4))
+        ctx.draw(
+            resolved,
+            at: CGPoint(
+                x: (s - size.width) / 2, y: (s - size.height) / 2 + s * scale * 0.06),
+            anchor: .topLeading)
     }
 }

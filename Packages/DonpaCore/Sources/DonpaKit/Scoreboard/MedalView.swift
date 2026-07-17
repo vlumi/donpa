@@ -146,7 +146,7 @@ struct MedalView: View {
             star(in: ctx, at: CGPoint(x: s / 2, y: s / 2), radius: s * 0.34, ink: ink)
         },
         .lunaticWin: { fullMoon(in: $0, side: $1, ink: $2) },
-        .luckCoinFlip: { coin(in: $0, side: $1, label: "1/2", ink: $2) },
+        .luckCoinFlip: { coin(in: $0, side: $1, label: "50", ink: $2) },
         .fullClearSize: { BoardGlyph.draw(.grid, in: $0, side: $1, color: $2) },
         .trifecta: { smiley(in: $0, side: $1, ink: $2) },
         .trifectaTime: { speedSmiley(in: $0, side: $1, ink: $2) },
@@ -181,10 +181,7 @@ struct MedalView: View {
             burst(in: ctx, side: s, ink: ink)
             label("2", in: ctx, side: s, ink: ink, scale: 0.34)
         },
-        .hiddenThirteen: { ctx, s, ink in
-            circleFace(in: ctx, side: s, ink: ink)
-            label("13", in: ctx, side: s, ink: ink)
-        },
+        .hiddenThirteen: { label("13", in: $0, side: $1, ink: $2, scale: 0.6) },
         .hiddenSoClose: { label("99%", in: $0, side: $1, ink: $2) },
         .hiddenOvertime: { infinity(in: $0, side: $1, ink: $2) },
     ]
