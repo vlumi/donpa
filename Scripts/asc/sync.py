@@ -137,9 +137,13 @@ def release_achievements(asc, gc_id, live, apply):
     the Game Center detail (the "add to review from the Game Center section"
     flow — one call per achievement, not the per-item UI click). Skips any that
     already have a release. Idempotent: a duplicate create 409s and is skipped."""
+    # `include=` is required — without it the list omits relationship data,
+    # the set collapses to {None}, and every re-run re-plans all 29.
     existing = {
         (r.get("relationships", {}).get("gameCenterAchievement", {}).get("data") or {}).get("id")
-        for r in asc.get_all(f"/gameCenterDetails/{gc_id}/achievementReleases?limit=200")
+        for r in asc.get_all(
+            f"/gameCenterDetails/{gc_id}/achievementReleases"
+            "?limit=200&include=gameCenterAchievement")
     }
     made = skipped = 0
     for wid, cur in sorted(live.items()):
@@ -148,18 +152,27 @@ def release_achievements(asc, gc_id, live, apply):
             continue
         print(f"release: {wid}")
         if apply:
-            asc.post("/gameCenterAchievementReleases", {
+            _post_release(asc, gc_id, cur["id"])
+        made += 1
+    print(f"\n{made} release(s) {'created' if apply else 'to create'}, "
+          f"{skipped} already released.")
+
+
+def _post_release(asc, gc_id, achievement_id):
+    """One release record; a duplicate 409 means it's already in review — skip."""
+    try:
+        asc.post("/gameCenterAchievementReleases", {
                 "data": {
                     "type": "gameCenterAchievementReleases",
                     "relationships": {
                         "gameCenterDetail": {
                             "data": {"type": "gameCenterDetails", "id": gc_id}},
                         "gameCenterAchievement": {
-                            "data": {"type": "gameCenterAchievements", "id": cur["id"]}},
+                            "data": {"type": "gameCenterAchievements", "id": achievement_id}},
                     }}})
-        made += 1
-    print(f"\n{made} release(s) {'created' if apply else 'to create'}, "
-          f"{skipped} already released.")
+    except RuntimeError as e:
+        if "409" not in str(e):
+            raise
 
 
 def main():
