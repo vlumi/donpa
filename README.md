@@ -13,12 +13,12 @@ touching the game logic.
 **v0.3.0** (board variants + the config/scoreboard redesign), **v0.4.0**
 (friendly rivalry — peer-to-peer score sharing, rivals and squads, the
 home-screen redesign, per-board saves, forced-guess luck tracking, and the
-Lunatic tier), and **v0.5.0** (progression — achievements, unlockable boards,
+Lunatic tier), **v0.5.0** (progression — achievements, unlockable boards,
 Drills, how-to-play, Nearby exchange, sound & haptics), and **v0.6.0**
-(keyboard & accessibility, plus the daily challenge) have shipped to
-TestFlight. See
-[CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md) for
-the path to v1.0, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
+(keyboard & accessibility, plus the daily challenge) shipped to TestFlight;
+**v1.0.0** — the public App Store release — is in submission. See
+[CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md)
+for what's next, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
 decisions.
 
 ## Contents

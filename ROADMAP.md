@@ -40,29 +40,20 @@ gates.
       tiny). Revisit only near KVS storage limits.
 
 
-## v0.6.0 — Keyboard & accessibility
-
-Code complete — the substance shipped (see CHANGELOG). The scope cuts
-(widgets, App Clip, SharePlay, TipKit) and the sync-flag scope rule are
-recorded in DECISIONS.md. The **daily challenge** (planned as 0.7.0's
-"skill & social" pillar) landed in this beta train instead — decide at
-the cut whether the next build stays 0.6.0 or stamps 0.7.0; the design
-of record is in DECISIONS.md.
-
 ## v1.0.0 — The store release
 
-The features are in; 1.0 makes them ship-shape for the public App Store.
+The features and the store assets are in (achievements, listing text,
+screenshots — all live in ASC and synced from this repo via `make asc-*`).
+What remains is the submission itself:
 
-- [ ] **Game Center, ASC side** (the reporter code shipped 2026-07-13; design
-      + merge rules in DECISIONS.md): create the 29 achievement definitions
-      per the tier-flattening mapping (`GameCenterMapping.allWireIDs` is
-      canonical), assign the ≤ 1 000-point budget, flag the four gags hidden;
-      one 1024×1024 image each — export via the MedalGalleryRender harness;
-      then a sandbox TestFlight pass of the opt-in flow.
-- [ ] Settings, theming, polish sweep across all modes
-- [ ] Documentation + screenshots per mode; store listing (incl. the short
-      AI-assistance note in the description)
-- [ ] App Store submission (age rating is set; review readiness)
+- [ ] Cut the first 1.0.0 build; attach it to the ASC version
+- [ ] **AI-assistance note in the store description** — the README carries
+      the honest note; decide whether to mirror a short version into the
+      description before submitting (Apple has no AI flag, so the
+      description is the only store-side lever). The live listing does NOT
+      carry it yet.
+- [ ] Release the 29 achievements into the review package
+      (`make asc-release-apply`), then **Submit for Review**
 - [ ] **UI smoke tests on CI?** A local XCUITest suite already exists (`make
       uitest`, `Tests/UITests/`, shipped in v0.1) but is deliberately *not* run
       by CI — it needs a job that builds the `.xcodeproj` and boots a simulator
@@ -77,9 +68,6 @@ Purchase record, and the local release lane does the whole cut (see
 [RELEASING.md](RELEASING.md); the two-native-targets / shared-bundle-id
 story is in [ARCHITECTURE.md](ARCHITECTURE.md)). Open items:
 
-- [ ] **AI disclosure at submission.** The README carries an honest "AI
-      assistance" note; mirror a short version into the App Store description
-      (Apple has no AI flag, so the description is the only store-side lever).
 - [ ] **Art assets — licensing (open question).** For now everything stays in
       this repo under the blanket MIT — the assets are AI-generated PNGs with no
       sensitive sources. The concern is **commissioned art**: MIT lets anyone
