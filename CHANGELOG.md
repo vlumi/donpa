@@ -22,6 +22,11 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **The Mess hall scrolls as one.** The share card now scrolls away and
+  the Rivals/Squads tabs pin to the top, so the rivals list gets the room
+  it needs — especially in landscape, where the fixed header used to
+  crowd it out.
+
 - **Share buttons keep their labels.** On the widest iPhones the Mess
   hall's Share link / QR code labels no longer wrap or truncate — they
   stay on one line, shrinking a hair if needed.

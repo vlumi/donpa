@@ -135,10 +135,10 @@ struct MessHallView: View {
 
     // MARK: Share / scan header
 
-    /// The header, COMPACT by design (a taller one starves the rivals list —
-    /// on a landscape SE it never appeared at all): the share card, then the
-    /// tab picker sharing a row with the icon-only Add-rival door to the
-    /// scanner. Nearby lives ON the card as its promoted default action.
+    #if os(macOS)
+    /// The macOS header: the share card, then the tab picker sharing a row with
+    /// the icon-only Add-rival door to the scanner. (iOS uses `collapsingContent`
+    /// — the card scrolls, the tab bar pins — so this is Mac-only.)
     private var shareHeader: some View {
         VStack(spacing: 8) {
             ShareCardView(
@@ -159,6 +159,83 @@ struct MessHallView: View {
             }
         }
     }
+    #endif
+
+    #if os(iOS)
+    /// The whole sheet as ONE scroll: the share card is a plain first row that
+    /// scrolls away, and the Rivals/Squads tab bar + scan button is a PINNED
+    /// section header (`.plain` list style pins headers). This reclaims the
+    /// space a fixed header stole in landscape, and shows more of the list once
+    /// you scroll past the card in portrait too.
+    @ViewBuilder private var collapsingContent: some View {
+        List {
+            Section {
+                ShareCardView(
+                    scoreboard: scoreboard, settings: settings, dailyStore: dailyStore,
+                    onNearby: { nearbyURL = currentShareURL().map(NearbyPayload.init) },
+                    keyFocus: cardKeyFocus, activate: cardActivate,
+                    hasLink: $cardHasLink
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                .listRowSeparator(.hidden)
+            }
+            Section {
+                switch tab {
+                case .rivals:
+                    if rivals.isEmpty {
+                        emptyRivals.listRowSeparator(.hidden)
+                    } else {
+                        rivalRows
+                    }
+                case .squads:
+                    groupRows
+                }
+            } header: {
+                pinnedTabBar
+            }
+        }
+        .listStyle(.plain)
+        .modifier(TightSectionSpacing())
+    }
+
+    /// The pinned sub-bar: the Rivals/Squads picker + the scan door. Styled as a
+    /// header (edge-to-edge, opaque backing) so it reads as chrome, not a row.
+    private var pinnedTabBar: some View {
+        HStack(spacing: 10) {
+            tabPicker.modifier(zoneRing(.tabs))
+            Button {
+                scanning = true
+            } label: {
+                Image(systemName: "qrcode.viewfinder")
+            }
+            .buttonStyle(.bordered)
+            .modifier(zoneRing(.addRival))
+            .accessibilityLabel(Text("Add rival", bundle: .module))
+        }
+        .padding(.vertical, 6)
+        .textCase(nil)
+        .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+    }
+
+    private var emptyRivals: some View {
+        ListEmptyState(
+            icon: "person.2", title: "No rivals yet.",
+            detail: "Add a rival's scores by scanning their QR code or opening a share link.")
+    }
+
+    /// Collapse the default gap `.plain` leaves between the card section and the
+    /// pinned tab bar. `.listSectionSpacing` is iOS 17+; a no-op below that (the
+    /// gap is a cosmetic nicety, not a functional issue).
+    private struct TightSectionSpacing: ViewModifier {
+        func body(content: Content) -> some View {
+            if #available(iOS 17.0, *) {
+                content.listSectionSpacing(0)
+            } else {
+                content
+            }
+        }
+    }
+    #endif
 
     /// The signed share link, through the same gate chain the card uses —
     /// but with the FULL daily history (Nearby has no scan budget).
@@ -207,27 +284,31 @@ struct MessHallView: View {
                 icon: "person.2", title: "No rivals yet.",
                 detail: "Add a rival's scores by scanning their QR code or opening a share link.")
         } else {
-            List {
-                ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
-                    // Tap = compare (the primary action); trailing pencil = edit.
-                    CompareEditRow(
-                        compare: {
-                            focusRow(index)
-                            comparingRival = rival
-                        },
-                        edit: {
-                            focusRow(index)
-                            editingRival = rival
-                        }
-                    ) {
-                        FriendRow(friend: rival, groupNames: groupNames(for: rival))
-                    }
-                    .modifier(keyFocusRing(index))
+            List { rivalRows }
+        }
+    }
+
+    /// The rival rows, as List content (shared by the macOS List and the iOS
+    /// collapsing List). Empty state is handled by the caller.
+    @ViewBuilder private var rivalRows: some View {
+        ForEach(Array(rivals.enumerated()), id: \.element.id) { index, rival in
+            // Tap = compare (the primary action); trailing pencil = edit.
+            CompareEditRow(
+                compare: {
+                    focusRow(index)
+                    comparingRival = rival
+                },
+                edit: {
+                    focusRow(index)
+                    editingRival = rival
                 }
-                .onDelete { offsets in
-                    offsets.map { rivals[$0].publicKey }.forEach { friends.delete($0) }
-                }
+            ) {
+                FriendRow(friend: rival, groupNames: groupNames(for: rival))
             }
+            .modifier(keyFocusRing(index))
+        }
+        .onDelete { offsets in
+            offsets.map { rivals[$0].publicKey }.forEach { friends.delete($0) }
         }
     }
 
@@ -239,44 +320,48 @@ struct MessHallView: View {
     // MARK: Groups tab
 
     @ViewBuilder private var groupsList: some View {
-        List {
-            // Create a group, then jump straight into editing it (name + add members).
-            HStack(spacing: 8) {
-                TextField(text: $newGroupName) { Text("New squad", bundle: .module) }
-                    .textFieldStyle(.roundedBorder)
-                    .focused($newSquadFocused)
-                    .onSubmit(createGroup)
-                Button(action: createGroup) { Text("Add", bundle: .module) }
-                    .disabled(newGroupName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-            .modifier(zoneRing(.newSquad))
+        List { groupRows }
+    }
 
-            if friends.groups.isEmpty {
-                Text("No squads yet — create one above.", bundle: .module)
-                    .font(.callout).foregroundStyle(.secondary)
-            } else {
-                ForEach(Array(friends.groups.enumerated()), id: \.element.id) { index, group in
-                    // Tap = compare vs the group's best; pencil = edit (name/members/delete).
-                    CompareEditRow(
-                        compare: {
-                            focusRow(index)
-                            comparingGroup = group
-                        },
-                        edit: {
-                            focusRow(index)
-                            editingGroup = group
-                        },
-                        compareDisabled: friends.members(of: group.id).isEmpty
-                    ) {
-                        HStack {
-                            Text(group.name)
-                            Spacer()
-                            Text("\(friends.members(of: group.id).count)", bundle: .module)
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
+    /// The squads rows, as List content (shared by the macOS List and the iOS
+    /// collapsing List): the create-squad field, then the squads.
+    @ViewBuilder private var groupRows: some View {
+        // Create a group, then jump straight into editing it (name + add members).
+        HStack(spacing: 8) {
+            TextField(text: $newGroupName) { Text("New squad", bundle: .module) }
+                .textFieldStyle(.roundedBorder)
+                .focused($newSquadFocused)
+                .onSubmit(createGroup)
+            Button(action: createGroup) { Text("Add", bundle: .module) }
+                .disabled(newGroupName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .modifier(zoneRing(.newSquad))
+
+        if friends.groups.isEmpty {
+            Text("No squads yet — create one above.", bundle: .module)
+                .font(.callout).foregroundStyle(.secondary)
+        } else {
+            ForEach(Array(friends.groups.enumerated()), id: \.element.id) { index, group in
+                // Tap = compare vs the group's best; pencil = edit (name/members/delete).
+                CompareEditRow(
+                    compare: {
+                        focusRow(index)
+                        comparingGroup = group
+                    },
+                    edit: {
+                        focusRow(index)
+                        editingGroup = group
+                    },
+                    compareDisabled: friends.members(of: group.id).isEmpty
+                ) {
+                    HStack {
+                        Text(group.name)
+                        Spacer()
+                        Text("\(friends.members(of: group.id).count)", bundle: .module)
+                            .font(.caption).foregroundStyle(.secondary)
                     }
-                    .modifier(keyFocusRing(index))
                 }
+                .modifier(keyFocusRing(index))
             }
         }
     }
@@ -301,10 +386,7 @@ extension MessHallView {
             title: "Mess hall", macMinWidth: 600, macIdealHeight: 600,
             content: {
                 #if os(iOS)
-                VStack(spacing: 0) {
-                    shareHeader.padding([.horizontal, .top], 12)
-                    tabContent
-                }
+                collapsingContent
                 #else
                 shareHeader
                 tabContent.frame(minHeight: 180, idealHeight: 300)
