@@ -22,6 +22,13 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Roomier Record and Mess hall on iPad.** Both now open page-sized
+  (iPadOS 18+) instead of the cramped default sheet.
+
+- **Tighter Finnish stat labels.** Four Service Record labels shortened
+  (Ilman lippuja, Ilman alueavausta, Miinaosumat, Nykytahti) so the
+  expanded row keeps its two-column layout on iPhone.
+
 - **A browsed daily stays put.** Opening the daily challenge's start
   prompt and then starting a plain game from the Service Record's history
   or a rival's list no longer drags the daily's Start/Cancel prompt (and
