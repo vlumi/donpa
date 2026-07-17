@@ -242,7 +242,13 @@ extension GameContent {
             onPlay: { navigator.playConfigRequested = $0 },
             // "Manage rivals": swap to the Mess hall at root (deferred a tick —
             // the scoreboard is dismissing; two sheet swaps in one runloop race).
+            // Hand the pause across FIRST, so the Record's dismiss doesn't
+            // restart the clock during the swap.
             onMessHall: {
+                if pausedForScores {
+                    pausedForScores = false
+                    pausedForMessHall = true
+                }
                 navigator.showingScores = false
                 navigator.afterDismiss { navigator.showingMessHall = true }
             },
