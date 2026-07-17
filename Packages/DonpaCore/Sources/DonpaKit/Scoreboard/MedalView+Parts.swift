@@ -139,14 +139,14 @@ extension MedalView {
         ctx.stroke(
             rings, with: .color(ink),
             style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
-        // The check, over the day area.
+        // The check, floated in the day area with a margin off every edge.
         var check = Path()
-        check.move(to: CGPoint(x: page.minX + page.width * 0.22, y: page.minY + s * 0.38))
-        check.addLine(to: CGPoint(x: page.minX + page.width * 0.42, y: page.maxY - s * 0.10))
-        check.addLine(to: CGPoint(x: page.maxX - page.width * 0.12, y: page.minY + s * 0.24))
+        check.move(to: CGPoint(x: page.minX + page.width * 0.28, y: page.minY + s * 0.40))
+        check.addLine(to: CGPoint(x: page.minX + page.width * 0.44, y: page.maxY - s * 0.16))
+        check.addLine(to: CGPoint(x: page.maxX - page.width * 0.22, y: page.minY + s * 0.30))
         ctx.stroke(
             check, with: .color(ink),
-            style: StrokeStyle(lineWidth: s * 0.09, lineCap: .round, lineJoin: .round))
+            style: StrokeStyle(lineWidth: s * 0.085, lineCap: .round, lineJoin: .round))
     }
 
     /// A drawn lemniscate — the ∞ glyph doesn't centre optically.
@@ -204,21 +204,91 @@ extension MedalView {
             style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
     }
 
-    static func circleFace(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
+    /// The classic Minesweeper reset-button smiley — the face of "The Classics".
+    /// `laughing` swaps the dot eyes for happy arcs and opens the grin, for the
+    /// timed variant.
+    static func smiley(
+        in ctx: GraphicsContext, side s: CGFloat, ink: Color, laughing: Bool = false
+    ) {
         let inset = s * 0.10
         let rect = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
+        let c = CGPoint(x: s / 2, y: s / 2)
         ctx.stroke(
             Path(ellipseIn: rect), with: .color(ink), style: StrokeStyle(lineWidth: s * 0.07))
+        let eyeY = c.y - s * 0.09
+        if laughing {
+            // Happy squinting eyes: two small upward arcs (∩-shaped).
+            for dx in [-s * 0.15, s * 0.15] {
+                var eye = Path()
+                eye.addArc(
+                    center: CGPoint(x: c.x + dx, y: eyeY), radius: s * 0.07,
+                    startAngle: .degrees(200), endAngle: .degrees(340), clockwise: false)
+                ctx.stroke(
+                    eye, with: .color(ink),
+                    style: StrokeStyle(lineWidth: s * 0.05, lineCap: .round))
+            }
+        } else {
+            let eyeR = s * 0.05
+            for dx in [-s * 0.15, s * 0.15] {
+                let e = CGPoint(x: c.x + dx, y: eyeY)
+                ctx.fill(
+                    Path(
+                        ellipseIn: CGRect(
+                            x: e.x - eyeR, y: e.y - eyeR, width: eyeR * 2, height: eyeR * 2)),
+                    with: .color(ink))
+            }
+        }
+        var mouth = Path()
+        let mr = s * (laughing ? 0.24 : 0.20)
+        mouth.addArc(
+            center: CGPoint(x: c.x, y: c.y + s * (laughing ? 0.0 : 0.02)), radius: mr,
+            startAngle: .degrees(laughing ? 10 : 25), endAngle: .degrees(laughing ? 170 : 155),
+            clockwise: false)
+        if laughing {
+            // Close the open grin with a lip so it reads as a laugh, not a bowl.
+            mouth.closeSubpath()
+            ctx.fill(mouth, with: .color(ink))
+        } else {
+            ctx.stroke(
+                mouth, with: .color(ink), style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+        }
+    }
+
+    /// The Classics smiley shoved forward with trailing speed lines — "fast".
+    static func speedSmiley(in ctx: GraphicsContext, side s: CGFloat, ink: Color) {
+        // Trailing stripes behind (left of) the face.
+        var stripes = Path()
+        for (y, len) in [(0.34, 0.22), (0.50, 0.30), (0.66, 0.22)] {
+            stripes.move(to: CGPoint(x: s * 0.02, y: s * y))
+            stripes.addLine(to: CGPoint(x: s * (0.02 + len), y: s * y))
+        }
+        ctx.stroke(
+            stripes, with: .color(ink.opacity(0.55)),
+            style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+        // The face, nudged right to make room for the stripes.
+        var face = ctx
+        face.translateBy(x: s * 0.16, y: 0)
+        smiley(in: face, side: s * 0.86, ink: ink, laughing: true)
     }
 
     static func label(
         _ text: String, in ctx: GraphicsContext, side s: CGFloat, ink: Color,
         scale: CGFloat = 0.5
     ) {
-        ctx.draw(
+        // Measure the resolved text (unconstrained box, so nothing wraps) and
+        // place its top-leading corner from the true size — centres it the same
+        // in the live Canvas and the ImageRenderer export. The small downward
+        // bias optically centres numerals, whose layout box carries descender
+        // padding they don't fill.
+        let resolved = ctx.resolve(
             Text(verbatim: text)
                 .font(.system(size: s * scale, weight: .black, design: .rounded))
-                .foregroundColor(ink),
-            at: CGPoint(x: s / 2, y: s / 2))
+                .foregroundColor(ink))
+        let size = resolved.measure(in: CGSize(width: s * 4, height: s * 4))
+        ctx.draw(
+            resolved,
+            at: CGPoint(
+                x: (s - size.width) / 2, y: (s - size.height) / 2 + s * scale * 0.06),
+            anchor: .topLeading)
     }
 }

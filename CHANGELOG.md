@@ -48,6 +48,11 @@ entries land under Unreleased as they merge.
   light and dark mode while the emblem stays crisp instead of washing out
   against a colored fill.
 
+- **Sharper achievement art.** The Classics decoration is now the familiar
+  smiley, and its timed variant a laughing smiley with speed lines. Roll
+  Call's calendar check sits inside its page, medal numbers are properly
+  centred, and the labels read cleaner (a plain "13", a "50" coin).
+
 ### build 26 — 2026-07-16
 
 - **Clearer daily start prompt.** The daily challenge's Start screen now

@@ -12,8 +12,8 @@ upload dance is slow and images change rarely; --images alone still needs
   Scripts/asc/sync.py --apply         # push text/points/hidden changes
   Scripts/asc/sync.py --apply --images  # also (re)upload images
 
-Image files are read from the render output dir (DONPA_MEDAL_ASC target),
-default ./asc-medals, overridable with --image-dir.
+Image files are read from Scripts/asc/medals (the committed set rendered by
+`make asc-medals`), overridable with --image-dir.
 Needs: PyJWT + cryptography.
 """
 import argparse
@@ -167,7 +167,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="write changes (default: dry run)")
     ap.add_argument("--images", action="store_true", help="also (re)upload images")
-    ap.add_argument("--image-dir", default="asc-medals", help="dir of <id>.png files")
+    ap.add_argument(
+        "--image-dir", default=os.path.join(HERE, "medals"), help="dir of <id>.png files")
     ap.add_argument("--release", action="store_true",
                     help="add achievements to review (create release records)")
     args = ap.parse_args()
