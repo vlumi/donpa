@@ -52,8 +52,11 @@ struct GameContent: View {
     @State private var processingTask: Task<Void, Never>?
     @State private var processingShownAt: Date?
     @State var windowSize: CGSize = .zero
-    /// Auto-resume on dismiss only if WE paused — not the player.
-    @State private var pausedForScores = false
+    /// Auto-resume on dismiss only if WE paused — not the player. Not private:
+    /// the Record's Manage-rivals cross-link (in +Result) hands the pause from
+    /// the scores sheet to the Mess hall so the clock never restarts mid-swap.
+    @State var pausedForScores = false
+    @State var pausedForMessHall = false
     @State private var pausedForNewGame = false
     @State private var saveStore: SaveStore
     @State private var saveWriter: BackgroundSaveWriter
@@ -155,30 +158,17 @@ struct GameContent: View {
         }
         #endif
         .appearanceSheet(isPresented: $navigator.showingScores, settings) { scoreboardSheet }
-        // Browsing scores shouldn't cost clock time; resume only OUR pause.
-        .onChangeCompat(of: navigator.showingScores) { showing in
-            if showing {
-                if viewModel.playState == .playing {
-                    pausedForScores = true
-                    viewModel.pause()
-                }
-            } else if pausedForScores {
-                pausedForScores = false
-                viewModel.resume()
-            }
+        // Browsing (scores, rivals, the New Game popup) shouldn't cost clock
+        // time; each surface resumes only ITS OWN pause. Starting from the
+        // popup is safe: newGame/restore leave isPaused false — resume no-ops.
+        .onChangeCompat(of: navigator.showingScores) {
+            pauseWhileBrowsing($0, flag: $pausedForScores)
         }
-        // Same for the New Game popup. Starting from the popup is safe:
-        // newGame/restore leave isPaused false, so this resume() no-ops.
-        .onChangeCompat(of: navigator.showingNewGame) { showing in
-            if showing {
-                if viewModel.playState == .playing {
-                    pausedForNewGame = true
-                    viewModel.pause()
-                }
-            } else if pausedForNewGame {
-                pausedForNewGame = false
-                viewModel.resume()
-            }
+        .onChangeCompat(of: navigator.showingMessHall) {
+            pauseWhileBrowsing($0, flag: $pausedForMessHall)
+        }
+        .onChangeCompat(of: navigator.showingNewGame) {
+            pauseWhileBrowsing($0, flag: $pausedForNewGame)
         }
         .appearanceSheet(isPresented: $navigator.showingSettings, settings) {
             SettingsView(settings: settings, scoreboard: scoreboard)
@@ -283,8 +273,23 @@ struct GameContent: View {
 
     /// Clear `pausedForScores` first: the sheet's dismiss handler must not
     /// resume the OLD (now replaced) game.
+    /// A browse surface opened over a LIVE game pauses it and marks the pause
+    /// as its own; closing resumes only that own pause — never the player's.
+    private func pauseWhileBrowsing(_ showing: Bool, flag: Binding<Bool>) {
+        if showing {
+            if viewModel.playState == .playing {
+                flag.wrappedValue = true
+                viewModel.pause()
+            }
+        } else if flag.wrappedValue {
+            flag.wrappedValue = false
+            viewModel.resume()
+        }
+    }
+
     private func playFromScoreboard(_ config: GameConfig) {
         pausedForScores = false
+        pausedForMessHall = false
         navigator.playConfigRequested = nil
         navigator.showingScores = false
         navigator.showingMessHall = false  // a head-to-head rematch arrives from here
