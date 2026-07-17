@@ -17,7 +17,6 @@ Image files are read from Scripts/asc/medals (the committed set rendered by
 Needs: PyJWT + cryptography.
 """
 import argparse
-import hashlib
 import json
 import os
 import sys
@@ -116,11 +115,11 @@ def upload_image(asc, loc_id, path, existing_image_id, apply):
     # 2. Upload the bytes to the returned URL.
     headers = {h["name"]: h["value"] for h in op.get("requestHeaders", [])}
     _put_bytes(op, data, headers)
-    # 3. Commit with the checksum.
-    md5 = hashlib.md5(data).hexdigest()
+    # 3. Commit. Only `uploaded` is accepted here — sourceFileChecksum is a
+    # reserve-time attribute and 409s ("unknown attribute") at commit.
     asc.patch(f"/gameCenterAchievementImages/{image_id}", {
         "data": {"type": "gameCenterAchievementImages", "id": image_id,
-                 "attributes": {"uploaded": True, "sourceFileChecksum": md5}}})
+                 "attributes": {"uploaded": True}}})
     return "uploaded"
 
 
