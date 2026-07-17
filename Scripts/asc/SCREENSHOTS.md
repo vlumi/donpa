@@ -57,12 +57,14 @@ commit them and every later demo launch (all platforms) resumes exactly those.
 
 iPhone 6.9" (1320×2868) · iPad 13" (2064×2752) · Mac 1440×900.
 
-## The shots — ordered by persuasion (the carousel shows ~3, so front-load)
+## The shots
 
-1. **big map** — THE opener. Resume the seeded **XXL** save, zoom out so the
-   minimap + sheer scale fill the frame. Nobody expects this from minesweeper
-   — lead with spectacle.
-2. **big map, Dark** — the same board with Appearance set to Dark: the one
+Capture order (what `make shots` walks — dark right after big-map because it's
+the same staged board):
+
+1. **big map** — resume the seeded **XXL** save, zoom out so the minimap +
+   sheer scale fill the frame. Nobody expects this from minesweeper.
+2. **big map, Dark** — the same board with Appearance flipped to Dark: the one
    dark-mode taster, so the listing shows the app isn't light-only.
 3. **a variant board** — resume the seeded **Hive** (hex) game, showing the hex
    numbers. The mechanical hook: "boards you haven't played."
@@ -70,12 +72,18 @@ iPhone 6.9" (1320×2868) · iPad 13" (2064×2752) · Mac 1440×900.
    "look how much is here" shot; proves the earlier boards weren't one-offs.
 5. **a clean mid-game** — resume the seeded **Beginner** game: a normal board
    part-cleared, numbers and flags showing. The core loop, legible.
-6. **Service Record** — Tour of Duty, scrolled to show a pace figure and the
-   Daily orders / streak section. "It tracks your skill; it has depth."
+6. **Service Record** — expand a cleared board's row so the top-5 times and
+   pace figures show. The stats-nerd shot: serious sweepers care about 3BV
+   pace, and nothing else on the store has it.
 7. **daily challenge** — the calendar (via History) or the review screen. "One
    shared board a day, a reason to come back."
-8. **rivalry** *(iPhone only)* — the Mess hall, rivals list + share row. Skip on
-   iPad (small centred sheet, dead space) — use another board shot there.
+8. **rivalry** — the Mess hall, Rivals tab: share card + head-to-head list.
+   Local, no-account score sharing is a differentiator.
+
+**Store order ≠ capture order.** In ASC, arrange the carousel by persuasion —
+the first ~3 sell the app: **big-map, mid-game, variant-board**, then
+new-game, daily, rivalry, service-record, big-map-dark. Don't spend slot 2 on
+the dark twin of slot 1.
 
 Avoid the home/title screen in every set (the AI title art). Every language
 gets this same set, in that language.

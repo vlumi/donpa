@@ -129,7 +129,11 @@ public enum DemoSeed {
             _ = scoreboard.submit(run.best, for: run.config, threeBV: run.threeBV)
             for i in 0..<run.wins {
                 if i > 0 {
-                    _ = scoreboard.submit(run.best + 600, for: run.config, threeBV: run.threeBV)
+                    // Spread the non-best wins deterministically so the top-5
+                    // times read as a real history, not one time five times.
+                    let over = 250 + (i * 217) % 1_400
+                    _ = scoreboard.submit(
+                        run.best + over, for: run.config, threeBV: run.threeBV)
                 }
                 scoreboard.recordGameOutcome(
                     for: run.config, won: true, minesHit: 0,

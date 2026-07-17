@@ -31,10 +31,10 @@ language, and so on.
 import os
 import sys
 
-# Canonical shots in capture order (see SCREENSHOTS.md). Each: (name,
-# iphone_only, what-to-capture). `iphone_only` skips iPad/Mac (the Mess hall
-# reads poorly as a centred sheet). Every language gets this SAME full set, in
-# that language — a JP listing must show JP screenshots, not English ones.
+# Canonical shots in capture order (see SCREENSHOTS.md — the recommended STORE
+# order differs; arrange at upload). Each: (name, iphone_only, what-to-capture);
+# `iphone_only` skips a shot on iPad/Mac. Every language gets this SAME full
+# set, in that language — a JP listing must show JP screenshots, not English.
 SHOTS = [
     ("big-map", False,
      "Resume the XXL save and zoom out so the minimap and sheer scale fill the "
@@ -51,13 +51,12 @@ SHOTS = [
     ("mid-game", False,
      "Resume the Beginner save — a clean, part-cleared square board mid-solve."),
     ("service-record", False,
-     "Open the Service Record on a config with scores, so pace lines and best "
-     "times show."),
+     "Open the Service Record and EXPAND a cleared board's row, so the top-5 "
+     "times and pace show — the stats-nerd shot."),
     ("daily", False,
      "Open the daily calendar showing the streak, then the day's result."),
-    ("rivalry", True,
-     "Open the Mess hall on the Rivals tab (iPhone only) — the head-to-head "
-     "list."),
+    ("rivalry", False,
+     "Open the Mess hall on the Rivals tab — the share card and rivals list."),
 ]
 
 
