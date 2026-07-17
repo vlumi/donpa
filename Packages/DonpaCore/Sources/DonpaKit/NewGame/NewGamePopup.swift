@@ -35,7 +35,9 @@ struct NewGamePopup: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.45)
+            // Match the system sheets' dimming (~20% black) — at 0.45 this
+            // overlay read noticeably darker than the Record/Mess hall sheets.
+            Color.black.opacity(0.2)
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { onClose() }
