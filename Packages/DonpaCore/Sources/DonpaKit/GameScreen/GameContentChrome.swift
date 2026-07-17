@@ -127,16 +127,20 @@ extension GameContent {
                     let shorter = min(geo.size.width, geo.size.height)
                     let panelW = min(max(shorter * 0.82, 220), 900)
                     VStack(spacing: 12) {
-                        Image("PanelPause", bundle: .module)
-                            .resizable()
-                            .interpolation(.high)
-                            .antialiased(true)
-                            .scaledToFit()
-                            .frame(
-                                maxWidth: min(panelW, geo.size.width - 24),
-                                maxHeight: geo.size.height - 100
-                            )
-                            .shadow(color: .black.opacity(0.35), radius: 14, y: 5)
+                        // Skipped in the screenshot demo: sheets opened over a
+                        // paused game would put the manga art in store shots.
+                        if !DemoSeed.isRequested {
+                            Image("PanelPause", bundle: .module)
+                                .resizable()
+                                .interpolation(.high)
+                                .antialiased(true)
+                                .scaledToFit()
+                                .frame(
+                                    maxWidth: min(panelW, geo.size.width - 24),
+                                    maxHeight: geo.size.height - 100
+                                )
+                                .shadow(color: .black.opacity(0.35), radius: 14, y: 5)
+                        }
                         // The drill command; a11y keeps the plain "Paused" below.
                         Text("At ease!", bundle: .module)
                             .font(.title2.bold())
