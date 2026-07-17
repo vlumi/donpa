@@ -219,7 +219,9 @@ public struct GameView: View {
                 didSeedDemo = true
                 DemoSeed.apply(
                     scoreboard: scoreboard, friends: friends, daily: dailyStore,
-                    settings: settings)
+                    settings: settings, saveStore: resumeStore)
+                // Show the resumable demo games in the Continue list right away.
+                saveSummaries = resumeStore.summaries()
             }
             let args = ProcessInfo.processInfo.arguments
             if args.contains("-uitest-open-newgame") {

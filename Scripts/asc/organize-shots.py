@@ -21,21 +21,34 @@ Simulator names them by timestamp too, so lexical sort == capture order. Pass
 import os
 import sys
 
-# Canonical shots in capture order (see SCREENSHOTS.md). `iphone_only` marks
-# shots skipped on iPad/Mac (the Mess hall reads poorly as a centred sheet).
+# Canonical shots in capture order (see SCREENSHOTS.md). Each: (name,
+# iphone_only, what-to-capture). `iphone_only` marks shots skipped on iPad/Mac
+# (the Mess hall reads poorly as a centred sheet).
 SHOTS = [
-    ("big-map", False),        # 1. million-cell map — the opener
-    ("variant-board", False),  # 2. Round/Hive board mid-clear
-    ("new-game", False),       # 3. the picker: families × sizes × edges
-    ("mid-game", False),       # 4. a clean part-cleared normal board
-    ("service-record", False), # 5. Tour of Duty — pace + daily orders
-    ("daily", False),          # 6. daily calendar / review
-    ("rivalry", True),         # 7. Mess hall (iPhone only)
+    ("big-map", False,
+     "Resume the Grid save and zoom out so the whole board fills the screen — "
+     "the scale hook."),
+    ("variant-board", False,
+     "Start a Round or Hive game and clear a few cells, so the non-square board "
+     "shape reads at a glance."),
+    ("new-game", False,
+     "Open New Game; show the family / size / edge picker with a family "
+     "selected."),
+    ("mid-game", False,
+     "Resume the Beginner save — a clean, part-cleared square board mid-solve."),
+    ("service-record", False,
+     "Open the Service Record on a config with scores, so pace lines and best "
+     "times show."),
+    ("daily", False,
+     "Open the daily calendar showing the streak, then the day's result."),
+    ("rivalry", True,
+     "Open the Mess hall on the Rivals tab (iPhone only) — the head-to-head "
+     "list."),
 ]
 
 
 def shots_for(platform):
-    return [name for name, iphone_only in SHOTS
+    return [(name, desc) for name, iphone_only, desc in SHOTS
             if not (iphone_only and platform != "iphone")]
 
 
@@ -45,14 +58,19 @@ def main():
     if not args or args[0] not in ("iphone", "ipad", "mac"):
         sys.exit("usage: organize-shots.py <iphone|ipad|mac> [<dir> | --list] [--by-mtime]")
     platform = args[0]
-    names = shots_for(platform)
+    shots = shots_for(platform)
+    names = [name for name, _ in shots]
 
     if "--list" in flags or len(args) < 2:
-        print(f"Capture these {len(names)} shots for {platform}, in this order:\n")
-        for i, name in enumerate(names, 1):
+        print(f"Capture these {len(shots)} shots for {platform}, in this order:\n")
+        for i, (name, desc) in enumerate(shots, 1):
             print(f"  {i}. {name}-{platform}.png")
-        print("\nShoot in order, drop the raw files in one folder, then re-run "
-              f"with that folder:\n  Scripts/asc/organize-shots.py {platform} <dir>")
+            print(f"     {desc}")
+        print("\nThe demo starts in Light — shoot the full set, then switch to "
+              "Dark\n(in-app Settings ▸ Appearance) and shoot the same set again "
+              "for the dark slots.")
+        print("\nShoot in order, drop one set's raw files in a folder, then "
+              f"re-run with it:\n  Scripts/asc/organize-shots.py {platform} <dir>")
         return
 
     d = args[1]

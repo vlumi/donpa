@@ -55,19 +55,21 @@ test:  ## Run the package logic tests (no Xcode project needed)
 uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 	@Scripts/uitest.sh
 
-# Launch in demo mode (seeded data + fixed accent) for MANUAL App Store
-# screenshots — see Scripts/asc/SCREENSHOTS.md for the shot list. Capture with
-# the simulator's ⌘S (iOS/iPad) or Scripts/grab-mac-shot.sh (Mac).
+# Launch in demo mode (seeded data + fixed accent, starts in Light) for MANUAL
+# App Store screenshots — see Scripts/asc/SCREENSHOTS.md for the shot list.
+# Capture with the simulator's ⌘S (iOS/iPad) or Scripts/grab-mac-shot.sh (Mac).
+# Pick the UI language with DEMO_LANG=en|fi|ja (default en), e.g.
+#   make demo-mac DEMO_LANG=fi
 .PHONY: demo-iphone
-demo-iphone: build-ios  ## Launch the iPhone simulator in demo mode (manual screenshots)
+demo-iphone: build-ios  ## Launch the iPhone simulator in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=iphone Scripts/demo.sh
 
 .PHONY: demo-ipad
-demo-ipad: build-ios  ## Launch the iPad simulator in demo mode (manual screenshots)
+demo-ipad: build-ios  ## Launch the iPad simulator in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=ipad Scripts/demo.sh
 
 .PHONY: demo-mac
-demo-mac: build-mac  ## Launch the Mac app in demo mode (manual screenshots)
+demo-mac: build-mac  ## Launch the Mac app in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=mac Scripts/demo.sh
 
 perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a heavy XXXL board

@@ -11,7 +11,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PLATFORM="${PLATFORM:-iphone}"
-ARGS=(-uitest-clean -uitest-demo -AppleLanguages "(en)")
+# DEMO_LANG picks the UI language for this run (en|fi|ja) — a distinct name so
+# it never collides with the shell's own LANG. Each language is its own clean
+# launch; the seed is identical, so only the language differs.
+DEMO_LANG="${DEMO_LANG:-en}"
+case "$DEMO_LANG" in
+    en | fi | ja) ;;
+    *) echo "DEMO_LANG must be en | fi | ja (got '$DEMO_LANG')" >&2; exit 2 ;;
+esac
+ARGS=(-uitest-clean -uitest-demo -AppleLanguages "($DEMO_LANG)")
 BUNDLE="fi.misaki.donpa"
 
 pick_udid() {  # $1 = name pattern

@@ -22,11 +22,54 @@ public enum DemoSeed {
     /// Seed once at launch. Times are hand-picked to look earned, not random,
     /// and to sort into a satisfying spread on the Service Record.
     static func apply(
-        scoreboard: Scoreboard, friends: FriendsStore, daily: DailyStore, settings: Settings
+        scoreboard: Scoreboard, friends: FriendsStore, daily: DailyStore, settings: Settings,
+        saveStore: SaveStore
     ) {
+        // Start in Light every launch so the light screenshot set is captured
+        // deliberately (then switch to Dark in-app for the dark set), rather
+        // than inheriting whatever the capture machine happens to be in.
+        settings.appearance = .light
         seedScores(scoreboard)
         seedRivals(friends, settings: settings)
         seedDaily(daily)
+        seedSaves(saveStore)
+    }
+
+    /// A couple of fixed in-progress games so the demo Home shows a real
+    /// "Continue" list and a tap resumes a genuine mid-game board — no live
+    /// clicking to set up, and identical every launch (any language) because
+    /// each save is built deterministically from a seed + scripted reveals.
+    private struct SavedGame {
+        let config: GameConfig
+        let seed: UInt64
+        let reveals: [Coord]
+        let flags: [Coord]
+        let elapsed: Int
+    }
+
+    private static func seedSaves(_ store: SaveStore) {
+        let games: [SavedGame] = [
+            // A partly-cleared Beginner: the familiar square board mid-solve.
+            SavedGame(
+                config: .beginner, seed: 635, reveals: [Coord(4, 4)],
+                flags: [Coord(3, 0), Coord(6, 0)], elapsed: 2_340),
+            // A Grid board so the Continue list shows more than one board type.
+            SavedGame(
+                config: .grid(.s, .normal, .flat), seed: 9, reveals: [Coord(8, 8)],
+                flags: [Coord(0, 0)], elapsed: 5_110),
+        ]
+        for g in games {
+            var rng = SeededGenerator(seed: g.seed)
+            var game = Game(config: g.config)
+            game.placeMinesEagerly(using: &rng)
+            for c in g.reveals { game.reveal(c, using: &rng) }
+            for c in g.flags { game.toggleFlag(c) }
+            guard
+                let snapshot = GameSnapshot(
+                    game: game, config: g.config, elapsedCentiseconds: g.elapsed)
+            else { continue }
+            store.save(snapshot)
+        }
     }
 
     /// One seeded board result: a best time, a win count, and the 3BV that
@@ -140,10 +183,13 @@ public enum DemoSeed {
 
 extension View {
     /// Applies the deterministic screenshot accent when capturing; a no-op in
-    /// normal use (the app keeps the system accent).
+    /// normal use (the app keeps the system accent). Both `tint` (controls) and
+    /// `accentColor` (the many `Color.accentColor` fills/strokes) are set — on
+    /// macOS `tint` alone doesn't reach `Color.accentColor`, which otherwise
+    /// resolves to the machine's system accent and defeats the fixed blue.
     @ViewBuilder public func screenshotAccent() -> some View {
         if let accent = DemoSeed.screenshotAccent {
-            tint(accent)
+            tint(accent).accentColor(accent)
         } else {
             self
         }

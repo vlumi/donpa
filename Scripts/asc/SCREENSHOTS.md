@@ -2,24 +2,28 @@
 
 The carousel's job: make someone scrolling past their 500th minesweeper stop
 and think *"wait, this one's different."* Lead with spectacle and breadth, then
-show depth. Manual capture, demo mode (seeded data + fixed blue accent).
+show depth. Manual capture, demo mode (seeded data + fixed blue accent, starts
+in Light).
 
 **Gameplay and functional UI only — no title/manga art.** Show the game, not
-the packaging. **Light mode, English, one set per size** — a player deciding to
-tap Get doesn't care about a screenshot's background colour or chrome language;
-they care what the game is, and a board reads the same in any language. Don't
-spend captures on dark or localized sets, or on the title screen.
+the packaging. The demo seeds a couple of resumable in-progress games, so a
+gameplay shot is a tap on the Continue list — no live setup, identical every
+launch.
 
 ## Workflow
 
 1. `make demo-iphone` (or `demo-ipad` / `demo-mac`) — builds, launches the app
-   in demo mode, and prints the shot list below. Mac opens at a fixed 1440×900
-   window (reproducible across runs — no manual resizing).
+   in demo mode, and prints the annotated shot list. Mac opens at a fixed
+   1440×900 window (reproducible across runs — no manual resizing).
+   Pick the language with `DEMO_LANG=en|fi|ja` (default `en`), e.g.
+   `make demo-mac DEMO_LANG=fi`. Each language is its own clean launch.
 2. Capture in the printed order: simulator **⌘S** (iOS/iPad), or **⌘⇧4-space**
-   on the Mac window. Dump the raw files in one folder.
-3. `Scripts/asc/organize-shots.py <iphone|ipad|mac> <folder>` renames them to
-   the canonical names by capture order (no need to look at the images).
-4. Hand the folder over for the ASC upload.
+   on the Mac window. Dump one set's raw files in one folder.
+3. The demo starts in **Light**: shoot the full set, then switch to **Dark**
+   (in-app Settings ▸ Appearance) and shoot it again into a second folder.
+4. `Scripts/asc/organize-shots.py <iphone|ipad|mac> <folder>` renames each
+   folder's files to the canonical names by capture order.
+5. Hand the folders over for the ASC upload.
 
 ## Sizes
 
@@ -27,17 +31,16 @@ iPhone 6.9" (1320×2868) · iPad 13" (2064×2752) · Mac 1440×900.
 
 ## The shots — ordered by persuasion (the carousel shows ~3, so front-load)
 
-1. **million-cell map** — THE opener. Start an XXL/XXXL board, open a big
-   region, zoom out so the minimap + sheer scale fill the frame. Nobody expects
-   this from minesweeper — lead with the spectacle.
+1. **million-cell map** — THE opener. Resume the Grid save (or start an
+   XXL/XXXL board), open a big region, zoom out so the minimap + sheer scale
+   fill the frame. Nobody expects this from minesweeper — lead with spectacle.
 2. **a variant board** — a **Round** (wrap-around) or **Hive** (hex) board
    mid-clear, showing the wrap or the hex numbers. The mechanical hook: "boards
    you haven't played."
 3. **New Game picker** — families × sizes × edges × difficulties laid out. The
    "look how much is here" shot; proves 1–2 weren't one-offs.
-4. **a clean mid-game** — a normal board part-cleared: numbers, flags, the mine
-   counter and timer running. The core loop, legible. (Tap the board first — a
-   blank grid shows nothing.)
+4. **a clean mid-game** — resume the seeded **Beginner** game: a normal board
+   part-cleared, numbers and flags showing. The core loop, legible.
 5. **Service Record** — Tour of Duty, scrolled to show a pace figure and the
    Daily orders / streak section. "It tracks your skill; it has depth."
 6. **daily challenge** — the calendar (via History) or the review screen. "One
@@ -45,7 +48,8 @@ iPhone 6.9" (1320×2868) · iPad 13" (2064×2752) · Mac 1440×900.
 7. **rivalry** *(iPhone only)* — the Mess hall, rivals list + share row. Skip on
    iPad (small centred sheet, dead space) — use another board shot there.
 
-Avoid the home/title screen in every set (the AI title art).
+Avoid the home/title screen in every set (the AI title art). Shoot each set in
+Light, then repeat in Dark (Settings ▸ Appearance) for the dark slots.
 
 Optional captions (add in ASC), one concrete idea each: "A million cells." ·
 "The world wraps around." · "Square, hex, flat or round." · "A new board every
