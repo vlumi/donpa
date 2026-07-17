@@ -35,6 +35,13 @@ struct MedalView: View {
         let radius = s * 0.34
         let lw = s * 0.05
 
+        // A filled tier disc is always pale (pale base + metal at 65%), so the
+        // emblem and disc outline on it take a fixed dark ink — following
+        // `Color.primary` would put white-on-silver in dark mode. The horns sit
+        // OUTSIDE the disc on the app background, so they keep `ink`.
+        let hasDisc = earned && id.tierThresholds != nil
+        let discInk = hasDisc ? Color(white: 0.15) : ink
+
         // The chassis is an abstract naval mine: eight stubby contact horns.
         var horns = Path()
         for i in 0..<8 {
@@ -66,7 +73,7 @@ struct MedalView: View {
                 disc,
                 with: .color(Self.metal(for: earnedTier, of: thresholds.count).opacity(0.65)))
         }
-        ctx.stroke(disc, with: .color(ink), style: StrokeStyle(lineWidth: lw))
+        ctx.stroke(disc, with: .color(discInk), style: StrokeStyle(lineWidth: lw))
 
         let emblemSide = radius * 1.15
         var inner = ctx
@@ -74,10 +81,10 @@ struct MedalView: View {
         if id.isHidden && !earned {
             inner.draw(
                 Text(verbatim: "?").font(.system(size: emblemSide * 0.9, weight: .black))
-                    .foregroundColor(ink),
+                    .foregroundColor(discInk),
                 at: CGPoint(x: emblemSide / 2, y: emblemSide / 2))
         } else {
-            Self.drawEmblem(id, in: inner, side: emblemSide, ink: ink)
+            Self.drawEmblem(id, in: inner, side: emblemSide, ink: discInk)
         }
     }
 

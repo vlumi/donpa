@@ -39,7 +39,8 @@ entries land under Unreleased as they merge.
 
 - **Medal tiers read at a glance.** Gold, silver, and bronze now differ in
   both hue and lightness, so the tiers stay distinct in dark mode and at
-  small sizes instead of muddying together.
+  small sizes instead of muddying together, and each medal's emblem keeps
+  its contrast against the disc — no more washed-out glyph on silver.
 
 ### build 26 — 2026-07-16
 
