@@ -57,8 +57,8 @@ SHOTS = [
      "The daily REVIEW screen: start the daily from Home — board + Start "
      "overlay, no title art. (The calendar only opens over Home's art.)"),
     ("rivalry", False,
-     "From within a game (⌘B on Mac), open the Mess hall on the Rivals tab — "
-     "share card + rivals list, board behind."),
+     "From within a game: Service Record ▸ 'Manage rivals' swaps to the Mess "
+     "hall over the board — share card + rivals list, no title art."),
 ]
 
 
