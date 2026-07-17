@@ -107,18 +107,33 @@ public enum DemoSeed {
         let best: Int
     }
 
-    /// Best times + a plausible win/loss history across a representative
-    /// spread of the config matrix (the presets, a couple of Grid/Hive sizes).
+    /// Best times + a plausible win/loss history shaped like a real veteran's
+    /// record: small boards played heavily, coverage thinning as sizes grow,
+    /// zeros only at the XXL+ frontier — every family tab opens onto life.
     private static func seedScores(_ scoreboard: Scoreboard) {
         let runs: [Run] = [
+            Run(config: .practice(.xs), best: 700, wins: 15, threeBV: 9),
+            Run(config: .practice(.s), best: 2_600, wins: 8, threeBV: 38),
+            Run(config: .practice(.m), best: 9_800, wins: 3, threeBV: 150),
             Run(config: .basic(.beginner), best: 812, wins: 40, threeBV: 22),
             Run(config: .basic(.intermediate), best: 4_355, wins: 18, threeBV: 96),
             Run(config: .basic(.expert), best: 11_920, wins: 9, threeBV: 214),
+            Run(config: .grid(.xs, .easy, .flat), best: 600, wins: 5, threeBV: 8),
+            Run(config: .grid(.xs, .normal, .flat), best: 950, wins: 26, threeBV: 12),
+            Run(config: .grid(.xs, .hard, .flat), best: 1_420, wins: 7, threeBV: 16),
             Run(config: .grid(.s, .normal, .flat), best: 1_640, wins: 12, threeBV: 38),
+            Run(config: .grid(.s, .hard, .flat), best: 2_890, wins: 4, threeBV: 52),
+            Run(config: .grid(.m, .normal, .flat), best: 7_150, wins: 8, threeBV: 152),
             Run(config: .grid(.m, .hard, .flat), best: 8_770, wins: 5, threeBV: 168),
+            Run(config: .grid(.l, .normal, .flat), best: 36_500, wins: 2, threeBV: 640),
+            Run(config: .grid(.xl, .normal, .flat), best: 160_000, wins: 1, threeBV: 2_600),
+            Run(config: .grid(.xs, .normal, .round), best: 1_110, wins: 6, threeBV: 13),
             Run(config: .grid(.s, .normal, .round), best: 2_010, wins: 7, threeBV: 41),
+            Run(config: .hive(.xs, .normal, .flat), best: 1_190, wins: 9, threeBV: 14),
             Run(config: .hive(.s, .normal, .flat), best: 1_890, wins: 10, threeBV: 44),
+            Run(config: .hive(.s, .hard, .flat), best: 3_150, wins: 3, threeBV: 60),
             Run(config: .hive(.m, .normal, .flat), best: 6_240, wins: 4, threeBV: 121),
+            Run(config: .hive(.s, .normal, .round), best: 2_480, wins: 2, threeBV: 47),
         ]
         for run in runs {
             // Coherent counters: one outcome + one activity flush PER game, so
@@ -157,12 +172,17 @@ public enum DemoSeed {
     /// real shares), each with a handful of times so the head-to-head reads.
     private static func seedRivals(_ friends: FriendsStore, settings: Settings) {
         settings.shareName = "You"
+        // Coverage overlaps the seeded configs so expanded rows show a rival
+        // ladder — some times beat yours, some don't (a rivalry, not a rout).
         let rosters: [(name: String, scores: [RivalScore])] = [
             (
                 "Aoi",
                 [
                     RivalScore(config: .basic(.beginner), best: 744),
                     RivalScore(config: .basic(.expert), best: 13_050),
+                    RivalScore(config: .grid(.xs, .normal, .flat), best: 880),
+                    RivalScore(config: .grid(.s, .normal, .flat), best: 1_590),
+                    RivalScore(config: .grid(.m, .normal, .flat), best: 6_800),
                     RivalScore(config: .hive(.s, .normal, .flat), best: 2_120),
                 ]
             ),
@@ -171,7 +191,19 @@ public enum DemoSeed {
                 [
                     RivalScore(config: .basic(.beginner), best: 905),
                     RivalScore(config: .basic(.intermediate), best: 3_980),
+                    RivalScore(config: .grid(.xs, .normal, .flat), best: 1_020),
                     RivalScore(config: .grid(.m, .hard, .flat), best: 8_010),
+                    RivalScore(config: .grid(.l, .normal, .flat), best: 39_500),
+                    RivalScore(config: .hive(.xs, .normal, .flat), best: 1_260),
+                ]
+            ),
+            (
+                "Mio",
+                [
+                    RivalScore(config: .basic(.beginner), best: 1_150),
+                    RivalScore(config: .grid(.xs, .normal, .flat), best: 1_400),
+                    RivalScore(config: .grid(.s, .normal, .flat), best: 2_350),
+                    RivalScore(config: .hive(.s, .normal, .flat), best: 2_600),
                 ]
             ),
         ]
