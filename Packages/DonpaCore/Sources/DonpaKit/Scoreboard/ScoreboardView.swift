@@ -350,38 +350,46 @@ struct ScoreboardView: View {
             ? filterEdges : .flat
         let groups = Self.groups(family: filterFamily, edges: edges)
         let rivals = FriendRanking.rivals(from: friends, group: rivalGroupID)
-        VStack(spacing: 0) {
-            columnHeader
-            ForEach(groups) { group in
-                if let label = group.label {
-                    groupHeader(label, standing: standing(for: group))
+        // Only the column labels pin (as this list's section header) so
+        // "Cleared / Best % / Best" stays visible while the rows scroll — the
+        // section title and filter above scroll away normally. Scoped to the
+        // score list, so the career/decorations scroll-to is untouched.
+        LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+            Section {
+                ForEach(groups) { group in
+                    if let label = group.label {
+                        groupHeader(label, standing: standing(for: group))
+                    }
+                    ForEach(group.configs, id: \.self) { config in
+                        ScoreRow(
+                            scoreboard: scoreboard, config: config,
+                            currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
+                            isExpanded: expandedKey == config.storageKey,
+                            isKeyFocused: keyFocused(config),
+                            onToggle: {
+                                toggleExpanded(config.storageKey)
+                                // Click takes the keyboard focus with it, so the
+                                // arrows resume from the clicked row.
+                                keyRowKey = config.storageKey
+                                keys.enter(.rows)
+                            },
+                            onPlay: gates.config(config)
+                                ? onPlay.map { play in { play(config) } } : nil,
+                            rivals: rivals, yourName: settings.shareName
+                        )
+                        .id(config.storageKey)  // scroll anchor for the current-config jump
+                        if config != group.configs.last { Divider() }
+                    }
+                    // Basic only: Drills' group is also label-less, but a
+                    // cross-size Total is a deliberate non-goal there (practice,
+                    // not a ladder).
+                    if filterFamily == .basic, group.label == nil {
+                        trifectaFooter(standing: standing(for: group))
+                    }
                 }
-                ForEach(group.configs, id: \.self) { config in
-                    ScoreRow(
-                        scoreboard: scoreboard, config: config,
-                        currentConfigKey: currentConfigKey, rowInset: Self.rowInset,
-                        isExpanded: expandedKey == config.storageKey,
-                        isKeyFocused: keyFocused(config),
-                        onToggle: {
-                            toggleExpanded(config.storageKey)
-                            // Click takes the keyboard focus with it, so the
-                            // arrows resume from the clicked row.
-                            keyRowKey = config.storageKey
-                            keys.enter(.rows)
-                        },
-                        onPlay: gates.config(config)
-                            ? onPlay.map { play in { play(config) } } : nil,
-                        rivals: rivals, yourName: settings.shareName
-                    )
-                    .id(config.storageKey)  // scroll anchor for the current-config jump
-                    if config != group.configs.last { Divider() }
-                }
-                // Basic only: Drills' group is also label-less, but a
-                // cross-size Total is a deliberate non-goal there (practice,
-                // not a ladder).
-                if filterFamily == .basic, group.label == nil {
-                    trifectaFooter(standing: standing(for: group))
-                }
+            } header: {
+                // Opaque backing so scrolled rows don't show through the pin.
+                columnHeader.background(.bar)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -22,6 +22,12 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **Clearer, more navigable Service Record.** The score list's column
+  labels (Cleared / Best % / Best) now stay put while you scroll, so the
+  numbers always have headings. On Mac, Page Up/Down scroll a screenful
+  and Home/End jump to the ends — so a tall career block is reachable by
+  keyboard on any window size.
+
 - **The Mess hall scrolls as one.** The share card now scrolls away and
   the Rivals/Squads tabs pin to the top, so the rivals list gets the room
   it needs — especially in landscape, where the fixed header used to
