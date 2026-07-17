@@ -43,12 +43,24 @@ mac_window_id() {
     return 1
 }
 
+# Quit and WAIT until the process is really gone — an open modal can stall the
+# polite quit, and relaunching while the old instance lives makes `open` just
+# activate it, silently keeping the previous language's args.
 quit_app() {
     if [ "$PLATFORM" = mac ]; then
         osascript -e "quit app \"$APP_NAME\"" >/dev/null 2>&1 || true
+        for _ in $(seq 1 8); do
+            pgrep -xq "$APP_NAME" || return 0
+            sleep 1
+        done
+        echo "  (app didn't quit politely — terminating it)"
+        killall "$APP_NAME" >/dev/null 2>&1 || true
+        sleep 1
+        pgrep -xq "$APP_NAME" && { killall -9 "$APP_NAME" || true; sleep 1; }
     else
         xcrun simctl terminate booted "$BUNDLE" >/dev/null 2>&1 || true
     fi
+    return 0
 }
 
 IFS=',' read -ra langs <<< "$LANGS"
@@ -57,6 +69,7 @@ total=$(python3 Scripts/asc/organize-shots.py "$PLATFORM" --plain | wc -l | tr -
 for lang in "${langs[@]}"; do
     echo ""
     echo "━━━ $PLATFORM / $lang — launching demo ━━━"
+    quit_app  # a lingering instance would swallow the new language's args
     DEMO_LANG="$lang" PLATFORM="$PLATFORM" Scripts/demo.sh >/dev/null
     if [ "$PLATFORM" = mac ]; then
         WINDOW_ID=$(mac_window_id) || { echo "App window never appeared." >&2; exit 1; }
