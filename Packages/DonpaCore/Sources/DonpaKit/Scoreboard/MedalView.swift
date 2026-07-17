@@ -40,10 +40,11 @@ struct MedalView: View {
         // while the emblem keeps a neutral, high-contrast disc to sit on. The
         // interior is a fixed pale disc, so the emblem takes a fixed dark ink
         // (following Color.primary would flip it white on the pale disc in dark
-        // mode). Unearned / non-tiered medals fall back to the plain `ink`.
+        // mode). A one-shot feat has no ladder, so earning it is gold. Only an
+        // UNEARNED medal falls back to the plain silhouette `ink`.
         let tierMetal =
             earned
-            ? id.tierThresholds.map { Self.metal(for: earnedTier, of: $0.count) }
+            ? Self.metal(for: earnedTier, of: id.tierThresholds?.count ?? earnedTier)
             : nil
         let frameInk = tierMetal ?? ink
         let discInk = tierMetal != nil ? Color(white: 0.15) : ink
