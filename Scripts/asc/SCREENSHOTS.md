@@ -18,13 +18,20 @@ launch.
    Pick the language with `DEMO_LANG=en|fi|ja` (default `en`), e.g.
    `make demo-mac DEMO_LANG=fi`. Each language is its own clean launch.
 2. Capture in the printed order: simulator **⌘S** (iOS/iPad), or **⌘⇧4-space**
-   on the Mac window. Dump one set's raw files in one folder.
+   on the Mac window. **Where to put the files:** one folder per platform is
+   enough — dump every raw shot straight into it (subfolders aren't needed;
+   the organizer sorts by capture order, so just don't reorder them).
 3. The demo starts in **Light**: shoot the full set in Light. Then, for one
    dark-mode taster, switch to **Dark** (in-app Settings ▸ Appearance) and
    re-shoot just shot 1 (big-map) — a full dark set isn't worth the effort.
-4. `Scripts/asc/organize-shots.py <iphone|ipad|mac> <folder>` renames the
-   folder's files to the canonical names by capture order.
-5. Hand the folder(s) over for the ASC upload.
+4. **Languages:** to ship localized shots, relaunch with `DEMO_LANG=fi` (then
+   `ja`) and shoot each language's full set **back-to-back into the same
+   folder** — en set, then fi set, then ja set, in order.
+5. Organize:
+   - one language → `make asc-shots DIR=<folder> PLATFORM=mac`
+   - several → `make asc-shots DIR=<folder> PLATFORM=mac LANGS=en,fi,ja`
+     (splits into `<folder>/en/…`, `/fi/…`, `/ja/…`, canonically named).
+6. Hand the folder over for the ASC upload.
 
 ## Sizes
 

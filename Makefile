@@ -113,8 +113,8 @@ asc-release-apply:  ## Add all achievements to review (create release records)
 	@Scripts/asc/run.sh sync --release --apply
 
 .PHONY: asc-shots
-asc-shots:  ## Rename raw screenshots by capture order: DIR=<folder> PLATFORM=iphone|ipad|mac
-	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR)
+asc-shots:  ## Rename raw screenshots by capture order: DIR=<folder> PLATFORM=iphone|ipad|mac [LANGS=en,fi,ja]
+	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR) $(if $(LANGS),--langs=$(LANGS),)
 
 # ── Release lane ──────────────────────────────────────────────────────────────
 # The cut is split by concern, one script each, chained here in order:
