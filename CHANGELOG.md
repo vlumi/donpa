@@ -22,6 +22,9 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
+- **New Game dims like everything else.** The picker's backdrop now
+  matches the sheets' dimming instead of a noticeably darker wash.
+
 - **Roomier Record and Mess hall on iPad.** Both now open page-sized
   (iPadOS 18+) instead of the cramped default sheet.
 
