@@ -33,10 +33,16 @@ capture() {  # $1 = output file
     fi
 }
 
+# Find the app's window by PID — the executable name is never localized, but
+# the window-owner NAME is (ドンパ隊 under ja), so names can't be trusted here.
 mac_window_id() {
-    for _ in 1 2 3 4 5 6 7 8 9 10; do
-        if id=$(swift Scripts/asc/window-id.swift "$APP_NAME" 2>/dev/null); then
-            echo "$id"; return 0
+    for _ in $(seq 1 15); do
+        local pid
+        pid=$(pgrep -x "$APP_NAME" | head -1)
+        if [ -n "$pid" ]; then
+            if id=$(swift Scripts/asc/window-id.swift "$pid" 2>/dev/null); then
+                echo "$id"; return 0
+            fi
         fi
         sleep 1
     done
@@ -48,7 +54,9 @@ mac_window_id() {
 # activate it, silently keeping the previous language's args.
 quit_app() {
     if [ "$PLATFORM" = mac ]; then
-        osascript -e "quit app \"$APP_NAME\"" >/dev/null 2>&1 || true
+        pgrep -xq "$APP_NAME" || return 0
+        # By bundle id — the app NAME is localized under ja and wouldn't resolve.
+        osascript -e "tell application id \"$BUNDLE\" to quit" >/dev/null 2>&1 || true
         for _ in $(seq 1 8); do
             pgrep -xq "$APP_NAME" || return 0
             sleep 1
