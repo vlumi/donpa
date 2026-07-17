@@ -53,9 +53,10 @@ public enum DemoSeed {
             SavedGame(
                 config: .beginner, seed: 635, reveals: [Coord(4, 4)],
                 flags: [Coord(3, 0), Coord(6, 0)], elapsed: 2_340),
-            // A Grid board so the Continue list shows more than one board type.
+            // A Hive (hex) board so the Continue list shows a second board type
+            // and the variant-board screenshot resumes rather than sets up.
             SavedGame(
-                config: .grid(.s, .normal, .flat), seed: 9, reveals: [Coord(8, 8)],
+                config: .hive(.s, .normal, .flat), seed: 5, reveals: [Coord(8, 8)],
                 flags: [Coord(0, 0)], elapsed: 5_110),
         ]
         for g in games {

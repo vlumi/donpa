@@ -19,11 +19,12 @@ launch.
    `make demo-mac DEMO_LANG=fi`. Each language is its own clean launch.
 2. Capture in the printed order: simulator **⌘S** (iOS/iPad), or **⌘⇧4-space**
    on the Mac window. Dump one set's raw files in one folder.
-3. The demo starts in **Light**: shoot the full set, then switch to **Dark**
-   (in-app Settings ▸ Appearance) and shoot it again into a second folder.
-4. `Scripts/asc/organize-shots.py <iphone|ipad|mac> <folder>` renames each
+3. The demo starts in **Light**: shoot the full set in Light. Then, for one
+   dark-mode taster, switch to **Dark** (in-app Settings ▸ Appearance) and
+   re-shoot just shot 1 (big-map) — a full dark set isn't worth the effort.
+4. `Scripts/asc/organize-shots.py <iphone|ipad|mac> <folder>` renames the
    folder's files to the canonical names by capture order.
-5. Hand the folders over for the ASC upload.
+5. Hand the folder(s) over for the ASC upload.
 
 ## Sizes
 
@@ -34,9 +35,9 @@ iPhone 6.9" (1320×2868) · iPad 13" (2064×2752) · Mac 1440×900.
 1. **million-cell map** — THE opener. Resume the Grid save (or start an
    XXL/XXXL board), open a big region, zoom out so the minimap + sheer scale
    fill the frame. Nobody expects this from minesweeper — lead with spectacle.
-2. **a variant board** — a **Round** (wrap-around) or **Hive** (hex) board
-   mid-clear, showing the wrap or the hex numbers. The mechanical hook: "boards
-   you haven't played."
+2. **a variant board** — resume the seeded **Hive** (hex) game, showing the hex
+   numbers. The mechanical hook: "boards you haven't played." (Or start a
+   **Round** wrap-around board if you'd rather show the wrap.)
 3. **New Game picker** — families × sizes × edges × difficulties laid out. The
    "look how much is here" shot; proves 1–2 weren't one-offs.
 4. **a clean mid-game** — resume the seeded **Beginner** game: a normal board
@@ -48,8 +49,8 @@ iPhone 6.9" (1320×2868) · iPad 13" (2064×2752) · Mac 1440×900.
 7. **rivalry** *(iPhone only)* — the Mess hall, rivals list + share row. Skip on
    iPad (small centred sheet, dead space) — use another board shot there.
 
-Avoid the home/title screen in every set (the AI title art). Shoot each set in
-Light, then repeat in Dark (Settings ▸ Appearance) for the dark slots.
+Avoid the home/title screen in every set (the AI title art). Shoot the set in
+Light; add one Dark re-shoot of shot 1 (big-map) as a dark-mode taster.
 
 Optional captions (add in ASC), one concrete idea each: "A million cells." ·
 "The world wraps around." · "Square, hex, flat or round." · "A new board every

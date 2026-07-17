@@ -26,11 +26,11 @@ import sys
 # (the Mess hall reads poorly as a centred sheet).
 SHOTS = [
     ("big-map", False,
-     "Resume the Grid save and zoom out so the whole board fills the screen — "
-     "the scale hook."),
+     "New Game ▸ start an XXL/XXXL board, open a region, then zoom out so the "
+     "minimap and sheer scale fill the screen — the scale hook."),
     ("variant-board", False,
-     "Start a Round or Hive game and clear a few cells, so the non-square board "
-     "shape reads at a glance."),
+     "Resume the Hive save — a hex board mid-solve, so the non-square shape "
+     "reads at a glance."),
     ("new-game", False,
      "Open New Game; show the family / size / edge picker with a family "
      "selected."),
@@ -66,9 +66,9 @@ def main():
         for i, (name, desc) in enumerate(shots, 1):
             print(f"  {i}. {name}-{platform}.png")
             print(f"     {desc}")
-        print("\nThe demo starts in Light — shoot the full set, then switch to "
-              "Dark\n(in-app Settings ▸ Appearance) and shoot the same set again "
-              "for the dark slots.")
+        print("\nThe demo starts in Light — shoot the full set in Light. Then, "
+              "for one\ndark-mode taster, switch to Dark (in-app Settings ▸ "
+              "Appearance) and re-shoot\njust shot 1 (big-map).")
         print("\nShoot in order, drop one set's raw files in a folder, then "
               f"re-run with it:\n  Scripts/asc/organize-shots.py {platform} <dir>")
         return
