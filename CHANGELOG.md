@@ -27,6 +27,11 @@ entries land under Unreleased as they merge.
   or a rival's list no longer drags the daily's Start/Cancel prompt (and
   its untimed first look) onto that game.
 
+- **Browsing rivals doesn't cost clock time.** Jumping from the Service
+  Record to the Mess hall (Manage rivals) mid-game now keeps the game
+  paused for the whole visit — the clock restarted the moment the Record
+  closed.
+
 - **Roomier rival highlight.** The Mess hall's keyboard-focus ring no
   longer hugs the row text.
 
