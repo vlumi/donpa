@@ -132,9 +132,53 @@ struct KeyCatcher: NSViewRepresentable {
         override func keyDown(with event: NSEvent) {
             if let key = Self.key(for: event) {
                 onKey?(key)
+            } else if pageScroll(for: event) {
+                // handled: Page Up/Down scrolled the enclosing scroll view
             } else {
                 super.keyDown(with: event)
             }
+        }
+
+        /// Page Up/Down (a screenful) and Home/End (top/bottom) scroll the
+        /// enclosing scroll view — because this view holds first responder,
+        /// AppKit's default handling never reaches the SwiftUI ScrollView, so
+        /// drive it directly. Lets the keyboard reveal content taller than the
+        /// window (e.g. the Record's career block on a small window) without
+        /// overloading the arrows.
+        private func pageScroll(for event: NSEvent) -> Bool {
+            let pageUp = 116, pageDown = 121, home = 115, end = 119
+            let code = Int(event.keyCode)
+            guard [pageUp, pageDown, home, end].contains(code),
+                // The catcher is seated as a background SIBLING of the scroll
+                // (not an ancestor), so `enclosingScrollView` is nil — find the
+                // scroll view by walking the window's view tree instead.
+                let scroll = enclosingScrollView
+                    ?? window?.contentView.flatMap(Self.firstScrollView),
+                let doc = scroll.documentView
+            else { return false }
+            let visible = scroll.contentView.bounds
+            let step = visible.height * 0.85  // a screenful, minus overlap
+            let maxY = max(0, doc.bounds.height - visible.height)
+            let y: CGFloat
+            switch code {
+            case home: y = 0
+            case end: y = maxY
+            case pageDown: y = min(maxY, visible.origin.y + step)
+            default: y = max(0, visible.origin.y - step)  // pageUp
+            }
+            scroll.contentView.scroll(to: NSPoint(x: visible.origin.x, y: y))
+            scroll.reflectScrolledClipView(scroll.contentView)
+            return true
+        }
+
+        /// Depth-first search for the first scroll view under `view` — the
+        /// sheet's single content scroll (the only one on these surfaces).
+        private static func firstScrollView(_ view: NSView) -> NSScrollView? {
+            if let scroll = view as? NSScrollView { return scroll }
+            for sub in view.subviews {
+                if let found = firstScrollView(sub) { return found }
+            }
+            return nil
         }
 
         private static func key(for event: NSEvent) -> Key? {
