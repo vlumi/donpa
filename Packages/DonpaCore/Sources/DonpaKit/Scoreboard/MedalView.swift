@@ -57,9 +57,14 @@ struct MedalView: View {
                 x: center.x - radius, y: center.y - radius,
                 width: radius * 2, height: radius * 2))
         if earned, let thresholds = id.tierThresholds {
+            // Fill over an opaque pale disc so the tier metal reads the SAME in
+            // light and dark mode (a translucent fill over the scheme-flipped
+            // tile muddied bronze/silver/gold together, worst in dark mode),
+            // and at a strength where the hue actually carries.
+            ctx.fill(disc, with: .color(Color(white: 0.94)))
             ctx.fill(
                 disc,
-                with: .color(Self.metal(for: earnedTier, of: thresholds.count).opacity(0.30)))
+                with: .color(Self.metal(for: earnedTier, of: thresholds.count).opacity(0.65)))
         }
         ctx.stroke(disc, with: .color(ink), style: StrokeStyle(lineWidth: lw))
 
@@ -79,10 +84,13 @@ struct MedalView: View {
     /// Metals anchor at the top: a feat's highest tier is always gold, with
     /// silver then bronze counting down beneath it.
     static func metal(for tier: Int, of total: Int) -> Color {
+        // Separated by LIGHTNESS as well as hue — gold bright, silver mid,
+        // bronze distinctly darker — so the tiers stay apart even at low fill
+        // strength, small sizes, and in dark mode (hue alone converged).
         switch total - tier {
-        case 0: return Color(red: 0.85, green: 0.65, blue: 0.13)  // gold
-        case 1: return Color(red: 0.62, green: 0.66, blue: 0.71)  // silver
-        default: return Color(red: 0.72, green: 0.45, blue: 0.20)  // bronze
+        case 0: return Color(red: 0.95, green: 0.76, blue: 0.19)  // gold — bright yellow
+        case 1: return Color(red: 0.70, green: 0.74, blue: 0.78)  // silver — light cool grey
+        default: return Color(red: 0.66, green: 0.33, blue: 0.18)  // bronze — dark coppery red
         }
     }
 
