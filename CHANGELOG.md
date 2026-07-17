@@ -22,9 +22,10 @@ entries land under Unreleased as they merge.
 
 ### Unreleased (next build)
 
-- **Light/Dark setting applies everywhere.** Choosing Light or Dark now
-  repaints the Settings, Mess hall, Service Record, and other sheets too,
-  instead of leaving them on the system appearance.
+- **Appearance setting applies everywhere.** Changing Light / Dark / System
+  now repaints the Settings, Mess hall, Service Record, and other sheets
+  too — including switching back to System — instead of leaving them on the
+  previous appearance.
 
 - **Clearer, more navigable Service Record.** The score list's column
   labels (Cleared / Best % / Best) now stay put while you scroll, so the
