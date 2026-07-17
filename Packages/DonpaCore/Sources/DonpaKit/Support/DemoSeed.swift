@@ -92,6 +92,11 @@ public enum DemoSeed {
         }
     }
 
+    /// A deterministic past moment for backdating seeded history.
+    private static func daysAgo(_ days: Int, hour: Int) -> Date {
+        Date(timeIntervalSinceNow: -Double(days * 86_400 + hour * 3_600))
+    }
+
     /// One seeded board result: a best time, a win count, and the 3BV that
     /// drives its pace line.
     private struct Run {
@@ -107,48 +112,53 @@ public enum DemoSeed {
         let best: Int
     }
 
-    /// Best times + a plausible win/loss history shaped like a real veteran's
-    /// record: small boards played heavily, coverage thinning as sizes grow,
-    /// zeros only at the XXL+ frontier — every family tab opens onto life.
+    /// A veteran's record in numbers: small boards played heavily, coverage
+    /// thinning as sizes grow, zeros only at the XXL+ frontier — every family
+    /// tab opens onto life.
+    private static let runs: [Run] = [
+        Run(config: .practice(.xs), best: 700, wins: 15, threeBV: 9),
+        Run(config: .practice(.s), best: 2_600, wins: 8, threeBV: 38),
+        Run(config: .practice(.m), best: 9_800, wins: 3, threeBV: 150),
+        Run(config: .basic(.beginner), best: 812, wins: 40, threeBV: 22),
+        Run(config: .basic(.intermediate), best: 4_355, wins: 18, threeBV: 96),
+        Run(config: .basic(.expert), best: 11_920, wins: 9, threeBV: 214),
+        Run(config: .grid(.xs, .easy, .flat), best: 600, wins: 5, threeBV: 8),
+        Run(config: .grid(.xs, .normal, .flat), best: 950, wins: 26, threeBV: 12),
+        Run(config: .grid(.xs, .hard, .flat), best: 1_420, wins: 7, threeBV: 16),
+        Run(config: .grid(.s, .normal, .flat), best: 1_640, wins: 12, threeBV: 38),
+        Run(config: .grid(.s, .hard, .flat), best: 2_890, wins: 4, threeBV: 52),
+        Run(config: .grid(.m, .normal, .flat), best: 7_150, wins: 8, threeBV: 152),
+        Run(config: .grid(.m, .hard, .flat), best: 8_770, wins: 5, threeBV: 168),
+        Run(config: .grid(.l, .normal, .flat), best: 36_500, wins: 2, threeBV: 640),
+        Run(config: .grid(.xl, .normal, .flat), best: 160_000, wins: 1, threeBV: 2_600),
+        Run(config: .grid(.xs, .normal, .round), best: 1_110, wins: 6, threeBV: 13),
+        Run(config: .grid(.s, .normal, .round), best: 2_010, wins: 7, threeBV: 41),
+        Run(config: .hive(.xs, .normal, .flat), best: 1_190, wins: 9, threeBV: 14),
+        Run(config: .hive(.s, .normal, .flat), best: 1_890, wins: 10, threeBV: 44),
+        Run(config: .hive(.s, .hard, .flat), best: 3_150, wins: 3, threeBV: 60),
+        Run(config: .hive(.m, .normal, .flat), best: 6_240, wins: 4, threeBV: 121),
+        Run(config: .hive(.s, .normal, .round), best: 2_480, wins: 2, threeBV: 47),
+    ]
+
     private static func seedScores(_ scoreboard: Scoreboard) {
-        let runs: [Run] = [
-            Run(config: .practice(.xs), best: 700, wins: 15, threeBV: 9),
-            Run(config: .practice(.s), best: 2_600, wins: 8, threeBV: 38),
-            Run(config: .practice(.m), best: 9_800, wins: 3, threeBV: 150),
-            Run(config: .basic(.beginner), best: 812, wins: 40, threeBV: 22),
-            Run(config: .basic(.intermediate), best: 4_355, wins: 18, threeBV: 96),
-            Run(config: .basic(.expert), best: 11_920, wins: 9, threeBV: 214),
-            Run(config: .grid(.xs, .easy, .flat), best: 600, wins: 5, threeBV: 8),
-            Run(config: .grid(.xs, .normal, .flat), best: 950, wins: 26, threeBV: 12),
-            Run(config: .grid(.xs, .hard, .flat), best: 1_420, wins: 7, threeBV: 16),
-            Run(config: .grid(.s, .normal, .flat), best: 1_640, wins: 12, threeBV: 38),
-            Run(config: .grid(.s, .hard, .flat), best: 2_890, wins: 4, threeBV: 52),
-            Run(config: .grid(.m, .normal, .flat), best: 7_150, wins: 8, threeBV: 152),
-            Run(config: .grid(.m, .hard, .flat), best: 8_770, wins: 5, threeBV: 168),
-            Run(config: .grid(.l, .normal, .flat), best: 36_500, wins: 2, threeBV: 640),
-            Run(config: .grid(.xl, .normal, .flat), best: 160_000, wins: 1, threeBV: 2_600),
-            Run(config: .grid(.xs, .normal, .round), best: 1_110, wins: 6, threeBV: 13),
-            Run(config: .grid(.s, .normal, .round), best: 2_010, wins: 7, threeBV: 41),
-            Run(config: .hive(.xs, .normal, .flat), best: 1_190, wins: 9, threeBV: 14),
-            Run(config: .hive(.s, .normal, .flat), best: 1_890, wins: 10, threeBV: 44),
-            Run(config: .hive(.s, .hard, .flat), best: 3_150, wins: 3, threeBV: 60),
-            Run(config: .hive(.m, .normal, .flat), best: 6_240, wins: 4, threeBV: 121),
-            Run(config: .hive(.s, .normal, .round), best: 2_480, wins: 2, threeBV: 47),
-        ]
         for run in runs {
             // Coherent counters: one outcome + one activity flush PER game, so
             // games ≈ wins+losses, and tiles/flags/playtime aren't left at zero.
             // The board's own geometry sets believable per-game magnitudes.
             let safeTiles = run.config.width * run.config.height - run.config.mineCount
             let losses = max(1, run.wins / 6)
-            _ = scoreboard.submit(run.best, for: run.config, threeBV: run.threeBV)
+            _ = scoreboard.submit(
+                run.best, for: run.config, at: daysAgo(3, hour: 5), threeBV: run.threeBV)
             for i in 0..<run.wins {
                 if i > 0 {
-                    // Spread the non-best wins deterministically so the top-5
-                    // times read as a real history, not one time five times.
+                    // Spread times AND dates deterministically so the top-5
+                    // list reads as a real history — varied times achieved
+                    // across weeks, not one number stamped "29 seconds ago".
                     let over = 250 + (i * 217) % 1_400
                     _ = scoreboard.submit(
-                        run.best + over, for: run.config, threeBV: run.threeBV)
+                        run.best + over, for: run.config,
+                        at: daysAgo(1 + (i * 37) % 88, hour: (i * 13) % 24),
+                        threeBV: run.threeBV)
                 }
                 scoreboard.recordGameOutcome(
                     for: run.config, won: true, minesHit: 0,
@@ -207,15 +217,18 @@ public enum DemoSeed {
                 ]
             ),
         ]
-        for roster in rosters {
+        for (index, roster) in rosters.enumerated() {
             let identity = ShareIdentity()
             let scores = roster.scores.map { entry in
                 SharedConfigScore(
                     key: entry.config.storageKey, best: entry.best, wins: 5,
                     bestProgress: nil, recentPace: nil, bestPace: nil)
             }
+            // Backdated a staggered few days so "received …" reads as a
+            // relationship, not three shares seeded seconds ago.
             if let payload = try? identity.makePayload(
-                name: roster.name, scores: scores, career: nil, issuedAt: Date())
+                name: roster.name, scores: scores, career: nil,
+                issuedAt: daysAgo(2 + index * 3, hour: 7 * (index + 1)))
             {
                 _ = friends.apply(payload)
             }
