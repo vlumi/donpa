@@ -26,7 +26,7 @@ struct ShareCardView: View {
     var hasLink: Binding<Bool>?
 
     /// The card's keyboard-focusable controls, in visual order.
-    enum KeyFocus { case name, career, nearby, shareLink, qr }
+    enum KeyFocus { case name, career, nearby }
 
     /// Minted lazily on first share; held for the card's lifetime.
     private let identityStore = ShareIdentityStore()
@@ -42,15 +42,9 @@ struct ShareCardView: View {
 
     @State private var name: String = ""
     @State private var link: URL?
-    @State private var qr: Image?
     @State private var failed = false
-    /// The full-size QR sheet (behind the "QR code" button).
-    @State private var enlarged = false
     /// Keyboard focus for the name field (the host's Return on the name zone).
     @FocusState private var nameFocused: Bool
-    /// Fired to open the macOS share picker from the keyboard (ShareLink
-    /// itself can't be invoked programmatically).
-    @State private var sharePick = Pulse()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -83,9 +77,6 @@ struct ShareCardView: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.primary.opacity(0.05))
         )
-        .appearanceSheet(isPresented: $enlarged, settings) {
-            QRZoomSheet(qr: qr, name: trimmedName, link: link)
-        }
         .onAppear {
             // Pull the latest synced name (iCloud Keychain has no change
             // notifications, so opening the card is the refresh point) BEFORE
@@ -104,8 +95,6 @@ struct ShareCardView: View {
         case .name: nameFocused = true
         case .career: settings.shareIncludeCareer.toggle()
         case .nearby: onNearby?()
-        case .shareLink: sharePick.fire()
-        case .qr: enlarged = true
         case nil: break
         }
     }
@@ -138,36 +127,11 @@ struct ShareCardView: View {
         .onChangeCompat(of: settings.shareIncludeCareer) { _ in rebuild() }
     }
 
-    /// All the share actions. On a WIDE canvas (iPad, Mac) they sit in one row —
-    /// Nearby (the promoted default) beside the remote pair. On a phone the three
-    /// labels can't share a row without truncating ("Sh…", "QR…"), so Nearby
-    /// takes the top row and the remote pair stacks below it. Decided by size
-    /// class rather than ViewThatFits, which counts truncated text as "fitting".
+    /// The share actions — Nearby only for now: the link/QR remotes are
+    /// PARKED (a full record outgrows a QR, and multi-KB links are hostile in
+    /// a message; see DECISIONS.md). They return as bounded challenge cards.
     @ViewBuilder private func shareActions(for link: URL) -> some View {
-        if onNearby != nil {
-            if isWideLayout {
-                HStack(spacing: 8) {
-                    nearbyButton
-                    remoteButtons(for: link).frame(maxWidth: .infinity)
-                }
-            } else {
-                VStack(spacing: 8) {
-                    nearbyButton
-                    remoteButtons(for: link)
-                }
-            }
-        } else {
-            remoteButtons(for: link)
-        }
-    }
-
-    /// One row only where there's genuinely room: iPad (regular width) and Mac.
-    private var isWideLayout: Bool {
-        #if os(macOS)
-        return true
-        #else
-        return hSizeClass == .regular
-        #endif
+        nearbyButton
     }
 
     @ViewBuilder private var nearbyButton: some View {
@@ -189,38 +153,6 @@ struct ShareCardView: View {
         }
     }
 
-    /// The remote channels: send the link (the system share sheet already offers
-    /// Copy, so no separate copy button) and show the QR full size — the
-    /// branded-card image exports (share/save) live inside the QR view, beside
-    /// the code they render.
-    private func remoteButtons(for link: URL) -> some View {
-        HStack(spacing: 8) {
-            #if os(macOS)
-            SharePickerButton(url: link, activate: sharePick)
-                .modifier(ring(.shareLink))
-            #else
-            ShareLinkButton(url: link)
-            #endif
-            if qr != nil {
-                Button {
-                    enlarged = true
-                } label: {
-                    Label {
-                        Text("QR code", bundle: .module)
-                    } icon: {
-                        Image(systemName: "qrcode")
-                    }
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity)
-                }
-                .modifier(ring(.qr))
-                .accessibilityHint(Text("Shows the code full size.", bundle: .module))
-            }
-        }
-        .buttonStyle(.bordered)
-    }
-
     /// The trimmed name: stamped on the card, and (when empty) the sharing
     /// gate — see the nudge above for the why.
     private var trimmedName: String {
@@ -234,9 +166,8 @@ struct ShareCardView: View {
     private func rebuild() {
         failed = false
         defer { hasLink?.wrappedValue = link != nil }
-        // No name → no card. The QR/buttons stay hidden and the field shows a nudge.
+        // No name → no card. The button stays hidden and the field shows a nudge.
         guard !trimmedName.isEmpty else {
-            qr = nil
             link = nil
             return
         }
@@ -245,18 +176,11 @@ struct ShareCardView: View {
                 scoreboard: scoreboard, settings: settings, identityStore: identityStore,
                 dailyStore: dailyStore, dailyDays: Self.qrDailyWindow)
         else {
-            qr = nil
             link = nil
             failed = true
             return
         }
         link = url
-        // The QR gets its own budgeted URL (ShareQRBudget) — an oversized
-        // card overflows the encoder; the link above keeps the full payload.
-        qr = SharePayloadBuilder.qrURL(
-            scoreboard: scoreboard, settings: settings, identityStore: identityStore,
-            dailyStore: dailyStore
-        ).flatMap { QRCode.image(from: $0.absoluteString) }
     }
 
 }
