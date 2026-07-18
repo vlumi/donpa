@@ -13,7 +13,7 @@ upload dance is slow and images change rarely; --images alone still needs
   Scripts/asc/sync.py --apply --images  # also (re)upload images
 
 Image files are read from Scripts/asc/medals (the committed set rendered by
-`make asc-medals`), overridable with --image-dir.
+`make medals`), overridable with --image-dir.
 Needs: PyJWT + cryptography.
 """
 import argparse

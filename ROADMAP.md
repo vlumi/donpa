@@ -59,7 +59,7 @@ What remains is the submission itself:
       description is the only store-side lever). The live listing does NOT
       carry it yet.
 - [ ] Release the 29 achievements into the review package
-      (`make asc-release-apply`), then **Submit for Review**
+      (`make asc-achievements-review-apply`), then **Submit for Review**
 - [ ] **UI smoke tests on CI?** A local XCUITest suite already exists (`make
       uitest`, `Tests/UITests/`, shipped in v0.1) but is deliberately *not* run
       by CI — it needs a job that builds the `.xcodeproj` and boots a simulator
