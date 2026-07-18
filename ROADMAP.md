@@ -24,6 +24,12 @@ gates.
 - [ ] **Game controllers** — the cursor seam is ready.
 - [ ] **A real VoiceOver session** to validate the spoken-cell flow.
 
+**Polish:**
+
+- [ ] **Theme color on share-card/rivalry buttons** — some buttons on the
+      score card and in the rivalry surfaces ignore the selected theme
+      accent. Audit the sharing views' button tints.
+
 **Carry-overs (deferred, revisit when relevant):**
 
 - [ ] **Device registry readers** — the COLLECTION shipped (a metadata
