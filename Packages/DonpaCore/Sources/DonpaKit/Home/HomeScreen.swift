@@ -31,7 +31,7 @@ struct HomeScreen: View {
     var onDaily: () -> Void = {}
     var onDailyCalendar: () -> Void = {}
     let onScores: () -> Void
-    /// Open the Mess hall — the social screen (share card, rivals, squads).
+    /// Open the Mess hall — the social screen (share card and rivals).
     let onMessHall: () -> Void
     let onSettings: () -> Void
     let onAbout: () -> Void

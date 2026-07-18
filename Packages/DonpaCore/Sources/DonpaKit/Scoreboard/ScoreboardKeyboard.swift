@@ -36,7 +36,7 @@ extension ScoreboardView {
     private func confirmOrActivate() {
         switch keys.zone {
         case .rows, .medals, .manage: activateZone()
-        case .career, .breakdown, .family, .edges, .rivals, .sync, nil: dismiss()
+        case .career, .breakdown, .family, .edges, .sync, nil: dismiss()
         }
     }
 
@@ -49,7 +49,7 @@ extension ScoreboardView {
     /// Space steps segmented zones forward (like Settings); buttons and rows activate.
     private func operateOrActivate() {
         switch keys.zone {
-        case .breakdown, .family, .edges, .rivals: operateZone(1)
+        case .breakdown, .family, .edges: operateZone(1)
         default: activateZone()
         }
     }
@@ -65,9 +65,7 @@ extension ScoreboardView {
         if !(filterFamily == .grid || filterFamily == .hive) {
             zones.removeAll { $0 == .edges }
         }
-        if friends.friends.isEmpty {
-            zones.removeAll { $0 == .rivals || $0 == .manage }
-        } else if onMessHall == nil {
+        if friends.friends.isEmpty || onMessHall == nil {
             zones.removeAll { $0 == .manage }
         }
         return zones
@@ -110,10 +108,6 @@ extension ScoreboardView {
             breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
         case .medals:
             moveMedalFocus(step)
-        case .rivals:
-            let options: [String?] = [nil] + friends.groups.map(\.id)
-            let i = options.firstIndex(of: rivalGroupID) ?? 0
-            rivalGroupID = options[min(max(i + step, 0), options.count - 1)]
         case .family:
             filterFamily = KeyStep.clamped(filterFamily, by: step)
             expandedKey = nil
@@ -140,7 +134,7 @@ extension ScoreboardView {
             onMessHall?()
         case .sync:
             syncActivate.fire()
-        case .career, .breakdown, .family, .edges, .rivals, nil:
+        case .career, .breakdown, .family, .edges, nil:
             break
         }
     }

@@ -1,13 +1,12 @@
 import DonpaCore
 import SwiftUI
 
-/// The **Mess hall** — where units mingle: your share card, your rivals, and your
-/// squads, one social screen (FI *Sotku*, JA 食堂). Two segmented tabs, **Rivals**
-/// and **Squads**, over one `FriendsStore`, under a share/scan header. In both tabs,
-/// tapping a row COMPARES you head-to-head; a trailing pencil edits (a rival's
-/// alias/squads/removal, or a squad's name/members/deletion). Sorted alphabetically.
-/// Read-only over the store except through its methods — the display-merge invariant
-/// means removing an entry just drops its data.
+/// The **Mess hall** — where units mingle: your share card over your rivals,
+/// one social screen (FI *Sotku*, JA 食堂) on one `FriendsStore`. Tapping a
+/// row COMPARES you head-to-head; a trailing pencil edits (alias/removal).
+/// Sorted alphabetically. Read-only over the store except through its
+/// methods — the display-merge invariant means removing an entry just drops
+/// its data.
 struct MessHallView: View {
     @ObservedObject var friends: FriendsStore
     @ObservedObject var scoreboard: Scoreboard
@@ -45,7 +44,7 @@ struct MessHallView: View {
     @State var cardHasLink = false
 
     /// Tab-cyclable zones, in visual order. The card's action zones exist
-    /// only while the card has a link; the new-squad field only on Squads.
+    /// only while the card has a link.
     enum KeyZone: CaseIterable {
         case name, career, nearby, rows, sync
     }
