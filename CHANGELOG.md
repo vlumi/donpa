@@ -20,6 +20,17 @@ it with a one-line edit.
 
 ### Unreleased (next build)
 
+- **Sharing simplifies to Nearby.** The share-link/QR buttons, the QR
+  scanner, and the squads layer are parked for 1.0 — a real record
+  outgrew what a QR can carry, and honest is better than silently
+  trimmed. Rivals are added by swapping cards in person; existing squads
+  and old share links keep working underneath. Remote sharing returns as
+  single-score challenge cards.
+
+- **Opening your own share link can't jam the app.** It now shows just the
+  "that's your own card" notice — before, an empty sheet could fight the
+  notice and leave the Record and Mess hall unopenable until a relaunch.
+
 - **The Nearby button gets its icon back on iPhone and iPad.** The button
   sits in a list row there, and the list quietly dropped the label's icon
   (leaving the text off-centre around an empty slot); the icon is now
@@ -27,17 +38,6 @@ it with a one-line edit.
 
 - **One window on Mac.** Opening a share link routed to the existing
   window instead of spawning a second app window over the same game.
-
-- **Opening your own share link can't jam the app.** It now shows just the
-  "that's your own card" notice — before, an empty sheet could fight the
-  notice and leave the Record and Mess hall unopenable until a relaunch.
-
-- **Sharing simplifies to Nearby.** The share-link/QR buttons, the QR
-  scanner, and the squads layer are parked for 1.0 — a real record
-  outgrew what a QR can carry, and honest is better than silently
-  trimmed. Rivals are added by swapping cards in person; existing squads
-  and old share links keep working underneath. Remote sharing returns as
-  single-score challenge cards.
 
 ### build 29 — 2026-07-18
 
