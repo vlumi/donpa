@@ -45,8 +45,6 @@ struct ScoreboardView: View {
 
     /// Game Center reporting (the Decorations footer's toggle drives it).
     @ObservedObject var gameCenter: GameCenterReporter
-    /// The group to compare against, or nil for all friends (the group filter).
-    @State var rivalGroupID: String?
     @Environment(\.dismiss) var dismiss
 
     /// High-scores filter: one Family × Edges leaf at a time (Basic ignores edges).
@@ -72,7 +70,7 @@ struct ScoreboardView: View {
     /// read-only scroll anchor (stats have nothing to operate); `edges` is
     /// skipped while the family has no edges axis.
     enum KeyZone: CaseIterable {
-        case career, breakdown, medals, family, edges, rivals, manage, rows, sync
+        case career, breakdown, medals, family, edges, manage, rows, sync
     }
 
     /// The Breakdown block's metric, hoisted so the keyboard can flip it.
@@ -250,7 +248,7 @@ struct ScoreboardView: View {
         VStack(alignment: .leading, spacing: 16) {
             sectionHeader("Commendations")
             filterControls
-            if !friends.friends.isEmpty { rivalScopeControl.id("zone.rivals") }
+            if !friends.friends.isEmpty { manageRivalsControl.id("zone.manage") }
             leafRows
         }
     }
@@ -349,7 +347,7 @@ struct ScoreboardView: View {
             filterFamily == .grid || filterFamily == .hive
             ? filterEdges : .flat
         let groups = Self.groups(family: filterFamily, edges: edges)
-        let rivals = FriendRanking.rivals(from: friends, group: rivalGroupID)
+        let rivals = FriendRanking.rivals(from: friends, group: nil)
         // Only the column labels pin (as this list's section header) so
         // "Cleared / Best % / Best" stays visible while the rows scroll — the
         // section title and filter above scroll away normally. Scoped to the

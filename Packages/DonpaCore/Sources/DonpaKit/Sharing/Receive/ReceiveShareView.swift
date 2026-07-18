@@ -48,16 +48,11 @@ private struct ConfirmAddView: View {
     /// Optional local nickname, offered only for a genuine new add — a refresh
     /// mustn't clobber an alias you set earlier with a blank field here.
     @State private var alias = ""
-    /// Groups to put the friend in, staged until confirm (they aren't stored yet).
-    @State private var groupSelection: Set<String> = []
-    /// Tab-cyclable zones (new adds only — a refresh has no controls): the
-    /// alias field, the squad checkboxes, the new-squad field.
-    private enum KeyZone: CaseIterable { case alias, groups, newGroup }
+    /// Tab-cyclable zones (new adds only — a refresh has no controls): just
+    /// the alias field.
+    private enum KeyZone: CaseIterable { case alias }
     @State private var keys = KeyCursor<KeyZone>()
     @FocusState private var aliasFocused: Bool
-    @State private var newGroupFocus = Pulse()
-    /// A typed-but-not-created new squad name; confirm commits it (see GroupPicker).
-    @State private var pendingGroupName = ""
 
     private var isRefresh: Bool {
         if case .add = outcome { return false }
@@ -77,10 +72,9 @@ private struct ConfirmAddView: View {
         .keyFocusRing(keys.zone == .alias)
     }
 
-    /// Tab cycles the zones, arrows walk the checkboxes, Space operates the
-    /// focused control; Return enters a focused field, otherwise it's the
-    /// default — confirm. Esc cancels (the catcher owns keyDown, so both are
-    /// routed here). Yields while a field is being typed in.
+    /// Tab enters the alias field; Return enters it when focused, otherwise
+    /// it's the default — confirm. Esc cancels (the catcher owns keyDown, so
+    /// both are routed here). Yields while a field is being typed in.
     @ViewBuilder private var confirmKeyCatcher: some View {
         #if os(macOS)
         KeyCatcher(
@@ -88,13 +82,10 @@ private struct ConfirmAddView: View {
                 switch key {
                 case .tab: cycleZone(1)
                 case .backTab: cycleZone(-1)
-                case .down: if keys.zone == .groups { keys.move(1, count: friends.groups.count) }
-                case .up: if keys.zone == .groups { keys.move(-1, count: friends.groups.count) }
-                case .space: activateFocusedZone()
-                case .enter:
-                    if !isRefresh, keys.zone == .alias || keys.zone == .newGroup {
-                        activateFocusedZone()
-                    } else {
+                case .space, .enter:
+                    if !isRefresh, keys.zone == .alias {
+                        aliasFocused = true
+                    } else if key == .enter {
                         confirm()
                     }
                 case .escape: finish()
@@ -106,39 +97,12 @@ private struct ConfirmAddView: View {
     }
 
     #if os(macOS)
-    /// Tab wraps through the zones; a refresh has none, and the checkbox
-    /// zone drops out when there are no squads yet. Landing on a field
-    /// starts editing.
+    /// Tab wraps through the zones (a refresh has none); landing on the
+    /// field starts editing.
     private func cycleZone(_ delta: Int) {
         guard !isRefresh else { return }
-        var zones = KeyZone.allCases
-        if friends.groups.isEmpty { zones.removeAll { $0 == .groups } }
-        switch keys.cycle(delta, through: zones, entering: Self.entry) {
-        case .field where keys.zone == .alias: aliasFocused = true
-        case .field: newGroupFocus.fire()
-        default: break
-        }
-    }
-
-    private static func entry(_ zone: KeyZone) -> KeyCursor<KeyZone>.Entry {
-        switch zone {
-        case .alias, .newGroup: return .field
-        case .groups: return .list(seed: 0)
-        }
-    }
-
-    private func activateFocusedZone() {
-        guard !isRefresh else { return }
-        switch keys.zone {
-        case .alias:
+        if case .field = keys.cycle(delta, through: KeyZone.allCases, entering: { _ in .field }) {
             aliasFocused = true
-        case .groups:
-            guard let index = keys.index else { return }
-            GroupPicker.toggle(at: index, of: friends.groups, in: &groupSelection)
-        case .newGroup:
-            newGroupFocus.fire()
-        case nil:
-            break
         }
     }
     #endif
@@ -166,20 +130,6 @@ private struct ConfirmAddView: View {
                         aliasField
                             .textFieldStyle(.roundedBorder)
                     }
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Squads (optional)", bundle: .module)
-                            .font(.caption).foregroundStyle(.secondary)
-                        GroupPicker(
-                            friends: friends, selection: $groupSelection,
-                            pendingName: $pendingGroupName,
-                            keyFocusIndex: keys.zone == .groups ? keys.index : nil,
-                            fieldKeyFocused: keys.zone == .newGroup,
-                            fieldFocus: newGroupFocus,
-                            onRowTap: { index in
-                                keys.enter(.groups)
-                                keys.index = index
-                            })
-                    }
                 }
             }
         }
@@ -190,15 +140,6 @@ private struct ConfirmAddView: View {
         if !isRefresh {
             let trimmed = alias.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty { friends.setAlias(trimmed, for: payload.publicKey) }
-            // A squad name typed but never committed with Create still counts —
-            // discarding it silently would lose the squad.
-            var selection = groupSelection
-            if let pending = friends.createGroup(named: pendingGroupName) {
-                selection.insert(pending.id)
-            }
-            if !selection.isEmpty {
-                friends.setGroups(Array(selection), for: payload.publicKey)
-            }
         }
         dismiss()
         (onAdded ?? onDone)()
