@@ -28,10 +28,20 @@ enum WindowSizer {
     /// A FIXED window size for the App Store screenshot pass, so every capture
     /// generation is pixel-identical (a hand-dragged window never is). 1440×900
     /// is a clean 16:10 above Apple's 1280×800 Mac minimum. Demo mode only.
-    static func fixToScreenshotSize() {
+    /// Retries briefly: at onAppear the window may not be visible yet (the
+    /// Window scene restores its frame late), and giving up silently left a
+    /// capture run at whatever size the window last had.
+    static func fixToScreenshotSize(attempt: Int = 0) {
         guard
             let window = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible })
-        else { return }
+        else {
+            if attempt < 20 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    fixToScreenshotSize(attempt: attempt + 1)
+                }
+            }
+            return
+        }
         window.setContentSize(CGSize(width: 1440, height: 900))
         window.center()
     }
