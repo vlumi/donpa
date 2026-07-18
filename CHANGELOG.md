@@ -30,9 +30,12 @@ it with a one-line edit.
   "that's your own card" notice — before, an empty sheet could fight the
   notice and leave the Record and Mess hall unopenable until a relaunch.
 
-- **The share QR survives a giant record.** Past the QR format's byte
-  ceiling, the code now trims to the boards a rival cares about most (the
-  link keeps everything) instead of silently dropping the QR button.
+- **Sharing simplifies to Nearby.** The share-link/QR buttons, the QR
+  scanner, and the squads layer are parked for 1.0 — a real record
+  outgrew what a QR can carry, and honest is better than silently
+  trimmed. Rivals are added by swapping cards in person; existing squads
+  and old share links keep working underneath. Remote sharing returns as
+  single-score challenge cards.
 
 ### build 29 — 2026-07-18
 

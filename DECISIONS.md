@@ -523,3 +523,23 @@ ink borders) was built and REVERTED — not distinct enough from classic to
 justify itself. The manga flavour lives in the chrome and panels; the board
 grid stays the classic look. Revisit only with a genuinely different
 treatment (real screentone, heavier ink, custom numbers).
+
+## Remote sharing & squads — parked for 1.0 (2026-07-18)
+
+The **share-link/QR channels and the squads layer are hidden from the UI**
+for the store release; all the code (codec, QR pipeline, scanner, group
+model + sync, group views) stays in the tree, and existing data stays in
+the synced stores, so both unpark intact.
+
+Why: a real record outgrew the QR's ~2.3KB ceiling (a ~60-config veteran
+sits byte-exact on it — career's ~110 compressed bytes was flipping the
+button), and the honest alternative — a multi-KB URL — is hostile pasted
+into a message. Silent trimming was rejected: what a share carries must be
+obvious. And with **Nearby as the only add channel**, rosters stay small,
+which removes what squads were for.
+
+The way back in: **bounded challenge cards** — QR/link shares a single
+score (or a small named block), small by construction, no trimming to
+explain; full records stay a Nearby-only, in-person, two-way swap. Squads
+return when remote sharing regrows rosters. The incoming-link receive path
+stays live (old shares keep verifying and importing).

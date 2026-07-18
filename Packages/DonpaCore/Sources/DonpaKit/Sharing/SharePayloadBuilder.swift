@@ -87,28 +87,4 @@ extension SharePayloadBuilder {
         return try? ShareLink.url(for: payload)
     }
 
-    /// The QR's URL: the payload shrunk along `ShareQRBudget`'s policy until
-    /// the encoder accepts it. Nil only for the no-name/no-identity gates.
-    static func qrURL(
-        scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore,
-        dailyStore: DailyStore
-    ) -> URL? {
-        let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let identity = identityStore.identity() else { return nil }
-        let issuedAt = Date()  // one stamp for every candidate: identical fit inputs
-        return ShareQRBudget.firstFitting(
-            scores: scores(from: scoreboard), career: settings.shareIncludeCareer
-        ) { plan in
-            guard
-                let payload = try? identity.makePayload(
-                    name: trimmed, scores: plan.scores,
-                    career: plan.career ? career(from: scoreboard) : nil,
-                    daily: dailyWindow(from: dailyStore, days: plan.dailyDays),
-                    issuedAt: issuedAt),
-                let url = try? ShareLink.url(for: payload),
-                QRCode.ciImage(from: url.absoluteString) != nil
-            else { return nil }
-            return url
-        }
-    }
 }
