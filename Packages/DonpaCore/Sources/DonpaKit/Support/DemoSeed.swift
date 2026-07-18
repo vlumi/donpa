@@ -29,6 +29,8 @@ public enum DemoSeed {
         // deliberately (then switch to Dark in-app for the dark set), rather
         // than inheriting whatever the capture machine happens to be in.
         settings.appearance = .light
+        // Staging shouldn't bump into progression gates — every board open.
+        settings.unlockAll = true
         seedScores(scoreboard)
         seedRivals(friends, settings: settings)
         seedDaily(daily)
