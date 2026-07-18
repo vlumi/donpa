@@ -229,33 +229,27 @@ The **Mess hall** (from the home screen) is the social room — peer-to-peer,
 with **no server and no accounts**:
 
 - **Share your scores.** Your share card sits right on the screen: type a
-  display name, optionally include career totals, and hand someone the **QR
-  code** (tap it to enlarge to scanning size) or the **donpa.app link** — or
-  share the branded card as an image (macOS can also save it to disk). Shares
-  are **signed** by a key in your Keychain. The signature is what keeps a rival
-  *being* the same person over time: the first share is taken on trust, but from
-  then on updates apply only when they come from that same person — someone else
-  reusing the name shows up as a separate add, never a silent overwrite. Your
-  own devices present one identity via iCloud Keychain.
-- **Add rivals.** Scan a rival's QR (**Add rival**; macOS imports or drags an
-  image) or just open their link — it works from the system Camera and Messages
-  too. What you receive is a **snapshot** of the scores they chose to share
-  (updated only when they share again), kept strictly separate from your own
-  records; removing a rival simply deletes their data. You can nickname a rival
-  and sort them into **squads** (work, family, …), and compare **head-to-head**
-  against one rival or a whole squad's best, board by board with a running
-  tally.
+  display name, optionally include career totals, and swap cards with
+  **Nearby exchange**. Shares are **signed** by a key in your Keychain. The
+  signature is what keeps a rival *being* the same person over time: the
+  first share is taken on trust, but from then on updates apply only when
+  they come from that same person — someone else reusing the name shows up
+  as a separate add, never a silent overwrite. Your own devices present one
+  identity via iCloud Keychain.
 - **Swap in the same room.** **Nearby exchange** trades score cards with a
   player next to you over local Wi-Fi/Bluetooth — open the sheet on both
   devices, tap their name, and the cards cross both ways in one handshake
-  (each side still confirms through the normal add flow). Your own other
-  devices are hidden from the list.
+  (each side still confirms an incoming card before it lands). What you
+  receive is a **snapshot** of the scores they chose to share (updated only
+  when they swap again), kept strictly separate from your own records;
+  removing a rival simply deletes their data. You can nickname a rival, and
+  compare **head-to-head** board by board with a running tally. Your own
+  other devices are hidden from the list.
 - **See where you stand.** In the Service Record, expand any board for a
-  leaderboard — your best slotted in among your rivals', fastest first, with a
-  standing medal on the row — and narrow the comparison to a single squad with
-  the **Compare with** picker.
-- With iCloud sync on, your rivals and squads follow you across your own
-  devices under the same switch as scores.
+  leaderboard — your best slotted in among your rivals', fastest first, with
+  a standing medal on the row.
+- With iCloud sync on, your rivals follow you across your own devices under
+  the same switch as scores.
 
 ## Settings
 
