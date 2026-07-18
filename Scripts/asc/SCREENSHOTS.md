@@ -35,7 +35,7 @@ that language (a JP listing must never show English screenshots).
 
 Manual fallback (freehand capture, then rename by capture order):
 `make demo-mac DEMO_LANG=fi` to just launch, then
-`make asc-shots DIR=<folder> PLATFORM=mac [LANGS=en,fi,ja]`.
+`make shots-organize DIR=<folder> PLATFORM=mac [LANGS=en,fi,ja]`.
 
 ## Demo isolation & the seeded boards
 

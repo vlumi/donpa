@@ -10,10 +10,12 @@
 .PHONY: help
 help:  ## List the available commands
 	@echo "Donpa — available make targets:"
-	@echo
-	@grep -hE '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
-		| sort \
-		| awk 'BEGIN {FS = ":.*## "} {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*## "} \
+		/^##@ / {printf "\n\033[1m%s\033[0m\n", substr($$0, 5); next} \
+		/^##~ / {printf "  \033[2m%s\033[0m\n", substr($$0, 5); next} \
+		/^[a-zA-Z0-9_-]+:.*## / {printf "  \033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+##@ Dev — build, run, test
 
 # Inputs xcodegen reads — regenerate the project when any of these change.
 PROJECT_INPUTS := project.yml \
@@ -55,6 +57,18 @@ test:  ## Run the package logic tests (no Xcode project needed)
 uitest: Donpa.xcodeproj  ## Run the local-only iOS UI tests (simulator)
 	@Scripts/uitest.sh
 
+.PHONY: perf
+perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a heavy XXXL board
+	@Scripts/perf-profile.sh
+
+.PHONY: clean
+clean:  ## Remove the generated project + local build output
+	@rm -rf Donpa.xcodeproj .build-xcode
+	@echo "removed Donpa.xcodeproj and .build-xcode"
+
+##@ Demo & screenshot capture
+##~ Screenshot refresh: make shots → make asc-screenshots → make asc-screenshots-apply
+
 # App Store screenshots — see Scripts/asc/SCREENSHOTS.md. `make shots` is the
 # whole flow: it launches the demo per language, prompts what to stage, and
 # captures each shot itself, canonically named under shots/<platform>/<lang>/.
@@ -82,29 +96,42 @@ demo-ipad: build-ios  ## Launch the iPad simulator in demo mode (DEMO_LANG=en|fi
 demo-mac: build-mac  ## Launch the Mac app in demo mode (DEMO_LANG=en|fi|ja)
 	@PLATFORM=mac Scripts/demo.sh
 
-perf: build-mac  ## Headless macOS perf probe (CPU% + Time Profiler trace) of a heavy XXXL board
-	@Scripts/perf-profile.sh
+.PHONY: shots-organize
+shots-organize:  ## Rename raw freehand screenshots by capture order (local): DIR=<folder> PLATFORM=iphone|ipad|mac [LANGS=en,fi,ja]
+	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR) $(if $(LANGS),--langs=$(LANGS),)
 
-# App Store Connect achievement tooling. The runner self-manages a venv (deps
-# in Scripts/asc/requirements.txt); achievements.json is the source of truth.
-.PHONY: asc-medals
-asc-medals:  ## Render the 29 achievement medal PNGs into Scripts/asc/medals
+##@ App Store Connect sync (asc-* talk to ASC; dry-run by default, -apply writes)
+##~ Listing text: edit Scripts/asc/listing.json → make asc-listing → make asc-listing-apply
+##~ Achievements: edit achievements.json → make medals → make asc-achievements → -apply, then make asc-achievements-review-apply to add them to a review
+
+# App Store Connect tooling. The runner self-manages a venv (deps in
+# Scripts/asc/requirements.txt); achievements.json is the source of truth.
+.PHONY: medals
+medals:  ## Render the 29 achievement medal PNGs into Scripts/asc/medals
 	@DONPA_MEDAL_ASC="$(CURDIR)/Scripts/asc/medals" DONPA_REPO_ROOT="$(CURDIR)" \
 		swift test --package-path Packages/DonpaCore \
 		--filter MedalGalleryRender/testRenderASCImages
 	@echo "Rendered $$(ls Scripts/asc/medals/*.png | wc -l | tr -d ' ') medals."
 
-.PHONY: asc-status
-asc-status:  ## List Game Center achievements + completeness (reads ASC)
+.PHONY: asc-achievements-status
+asc-achievements-status:  ## List Game Center achievements + completeness (reads ASC)
 	@Scripts/asc/run.sh status
 
-.PHONY: asc-sync
-asc-sync:  ## Show what differs between achievements.json and ASC (dry run)
+.PHONY: asc-achievements
+asc-achievements:  ## Show what differs between achievements.json and ASC (dry run)
 	@Scripts/asc/run.sh sync $(ARGS)
 
-.PHONY: asc-sync-apply
-asc-sync-apply:  ## Push achievements.json text/points changes to ASC (add ARGS="--images ..." for images)
+.PHONY: asc-achievements-apply
+asc-achievements-apply:  ## Push achievements.json text/points changes to ASC (add ARGS="--images ..." for images)
 	@Scripts/asc/run.sh sync --apply $(ARGS)
+
+.PHONY: asc-achievements-review
+asc-achievements-review:  ## Show which achievements would be added to review (dry run)
+	@Scripts/asc/run.sh sync --release
+
+.PHONY: asc-achievements-review-apply
+asc-achievements-review-apply:  ## Add all achievements to review (create release records)
+	@Scripts/asc/run.sh sync --release --apply
 
 .PHONY: asc-listing
 asc-listing:  ## Show what differs between listing.json and the ASC App Store listing (dry run)
@@ -114,27 +141,17 @@ asc-listing:  ## Show what differs between listing.json and the ASC App Store li
 asc-listing-apply:  ## Push listing.json (description/keywords/etc.) to the ASC listing
 	@Scripts/asc/run.sh listing --apply $(ARGS)
 
-.PHONY: asc-release
-asc-release:  ## Show which achievements would be added to review (dry run)
-	@Scripts/asc/run.sh sync --release
-
-.PHONY: asc-release-apply
-asc-release-apply:  ## Add all achievements to review (create release records)
-	@Scripts/asc/run.sh sync --release --apply
-
-.PHONY: asc-shots
-asc-shots:  ## Rename raw screenshots by capture order: DIR=<folder> PLATFORM=iphone|ipad|mac [LANGS=en,fi,ja]
-	@Scripts/asc/run.sh organize $${PLATFORM:-iphone} $(DIR) $(if $(LANGS),--langs=$(LANGS),)
-
-.PHONY: asc-screens
-asc-screens:  ## Show what the shots/ tree would upload to the ASC listings (dry run)
+.PHONY: asc-screenshots
+asc-screenshots:  ## Show what the shots/ tree would upload to the ASC listings (dry run)
 	@Scripts/asc/run.sh screens $(ARGS)
 
-.PHONY: asc-screens-apply
-asc-screens-apply:  ## Replace + upload the shots/ tree to the ASC listings
+.PHONY: asc-screenshots-apply
+asc-screenshots-apply:  ## Replace + upload the shots/ tree to the ASC listings
 	@Scripts/asc/run.sh screens --apply $(ARGS)
 
-# ── Release lane ──────────────────────────────────────────────────────────────
+##@ Release lane
+##~ Cut a build: make release (PLATFORM=all|ios|macos) — runs preflight → publish → tag → distribute
+
 # The cut is split by concern, one script each, chained here in order:
 #   preflight → publish → tag → distribute
 # The pure ends (preflight, tag, distribute) re-derive their inputs from git +
@@ -193,7 +210,3 @@ release-distribute-retry:  ## Re-distribute an already-tagged release (no PR/tag
 release-upload:  ## Upload the already-built dist/ package (no rebuild)
 	@Scripts/release-distribute.sh $(PLATFORM) --upload-only
 
-.PHONY: clean
-clean:  ## Remove the generated project + local build output
-	@rm -rf Donpa.xcodeproj .build-xcode
-	@echo "removed Donpa.xcodeproj and .build-xcode"
