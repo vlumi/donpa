@@ -35,6 +35,14 @@ PLATFORMS = {
     "ipad": ("IOS", "APP_IPAD_PRO_3GEN_129"),
     "mac": ("MAC_OS", "APP_DESKTOP"),
 }
+# Pixel sizes ASC accepts for each platform dir. A capture at any other size
+# uploads fine but fails ASC's processing — a broken tile that BLOCKS
+# submission — so refuse it here, loudly, before touching the sets.
+EXPECTED_SIZES = {
+    "iphone": {(1320, 2868)},
+    "ipad": {(2064, 2752)},
+    "mac": {(1440, 900), (2880, 1800)},
+}
 LOCALES = {"en": "en-US", "fi": "fi", "ja": "ja"}
 EDITABLE = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED",
             "METADATA_REJECTED", "PENDING_DEVELOPER_RELEASE"}
@@ -48,6 +56,25 @@ def ordered_files(lang_dir, platform):
         if os.path.exists(path):
             out.append(path)
     return out
+
+
+def png_size(path):
+    """Width × height from the PNG header (IHDR is always first)."""
+    with open(path, "rb") as f:
+        head = f.read(24)
+    if head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
+        sys.exit(f"Not a PNG: {path}")
+    return (int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big"))
+
+
+def check_sizes(files, platform):
+    """Refuse the whole run on a wrong-sized capture (see EXPECTED_SIZES)."""
+    bad = [(p, png_size(p)) for p in files if png_size(p) not in EXPECTED_SIZES[platform]]
+    if bad:
+        lines = "\n".join(f"  {p}: {w}x{h}" for p, (w, h) in bad)
+        want = " or ".join(f"{w}x{h}" for w, h in sorted(EXPECTED_SIZES[platform]))
+        sys.exit(f"Wrong-sized {platform} capture(s) — expected {want}:\n{lines}\n"
+                 "Recapture via `make shots` (the demo pins the window/simulator size).")
 
 
 def screenshot_set(asc, loc_id, display_type, apply):
@@ -158,6 +185,7 @@ def main():
             if not files:
                 print(f"({platform} [{locale}]: no captures — skipped)")
                 continue
+            check_sizes(files, platform)
             loc_id = loc_ids.get(locale)
             if not loc_id:
                 print(f"({platform} [{locale}]: locale missing on the version — skipped)")
