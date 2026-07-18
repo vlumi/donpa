@@ -50,6 +50,10 @@ case "$PLATFORM" in
     iphone) pat="${DEVICE:-iPhone 1[6-9] Pro Max}" ;;
     ipad) pat="${DEVICE:-iPad Pro 13-inch}" ;;
     mac)
+        # AppKit resolves Color.accentColor from the SYSTEM accent, out of
+        # SwiftUI's reach — pin it per-launch via the argument domain so Mac
+        # captures are blue on any machine (iOS is pinned in-app).
+        ARGS+=(-AppleAccentColor 4)
         app=$(find ~/Library/Developer/Xcode/DerivedData/Donpa-*/Build/Products/Debug \
             -maxdepth 1 -name "Donpa Squad.app" 2>/dev/null | head -1)
         [ -n "$app" ] || { echo "Build the Mac app first (make build-mac)." >&2; exit 1; }
