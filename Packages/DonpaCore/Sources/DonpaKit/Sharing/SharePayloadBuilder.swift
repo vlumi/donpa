@@ -8,9 +8,18 @@ import Foundation
 enum SharePayloadBuilder {
     static func build(
         from scoreboard: Scoreboard, identity: ShareIdentity, name: String,
-        includeCareer: Bool, daily: [SharedDailyDay]? = nil, maxScores: Int? = nil, now: Date
+        includeCareer: Bool, daily: [SharedDailyDay]? = nil, now: Date
     ) -> SharePayload? {
-        var scores: [SharedConfigScore] = scoreboard.displayRecords.map { key, rec in
+        let career = includeCareer ? Self.career(from: scoreboard) : nil
+        return try? identity.makePayload(
+            name: name, scores: scores(from: scoreboard), career: career, daily: daily,
+            issuedAt: now)
+    }
+
+    /// Every merged config's share slice, key-sorted (the codec's
+    /// determinism rule).
+    static func scores(from scoreboard: Scoreboard) -> [SharedConfigScore] {
+        scoreboard.displayRecords.map { key, rec in
             SharedConfigScore(
                 key: key,
                 best: rec.best?.centiseconds,
@@ -19,21 +28,7 @@ enum SharePayloadBuilder {
                 recentPace: Pace.medianPace(of: rec.recentWins),
                 bestPace: rec.bestPace?.pace)
         }
-        // A QR has a hard byte ceiling (a veteran's every-config payload
-        // overflows it and the encoder yields nothing) — under a budget, keep
-        // the boards a rival cares about most: won configs, most wins first.
-        if let maxScores, scores.count > maxScores {
-            scores =
-                scores
-                .sorted { ($0.wins, $1.key) > ($1.wins, $0.key) }
-                .prefix(maxScores)
-                .map { $0 }
-        }
-        scores.sort { $0.key < $1.key }  // stable order → deterministic payload/QR
-
-        let career = includeCareer ? Self.career(from: scoreboard) : nil
-        return try? identity.makePayload(
-            name: name, scores: scores, career: career, daily: daily, issuedAt: now)
+        .sorted { $0.key < $1.key }
     }
 
     /// The daily slice for a share: the newest `days` (nil = the full
@@ -78,7 +73,7 @@ extension SharePayloadBuilder {
     /// for the QR/link (scan budget), nil = full history for Nearby.
     static func currentURL(
         scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore,
-        dailyStore: DailyStore, dailyDays: Int?, maxScores: Int? = nil
+        dailyStore: DailyStore, dailyDays: Int?
     ) -> URL? {
         if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
         let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -87,9 +82,33 @@ extension SharePayloadBuilder {
             let payload = build(
                 from: scoreboard, identity: identity, name: trimmed,
                 includeCareer: settings.shareIncludeCareer,
-                daily: dailyWindow(from: dailyStore, days: dailyDays),
-                maxScores: maxScores, now: Date())
+                daily: dailyWindow(from: dailyStore, days: dailyDays), now: Date())
         else { return nil }
         return try? ShareLink.url(for: payload)
+    }
+
+    /// The QR's URL: the payload shrunk along `ShareQRBudget`'s policy until
+    /// the encoder accepts it. Nil only for the no-name/no-identity gates.
+    static func qrURL(
+        scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore,
+        dailyStore: DailyStore
+    ) -> URL? {
+        let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let identity = identityStore.identity() else { return nil }
+        let issuedAt = Date()  // one stamp for every candidate: identical fit inputs
+        return ShareQRBudget.firstFitting(
+            scores: scores(from: scoreboard), career: settings.shareIncludeCareer
+        ) { plan in
+            guard
+                let payload = try? identity.makePayload(
+                    name: trimmed, scores: plan.scores,
+                    career: plan.career ? career(from: scoreboard) : nil,
+                    daily: dailyWindow(from: dailyStore, days: plan.dailyDays),
+                    issuedAt: issuedAt),
+                let url = try? ShareLink.url(for: payload),
+                QRCode.ciImage(from: url.absoluteString) != nil
+            else { return nil }
+            return url
+        }
     }
 }

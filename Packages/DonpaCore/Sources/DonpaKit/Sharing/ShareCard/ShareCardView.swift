@@ -176,7 +176,9 @@ struct ShareCardView: View {
                 Label {
                     Text("Nearby", bundle: .module)
                 } icon: {
-                    Image(systemName: "person.line.dotted.person.fill")
+                    // Not person.line.dotted.person.fill: it renders on macOS
+                    // but comes up empty on iOS.
+                    Image(systemName: "person.2.wave.2.fill")
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -249,25 +251,12 @@ struct ShareCardView: View {
             return
         }
         link = url
-        qr = budgetedQR(startingFrom: url)
-    }
-
-    /// A QR has a hard byte ceiling; past it the encoder yields nothing and a
-    /// veteran's every-config card silently lost its QR button. The LINK keeps
-    /// the full payload; only the QR degrades — fewer configs (won ones stay,
-    /// most wins first), then a shorter daily window — until it encodes.
-    private func budgetedQR(startingFrom url: URL) -> Image? {
-        if let full = QRCode.image(from: url.absoluteString) { return full }
-        for (maxScores, days) in [(24, Self.qrDailyWindow), (16, 7), (10, 7), (6, 0)] {
-            guard
-                let smaller = SharePayloadBuilder.currentURL(
-                    scoreboard: scoreboard, settings: settings, identityStore: identityStore,
-                    dailyStore: dailyStore, dailyDays: days, maxScores: maxScores),
-                let image = QRCode.image(from: smaller.absoluteString)
-            else { continue }
-            return image
-        }
-        return nil
+        // The QR gets its own budgeted URL (ShareQRBudget) — an oversized
+        // card overflows the encoder; the link above keeps the full payload.
+        qr = SharePayloadBuilder.qrURL(
+            scoreboard: scoreboard, settings: settings, identityStore: identityStore,
+            dailyStore: dailyStore
+        ).flatMap { QRCode.image(from: $0.absoluteString) }
     }
 
 }
