@@ -8,9 +8,9 @@ import Foundation
 enum SharePayloadBuilder {
     static func build(
         from scoreboard: Scoreboard, identity: ShareIdentity, name: String,
-        includeCareer: Bool, daily: [SharedDailyDay]? = nil, now: Date
+        includeCareer: Bool, daily: [SharedDailyDay]? = nil, maxScores: Int? = nil, now: Date
     ) -> SharePayload? {
-        let scores: [SharedConfigScore] = scoreboard.displayRecords.map { key, rec in
+        var scores: [SharedConfigScore] = scoreboard.displayRecords.map { key, rec in
             SharedConfigScore(
                 key: key,
                 best: rec.best?.centiseconds,
@@ -19,7 +19,17 @@ enum SharePayloadBuilder {
                 recentPace: Pace.medianPace(of: rec.recentWins),
                 bestPace: rec.bestPace?.pace)
         }
-        .sorted { $0.key < $1.key }  // stable order → deterministic payload/QR
+        // A QR has a hard byte ceiling (a veteran's every-config payload
+        // overflows it and the encoder yields nothing) — under a budget, keep
+        // the boards a rival cares about most: won configs, most wins first.
+        if let maxScores, scores.count > maxScores {
+            scores =
+                scores
+                .sorted { ($0.wins, $1.key) > ($1.wins, $0.key) }
+                .prefix(maxScores)
+                .map { $0 }
+        }
+        scores.sort { $0.key < $1.key }  // stable order → deterministic payload/QR
 
         let career = includeCareer ? Self.career(from: scoreboard) : nil
         return try? identity.makePayload(
@@ -68,7 +78,7 @@ extension SharePayloadBuilder {
     /// for the QR/link (scan budget), nil = full history for Nearby.
     static func currentURL(
         scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore,
-        dailyStore: DailyStore, dailyDays: Int?
+        dailyStore: DailyStore, dailyDays: Int?, maxScores: Int? = nil
     ) -> URL? {
         if scoreboard.isCloudActive { scoreboard.refreshFromCloud() }
         let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -77,7 +87,8 @@ extension SharePayloadBuilder {
             let payload = build(
                 from: scoreboard, identity: identity, name: trimmed,
                 includeCareer: settings.shareIncludeCareer,
-                daily: dailyWindow(from: dailyStore, days: dailyDays), now: Date())
+                daily: dailyWindow(from: dailyStore, days: dailyDays),
+                maxScores: maxScores, now: Date())
         else { return nil }
         return try? ShareLink.url(for: payload)
     }
