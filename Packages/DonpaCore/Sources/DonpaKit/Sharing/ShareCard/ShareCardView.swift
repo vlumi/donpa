@@ -140,10 +140,11 @@ struct ShareCardView: View {
                 Label {
                     Text("Nearby", bundle: .module)
                 } icon: {
-                    // Not person.line.dotted.person.fill: it renders on macOS
-                    // but comes up empty on iOS.
-                    Image(systemName: "person.2.wave.2.fill")
+                    Image(systemName: "person.line.dotted.person.fill")
                 }
+                // Explicit: inside a List row (the iPhone layout) the
+                // automatic style resolves to title-only and drops the icon.
+                .labelStyle(.titleAndIcon)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)

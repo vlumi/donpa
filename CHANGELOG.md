@@ -20,8 +20,10 @@ it with a one-line edit.
 
 ### Unreleased (next build)
 
-- **The Nearby button gets its icon back on iPhone and iPad.** The symbol
-  rendered on Mac only; the label sat off-centre with an empty icon slot.
+- **The Nearby button gets its icon back on iPhone and iPad.** The button
+  sits in a list row there, and the list quietly dropped the label's icon
+  (leaving the text off-centre around an empty slot); the icon is now
+  explicit.
 
 - **One window on Mac.** Opening a share link routed to the existing
   window instead of spawning a second app window over the same game.
