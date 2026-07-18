@@ -256,10 +256,10 @@ extension View {
     /// Applies the deterministic screenshot accent when capturing; a no-op in
     /// normal use (the app keeps the system accent). Sets both `tint` and
     /// `accentColor` so SwiftUI controls and `Color.accentColor` fills pin to
-    /// blue on iOS. macOS is the exception: AppKit resolves the selection/
-    /// control accent from the SYSTEM setting regardless, so for Mac captures
-    /// set the machine's accent to Blue (System Settings ▸ Appearance) — see
-    /// SCREENSHOTS.md. The tint here still fixes the SwiftUI-drawn accents.
+    /// blue on iOS. macOS resolves `Color.accentColor` from the SYSTEM accent,
+    /// out of SwiftUI's reach — demo.sh pins that side with a per-launch
+    /// `-AppleAccentColor 4` argument; the tint here still covers the
+    /// SwiftUI-drawn accents.
     @ViewBuilder public func screenshotAccent() -> some View {
         if let accent = DemoSeed.screenshotAccent {
             tint(accent).accentColor(accent)

@@ -25,9 +25,6 @@ upload.
 
 Before a Mac run, once:
 
-- Set System Settings ▸ Appearance ▸ Accent to **Blue** — the Mac's selection
-  colour comes from the system and the app can't pin it (iOS is pinned
-  automatically).
 - The first window grab asks for Screen Recording permission for your
   terminal; grant it and re-run.
 
@@ -77,7 +74,7 @@ the same staged board):
    pace, and nothing else on the store has it.
 7. **daily challenge** — the calendar (via History) or the review screen. "One
    shared board a day, a reason to come back."
-8. **rivalry** — the Mess hall, Rivals tab: share card + head-to-head list.
+8. **rivalry** — the Mess hall: share card + head-to-head rivals list.
    Local, no-account score sharing is a differentiator.
 
 **Store order ≠ capture order.** In ASC, arrange the carousel by persuasion —
