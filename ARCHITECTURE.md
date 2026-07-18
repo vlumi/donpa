@@ -283,8 +283,8 @@ The app is a **game with a menu, not an app with tabs** — a tab bar over a
 pan/zoom board is hostile (edge pans, mis-taps) and translates badly to the Mac
 window, so the 0.4.0 nav redesign made the title a real **Home hub** instead:
 Continue (the latest in-progress board, expandable to all of them), New Game,
-the Service Record, and the **Mess hall** (the social screen: share card,
-rivals, squads, scanner), with Settings/About as corner utilities.
+the Service Record, and the **Mess hall** (the social screen: share card
+and rivals), with Settings/About as corner utilities.
 
 - **The board stays mounted underneath; Home is an opaque overlay.** That's what
   makes resume instant — leaving a game is `pause + save + showingTitle = true`,
@@ -375,7 +375,9 @@ devices instead of one person's. The whole pipeline lives in `DonpaCore/Sharing`
   signer and verifier hash identical bytes), signed, wrapped in a versioned
   `SharePayload`, then zlib-compressed + base64url'd by `ShareCodec` into a
   `https://donpa.app/s/<blob>` **Universal Link** (`ShareLink`) — which is also the QR.
-  No server: everything needed to verify is in the blob.
+  No server: everything needed to verify is in the blob. For 1.0 the link/QR **send**
+  surfaces are parked (Nearby carries the same payload; see DECISIONS.md) — the
+  codec and the receive path below stay live.
 - **Receiving is trust-on-first-use.** A tapped link (`onOpenURL`) or scanned/imported
   QR (`ScanContent`) both funnel through **one** path: `ShareLink.payload` verifies the
   signature, then `FriendMerge.outcome` classifies it — genuine add, refresh, silent
@@ -463,7 +465,7 @@ set. Streaks read `playedLive` alone, so replaying a missed day from the
 calendar records results but can never repair a streak. Daily results
 never touch a config's regular bests — the day is its own competition.
 Shares carry a channel-sized window of the same records (full history
-over Nearby, a rolling window in the QR) and receivers accumulate per
+over Nearby, a rolling window on the parked QR/link channel) and receivers accumulate per
 date, newest share winning its dates — long rivalries assemble full
 histories from small cards.
 
