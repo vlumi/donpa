@@ -10,7 +10,16 @@ enum SharePayloadBuilder {
         from scoreboard: Scoreboard, identity: ShareIdentity, name: String,
         includeCareer: Bool, daily: [SharedDailyDay]? = nil, now: Date
     ) -> SharePayload? {
-        let scores: [SharedConfigScore] = scoreboard.displayRecords.map { key, rec in
+        let career = includeCareer ? Self.career(from: scoreboard) : nil
+        return try? identity.makePayload(
+            name: name, scores: scores(from: scoreboard), career: career, daily: daily,
+            issuedAt: now)
+    }
+
+    /// Every merged config's share slice, key-sorted (the codec's
+    /// determinism rule).
+    static func scores(from scoreboard: Scoreboard) -> [SharedConfigScore] {
+        scoreboard.displayRecords.map { key, rec in
             SharedConfigScore(
                 key: key,
                 best: rec.best?.centiseconds,
@@ -19,11 +28,7 @@ enum SharePayloadBuilder {
                 recentPace: Pace.medianPace(of: rec.recentWins),
                 bestPace: rec.bestPace?.pace)
         }
-        .sorted { $0.key < $1.key }  // stable order → deterministic payload/QR
-
-        let career = includeCareer ? Self.career(from: scoreboard) : nil
-        return try? identity.makePayload(
-            name: name, scores: scores, career: career, daily: daily, issuedAt: now)
+        .sorted { $0.key < $1.key }
     }
 
     /// The daily slice for a share: the newest `days` (nil = the full
@@ -80,5 +85,30 @@ extension SharePayloadBuilder {
                 daily: dailyWindow(from: dailyStore, days: dailyDays), now: Date())
         else { return nil }
         return try? ShareLink.url(for: payload)
+    }
+
+    /// The QR's URL: the payload shrunk along `ShareQRBudget`'s policy until
+    /// the encoder accepts it. Nil only for the no-name/no-identity gates.
+    static func qrURL(
+        scoreboard: Scoreboard, settings: Settings, identityStore: ShareIdentityStore,
+        dailyStore: DailyStore
+    ) -> URL? {
+        let trimmed = settings.shareName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let identity = identityStore.identity() else { return nil }
+        let issuedAt = Date()  // one stamp for every candidate: identical fit inputs
+        return ShareQRBudget.firstFitting(
+            scores: scores(from: scoreboard), career: settings.shareIncludeCareer
+        ) { plan in
+            guard
+                let payload = try? identity.makePayload(
+                    name: trimmed, scores: plan.scores,
+                    career: plan.career ? career(from: scoreboard) : nil,
+                    daily: dailyWindow(from: dailyStore, days: plan.dailyDays),
+                    issuedAt: issuedAt),
+                let url = try? ShareLink.url(for: payload),
+                QRCode.ciImage(from: url.absoluteString) != nil
+            else { return nil }
+            return url
+        }
     }
 }

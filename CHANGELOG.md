@@ -20,6 +20,25 @@ it with a one-line edit.
 
 ### Unreleased (next build)
 
+- **The Nearby button gets its icon back on iPhone and iPad.** The symbol
+  rendered on Mac only; the label sat off-centre with an empty icon slot.
+
+- **One window on Mac.** Opening a share link routed to the existing
+  window instead of spawning a second app window over the same game.
+
+- **Opening your own share link can't jam the app.** It now shows just the
+  "that's your own card" notice — before, an empty sheet could fight the
+  notice and leave the Record and Mess hall unopenable until a relaunch.
+
+- **The share QR survives a giant record.** Past the QR format's byte
+  ceiling, the code now trims to the boards a rival cares about most (the
+  link keeps everything) instead of silently dropping the QR button.
+
+### build 29 — 2026-07-18
+
+- **The App Store submission build.** Identical in substance to 0.6.0's
+  build 28 — the version turns 1.0.0 for the public release.
+
 ## [0.6.0] — Keyboard & accessibility
 
 **The last pre-store polish: full keyboard play and navigation, VoiceOver

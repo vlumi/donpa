@@ -176,7 +176,9 @@ struct ShareCardView: View {
                 Label {
                     Text("Nearby", bundle: .module)
                 } icon: {
-                    Image(systemName: "person.line.dotted.person.fill")
+                    // Not person.line.dotted.person.fill: it renders on macOS
+                    // but comes up empty on iOS.
+                    Image(systemName: "person.2.wave.2.fill")
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -249,7 +251,12 @@ struct ShareCardView: View {
             return
         }
         link = url
-        qr = QRCode.image(from: url.absoluteString)
+        // The QR gets its own budgeted URL (ShareQRBudget) — an oversized
+        // card overflows the encoder; the link above keeps the full payload.
+        qr = SharePayloadBuilder.qrURL(
+            scoreboard: scoreboard, settings: settings, identityStore: identityStore,
+            dailyStore: dailyStore
+        ).flatMap { QRCode.image(from: $0.absoluteString) }
     }
 
 }

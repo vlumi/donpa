@@ -431,9 +431,13 @@ private struct ReceivePrompt: ViewModifier {
     }
 
     /// Every incoming case EXCEPT `.failed` (that one is the alert).
+    /// `.failed` and `.own` are ALERTS at this presenter, never sheets —
+    /// returning them here presented an empty sheet AND the alert at once,
+    /// and that presentation collision could wedge the window's sheet stack
+    /// (every later sheet silently refused until relaunch).
     private var sheetBinding: Binding<IncomingShare?> {
         Binding(
-            get: { failure == nil ? navigator.incomingShare : nil },
+            get: { failure == nil && !isOwn ? navigator.incomingShare : nil },
             set: { if $0 == nil { navigator.incomingShare = nil } })
     }
 

@@ -16,7 +16,9 @@ struct DonpaApp: App {
     @State private var showingAbout = false
 
     var body: some Scene {
-        WindowGroup {
+        // A single Window, not a WindowGroup — a WindowGroup answers an
+        // incoming share link with a SECOND window over the same game model.
+        Window("Donpa Squad", id: "main") {
             GameView(
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator
