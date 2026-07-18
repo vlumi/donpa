@@ -20,6 +20,8 @@ it with a one-line edit.
 
 ### Unreleased (next build)
 
+### build 30 — 2026-07-18
+
 - **Sharing simplifies to Nearby.** The share-link/QR buttons, the QR
   scanner, and the squads layer are parked for 1.0 — a real record
   outgrew what a QR can carry, and honest is better than silently
