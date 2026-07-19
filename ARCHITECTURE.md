@@ -391,15 +391,69 @@ devices instead of one person's. The whole pipeline lives in `DonpaCore/Sharing`
   leaderboard + head-to-head) reads both and interleaves at display time — so removing
   a rival just drops their record, with nothing to disentangle from your stats.
 - **Nearby exchange is a transport, not a second pipeline.** `NearbyExchange`
-  (v0.5.0) swaps the *same* signed share URL both ways over MultipeerConnectivity
+  swaps the *same* signed share URL both ways over MultipeerConnectivity
   (encryption required) — the received bytes re-enter the exact scan/link classify
   path, so all the verification above applies unchanged. Both sides advertise *and*
-  browse under one Bonjour type; opening the sheet is the consent gesture, so an
-  invite is auto-accepted (the import still stops at the normal confirm step).
-  Devices advertise a short prefix of their own public key, letting a browser hide
-  the player's own other devices — self-recognition only; the full key is still
-  checked on receive (and a self-add is classified `.own` and rejected gently).
-  NFC was the wish, but iOS gives third-party apps no phone-to-phone NFC.
+  browse under one Bonjour type. Devices advertise a short prefix of their own
+  public key, letting a browser hide the player's own other devices —
+  self-recognition only; the full key is still checked on receive (and a self-add
+  is classified `.own` and rejected gently). NFC was the wish, but iOS gives
+  third-party apps no phone-to-phone NFC.
+
+### The Nearby handshake: mutual taps, then cards
+
+A connection is plain transport — an invitation is accepted automatically, but
+**nothing rides it until both players have tapped each other's name**. A tap
+arms your side and announces itself with a tiny READY marker; your card leaves
+your device only once you're armed *and* their consent has arrived. So neither
+player can pull the other's card one-sided: the transfer needs both taps, in
+either order.
+
+The handshake brain is `NearbyFlow`, a pure state machine (events in, actions
+out — unit-tested headless); `NearbyExchange` is the MultipeerConnectivity
+adapter that executes its actions.
+
+```mermaid
+sequenceDiagram
+    participant A as Player A
+    participant B as Player B
+    Note over A,B: both sheets open — advertise + browse
+    A->>B: invite (A tapped B)
+    Note right of B: auto-accept: transport only,<br/>nothing sent yet
+    B-->>A: connected
+    A->>B: READY (A's tap, announced)
+    Note right of B: A's sheet: "waiting for B to tap…"
+    B->>A: READY (B tapped A)
+    par cards cross
+        A->>B: signed share URL
+    and
+        B->>A: signed share URL
+    end
+    Note over A,B: each side confirms the import<br/>through the normal receive flow
+```
+
+Design notes, each a fix for a field failure:
+
+- **Crossed invites** (both tap at once) previously raced two sessions into
+  mutual collapse. Now exactly one side hosts: the invitation carries the
+  sender's key tag, and the receiver accepts a crossed invite only when the
+  deterministic tie-break (`NearbyFlow.acceptsCrossedInvite`) says so — the
+  mirror rule makes the other side's invite win instead.
+- **Transient drops auto-retry.** Multipeer churns through `.notConnected`
+  while negotiating transports, and a mid-air drop used to be terminal. A
+  failure before completion now rebuilds the `MCSession` (a failed session
+  object isn't trustworthy) and re-invites with linear backoff, transparently,
+  a bounded number of times (`NearbyFlow.maxAutoRetries`); discovery keeps
+  running throughout, so retries never re-scan. Only an exhausted budget shows
+  the failure sheet — whose Retry button re-targets the same peer with a fresh
+  budget, because browse/advertise never stopped.
+- **Resends are safe by construction.** A reconnect restarts the handshake and
+  resends our card; the receiver keeps the first URL it saw and the
+  friend-merge is idempotent, so duplicates are absorbed.
+- **Old builds interop.** A pre-handshake build sends its card immediately on
+  connect — that card is treated as its consent (its user did tap), while ours
+  still waits for our tap. The READY marker contains spaces, which
+  `URL(string:)` rejects, so old receivers ignore it by design.
 
 ## Rival-list sync: the same blob model, different merge
 

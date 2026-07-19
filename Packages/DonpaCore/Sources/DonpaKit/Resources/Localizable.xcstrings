@@ -1498,6 +1498,22 @@
         }
       }
     },
+    "Connection hiccup — retrying with %@…" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yhteys pätki — yritetään uudelleen: %@…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続が不安定 — %@と再試行中…"
+          }
+        }
+      }
+    },
     "Continue" : {
       "comment" : "Continue list: sheet title — pick an in-progress board to resume",
       "localizations" : {
@@ -4376,6 +4392,22 @@
         }
       }
     },
+    "Open this on both devices, then each tap the other's name. Cards cross both ways only after both taps — nothing leaves the room." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa tämä molemmilla laitteilla ja napauttakaa kumpikin toisen nimeä. Kortit vaihtuvat vasta molempien napautuksesta — mikään ei poistu huoneesta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "両方の端末でこれを開き、お互いに相手の名前をタップ。カードは両者のタップで初めて交換 — データはその場から出ない。"
+          }
+        }
+      }
+    },
     "Open this on both devices, then tap the other player. You swap score cards both ways in one go — nothing leaves the room." : {
       "localizations" : {
         "fi" : {
@@ -5405,6 +5437,22 @@
         }
       }
     },
+    "Sending your card…" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lähetetään korttiasi…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分のカードを送信中…"
+          }
+        }
+      }
+    },
     "Service" : {
       "comment" : "Career segment: playtime",
       "localizations" : {
@@ -6094,6 +6142,22 @@
         }
       }
     },
+    "The connection dropped." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yhteys katkesi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続が切れました。"
+          }
+        }
+      }
+    },
     "The connection dropped — try again." : {
       "localizations" : {
         "fi" : {
@@ -6221,6 +6285,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上部のカウンターは地雷数から旗の数を引いたもの — まだ印を付けていない地雷の数。正しくても間違っていても、旗を信じて数える。"
+          }
+        }
+      }
+    },
+    "Their card arrived." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heidän korttinsa saapui."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相手のカードが届いた。"
           }
         }
       }
@@ -6582,6 +6662,22 @@
         }
       }
     },
+    "Try again" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yritä uudelleen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一度"
+          }
+        }
+      }
+    },
     "Turn on sync?" : {
       "comment" : "Confirm dialog title: enabling sync after a global wipe",
       "localizations" : {
@@ -6811,6 +6907,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "表示"
+          }
+        }
+      }
+    },
+    "Waiting for their card…" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odotetaan heidän korttiaan…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相手のカードを待っています…"
+          }
+        }
+      }
+    },
+    "Waiting for %@ to tap your name…" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odotetaan, että %@ napauttaa nimeäsi…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@があなたの名前をタップするのを待っています…"
           }
         }
       }
@@ -7316,6 +7444,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "この盤面の自己ベスト。"
+          }
+        }
+      }
+    },
+    "Your card is sent." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korttisi on lähetetty."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分のカードを送信済み。"
           }
         }
       }

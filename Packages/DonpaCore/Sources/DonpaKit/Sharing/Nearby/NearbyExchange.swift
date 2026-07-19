@@ -2,36 +2,37 @@ import DonpaCore
 import Foundation
 import MultipeerConnectivity
 
-/// Two-way local score exchange over MultipeerConnectivity: both players open the
-/// Nearby sheet, one taps the other's name, and BOTH share payloads cross in a
-/// single handshake. Each side still confirms the import through the normal
-/// receive flow.
+/// Two-way local score exchange over MultipeerConnectivity. Both players open
+/// the Nearby sheet and BOTH tap the other's name — a connection alone carries
+/// nothing, cards cross only after mutual taps (see NearbyFlow, which owns the
+/// handshake; this class is the MCC adapter executing its actions). Each side
+/// still confirms the import through the normal receive flow.
 @MainActor
 final class NearbyExchange: NSObject, ObservableObject {
-    enum Phase: Equatable {
-        case browsing
-        case connecting(String)
-        case exchanging(String)
-        /// Both directions done: ours sent, theirs received (URL handed out).
-        case done(String)
-        case failed
-    }
+    typealias Phase = NearbyFlow<MCPeerID>.Phase
 
     @Published private(set) var phase: Phase = .browsing
     @Published private(set) var peers: [MCPeerID] = []
     /// The rival's payload link, once received — routed into the same
     /// classify/confirm path a scanned QR takes.
     @Published private(set) var receivedURL: URL?
+    /// Per-direction progress for the exchanging view.
+    @Published private(set) var sentOurs = false
 
     /// Bonjour service type (≤15 chars, lowercase/digits/hyphen).
     static let service = "donpa-swap"
+    /// The tap announcement. Old builds feed received data to `URL(string:)`,
+    /// which rejects spaces — so this marker is invisible to them by design.
+    static let readyMarker = Data("DONPA READY 1".utf8)
 
     private let myPeer: MCPeerID
-    private let session: MCSession
+    private var session: MCSession
     private let advertiser: MCNearbyServiceAdvertiser
     private let browser: MCNearbyServiceBrowser
     private let payload: Data
-    private var sent = false
+    private var flow = NearbyFlow<MCPeerID>()
+    /// Discovery tags by peer, for the crossed-invite tie-break.
+    private var peerTags: [MCPeerID: String] = [:]
 
     /// A short tag of the local signing key, advertised so the browser can hide the
     /// player's OWN other devices (same synchronizable identity). A prefix suffices:
@@ -43,8 +44,7 @@ final class NearbyExchange: NSObject, ObservableObject {
         // MCPeerID rejects empty/oversized names; the share name is user text.
         myPeer = MCPeerID(displayName: trimmed.isEmpty ? "Donpa" : String(trimmed.prefix(60)))
         selfTag = (identityKey ?? Data()).prefix(9).base64EncodedString()
-        session = MCSession(
-            peer: myPeer, securityIdentity: nil, encryptionPreference: .required)
+        session = Self.makeSession(for: myPeer)
         advertiser = MCNearbyServiceAdvertiser(
             peer: myPeer, discoveryInfo: ["k": selfTag], serviceType: Self.service)
         browser = MCNearbyServiceBrowser(peer: myPeer, serviceType: Self.service)
@@ -55,8 +55,12 @@ final class NearbyExchange: NSObject, ObservableObject {
         browser.delegate = self
     }
 
-    /// Advertise AND browse: every open sheet sees every other open sheet, and
-    /// whoever taps first becomes the inviter (the other side auto-accepts).
+    private static func makeSession(for peer: MCPeerID) -> MCSession {
+        MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .required)
+    }
+
+    /// Advertise AND browse: every open sheet sees every other open sheet.
+    /// Discovery runs for the sheet's whole life — retries reuse it as-is.
     func start() {
         advertiser.startAdvertisingPeer()
         browser.startBrowsingForPeers()
@@ -68,32 +72,86 @@ final class NearbyExchange: NSObject, ObservableObject {
         session.disconnect()
     }
 
+    /// The local player tapped a name — arm our side.
     func invite(_ peer: MCPeerID) {
-        phase = .connecting(peer.displayName)
-        browser.invitePeer(peer, to: session, withContext: nil, timeout: 20)
+        perform(flow.userTapped(peer))
+    }
+
+    /// The failure sheet's Retry: fresh session, same peer, warm discovery.
+    func retry() {
+        remakeSession()
+        perform(flow.userRetried())
+    }
+
+    // MARK: Flow actions → MCC calls
+
+    private func perform(_ actions: [NearbyFlow<MCPeerID>.Action]) {
+        for action in actions {
+            switch action {
+            case .invite(let peer):
+                // 30s over the default 20: encryption negotiation on a busy
+                // radio was cutting it close.
+                browser.invitePeer(
+                    peer, to: session, withContext: Data(selfTag.utf8), timeout: 30)
+            case .sendReady(let peer):
+                send(Self.readyMarker, to: peer)
+            case .sendPayload(let peer):
+                if send(payload, to: peer) {
+                    perform(flow.payloadSent(to: peer))
+                }
+            case .retry(let peer, let attempt):
+                remakeSession()
+                // Linear backoff, capped — enough for the radio to settle, short
+                // enough that the "reconnecting" beat reads as automatic.
+                let delay = Double(min(attempt, 3))
+                Task { [weak self] in
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    guard let self else { return }
+                    self.perform(self.flow.retryFired(for: peer))
+                }
+            }
+        }
+        publish()
+    }
+
+    /// One failure funnel: a throwing send is the same event as a drop.
+    @discardableResult
+    private func send(_ data: Data, to peer: MCPeerID) -> Bool {
+        do {
+            try session.send(data, toPeers: [peer], with: .reliable)
+            return true
+        } catch {
+            perform(flow.linkFailed(with: peer))
+            return false
+        }
+    }
+
+    /// A failed session object is not trustworthy for the next attempt —
+    /// rebuild it; discovery (advertiser/browser) stays warm throughout.
+    private func remakeSession() {
+        session.disconnect()
+        session = Self.makeSession(for: myPeer)
+        session.delegate = self
+    }
+
+    private func publish() {
+        phase = flow.phase
+        sentOurs = flow.sentOurs
     }
 
     // MARK: Session plumbing (delegates arrive off-main; hop before touching state)
 
-    private func connected(to peer: MCPeerID) {
-        phase = .exchanging(peer.displayName)
-        guard !sent else { return }
-        sent = true
-        try? session.send(payload, toPeers: [peer], with: .reliable)
-        settle(with: peer)
-    }
-
     private func received(_ data: Data, from peer: MCPeerID) {
+        if data == Self.readyMarker {
+            perform(flow.receivedReady(from: peer))
+            return
+        }
         guard receivedURL == nil,
             let text = String(bytes: data, encoding: .utf8),
             let url = URL(string: text)
         else { return }
         receivedURL = url
-        settle(with: peer)
-    }
-
-    private func settle(with peer: MCPeerID) {
-        if sent, receivedURL != nil { phase = .done(peer.displayName) }
+        perform(flow.receivedPayload(from: peer))
     }
 }
 
@@ -103,13 +161,12 @@ extension NearbyExchange: MCSessionDelegate {
     ) {
         Task { @MainActor in
             switch state {
-            case .connected: self.connected(to: peerID)
+            case .connected:
+                self.perform(self.flow.connected(to: peerID))
             case .notConnected:
-                // A drop before both directions completed is a failure; after .done,
-                // it's just the other side closing their sheet.
-                if case .done = self.phase { return }
-                if case .browsing = self.phase { return }
-                self.phase = .failed
+                // The flow sorts transient drops (auto-retry) from real
+                // failures; after .done it's just the other sheet closing.
+                self.perform(self.flow.linkFailed(with: peerID))
             default: break
             }
         }
@@ -120,7 +177,7 @@ extension NearbyExchange: MCSessionDelegate {
         Task { @MainActor in self.received(data, from: peerID) }
     }
 
-    // Streams/resources unused — the exchange is one small Data each way.
+    // Streams/resources unused — the exchange is two small Datas each way.
     nonisolated func session(
         _ session: MCSession, didReceive stream: InputStream, withName streamName: String,
         fromPeer peerID: MCPeerID
@@ -141,11 +198,27 @@ extension NearbyExchange: MCNearbyServiceAdvertiserDelegate {
         didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?,
         invitationHandler: @escaping (Bool, MCSession?) -> Void
     ) {
-        // Auto-accept: opening the sheet IS the consent gesture (the import
-        // still runs through the normal confirm sheet).
+        // Accept as transport only — nothing is sent until OUR player taps.
+        // Crossed invites (both tapped at once): the tie-break picks exactly
+        // one hosting side; the loser's own invite wins on the mirror rule.
         Task { @MainActor in
+            let theirTag =
+                context.flatMap { String(bytes: $0, encoding: .utf8) }
+                ?? self.peerTags[peerID] ?? ""
+            let crossed: Bool
+            if case .connecting(let invited) = self.flow.phase, invited == peerID {
+                crossed = true
+            } else {
+                crossed = false
+            }
+            if crossed,
+                !NearbyFlow<MCPeerID>.acceptsCrossedInvite(
+                    myTag: self.selfTag, theirTag: theirTag)
+            {
+                invitationHandler(false, nil)
+                return
+            }
             invitationHandler(true, self.session)
-            self.phase = .connecting(peerID.displayName)
         }
     }
 }
@@ -157,6 +230,7 @@ extension NearbyExchange: MCNearbyServiceBrowserDelegate {
     ) {
         Task { @MainActor in
             guard info?["k"] != self.selfTag else { return }
+            self.peerTags[peerID] = info?["k"] ?? ""
             if !self.peers.contains(peerID) { self.peers.append(peerID) }
         }
     }

@@ -44,14 +44,67 @@ struct NearbyExchangeView: View {
         switch exchange.phase {
         case .browsing:
             browsing
-        case .connecting(let name):
-            status(Text("Connecting to \(name)…", bundle: .module), spinner: true)
-        case .exchanging(let name):
-            status(Text("Swapping scores with \(name)…", bundle: .module), spinner: true)
-        case .done(let name):
-            done(name)
-        case .failed:
-            status(Text("The connection dropped — try again.", bundle: .module), spinner: false)
+        case .connecting(let peer):
+            status(Text("Connecting to \(peer.displayName)…", bundle: .module), spinner: true)
+        case .waitingForTap(let peer):
+            status(
+                Text("Waiting for \(peer.displayName) to tap your name…", bundle: .module),
+                spinner: true)
+        case .exchanging(let peer):
+            exchanging(peer.displayName)
+        case .reconnecting(let peer):
+            status(
+                Text("Connection hiccup — retrying with \(peer.displayName)…", bundle: .module),
+                spinner: true)
+        case .done(let peer):
+            done(peer.displayName)
+        case .failed(let peer):
+            failed(peer)
+        }
+    }
+
+    /// Both sides tapped; show each direction's own progress.
+    private func exchanging(_ name: String) -> some View {
+        VStack(spacing: 8) {
+            ProgressView()
+            Text("Swapping scores with \(name)…", bundle: .module)
+                .font(.callout).foregroundStyle(.secondary)
+            directionTick(
+                done: exchange.sentOurs,
+                doneText: Text("Your card is sent.", bundle: .module),
+                pendingText: Text("Sending your card…", bundle: .module))
+            directionTick(
+                done: exchange.receivedURL != nil,
+                doneText: Text("Their card arrived.", bundle: .module),
+                pendingText: Text("Waiting for their card…", bundle: .module))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+    }
+
+    private func directionTick(done: Bool, doneText: Text, pendingText: Text) -> some View {
+        Label {
+            (done ? doneText : pendingText).font(.caption)
+        } icon: {
+            Image(systemName: done ? "checkmark.circle.fill" : "circle.dotted")
+                .foregroundStyle(done ? .green : .secondary)
+        }
+        .foregroundStyle(.secondary)
+    }
+
+    /// The automatic retries are spent — offer a manual one. Discovery stayed
+    /// warm, so Retry re-invites the same player directly.
+    private func failed(_ peer: MCPeerID?) -> some View {
+        VStack(spacing: 10) {
+            status(Text("The connection dropped.", bundle: .module), spinner: false)
+            if peer != nil {
+                Button {
+                    exchange.retry()
+                } label: {
+                    Text("Try again", bundle: .module).frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            }
         }
     }
 
@@ -63,8 +116,8 @@ struct NearbyExchangeView: View {
         if let received { onReceived(received) }
     }
 
-    /// Arrows pick a nearby player, Return invites them — or, once cards have
-    /// crossed, adds the received one.
+    /// Arrows pick a nearby player, Return taps them — or retries a failed
+    /// swap, or, once cards have crossed, adds the received one.
     @ViewBuilder private var nearbyKeyCatcher: some View {
         #if os(macOS)
         KeyCatcher { key in
@@ -95,6 +148,8 @@ struct NearbyExchangeView: View {
         case .browsing:
             guard let peer = focusedPeer, exchange.peers.contains(peer) else { return }
             exchange.invite(peer)
+        case .failed(let peer):
+            if peer != nil { exchange.retry() }
         case .done:
             guard let url = exchange.receivedURL else { return }
             dismiss()
@@ -134,8 +189,9 @@ struct NearbyExchangeView: View {
             Text("Nearby exchange", bundle: .module).font(.headline)
             Text(
                 """
-                Open this on both devices, then tap the other player. You \
-                swap score cards both ways in one go — nothing leaves the room.
+                Open this on both devices, then each tap the other's name. \
+                Cards cross both ways only after both taps — nothing leaves \
+                the room.
                 """, bundle: .module
             )
             .font(.caption)
