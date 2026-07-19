@@ -39,7 +39,9 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
   breaks the synced household apart: every device that contributes to your
   record, with its own wins and playtime — the career by where it was
   earned. Devices from before this feature still show (unnamed), so the
-  rows always add up to your total.
+  rows always add up to your total. Tap a row to give a device a
+  **nickname** — it syncs, survives the device renaming itself, and even a
+  forgotten old device can be named.
 
 - **Nearby exchange asks both players.** Cards now cross only after BOTH
   players tap each other's name — a connection alone carries nothing, so

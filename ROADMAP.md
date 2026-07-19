@@ -47,12 +47,6 @@ no new collection. The whole feature is sync-gated and hides without it.
       names like "Duty stations" were considered and dropped as
       under-selling it). Lives beside the Record's Sync toggle. Read-only;
       forget-a-device joins later.
-- [ ] **Nicknames** — user-assigned, alias pattern like rivals: never
-      overwrite the self-published name, keep a synced `DeviceID → nickname`
-      map (KVS, sync-gated, LWW per entry), display `nickname ?? name`.
-      Editable on the device row; works on stale/ghost devices; survives a
-      migrated device renaming itself. Softens iOS's generic names — the
-      user-assigned-device-name entitlement becomes optional polish.
 - [ ] **Record attribution** — the expanded Record row (and top-5 entries)
       gets a small class glyph beside a best: derived at merge time from
       whose blob carries it, retroactively. Ties/unknown blobs show nothing.
