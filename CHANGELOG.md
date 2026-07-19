@@ -29,6 +29,13 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
 
 ### Unreleased (next build)
 
+- **Nearby exchange asks both players.** Cards now cross only after BOTH
+  players tap each other's name — a connection alone carries nothing, so
+  nobody's card can be pulled one-sided. The sheet shows each direction's
+  progress, connection hiccups retry themselves a couple of times before
+  bothering you, and the failure screen gains a Try again button that
+  reuses the players it already found.
+
 ## [1.0.0] — The store release
 
 **The public App Store debut** — the beta feature set, ship-shape.
