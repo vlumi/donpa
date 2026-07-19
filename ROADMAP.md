@@ -48,24 +48,35 @@ gates.
 
 ## v1.0.0 — The store release
 
-The features and the store assets are in (achievements, listing text,
-screenshots — all live in ASC and synced from this repo via `make asc-*`).
-What remains is the submission itself:
+**Build 30 is submitted for App Review** (both platforms, one Universal
+Purchase record; sharing is Nearby-only for 1.0 and squads are hidden — the
+rationale and the way back live in [DECISIONS.md](DECISIONS.md)). Store
+assets (listing text, screenshots, achievements) are live in ASC and synced
+from this repo via the `asc-*` targets. What remains:
 
-- [ ] Cut the first 1.0.0 build; attach it to the ASC version
-- [ ] **AI-assistance note in the store description** — the README carries
-      the honest note; decide whether to mirror a short version into the
-      description before submitting (Apple has no AI flag, so the
-      description is the only store-side lever). The live listing does NOT
-      carry it yet.
-- [ ] Release the 29 achievements into the review package
-      (`make asc-achievements-review-apply`), then **Submit for Review**
+- [ ] **Await App Review**; on approval, release (manual release is set)
+- [ ] **Update donpa.app after release** — App Store links (and any launch
+      wording) on the live site
+- [ ] Delete `release/0.5.x` once 1.0.0 ships (superseded-line rule in
+      [RELEASING.md](RELEASING.md))
 - [ ] **UI smoke tests on CI?** A local XCUITest suite already exists (`make
       uitest`, `Tests/UITests/`, shipped in v0.1) but is deliberately *not* run
       by CI — it needs a job that builds the `.xcodeproj` and boots a simulator
       (today CI runs SPM `swift test` + `xcodebuild build` only), which is slow
-      and flaky mid-iteration. Decide near 1.0 whether the regression value is
-      worth wiring it into CI.
+      and flaky mid-iteration. Decide whether the regression value is worth
+      wiring it into CI.
+
+## Sharing regrows (post-1.0)
+
+Remote sharing returns **bounded**, not as it was:
+
+- [ ] **Challenge cards** — share a single score (or a small named block) by
+      QR/link: small by construction, nothing to trim, nothing to explain.
+      Full records stay a Nearby-only, in-person, two-way swap. The parked
+      code (codec, QR pipeline, scanner) is intact in the tree.
+- [ ] **Squads return** when remote sharing regrows rosters past what a
+      flat rivals list handles comfortably — group data and sync stayed
+      live underneath the hidden UI.
 
 ## Publishing & distribution
 
@@ -128,6 +139,6 @@ Per project conventions: **no ads, no microtransactions, no pay-to-win**; no
 third-party *runtime* dependencies; the older Intel Mac is not targeted. No online
 multiplayer, **no server, no accounts, no global leaderboards** — ever the plan.
 (Cross-device *score* sync (shipped in 0.2.0) is the user's own iCloud KVS, and
-score *sharing* (the friendly-rivalry milestone) is peer-to-peer QR between people
-who know each other — neither involves a server or a global social layer.) A **tip jar** — optional,
+score *sharing* (the friendly-rivalry milestone) is a peer-to-peer swap between
+people in the same room — neither involves a server or a global social layer.) A **tip jar** — optional,
 content-neutral support — is the one monetization form under consideration.
