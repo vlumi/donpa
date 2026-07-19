@@ -88,7 +88,7 @@ struct ScoreboardView: View {
             .onChangeCompat(of: filterFamily) { settings.scoreFilterFamily = $0 }
             .onChangeCompat(of: filterEdges) { settings.scoreFilterEdges = $0 }
             .appearanceSheet(isPresented: $showingDeviceScores, settings) {
-                DeviceScoresView(scoreboard: scoreboard)
+                DeviceScoresView(scoreboard: scoreboard, settings: settings)
             }
     }
 
