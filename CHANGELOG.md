@@ -29,6 +29,12 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
 
 ### Unreleased (next build)
 
+- **A daily clear counts as a win.** Clearing the daily challenge now
+  counts into the board's clear count and your career wins (and the
+  no-flag/no-chord tallies) — it used to count as a game played without
+  ever counting as a win, quietly dragging your win rate down. Daily best
+  times stay the day's own competition, as before.
+
 - **Scores by device.** A new door beside the Service Record's Sync toggle
   breaks the synced household apart: every device that contributes to your
   record, with its own wins and playtime — the career by where it was

@@ -16,7 +16,7 @@ final class StatsBlobCompressionTests: XCTestCase {
     func testPersistedBlobIsCompressedAndRoundTrips() {
         let store = defaults("roundtrip")
         let board = Scoreboard(defaults: store, cloud: nil)
-        board.submit(4321, for: .beginner)
+        board.submitWin(4321, for: .beginner)
 
         let raw = store.data(forKey: storeKey)
         XCTAssertNotNil(raw)

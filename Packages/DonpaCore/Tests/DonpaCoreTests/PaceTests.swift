@@ -169,7 +169,7 @@ final class PaceTests: XCTestCase {
     @MainActor func testSubmitAppendsNewestFirstAndTrims() {
         let board = freshBoard()
         for i in 0..<12 {
-            board.submit(
+            board.submitWin(
                 10_000 + i, for: GameConfig.beginner,
                 at: Date(timeIntervalSince1970: TimeInterval(1000 + i)), threeBV: 40)
         }
@@ -181,7 +181,7 @@ final class PaceTests: XCTestCase {
 
     @MainActor func testSubmitWithoutThreeBVLogsNothing() {
         let board = freshBoard()
-        board.submit(10_000, for: GameConfig.beginner)
+        board.submitWin(10_000, for: GameConfig.beginner)
         XCTAssertTrue(
             board.displayRecords[GameConfig.beginner.storageKey]!.recentWins.isEmpty)
     }
@@ -190,9 +190,9 @@ final class PaceTests: XCTestCase {
 
     @MainActor func testBestPaceKeepsTheFastest() {
         let board = freshBoard()
-        board.submit(10_000, for: GameConfig.beginner, threeBV: 50)  // 0.5/s
-        board.submit(5_000, for: GameConfig.beginner, threeBV: 40)  // 0.8/s
-        board.submit(10_000, for: GameConfig.beginner, threeBV: 40)  // 0.4/s — slower
+        board.submitWin(10_000, for: GameConfig.beginner, threeBV: 50)  // 0.5/s
+        board.submitWin(5_000, for: GameConfig.beginner, threeBV: 40)  // 0.8/s
+        board.submitWin(10_000, for: GameConfig.beginner, threeBV: 40)  // 0.4/s — slower
         let best = board.displayRecords[GameConfig.beginner.storageKey]!.bestPace
         XCTAssertEqual(best?.pace ?? 0, 0.8, accuracy: 1e-9)
     }

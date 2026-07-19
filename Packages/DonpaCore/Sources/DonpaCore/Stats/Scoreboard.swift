@@ -115,22 +115,20 @@ public final class Scoreboard: ObservableObject {
         return centiseconds < best
     }
 
-    /// Record a win: bump the clear count, store this DEVICE's best/top times, and
-    /// fold in the mastery signals. The best time is device-owned (kept on our own
-    /// record regardless of other devices) with its timestamp; the "new record" the
-    /// UI celebrates is still judged against the CROSS-DEVICE best. `noFlag`/`noChord`
-    /// are the game-end purity bits (a resumed game passes them as false). Returns
-    /// true if this beat the cross-device best.
+    /// Record a win's TIMES: store this DEVICE's best/top times and fold in the
+    /// mastery signals. The best time is device-owned (kept on our own record
+    /// regardless of other devices) with its timestamp; the "new record" the UI
+    /// celebrates is still judged against the CROSS-DEVICE best. Returns true if
+    /// this beat the cross-device best. The win TALLY lives in
+    /// `recordGameOutcome` — a daily clear counts as a win but never submits a
+    /// time, so the tallies must not ride the time path.
     @discardableResult
     public func submit(
         _ centiseconds: Int, for config: GameConfig,
-        at achievedAt: Date = Date(), noFlag: Bool = false, noChord: Bool = false,
+        at achievedAt: Date = Date(),
         threeBV: Int? = nil
     ) -> Bool {
         var record = records[config.storageKey] ?? ScoreRecord()
-        record.wins.add(1)
-        if noFlag { record.noFlagWins.add(1) }
-        if noChord { record.noChordWins.add(1) }
         stampPlayed(&record, at: achievedAt)
 
         // "New record" is judged against the cross-device best (a faster time on
@@ -204,15 +202,25 @@ public final class Scoreboard: ObservableObject {
 
     /// Record a finished game's outcome: games-played, win/loss, the mine tally (one
     /// hit on a loss; disarmed count on a win), and the chords used this game.
-    /// Activity accrues separately via `recordActivity`; wins/loss-progress via
-    /// `submit`/`submitLossProgress`.
+    /// Owns ALL the outcome tallies — wins included, so a daily clear counts
+    /// without submitting a time. `noFlag`/`noChord` are the game-end purity
+    /// bits (a resumed game passes them as false); only a won game earns them.
+    /// Activity accrues separately via `recordActivity`; best times /
+    /// loss-progress via `submit`/`submitLossProgress`.
     public func recordGameOutcome(
         for config: GameConfig, won: Bool, minesHit: Int, minesDisarmed: Int,
-        chordsUsed: Int = 0, at date: Date = Date()
+        chordsUsed: Int = 0, noFlag: Bool = false, noChord: Bool = false,
+        at date: Date = Date()
     ) {
         var record = records[config.storageKey] ?? ScoreRecord()
         record.gamesPlayed.add(1)
-        if !won { record.losses.add(1) }
+        if won {
+            record.wins.add(1)
+            if noFlag { record.noFlagWins.add(1) }
+            if noChord { record.noChordWins.add(1) }
+        } else {
+            record.losses.add(1)
+        }
         record.minesHit.add(minesHit)
         record.minesDisarmed.add(minesDisarmed)
         record.chordsUsed.add(chordsUsed)
