@@ -35,7 +35,7 @@ extension ScoreboardView {
     /// Manage rivals); anywhere else it's the sheet's default — Done.
     private func confirmOrActivate() {
         switch keys.zone {
-        case .rows, .medals, .manage: activateZone()
+        case .rows, .medals, .manage, .devices: activateZone()
         case .career, .breakdown, .family, .edges, .sync, nil: dismiss()
         }
     }
@@ -68,6 +68,7 @@ extension ScoreboardView {
         if friends.friends.isEmpty || onMessHall == nil {
             zones.removeAll { $0 == .manage }
         }
+        if !settings.syncScores { zones.removeAll { $0 == .devices } }
         return zones
     }
 
@@ -103,7 +104,7 @@ extension ScoreboardView {
 
     private func operateZone(_ step: Int) {
         switch keys.zone {
-        case .career, .manage, .rows, .sync, nil: break
+        case .career, .manage, .rows, .sync, .devices, nil: break
         case .breakdown:
             breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
         case .medals:
@@ -134,6 +135,8 @@ extension ScoreboardView {
             onMessHall?()
         case .sync:
             syncActivate.fire()
+        case .devices:
+            showingDeviceScores = true
         case .career, .breakdown, .family, .edges, nil:
             break
         }

@@ -438,6 +438,22 @@
         }
       }
     },
+    "Active %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiivinen %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最終アクティブ: %@"
+          }
+        }
+      }
+    },
     "Add" : {
       "localizations" : {
         "en" : {
@@ -5403,6 +5419,22 @@
         }
       }
     },
+    "Scores by device" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tulokset laitteittain"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端末別スコア"
+          }
+        }
+      }
+    },
     "Scores were erased everywhere while sync was off. Turning sync on will reset this device too." : {
       "comment" : "Confirm dialog message: a wipe happened while sync was off",
       "localizations" : {
@@ -6337,6 +6369,22 @@
         }
       }
     },
+    "This device" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tämä laite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末"
+          }
+        }
+      }
+    },
     "This device only" : {
       "comment" : "Sync status: toggle off (short)",
       "localizations" : {
@@ -6691,6 +6739,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同期をオンにしますか？"
+          }
+        }
+      }
+    },
+    "Unknown device" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuntematon laite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明な端末"
           }
         }
       }

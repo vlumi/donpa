@@ -376,3 +376,56 @@ final class ScoreboardSyncTests: XCTestCase {
         XCTAssertEqual(b.wins(for: .beginner), 1, "B's total drops to its own as A leaves")
     }
 }
+
+/// The "Scores by device" readers: per-device tables stay apart (no merge),
+/// and the summary counts only a device's own side.
+@MainActor
+final class PerDeviceRecordsTests: XCTestCase {
+    private func defaults(_ id: String) -> UserDefaults {
+        UserDefaults(suiteName: "device-\(id)-\(UUID().uuidString)")!
+    }
+
+    func testTablesStayApartAndPartitionTheTotal() {
+        let shared = FakeCloud.Shared()
+        let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
+        let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
+        a.submit(300, for: .beginner)
+        b.submit(250, for: .beginner)
+        b.submit(400, for: .beginner)
+
+        let tables = a.perDeviceRecords()
+        XCTAssertEqual(tables.count, 2)
+        let key = GameConfig.beginner.storageKey
+        XCTAssertEqual(tables[a.ownDeviceID]?[key]?.wins.mine, 1)
+        let other = tables.first { $0.key != a.ownDeviceID }?.value
+        XCTAssertEqual(other?[key]?.wins.mine, 2)
+
+        // The per-device summaries partition the merged household total.
+        let summed = tables.values.reduce(0) { $0 + DeviceScoreSummary(records: $1).wins }
+        XCTAssertEqual(summed, a.wins(for: .beginner))
+    }
+
+    func testOfflineFallsBackToOwnTableOnly() {
+        let shared = FakeCloud.Shared()
+        let cloudA = FakeCloud(shared: shared)
+        let a = Scoreboard(defaults: defaults("a"), cloud: cloudA)
+        let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
+        a.submit(300, for: .beginner)
+        b.submit(250, for: .beginner)
+
+        cloudA.available = false
+        let tables = a.perDeviceRecords()
+        XCTAssertEqual(Array(tables.keys), [a.ownDeviceID])
+    }
+
+    func testSummaryCountsOnlyTheDeviceOwnSide() {
+        var record = ScoreRecord()
+        record.wins = DeviceCounter(mine: 3, othersTotal: 40)
+        record.gamesPlayed = DeviceCounter(mine: 5, othersTotal: 60)
+        record.playtimeCentiseconds = DeviceCounter(mine: 6000, othersTotal: 999_999)
+        let summary = DeviceScoreSummary(records: ["k": record])
+        XCTAssertEqual(summary.wins, 3)
+        XCTAssertEqual(summary.gamesPlayed, 5)
+        XCTAssertEqual(summary.playtimeCentiseconds, 6000)
+    }
+}
