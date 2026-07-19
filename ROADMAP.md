@@ -26,18 +26,70 @@ gates.
 
 **Carry-overs (deferred, revisit when relevant):**
 
-- [ ] **Device registry readers** — the COLLECTION shipped (a metadata
-      entry beside each device's KVS blob: name, model, class, first-seen/
-      last-active; published under the sync gate, wipe-immune, never in
-      the share payload). Readers to build on it later: record-attribution
-      lines ("set on MacBook"), playtime by device class, a Settings "Your
-      devices" list, and eventually forget-a-device (the KVS-blob-pruning
-      item wearing a friendlier face). iOS names are generic until the
-      user-assigned-device-name entitlement ships with that UI.
-
 - [ ] **KVS blob pruning** — a reinstall mints a new sync slot, orphaning the old
       blob. Deferred (a dead reinstall looks like an offline device; blobs are
-      tiny). Revisit only near KVS storage limits.
+      tiny). Revisit only near KVS storage limits; the friendly face is
+      forget-a-device in the devices list (see "Your devices" below).
+
+
+## Your devices (post-1.0)
+
+The registry COLLECTION shipped ahead of every reader (a metadata entry
+beside each device's KVS blob: name, model, class, first-seen/last-active;
+sync-gated, wipe-immune, never in the share payload — deliberately: device
+names identify people in a way score tables don't, so rivals stay
+device-blind). Because each blob holds only its own device's records and the
+cross-device view merges at read time, all readers below are derivable with
+no new collection. The whole feature is sync-gated and hides without it.
+
+- [ ] **Devices list** — every known device: class icon, name, "This
+      device" badge, model as secondary text, and activity from
+      `lastActive` worded coarsely ("Active today", not a timestamp — the
+      registry refreshes at most daily). A device row can show that one
+      device's headline numbers (games, playtime — its blob is exactly
+      that). Read-only first; forget-a-device joins later. Placement:
+      Settings, "Your devices", visible while sync is on.
+- [ ] **Nicknames** — user-assigned, alias pattern like rivals: never
+      overwrite the self-published name, keep a synced `DeviceID → nickname`
+      map (KVS, sync-gated, LWW per entry), display `nickname ?? name`.
+      Editable on the device row; works on stale/ghost devices; survives a
+      migrated device renaming itself. Softens iOS's generic names — the
+      user-assigned-device-name entitlement becomes optional polish.
+- [ ] **Record attribution** — the expanded Record row (and top-5 entries)
+      gets a small class glyph beside a best: derived at merge time from
+      whose blob carries it, retroactively. Ties/unknown blobs show nothing.
+- [ ] **Career by device class** — All / Mac / iPhone / iPad segmented
+      filter on the career (filter the blob set before the merge); appears
+      only when two or more classes have data, like the Edges control.
+      Per-individual-device was considered and rejected — class is where
+      the insight lives. The Breakdown block could gain a by-class bar
+      (same shape as its Edges bar).
+
+**Migration semantics** (DeviceID is a UUID in UserDefaults, so it travels
+with backup/transfer — the ID must ride with the data it describes, or
+history double-counts):
+
+- Normal migration (old device retired): clean takeover — same ID, same
+  blob, registry entry re-describes itself, nickname follows. Correct as-is.
+- Fresh reinstall: new ID, old blob remains merged in (no data loss) but
+  its registry entry goes stale — a ghost row in the list, cleaned by
+  forget-a-device eventually.
+- [ ] **Fork this device** — "Start as a new device" on the This-device
+      row: mints a fresh DeviceID, zeroes the local mine-table, publishes a
+      fresh registry entry. Pre-fork history stays owned by the old blob —
+      totals preserved exactly, only provenance reassigns (pre-fork records
+      keep the old device's class in attribution: frozen at earn time, by
+      design). For the kept-both-devices-after-cloning case. Sync-gated.
+- [ ] **Clone detection** — a ThisDeviceOnly Keychain marker doesn't
+      survive restore onto new hardware: "ID present, marker missing" =
+      migrated/cloned. Offer the choice up front ("continue as ⟨old
+      name⟩" / "start fresh" = fork). If the user continues but the old
+      device is still alive, catch the mix-up anyway: stamp each blob
+      write with a per-install token; a device reading its own slot with
+      someone else's newer token knows two live installs share one ID —
+      surface it on both ("this ID is in use on another device") and
+      suggest the fork, instead of today's silent last-writer-wins
+      flip-flop.
 
 
 ## v1.0.0 — The store release
