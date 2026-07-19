@@ -109,8 +109,8 @@ final class CumulativeStatsTests: XCTestCase {
 
     func testWinsCountViaCounterAndPersists() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(30, for: .beginner)
-        board.submit(40, for: .beginner)
+        board.submitWin(30, for: .beginner)
+        board.submitWin(40, for: .beginner)
         XCTAssertEqual(board.wins(for: .beginner), 2)
         XCTAssertEqual(board.totalWins, 2)
         // Reload from the same defaults — counters persist.

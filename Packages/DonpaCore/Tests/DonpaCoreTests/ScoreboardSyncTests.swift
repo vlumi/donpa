@@ -72,8 +72,8 @@ final class ScoreboardSyncTests: XCTestCase {
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
 
-        a.submit(300, for: .beginner)  // A wins once → notifies B
-        b.submit(250, for: .beginner)  // B wins once, faster → notifies A
+        a.submitWin(300, for: .beginner)  // A wins once → notifies B
+        b.submitWin(250, for: .beginner)  // B wins once, faster → notifies A
 
         // Each device sees the union: 2 wins, best = the faster (min) time.
         XCTAssertEqual(a.wins(for: .beginner), 2)
@@ -88,13 +88,13 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(250, for: .beginner)  // A sets 2.50s; B now sees it
+        a.submitWin(250, for: .beginner)  // A sets 2.50s; B now sees it
 
         // B clears in 300 — slower than A's synced 250, so NOT a new record.
         XCTAssertFalse(
-            b.submit(300, for: .beginner), "slower than another device's best is not a record")
+            b.submitWin(300, for: .beginner), "slower than another device's best is not a record")
         // B clears in 200 — beats the cross-device best, so it IS a record.
-        XCTAssertTrue(b.submit(200, for: .beginner), "beating the cross-device best is a record")
+        XCTAssertTrue(b.submitWin(200, for: .beginner), "beating the cross-device best is a record")
         XCTAssertEqual(b.best(for: .beginner), 200)
     }
 
@@ -113,9 +113,9 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        a.submit(280, for: .beginner)
-        b.submit(290, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        a.submitWin(280, for: .beginner)
+        b.submitWin(290, for: .beginner)
         XCTAssertEqual(a.wins(for: .beginner), 3, "2 own + 1 from B")
         XCTAssertEqual(b.wins(for: .beginner), 3, "1 own + 2 from A")
     }
@@ -133,12 +133,12 @@ final class ScoreboardSyncTests: XCTestCase {
     func testSyncDisabledStaysLocalOnly() {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         // B has sync OFF — doesn't see A, doesn't publish.
         let b = Scoreboard(
             defaults: defaults("b"), cloud: FakeCloud(shared: shared), syncEnabled: false)
         XCTAssertEqual(b.wins(for: .beginner), 0, "sync off → cloud not read")
-        b.submit(100, for: .beginner)
+        b.submitWin(100, for: .beginner)
         XCTAssertEqual(a.wins(for: .beginner), 1, "B (sync off) didn't publish to A")
     }
 
@@ -146,7 +146,7 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(
             defaults: defaults("a"), cloud: FakeCloud(shared: shared, available: false))
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         XCTAssertEqual(a.wins(for: .beginner), 1, "still works locally")
         XCTAssertTrue(shared.blobs.isEmpty, "nothing written to an unavailable cloud")
         XCTAssertFalse(a.isCloudActive)
@@ -175,8 +175,8 @@ final class ScoreboardSyncTests: XCTestCase {
         let aCloud = FakeCloud(shared: shared)
         let a = Scoreboard(defaults: defaults("a"), cloud: aCloud)
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)  // A: 1
-        b.submit(280, for: .beginner)  // B: 1 → A sees 2
+        a.submitWin(300, for: .beginner)  // A: 1
+        b.submitWin(280, for: .beginner)  // B: 1 → A sees 2
         XCTAssertEqual(a.wins(for: .beginner), 2)
 
         aCloud.available = false  // A goes offline
@@ -192,8 +192,8 @@ final class ScoreboardSyncTests: XCTestCase {
         let aDefaults = defaults("a")
         let a = Scoreboard(defaults: aDefaults, cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        b.submit(280, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        b.submitWin(280, for: .beginner)
         XCTAssertEqual(a.wins(for: .beginner), 2)
 
         // Relaunch A on the SAME defaults but with an unavailable cloud (offline).
@@ -206,7 +206,7 @@ final class ScoreboardSyncTests: XCTestCase {
     func testTogglingSyncOnMergesInOtherDevices() {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         let b = Scoreboard(
             defaults: defaults("b"), cloud: FakeCloud(shared: shared), syncEnabled: false)
         XCTAssertEqual(b.wins(for: .beginner), 0)
@@ -223,8 +223,8 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        b.submit(280, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        b.submitWin(280, for: .beginner)
         XCTAssertEqual(b.wins(for: .beginner), 2)
 
         a.syncEnabled = false  // A opts out → its blob leaves the cloud
@@ -238,8 +238,8 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        b.submit(280, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        b.submitWin(280, for: .beginner)
         XCTAssertEqual(b.wins(for: .beginner), 2)
 
         a.reset()  // clears A's own count locally AND deletes its cloud blob
@@ -262,7 +262,7 @@ final class ScoreboardSyncTests: XCTestCase {
         // Suppress B's live notification so we can prove refreshFromCloud is what
         // delivers the update.
         bCloud.onExternalChange = nil
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         XCTAssertEqual(b.wins(for: .beginner), 0, "no live notification reached B yet")
         b.refreshFromCloud()
         XCTAssertEqual(b.wins(for: .beginner), 1, "foreground refresh pulls A's win")
@@ -271,7 +271,7 @@ final class ScoreboardSyncTests: XCTestCase {
     func testRefreshFromCloudIsNoOpWhenSyncOff() {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         let b = Scoreboard(
             defaults: defaults("b"), cloud: FakeCloud(shared: shared), syncEnabled: false)
         b.refreshFromCloud()  // sync off → must stay local-only
@@ -284,8 +284,8 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        b.submit(280, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        b.submitWin(280, for: .beginner)
         XCTAssertEqual(a.wins(for: .beginner), 2)
 
         XCTAssertTrue(a.wipeAllSynced(), "sync on + reachable → global wipe planted")
@@ -304,8 +304,8 @@ final class ScoreboardSyncTests: XCTestCase {
         let bDefaults = defaults("b")
         let bCloud = FakeCloud(shared: shared)
         let b = Scoreboard(defaults: bDefaults, cloud: bCloud)
-        a.submit(300, for: .beginner)
-        b.submit(280, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        b.submitWin(280, for: .beginner)
         XCTAssertEqual(a.wins(for: .beginner), 2)
 
         bCloud.available = false  // B goes offline, misses the wipe
@@ -325,9 +325,9 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         a.wipeAllSynced()
-        a.submit(250, for: .beginner)  // fresh win post-wipe
+        a.submitWin(250, for: .beginner)  // fresh win post-wipe
         XCTAssertEqual(a.wins(for: .beginner), 1)
         XCTAssertEqual(b.wins(for: .beginner), 1, "post-wipe wins still sync across devices")
     }
@@ -336,10 +336,10 @@ final class ScoreboardSyncTests: XCTestCase {
         // Sync off → the cloud must NOT be touched (the sync-scoped wipe rule).
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         let b = Scoreboard(
             defaults: defaults("b"), cloud: FakeCloud(shared: shared), syncEnabled: false)
-        b.submit(280, for: .beginner)
+        b.submitWin(280, for: .beginner)
 
         XCTAssertFalse(b.wipeAllSynced(), "sync off → not a global wipe")
         XCTAssertEqual(b.wins(for: .beginner), 0, "B cleared locally")
@@ -352,7 +352,7 @@ final class ScoreboardSyncTests: XCTestCase {
         // the window before it self-wipes) must not merge in even briefly.
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
+        a.submitWin(300, for: .beginner)
         a.wipeAllSynced()  // epoch now 2 (floor 1 + 1)
         // Forge a pre-wipe (epoch-1) blob directly into the shared cloud.
         let stale = Scoreboard.testMakeBlob(wins: 5, for: .beginner, epoch: 1)
@@ -367,9 +367,9 @@ final class ScoreboardSyncTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        a.submit(290, for: .beginner)  // A: 2 wins
-        b.submit(280, for: .beginner)  // B: 1 win
+        a.submitWin(300, for: .beginner)
+        a.submitWin(290, for: .beginner)  // A: 2 wins
+        b.submitWin(280, for: .beginner)  // B: 1 win
         XCTAssertEqual(b.wins(for: .beginner), 3, "B sees the combined total")
 
         a.syncEnabled = false  // A opts out elsewhere → B is notified and re-merges
@@ -389,9 +389,9 @@ final class PerDeviceRecordsTests: XCTestCase {
         let shared = FakeCloud.Shared()
         let a = Scoreboard(defaults: defaults("a"), cloud: FakeCloud(shared: shared))
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        b.submit(250, for: .beginner)
-        b.submit(400, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        b.submitWin(250, for: .beginner)
+        b.submitWin(400, for: .beginner)
 
         let tables = a.perDeviceRecords()
         XCTAssertEqual(tables.count, 2)
@@ -410,8 +410,8 @@ final class PerDeviceRecordsTests: XCTestCase {
         let cloudA = FakeCloud(shared: shared)
         let a = Scoreboard(defaults: defaults("a"), cloud: cloudA)
         let b = Scoreboard(defaults: defaults("b"), cloud: FakeCloud(shared: shared))
-        a.submit(300, for: .beginner)
-        b.submit(250, for: .beginner)
+        a.submitWin(300, for: .beginner)
+        b.submitWin(250, for: .beginner)
 
         cloudA.available = false
         let tables = a.perDeviceRecords()

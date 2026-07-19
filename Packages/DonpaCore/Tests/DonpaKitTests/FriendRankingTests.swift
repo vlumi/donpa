@@ -27,7 +27,7 @@ final class FriendRankingTests: XCTestCase {
         let config = GameConfig.basic(.beginner)
         let key = config.storageKey
         let scoreboard = Scoreboard(defaults: freshDefaults())
-        scoreboard.submit(500, for: config)  // you have a time here
+        scoreboard.submitWin(500, for: config)  // you have a time here
 
         let hasTime = rival("Amy", scores: [score(key, best: 810)])
         let noEntry = rival("Bob", scores: [])  // never played this board

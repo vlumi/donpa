@@ -136,14 +136,16 @@ extension GameContent {
             panelPace = nil
             panelPaceIsRecord = false
         }
-        // Outcome only — activity already accrued live via flushes. minesHit =
-        // the single loss detonation; a win's disarmedMineCount reads the full set.
+        // Outcome owns the tallies (wins included, so a DAILY clear counts) —
+        // activity already accrued live via flushes. minesHit = the single loss
+        // detonation; a win's disarmedMineCount reads the full set.
         scoreboard.recordGameOutcome(
             for: viewModel.config,
             won: isWin,
             minesHit: isWin ? 0 : 1,
             minesDisarmed: viewModel.game.board.disarmedMineCount,
-            chordsUsed: viewModel.chordsThisGame)
+            chordsUsed: viewModel.chordsThisGame,
+            noFlag: !viewModel.usedFlagEver, noChord: !viewModel.usedChordEver)
         celebrateUnlocks(isWin: isWin, before: recordsBefore)
         recordFeats()
         showPanel(kind)
@@ -163,10 +165,7 @@ extension GameContent {
         let priorBest = scoreboard.best(for: config)
         let priorBestPace = scoreboard.displayRecords[config.storageKey]?.bestPace?.pace
         let threeBV = viewModel.lastEndEvent?.threeBV
-        let isRecord = scoreboard.submit(
-            centiseconds, for: config,
-            noFlag: !viewModel.usedFlagEver, noChord: !viewModel.usedChordEver,
-            threeBV: threeBV)
+        let isRecord = scoreboard.submit(centiseconds, for: config, threeBV: threeBV)
         panelPace = threeBV.map {
             RecentWin(date: Date(), centiseconds: centiseconds, threeBV: $0).pace
         }

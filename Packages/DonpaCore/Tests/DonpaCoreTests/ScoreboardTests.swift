@@ -31,50 +31,50 @@ final class ScoreboardTests: XCTestCase {
 
     func testFirstSubmitSetsBest() {
         let board = Scoreboard(defaults: defaults)
-        XCTAssertTrue(board.submit(42, for: .beginner))
+        XCTAssertTrue(board.submitWin(42, for: .beginner))
         XCTAssertEqual(board.best(for: .beginner), 42)
     }
 
     func testFasterTimeReplacesBest() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(42, for: .beginner)
+        board.submitWin(42, for: .beginner)
         XCTAssertTrue(board.isNewRecord(30, for: .beginner))
-        XCTAssertTrue(board.submit(30, for: .beginner))
+        XCTAssertTrue(board.submitWin(30, for: .beginner))
         XCTAssertEqual(board.best(for: .beginner), 30)
     }
 
     func testSlowerTimeKeepsBestButStillCounts() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(30, for: .beginner)
+        board.submitWin(30, for: .beginner)
         XCTAssertFalse(board.isNewRecord(45, for: .beginner))
-        XCTAssertFalse(board.submit(45, for: .beginner), "a slower time is not a new best")
+        XCTAssertFalse(board.submitWin(45, for: .beginner), "a slower time is not a new best")
         XCTAssertEqual(board.best(for: .beginner), 30, "best time is unchanged")
         XCTAssertEqual(board.wins(for: .beginner), 2, "but the win still counts")
     }
 
     func testEqualTimeIsNotABetterRecord() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(30, for: .beginner)
+        board.submitWin(30, for: .beginner)
         XCTAssertFalse(board.isNewRecord(30, for: .beginner), "ties are not new records")
-        XCTAssertFalse(board.submit(30, for: .beginner))
+        XCTAssertFalse(board.submitWin(30, for: .beginner))
     }
 
     // MARK: Win counts
 
     func testEveryWinIncrementsTheClearCount() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(50, for: .beginner)  // best
-        board.submit(40, for: .beginner)  // new best
-        board.submit(60, for: .beginner)  // slower, still a clear
+        board.submitWin(50, for: .beginner)  // best
+        board.submitWin(40, for: .beginner)  // new best
+        board.submitWin(60, for: .beginner)  // slower, still a clear
         XCTAssertEqual(board.wins(for: .beginner), 3)
         XCTAssertEqual(board.best(for: .beginner), 40)
     }
 
     func testWinsAndBestAreIndependentPerDifficulty() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(30, for: .beginner)
-        board.submit(31, for: .beginner)
-        board.submit(120, for: .expert)
+        board.submitWin(30, for: .beginner)
+        board.submitWin(31, for: .beginner)
+        board.submitWin(120, for: .expert)
         XCTAssertEqual(board.wins(for: .beginner), 2)
         XCTAssertEqual(board.wins(for: .expert), 1)
         XCTAssertEqual(board.wins(for: .intermediate), 0)
@@ -84,8 +84,8 @@ final class ScoreboardTests: XCTestCase {
 
     func testRecordExposesWinsAndBest() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(30, for: .beginner)
-        board.submit(20, for: .beginner)
+        board.submitWin(30, for: .beginner)
+        board.submitWin(20, for: .beginner)
         let r = board.record(for: .beginner)
         XCTAssertEqual(r?.wins.total, 2)
         XCTAssertEqual(r?.bestCentiseconds, 20)
@@ -134,7 +134,7 @@ final class ScoreboardTests: XCTestCase {
         let board = Scoreboard(defaults: defaults)
         board.submitLossProgress(0.6, for: .beginner)
         XCTAssertEqual(board.bestProgress(for: .beginner) ?? 0, 0.6, accuracy: 1e-9)
-        board.submit(42, for: .beginner)  // a win
+        board.submitWin(42, for: .beginner)  // a win
         XCTAssertEqual(
             board.bestProgress(for: .beginner) ?? 0, 1.0, accuracy: 1e-9,
             "any win means the board has been fully cleared")
@@ -142,7 +142,7 @@ final class ScoreboardTests: XCTestCase {
 
     func testLossAfterWinIsNeverANewBest() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(42, for: .beginner)  // a win → effective best is 100%
+        board.submitWin(42, for: .beginner)  // a win → effective best is 100%
         // A subsequent loss, however far it got, can't beat a cleared board.
         XCTAssertFalse(
             board.submitLossProgress(0.58, for: .beginner),
@@ -175,15 +175,15 @@ final class ScoreboardTests: XCTestCase {
     func testNewBestTimeMarksRecentRecord() {
         let board = Scoreboard(defaults: defaults)
         XCTAssertNil(board.recentRecord)
-        board.submit(42, for: .beginner)
+        board.submitWin(42, for: .beginner)
         XCTAssertEqual(board.recentRecord, GameConfig.beginner.storageKey)
     }
 
     func testSlowerTimeDoesNotMarkRecentRecord() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(30, for: .beginner)
+        board.submitWin(30, for: .beginner)
         board.clearRecentRecord()
-        board.submit(45, for: .beginner)  // a win, but not a new best
+        board.submitWin(45, for: .beginner)  // a win, but not a new best
         XCTAssertNil(board.recentRecord)
     }
 
@@ -195,14 +195,14 @@ final class ScoreboardTests: XCTestCase {
 
     func testClearRecentRecordClearsIt() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(42, for: .beginner)
+        board.submitWin(42, for: .beginner)
         board.clearRecentRecord()
         XCTAssertNil(board.recentRecord)
     }
 
     func testResetClearsRecentRecord() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(42, for: .beginner)
+        board.submitWin(42, for: .beginner)
         board.reset()
         XCTAssertNil(board.recentRecord)
     }
@@ -211,8 +211,8 @@ final class ScoreboardTests: XCTestCase {
 
     func testStatsPersistAcrossInstances() {
         let first = Scoreboard(defaults: defaults)
-        first.submit(33, for: .intermediate)
-        first.submit(35, for: .intermediate)
+        first.submitWin(33, for: .intermediate)
+        first.submitWin(35, for: .intermediate)
         let second = Scoreboard(defaults: defaults)
         XCTAssertEqual(second.best(for: .intermediate), 33)
         XCTAssertEqual(second.wins(for: .intermediate), 2)
@@ -220,8 +220,8 @@ final class ScoreboardTests: XCTestCase {
 
     func testResetClearsEverythingAndPersists() {
         let board = Scoreboard(defaults: defaults)
-        board.submit(30, for: .beginner)
-        board.submit(120, for: .expert)
+        board.submitWin(30, for: .beginner)
+        board.submitWin(120, for: .expert)
         board.reset()
         XCTAssertNil(board.best(for: .beginner))
         XCTAssertEqual(board.wins(for: .expert), 0)
@@ -280,12 +280,16 @@ final class ScoreboardTests: XCTestCase {
         XCTAssertEqual(Scoreboard.decodeEpoch(Data(withEpoch.utf8)), 3)
     }
 
-    /// A win stamps first/last-played, keeps the best `topTimeLimit` times (fastest
-    /// first), and folds in the no-flag/no-chord skill flags.
+    /// A win stamps first/last-played and keeps the best `topTimeLimit` times
+    /// (fastest first); the no-flag/no-chord skill flags ride the OUTCOME (a
+    /// daily clear earns them without ever submitting a time).
     func testSubmitRecordsTimestampsTopTimesAndSkill() {
         let board = Scoreboard(defaults: defaults)
         let t0 = Date(timeIntervalSince1970: 1000)
-        board.submit(300, for: .beginner, at: t0, noFlag: true, noChord: true)
+        board.submit(300, for: .beginner, at: t0)
+        board.recordGameOutcome(
+            for: .beginner, won: true, minesHit: 0, minesDisarmed: 10,
+            noFlag: true, noChord: true)
         board.submit(200, for: .beginner, at: t0.addingTimeInterval(60))
         board.submit(400, for: .beginner, at: t0.addingTimeInterval(120))
         let r = board.record(for: .beginner)!
@@ -302,7 +306,7 @@ final class ScoreboardTests: XCTestCase {
     func testTopTimesCapAtLimit() {
         let board = Scoreboard(defaults: defaults)
         for cs in [500, 100, 400, 200, 600, 300, 700] {
-            board.submit(cs, for: .beginner)
+            board.submitWin(cs, for: .beginner)
         }
         let top = board.record(for: .beginner)!.topTimes.map(\.centiseconds)
         XCTAssertEqual(top, [100, 200, 300, 400, 500], "keeps fastest \(ScoreRecord.topTimeLimit)")
@@ -347,7 +351,7 @@ final class ScoreboardTests: XCTestCase {
     /// Round-trips through the versioned envelope across instances.
     func testEnvelopeRoundTrips() {
         let first = Scoreboard(defaults: defaults)
-        first.submit(50, for: .beginner)
+        first.submitWin(50, for: .beginner)
         first.submitLossProgress(0.6, for: .expert)
         let second = Scoreboard(defaults: defaults)
         XCTAssertEqual(second.best(for: .beginner), 50)
