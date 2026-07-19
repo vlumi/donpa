@@ -37,6 +37,13 @@ public final class Scoreboard: ObservableObject {
     public var isCloudAvailable: Bool { sync.isCloudAvailable }
     /// Pull + re-push + re-merge from the cloud (call on foreground).
     public func refreshFromCloud() { sync.refreshFromCloud() }
+    /// Every device's records keyed by DeviceID (own included, from the local
+    /// store) — the "Scores by device" reader. Sync off/offline → own only.
+    public func perDeviceRecords() -> [String: [String: ScoreRecord]] {
+        sync.perDeviceRecords()
+    }
+    /// This device's blob key, so the per-device view can mark "this device".
+    public var ownDeviceID: String { sync.deviceID }
     /// Whether flipping sync ON right now would clear this device's local records
     /// (a global wipe happened while sync was off) — so the toggle UI can ask first.
     public var enablingSyncWouldWipeLocal: Bool { sync.enablingSyncWouldWipeLocal }

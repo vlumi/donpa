@@ -42,13 +42,11 @@ device-blind). Because each blob holds only its own device's records and the
 cross-device view merges at read time, all readers below are derivable with
 no new collection. The whole feature is sync-gated and hides without it.
 
-- [ ] **Devices list** — every known device: class icon, name, "This
-      device" badge, model as secondary text, and activity from
-      `lastActive` worded coarsely ("Active today", not a timestamp — the
-      registry refreshes at most daily). A device row can show that one
-      device's headline numbers (games, playtime — its blob is exactly
-      that). Read-only first; forget-a-device joins later. Placement:
-      Settings, "Your devices", visible while sync is on.
+- [x] **Scores by device** (the list, SHIPPED first) — named by what it
+      is: the record by where it was earned, not a device manager (theme
+      names like "Duty stations" were considered and dropped as
+      under-selling it). Lives beside the Record's Sync toggle. Read-only;
+      forget-a-device joins later.
 - [ ] **Nicknames** — user-assigned, alias pattern like rivals: never
       overwrite the self-published name, keep a synced `DeviceID → nickname`
       map (KVS, sync-gated, LWW per entry), display `nickname ?? name`.

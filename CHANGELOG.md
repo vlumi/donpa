@@ -29,6 +29,12 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
 
 ### Unreleased (next build)
 
+- **Scores by device.** A new door beside the Service Record's Sync toggle
+  breaks the synced household apart: every device that contributes to your
+  record, with its own wins and playtime — the career by where it was
+  earned. Devices from before this feature still show (unnamed), so the
+  rows always add up to your total.
+
 - **Nearby exchange asks both players.** Cards now cross only after BOTH
   players tap each other's name — a connection alone carries nothing, so
   nobody's card can be pulled one-sided. The sheet shows each direction's

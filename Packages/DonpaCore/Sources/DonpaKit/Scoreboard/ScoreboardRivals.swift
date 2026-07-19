@@ -19,3 +19,18 @@ extension ScoreboardView {
         }
     }
 }
+
+extension ScoreboardView {
+    /// The per-device reading, sync's sibling in the footer — only meaningful
+    /// (and only shown) while the household view exists at all.
+    @ViewBuilder var deviceScoresDoor: some View {
+        if settings.syncScores {
+            Button {
+                showingDeviceScores = true
+            } label: {
+                Text("Scores by device", bundle: .module).font(.caption)
+            }
+            .modifier(zoneRing(.devices))
+        }
+    }
+}

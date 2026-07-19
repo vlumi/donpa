@@ -62,6 +62,8 @@ struct ScoreboardView: View {
     @State var keys = KeyCursor<KeyZone>()
     /// Fired to flip the sync toggle from the keyboard (see SyncFooterControl).
     @State var syncActivate = Pulse()
+    /// The "Scores by device" sheet (the door beside the sync control).
+    @State var showingDeviceScores = false
     /// The tapped/keyboard-selected medal whose detail line shows under the
     /// grid. Hoisted from DecorationsSection so the keyboard can drive it.
     @State var selectedMedal: AchievementID?
@@ -70,7 +72,7 @@ struct ScoreboardView: View {
     /// read-only scroll anchor (stats have nothing to operate); `edges` is
     /// skipped while the family has no edges axis.
     enum KeyZone: CaseIterable {
-        case career, breakdown, medals, family, edges, manage, rows, sync
+        case career, breakdown, medals, family, edges, manage, rows, sync, devices
     }
 
     /// The Breakdown block's metric, hoisted so the keyboard can flip it.
@@ -85,6 +87,9 @@ struct ScoreboardView: View {
             .onAppear(perform: seedFilterFromCurrent)
             .onChangeCompat(of: filterFamily) { settings.scoreFilterFamily = $0 }
             .onChangeCompat(of: filterEdges) { settings.scoreFilterEdges = $0 }
+            .appearanceSheet(isPresented: $showingDeviceScores, settings) {
+                DeviceScoresView(scoreboard: scoreboard)
+            }
     }
 
     private var sheetChrome: some View {
@@ -101,9 +106,13 @@ struct ScoreboardView: View {
             },
             macFooter: {
                 #if os(macOS)
-                SyncFooterControl(
-                    settings: settings, scoreboard: scoreboard,
-                    keyFocused: keys.zone == .sync, activate: syncActivate)
+                HStack(spacing: 12) {
+                    SyncFooterControl(
+                        settings: settings, scoreboard: scoreboard,
+                        keyFocused: keys.zone == .sync, activate: syncActivate)
+                    Spacer(minLength: 8)
+                    deviceScoresDoor
+                }
                 #endif
             },
             macBackground: {
@@ -114,45 +123,17 @@ struct ScoreboardView: View {
             },
             iosBottomBar: {
                 #if os(iOS)
-                SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                HStack(spacing: 12) {
+                    SyncFooterControl(settings: settings, scoreboard: scoreboard)
+                    Spacer(minLength: 8)
+                    deviceScoresDoor
+                }
                 #endif
             },
             // Width is driven firmly (else the sheet shrinks to content and
             // won't widen for two columns); height is a cap only.
             macFixedWidth: macSheetWidth, macMaxHeight: macSheetHeight)
     }
-
-    private var macSheetWidth: CGFloat? {
-        #if os(macOS)
-        sheetWidth
-        #else
-        nil
-        #endif
-    }
-    private var macSheetHeight: CGFloat? {
-        #if os(macOS)
-        sheetHeight
-        #else
-        nil
-        #endif
-    }
-
-    #if os(macOS)
-    /// Container to bound against: the presenting window, or the screen as a
-    /// fallback before its size is known.
-    private var container: CGSize {
-        if available != .zero { return available }
-        let h = NSScreen.main?.visibleFrame.height ?? 800
-        let w = NSScreen.main?.visibleFrame.width ?? 1000
-        return CGSize(width: w, height: h)
-    }
-
-    /// Tall in a big window, short in a small one, bounded so it never overflows.
-    private var sheetHeight: CGFloat { min(1100, max(380, container.height * 0.94)) }
-    /// Cap past the two-column breakpoint so a roomy window gives two columns; a
-    /// small window still shrinks to fit.
-    private var sheetWidth: CGFloat { min(820, max(300, container.width * 0.9)) }
-    #endif
 
     /// Gutter at the right of the table so the scroll indicator sits clear of the
     /// rows and their dividers.

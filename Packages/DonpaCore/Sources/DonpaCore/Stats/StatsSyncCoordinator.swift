@@ -11,7 +11,9 @@ import Foundation
 @MainActor
 final class StatsSyncCoordinator {
     private let cloud: (any CloudStatsStore)?
-    private let deviceID: String
+    /// This device's blob key — readable so the per-device view can mark
+    /// which table is "this device".
+    let deviceID: String
     private let defaults: UserDefaults
     /// Cache of the last merge, persisted so totals survive offline rather than
     /// collapsing to own-only then jumping back on reconnect.
@@ -224,5 +226,19 @@ final class StatsSyncCoordinator {
         let merged = StatsMerge.merge(mine: ownRecords(), others: others)
         onMerged(merged)
         if let data = encode(merged, epoch) { defaults.set(data, forKey: mergedKey) }
+    }
+
+    /// Every device's records keyed by its DeviceID — the "Scores by device"
+    /// reader. Own table comes from the LOCAL store (fresher than its blob);
+    /// the rest from their epoch-valid blobs. Sync off or offline → own only.
+    func perDeviceRecords() -> [String: [String: ScoreRecord]] {
+        var tables = [deviceID: ownRecords()]
+        guard syncEnabled, let cloud, cloud.isAvailable else { return tables }
+        let epoch = honoredEpoch
+        for (id, data) in cloud.readAllBlobs() where id != deviceID {
+            guard decodeEpoch(data) >= epoch else { continue }
+            tables[id] = decode(data)
+        }
+        return tables
     }
 }

@@ -48,7 +48,7 @@ extension ScoreboardView {
                     case .medals: "zone.medals"
                     case .family, .edges: "zone.filters"
                     case .manage: "zone.manage"
-                    case .rows, .sync, nil: nil  // rows self-scroll; sync is pinned
+                    case .rows, .sync, .devices, nil: nil  // rows self-scroll; the footer is pinned
                     }
                 guard let anchor else { return }
                 withAnimation(.easeOut(duration: 0.15)) {
