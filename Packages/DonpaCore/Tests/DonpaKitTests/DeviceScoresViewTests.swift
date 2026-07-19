@@ -35,6 +35,17 @@ final class DeviceScoresViewTests: XCTestCase {
         XCTAssertNil(rows[3].info)  // the ghost blob has no registry identity
     }
 
+    func testNicknameAttachesByID() {
+        let rows = DeviceScoresView.assemble(
+            tables: ["me": table(wins: 1), "ghost": table(wins: 2)],
+            known: [info("me", name: "Real Name", active: 100)],
+            ownID: "me",
+            nicknames: ["me": "Couch Mac", "ghost": "Old phone"])
+        XCTAssertEqual(rows.first?.nickname, "Couch Mac")
+        // A ghost with no registry identity can still be named.
+        XCTAssertEqual(rows.last?.nickname, "Old phone")
+    }
+
     func testRegistryOnlyDeviceShowsWithZeroSummary() {
         let rows = DeviceScoresView.assemble(
             tables: ["me": table(wins: 1)],
