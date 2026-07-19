@@ -12,13 +12,26 @@ Each version's top section, **Unreleased (next build)**, collects entries merged
 to `main` but not yet in a TestFlight build; cutting a release renames it to that
 build's heading and opens a fresh empty one. Keep that heading immediately
 followed by its list items (no prose between), so the release script can promote
-it with a one-line edit.
+it with a one-line edit — and keep it UNIQUE in the file (the script promotes
+the first match).
+
+Between releases the newest version section may be **[Unreleased]** — the next
+version number isn't known until the cut (a rejection means another build of
+the same version; otherwise the bump size is the cut's call). At cut time,
+rename that heading to the chosen version by hand (or fold its entries back
+into the previous version's section); the script only ever stamps the build
+heading.
+
+## [Unreleased]
+
+The next version — **1.0.0 build 31 if App Review rejects the submission,
+1.0.1 or 1.1.0 otherwise**; the heading is renamed by hand at cut time.
+
+### Unreleased (next build)
 
 ## [1.0.0] — The store release
 
 **The public App Store debut** — the beta feature set, ship-shape.
-
-### Unreleased (next build)
 
 ### build 30 — 2026-07-18
 
