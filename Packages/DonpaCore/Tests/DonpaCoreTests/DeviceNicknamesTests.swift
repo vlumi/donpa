@@ -19,6 +19,7 @@ final class DeviceNicknamesTests: XCTestCase {
         let nicknames = DeviceNicknames(cloud: cloud)
         nicknames.set("  Study Mac  ", for: "a")
         XCTAssertEqual(cloud.stored["a"], "Study Mac")
+        XCTAssertEqual(nicknames.all(), ["a": "Study Mac"], "reads back what was set")
         nicknames.set(String(repeating: "x", count: 99), for: "a")
         XCTAssertEqual(cloud.stored["a"]?.count, DeviceNicknames.maxLength)
         nicknames.set("   ", for: "a")
