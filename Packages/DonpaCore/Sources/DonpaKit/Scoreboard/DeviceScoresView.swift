@@ -213,13 +213,21 @@ private struct DeviceScoreRow: View {
         }
     }
 
-    /// Coarse by design — the registry refreshes at most daily, so a
-    /// timestamp would suggest precision the data doesn't have.
+    /// Day-granular by design — the registry refreshes at most daily, so
+    /// "15 hours ago" would claim precision the data doesn't have. Calendar
+    /// days, so early-morning yesterday reads "yesterday", not "today".
     private var activity: String? {
         guard let info = row.info else { return nil }
+        let calendar = Calendar.current
+        let days =
+            calendar.dateComponents(
+                [.day],
+                from: calendar.startOfDay(for: info.lastActive),
+                to: calendar.startOfDay(for: Date())
+            ).day ?? 0
         let formatter = RelativeDateTimeFormatter()
         formatter.dateTimeStyle = .named
-        return formatter.localizedString(for: info.lastActive, relativeTo: Date())
+        return formatter.localizedString(from: DateComponents(day: -max(0, days)))
     }
 }
 
