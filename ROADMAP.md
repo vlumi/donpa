@@ -47,12 +47,9 @@ no new collection. The whole feature is sync-gated and hides without it.
       names like "Duty stations" were considered and dropped as
       under-selling it). Lives beside the Record's Sync toggle. Read-only;
       forget-a-device joins later.
-- [ ] **Career by device class** — All / Mac / iPhone / iPad segmented
-      filter on the career (filter the blob set before the merge); appears
-      only when two or more classes have data, like the Edges control.
-      Per-individual-device was considered and rejected — class is where
-      the insight lives. The Breakdown block could gain a by-class bar
-      (same shape as its Edges bar).
+- [ ] **Breakdown by device class** — the Breakdown block could gain a
+      by-class bar (same shape as its Edges bar), now that the class
+      career shipped.
 
 **Migration semantics** (DeviceID is a UUID in UserDefaults, so it travels
 with backup/transfer — the ID must ride with the data it describes, or

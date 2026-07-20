@@ -35,6 +35,11 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
   ever counting as a win, quietly dragging your win rate down. Daily best
   times stay the day's own competition, as before.
 
+- **The career filters by device kind.** With two or more device kinds in
+  your synced household, Tour of Duty gains an All / iPhone / iPad / Mac
+  switch — how you play on the couch versus at the desk. The daily-orders
+  rollup stays household-wide (it isn't tracked per device).
+
 - **Records show where they were set.** In a multi-device household, the
   expanded board's best times each carry a small device glyph — Mac,
   iPhone, or iPad — telling you where that time was earned. The mark only

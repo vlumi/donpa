@@ -587,6 +587,22 @@
         }
       }
     },
+    "All" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaikki"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて"
+          }
+        }
+      }
+    },
     "All rivals" : {
       "localizations" : {
         "en" : {
