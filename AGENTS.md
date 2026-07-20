@@ -148,6 +148,31 @@ red on untouched code. Match it locally (`brew install swiftlint` tracks latest;
 CI version deliberately and update this line. swift-format needs no pin — it ships
 with the Xcode toolchain, which CI pins via `XCODE_VERSION`.
 
+## Pull requests & CI
+
+Branch off `main`, one focused change per PR (details in
+[CONTRIBUTING.md](CONTRIBUTING.md)). Agent-specific mechanics on top of that:
+
+- **Commit trailer:** end commit messages with a
+  `Co-Authored-By: <model> <noreply@anthropic.com>` line.
+- **A user-facing PR writes its own CHANGELOG bullet** under the newest
+  version's `### Unreleased (next build)` heading — the release lane only
+  stamps the build number, it never writes entries. Between releases the top
+  section may be `## [Unreleased]` (the next version number is chosen by hand
+  at cut time); see CHANGELOG.md's preamble.
+- **Wait for Codecov before merging.** `codecov/patch` is reported but is NOT a
+  required check, so `--auto` merge can land a PR *before* coverage posts —
+  merge only once it's green (target 80% on new, non-ignored code).
+- **`Cloud*.swift` are coverage-ignored** (protocol + the `Ubiquitous*`
+  `NSUbiquitousKeyValueStore` wrapper, which can't run without a signed-in
+  device). Keep testable logic OUT of them — it belongs in the merge/store
+  types the fakes drive. New such wrapper file → add it to `codecov.yml`'s
+  ignore list. The whole DonpaKit target is ignored too (the SwiftUI/SpriteKit
+  view layer), so pure logic goes in DonpaCore to be tracked.
+- **BEHIND blocks merge** (branch protection). Merge `origin/main` into the
+  branch to catch it up; auto-merge needs required checks, so a base without
+  protection falls back to a direct merge after the CI wait.
+
 ## Conventions
 
 - **Comments minimal:** explain only what isn't obvious from the code. No
