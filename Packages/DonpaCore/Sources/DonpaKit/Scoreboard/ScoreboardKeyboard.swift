@@ -49,7 +49,7 @@ extension ScoreboardView {
     /// Space steps segmented zones forward (like Settings); buttons and rows activate.
     private func operateOrActivate() {
         switch keys.zone {
-        case .breakdown, .family, .edges: operateZone(1)
+        case .breakdown, .family, .edges, .career: operateZone(1)
         default: activateZone()
         }
     }
@@ -104,7 +104,12 @@ extension ScoreboardView {
 
     private func operateZone(_ step: Int) {
         switch keys.zone {
-        case .career, .manage, .rows, .sync, .devices, nil: break
+        case .manage, .rows, .sync, .devices, nil: break
+        case .career:
+            // ←/→ walk the class filter when it's shown (All ↔ classes).
+            let options = careerClassOptions
+            guard let i = options.firstIndex(of: careerClass) else { break }
+            careerClass = options[min(max(i + step, 0), options.count - 1)]
         case .breakdown:
             breakdownMetric = breakdownMetric == .playtime ? .games : .playtime
         case .medals:

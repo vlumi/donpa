@@ -36,19 +36,53 @@ extension ScoreboardView {
 }
 
 extension ScoreboardView {
-    /// Build the per-open attribution index: per-device tables + the
-    /// registry's classes. Sync off (or a one-device household) yields an
-    /// index that answers nil everywhere — rows render exactly as before.
+    /// Build the per-open device readers (attribution glyphs + the class
+    /// career): per-device tables + the registry's classes. Sync off (or a
+    /// one-device household) yields readers that change nothing on screen.
     func buildAttribution() {
         guard settings.syncScores else {
             attribution = nil
+            classCareer = nil
             return
         }
         let ownID = scoreboard.ownDeviceID
         let known = DeviceRegistry(cloud: UbiquitousDeviceRegistry(), deviceID: ownID)
             .knownDevices()
-        attribution = DeviceAttribution(
-            tables: scoreboard.perDeviceRecords(),
-            classes: Dictionary(uniqueKeysWithValues: known.map { ($0.id, $0.deviceClass) }))
+        let tables = scoreboard.perDeviceRecords()
+        let classes = Dictionary(uniqueKeysWithValues: known.map { ($0.id, $0.deviceClass) })
+        attribution = DeviceAttribution(tables: tables, classes: classes)
+        classCareer = DeviceClassCareer(tables: tables, classes: classes)
+    }
+
+    /// What the career sums: the class-filtered view, or the household display.
+    var careerRecords: [String: ScoreRecord] {
+        guard let careerClass, let classCareer else { return scoreboard.displayRecords }
+        return classCareer.records(for: careerClass)
+    }
+
+    /// The class choices the keyboard's ←/→ walk (All first); empty when the
+    /// filter isn't shown.
+    var careerClassOptions: [DeviceInfo.DeviceClass?] {
+        guard let classCareer, classCareer.availableClasses.count >= 2 else { return [] }
+        return [nil] + classCareer.availableClasses
+    }
+
+    /// All / iPhone / iPad / Mac — only when two or more classes have data.
+    @ViewBuilder var careerClassPicker: some View {
+        if !careerClassOptions.isEmpty {
+            Picker(selection: $careerClass) {
+                Text("All", bundle: .module).tag(DeviceInfo.DeviceClass?.none)
+                ForEach(classCareer?.availableClasses ?? [], id: \.self) { deviceClass in
+                    // Product names, not localized terms.
+                    Text(verbatim: StatBlock.className(deviceClass))
+                        .tag(DeviceInfo.DeviceClass?.some(deviceClass))
+                }
+            } label: {
+                Text("Scores by device", bundle: .module)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, Self.rowInset)
+        }
     }
 }

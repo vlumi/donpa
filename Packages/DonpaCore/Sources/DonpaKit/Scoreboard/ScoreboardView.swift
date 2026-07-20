@@ -67,6 +67,12 @@ struct ScoreboardView: View {
     /// Per-open attribution index: which device class earned a best (glyphs
     /// on the expanded rows). Snapshot like the device sheet — not a live feed.
     @State var attribution: DeviceAttribution?
+    /// Per-open class-career reader; its segmented filter shows only when two
+    /// or more classes have data.
+    @State var classCareer: DeviceClassCareer?
+    /// The career's class filter (nil = the whole household). A browsing
+    /// choice, reset each open like the keyboard focus.
+    @State var careerClass: DeviceInfo.DeviceClass?
     /// The tapped/keyboard-selected medal whose detail line shows under the
     /// grid. Hoisted from DecorationsSection so the keyboard can drive it.
     @State var selectedMedal: AchievementID?
@@ -203,10 +209,14 @@ struct ScoreboardView: View {
     @ViewBuilder private var careerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             sectionHeader("Tour of Duty")
-            let career = StatFigures(career: Array(scoreboard.displayRecords.values))
+            careerClassPicker
+            let career = StatFigures(career: Array(careerRecords.values))
             if career.hasPlayed {
                 StatBlock(
-                    figures: career, segmented: true, daily: dailyStore?.career,
+                    // The daily rollup isn't per-device data — whole-household
+                    // (unfiltered) view only, or the numbers would lie.
+                    figures: career, segmented: true,
+                    daily: careerClass == nil ? dailyStore?.career : nil,
                     twoColumnWidth: Self.twoColumnMinWidth,
                     rowInset: Self.rowInset)
                 PlayDistributionView(
