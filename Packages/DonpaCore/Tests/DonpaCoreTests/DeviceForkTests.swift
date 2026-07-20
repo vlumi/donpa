@@ -150,6 +150,27 @@ final class DeviceForkTests: XCTestCase {
         XCTAssertTrue(b.idCollisionDetected, "A's earlier blob carries A's stamp for B too")
     }
 
+    func testCollisionCaughtOnPushBeforeOverwriting() {
+        // The clone writes our slot AFTER we've launched (init read it clean),
+        // so it's the next PUSH — not a refresh — that catches the foreign
+        // stamp, before overwriting it (the pushAndMerge detection path).
+        let shared = FakeCloud.Shared()
+        let d = defaults("push")
+        // A detached cloud handle (not a peer), so its write doesn't fire our
+        // onExternalChange — the collision must be caught by our own push.
+        let sideChannel = FakeCloud(shared: shared)
+        let board = Scoreboard(
+            defaults: d, cloud: FakeCloud(shared: shared), writerToken: "installA")
+        XCTAssertFalse(board.idCollisionDetected, "clean launch, empty slot")
+
+        // The clone stamps our slot out-of-band.
+        sideChannel.shared.peers.removeAll { $0 === sideChannel }
+        shared.blobs[board.ownDeviceID] = Scoreboard.encodeFile([:], epoch: 1, writer: "clone")
+
+        board.submitWin(300, for: .beginner)  // push path reads the slot first
+        XCTAssertTrue(board.idCollisionDetected)
+    }
+
     func testUnstampedOldBuildBlobNeverTriggers() {
         let shared = FakeCloud.Shared()
         let d = defaults("old")
