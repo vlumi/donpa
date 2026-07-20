@@ -113,14 +113,17 @@ struct GameContent: View {
             boardArea
         }
         .background(palette.pageBackground)
-        // Track the window size so sheets can size to it.
+        // Track the window size so sheets can size to it. Via a preference,
+        // NOT onChange-writes-@State inside the GeometryReader: the latter
+        // writes during the layout pass it's reading, which SwiftUI flags as
+        // an AttributeGraph cycle whenever another change (the game-end panel)
+        // re-lays-out this view. onPreferenceChange fires AFTER layout settles.
         .background(
             GeometryReader { geo in
-                Color.clear
-                    .onAppear { windowSize = geo.size }
-                    .onChangeCompat(of: geo.size) { windowSize = $0 }
+                Color.clear.preference(key: WindowSizeKey.self, value: geo.size)
             }
         )
+        .onPreferenceChange(WindowSizeKey.self) { windowSize = $0 }
         .onAppear { onLaunch() }
         .onChangeCompat(of: viewModel.lastResult?.id) { _ in handleResult() }
         .onChangeCompat(of: viewModel.lastForcedGuess) { handleGuessEvent($0) }
@@ -396,5 +399,17 @@ struct GameContent: View {
         viewModel.pause()
         autosave()
         navigator.showingTitle = true
+    }
+}
+
+/// Carries the window size up out of the layout pass, so writing `windowSize`
+/// happens in `onPreferenceChange` (post-layout) rather than from a
+/// GeometryReader's `onChange` during layout — the latter cycles under
+/// AttributeGraph when the game-end panel re-lays-out the view.
+private struct WindowSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        let next = nextValue()
+        if next != .zero { value = next }
     }
 }
