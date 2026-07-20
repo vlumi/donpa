@@ -64,6 +64,9 @@ struct ScoreboardView: View {
     @State var syncActivate = Pulse()
     /// The "Scores by device" sheet (the door beside the sync control).
     @State var showingDeviceScores = false
+    /// Per-open attribution index: which device class earned a best (glyphs
+    /// on the expanded rows). Snapshot like the device sheet — not a live feed.
+    @State var attribution: DeviceAttribution?
     /// The tapped/keyboard-selected medal whose detail line shows under the
     /// grid. Hoisted from DecorationsSection so the keyboard can drive it.
     @State var selectedMedal: AchievementID?
@@ -85,6 +88,7 @@ struct ScoreboardView: View {
         sheetChrome
             .escDismisses { dismiss() }
             .onAppear(perform: seedFilterFromCurrent)
+            .onAppear(perform: buildAttribution)
             .onChangeCompat(of: filterFamily) { settings.scoreFilterFamily = $0 }
             .onChangeCompat(of: filterEdges) { settings.scoreFilterEdges = $0 }
             .appearanceSheet(isPresented: $showingDeviceScores, settings) {
@@ -354,7 +358,8 @@ struct ScoreboardView: View {
                             },
                             onPlay: gates.config(config)
                                 ? onPlay.map { play in { play(config) } } : nil,
-                            rivals: rivals, yourName: settings.shareName
+                            rivals: rivals, yourName: settings.shareName,
+                            attribution: attribution
                         )
                         .id(config.storageKey)  // scroll anchor for the current-config jump
                         if config != group.configs.last { Divider() }

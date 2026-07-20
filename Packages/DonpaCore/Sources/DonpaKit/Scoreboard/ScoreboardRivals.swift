@@ -34,3 +34,21 @@ extension ScoreboardView {
         }
     }
 }
+
+extension ScoreboardView {
+    /// Build the per-open attribution index: per-device tables + the
+    /// registry's classes. Sync off (or a one-device household) yields an
+    /// index that answers nil everywhere — rows render exactly as before.
+    func buildAttribution() {
+        guard settings.syncScores else {
+            attribution = nil
+            return
+        }
+        let ownID = scoreboard.ownDeviceID
+        let known = DeviceRegistry(cloud: UbiquitousDeviceRegistry(), deviceID: ownID)
+            .knownDevices()
+        attribution = DeviceAttribution(
+            tables: scoreboard.perDeviceRecords(),
+            classes: Dictionary(uniqueKeysWithValues: known.map { ($0.id, $0.deviceClass) }))
+    }
+}
