@@ -38,5 +38,6 @@ ignore:
   - "Packages/DonpaCore/Sources/DonpaCore/Progression/CloudAchievementsStore.swift"
   - "Packages/DonpaCore/Sources/DonpaCore/Stats/CloudDeviceRegistry.swift"
   - "Packages/DonpaCore/Sources/DonpaCore/Stats/CloudDeviceNicknames.swift"
+  - "Packages/DonpaCore/Sources/DonpaCore/Stats/InstallMarkerKeychain.swift"
   - "Packages/DonpaCore/Sources/DonpaCore/Daily/CloudDailyStore.swift"
   - "Packages/DonpaCore/Tests/**"

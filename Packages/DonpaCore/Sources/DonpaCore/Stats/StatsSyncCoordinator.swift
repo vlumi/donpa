@@ -17,7 +17,8 @@ final class StatsSyncCoordinator {
     private let defaults: UserDefaults
     /// Cache of the last merge, persisted so totals survive offline rather than
     /// collapsing to own-only then jumping back on reconnect.
-    private let mergedKey = "donpa.stats.merged.v1"
+    private let mergedKey = StatsSyncCoordinator.mergedCacheKey
+    static let mergedCacheKey = "donpa.stats.merged.v1"
     /// The highest reset epoch this device has honored (persisted). A cloud epoch
     /// greater than this means a wipe happened elsewhere that we haven't applied.
     private let honoredEpochKey = "donpa.stats.resetEpoch.honored"
@@ -36,8 +37,15 @@ final class StatsSyncCoordinator {
     var clearOwnRecords: () -> Void = {}
     /// Encode/decode a records blob in the Scoreboard's persistence format. Encoding
     /// stamps the current reset epoch into the blob so readers can reject stale ones.
-    private let encode: ([String: ScoreRecord], Int) -> Data?
+    private let encode: ([String: ScoreRecord], Int, String?) -> Data?
     private let decode: (Data) -> [String: ScoreRecord]
+    private let decodeWriter: (Data) -> String?
+    /// This install's blob-write stamp (the install marker) — how two live
+    /// installs sharing one DeviceID notice each other. nil = don't stamp.
+    private let writerToken: String?
+    /// Fired once when another install's stamp shows up in OUR slot.
+    var onCollision: () -> Void = {}
+    private var collisionReported = false
     /// Read just the reset epoch a blob was stamped with (0 if none).
     private let decodeEpoch: (Data) -> Int
 
@@ -76,17 +84,21 @@ final class StatsSyncCoordinator {
         deviceID: String,
         defaults: UserDefaults,
         syncEnabled: Bool,
-        encode: @escaping ([String: ScoreRecord], Int) -> Data?,
+        writerToken: String? = nil,
+        encode: @escaping ([String: ScoreRecord], Int, String?) -> Data?,
         decode: @escaping (Data) -> [String: ScoreRecord],
-        decodeEpoch: @escaping (Data) -> Int
+        decodeEpoch: @escaping (Data) -> Int,
+        decodeWriter: @escaping (Data) -> String?
     ) {
         self.cloud = cloud
         self.deviceID = deviceID
         self.defaults = defaults
         self.syncEnabled = syncEnabled
+        self.writerToken = writerToken
         self.encode = encode
         self.decode = decode
         self.decodeEpoch = decodeEpoch
+        self.decodeWriter = decodeWriter
         self.cloud?.onExternalChange = { [weak self] in self?.refresh() }
     }
 
@@ -113,11 +125,25 @@ final class StatsSyncCoordinator {
     /// No-op on cloud when sync off / unavailable (still refreshes the display).
     func pushAndMerge() {
         if syncEnabled, let cloud, cloud.isAvailable,
-            let data = encode(ownRecords(), honoredEpoch)
+            let data = encode(ownRecords(), honoredEpoch, writerToken)
         {
+            // Look before overwriting: a foreign stamp in our slot means a
+            // live clone wrote it — flag it even though the write proceeds
+            // (last-writer-wins is unchanged; the fork is the real fix).
+            detectCollision(ownSlot: cloud.readAllBlobs()[deviceID])
             cloud.writeOwnBlob(data, deviceID: deviceID)
         }
         refresh()
+    }
+
+    /// A foreign install stamp in OUR blob slot = two live installs share
+    /// this DeviceID. Old-build blobs carry no stamp and stay silent.
+    private func detectCollision(ownSlot: Data?) {
+        guard !collisionReported, let token = writerToken, let own = ownSlot,
+            let writer = decodeWriter(own), writer != token
+        else { return }
+        collisionReported = true
+        onCollision()
     }
 
     /// Remove this device's cloud blob (on reset / sync-off), so it stops
@@ -197,7 +223,7 @@ final class StatsSyncCoordinator {
             onMerged(display)
             // Refresh (or epoch-upgrade) an existing cache; don't mint one offline.
             if defaults.data(forKey: mergedKey) != nil,
-                let data = encode(display, honoredEpoch)
+                let data = encode(display, honoredEpoch, nil)
             {
                 defaults.set(data, forKey: mergedKey)
             }
@@ -215,8 +241,10 @@ final class StatsSyncCoordinator {
             defaults.set(cloudEpoch, forKey: honoredEpochKey)
         }
         let epoch = honoredEpoch
+        let all = cloud.readAllBlobs()
+        detectCollision(ownSlot: all[deviceID])
         var others: [String: [String: ScoreRecord]] = [:]
-        for (id, data) in cloud.readAllBlobs() where id != deviceID {
+        for (id, data) in all where id != deviceID {
             // Reject blobs stamped below the current epoch: a returning offline
             // device's pre-wipe blob must not merge in even briefly (belt-and-
             // suspenders over its own self-wipe). Tolerant per-entry decode within.
@@ -225,7 +253,7 @@ final class StatsSyncCoordinator {
         }
         let merged = StatsMerge.merge(mine: ownRecords(), others: others)
         onMerged(merged)
-        if let data = encode(merged, epoch) { defaults.set(data, forKey: mergedKey) }
+        if let data = encode(merged, epoch, nil) { defaults.set(data, forKey: mergedKey) }
     }
 
     /// Every device's records keyed by its DeviceID — the "Scores by device"

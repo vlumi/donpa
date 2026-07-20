@@ -642,6 +642,22 @@
         }
       }
     },
+    "Another device is recording scores as this one. Open This device and start it as a new device." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toinen laite kirjaa tuloksia tämän laitteen nimissä. Avaa Tämä laite ja aloita se uutena laitteena."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別の端末がこの端末として記録しています。「この端末」を開き、新しい端末として開始してください。"
+          }
+        }
+      }
+    },
     "Anywhere" : {
       "localizations" : {
         "en" : {
@@ -1563,6 +1579,22 @@
         }
       }
     },
+    "Continue as before" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jatka entiseen tapaan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "そのまま続行"
+          }
+        }
+      }
+    },
     "Couldn't load the saved game" : {
       "comment" : "Alert title: a saved board's file was unreadable when resuming",
       "localizations" : {
@@ -2116,6 +2148,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完了"
+          }
+        }
+      }
+    },
+    "Donpa's data arrived from another device. If you still use that device too, start fresh — this device gets its own tally (nothing already earned is lost). Otherwise continue as before. Starting fresh takes effect when you next open Donpa." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donpan tiedot saapuivat toiselta laitteelta. Jos käytät yhä myös sitä laitetta, aloita alusta — tämä laite saa oman laskurinsa (mitään jo ansaittua ei menetetä). Muuten jatka entiseen tapaan. Alusta aloittaminen tulee voimaan, kun avaat Donpan seuraavan kerran."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donpaのデータが別の端末から届きました。その端末もまだ使う場合は新規開始を — この端末が独自の記録を持ちます（獲得済みのものは失われません）。そうでなければそのまま続行してください。新規開始は次回Donpaを開いたときに有効になります。"
           }
         }
       }
@@ -3201,6 +3249,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "両方残す"
+          }
+        }
+      }
+    },
+    "Is this a new device?" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onko tämä uusi laite?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これは新しい端末ですか？"
           }
         }
       }
@@ -5483,6 +5547,22 @@
         }
       }
     },
+    "Scores stay with this device's old entry; new games count under a fresh one. For when this install was copied from a device you still use. Takes effect when you next open Donpa." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tulokset jäävät laitteen vanhalle riville; uudet pelit lasketaan uudelle. Tätä varten, jos asennus on kopioitu laitteelta, joka on yhä käytössä. Tulee voimaan, kun avaat Donpan seuraavan kerran."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スコアはこの端末の元の項目に残り、新しいゲームは新しい項目に記録されます。まだ使っている端末からコピーされた場合向け。次回Donpaを開いたときに有効になります。"
+          }
+        }
+      }
+    },
     "Scores were erased everywhere while sync was off. Turning sync on will reset this device too." : {
       "comment" : "Confirm dialog message: a wipe happened while sync was off",
       "localizations" : {
@@ -5986,6 +6066,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "スタート"
+          }
+        }
+      }
+    },
+    "Start as a new device" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aloita uutena laitteena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい端末として開始"
+          }
+        }
+      }
+    },
+    "Start as a new device?" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aloitetaanko uutena laitteena?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい端末として開始しますか？"
+          }
+        }
+      }
+    },
+    "Start fresh" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aloita alusta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規開始"
+          }
+        }
+      }
+    },
+    "Starting as a new device — takes effect when you next open Donpa." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aloitetaan uutena laitteena — tulee voimaan, kun avaat Donpan seuraavan kerran."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい端末として開始 — 次回Donpaを開いたときに有効になります。"
           }
         }
       }

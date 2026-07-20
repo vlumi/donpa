@@ -4,6 +4,12 @@ import SwiftUI
 
 @main
 struct DonpaApp: App {
+    init() {
+        // FIRST: a staged fork must land before any store captures its
+        // DeviceID (the @StateObject closures run later, at first render).
+        DeviceIdentity.bootstrap()
+    }
+
     // The same store ownership as the macOS app, so the shared menu commands
     // (the iPadOS hold-⌘ HUD + hardware-keyboard shortcuts) can drive the game.
     @StateObject private var viewModel = GameViewModel()
@@ -12,7 +18,8 @@ struct DonpaApp: App {
     @StateObject private var scoreboard = Scoreboard(
         defaults: LaunchStores.defaults,
         cloud: LaunchStores.isClean ? nil : UbiquitousStatsStore(),
-        syncEnabled: LaunchStores.syncScores)
+        syncEnabled: LaunchStores.syncScores,
+        writerToken: DeviceIdentity.writerToken)
     @StateObject private var settings = Settings(defaults: LaunchStores.defaults)
     @StateObject private var navigator = Navigator()
 

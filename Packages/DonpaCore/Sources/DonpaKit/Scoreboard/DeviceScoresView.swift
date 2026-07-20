@@ -35,6 +35,7 @@ struct DeviceScoresView: View {
             "Scores by device", macMinWidth: 340, macIdealWidth: 400, iosScrolls: true
         ) {
             VStack(alignment: .leading, spacing: 4) {
+                collisionBanner
                 ForEach(rows) { row in
                     Button {
                         focusedRow = nil
@@ -56,6 +57,25 @@ struct DeviceScoresView: View {
                 nicknames.set(name, for: row.id)
                 reloadNicknames()
             }
+        }
+    }
+
+    /// Two live installs are writing as one device (a kept-alive clone) —
+    /// surface it; the fix is the fork on the This-device row.
+    @ViewBuilder private var collisionBanner: some View {
+        if scoreboard.idCollisionDetected {
+            Label {
+                Text(
+                    """
+                    Another device is recording scores as this one. Open \
+                    This device and start it as a new device.
+                    """, bundle: .module)
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+            }
+            .font(.caption)
+            .padding(.vertical, 6)
         }
     }
 
@@ -240,6 +260,7 @@ private struct DeviceNicknameEditor: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var nickname: String
+    @State fileprivate var confirmingFork = false
     @FocusState private var fieldFocused: Bool
 
     init(row: DeviceScoresView.Row, save: @escaping (String) -> Void) {
@@ -265,6 +286,7 @@ private struct DeviceNicknameEditor: View {
                 .focused($fieldFocused)
                 .onChangeCompat(of: nickname) { save($0) }
             }
+            forkSection
             HStack {
                 Spacer()
                 Button {
@@ -284,5 +306,48 @@ private struct DeviceNicknameEditor: View {
     private var deviceName: Text {
         if let info = row.info { return Text(verbatim: info.name) }
         return Text("Unknown device", bundle: .module)
+    }
+}
+
+extension DeviceNicknameEditor {
+    /// The fork section, This-device row only: history stays with the old
+    /// entry, this install starts a fresh tally under a new identity —
+    /// staged, applied at next launch (see DeviceFork).
+    @ViewBuilder fileprivate var forkSection: some View {
+        if row.isThisDevice {
+            VStack(alignment: .leading, spacing: 6) {
+                if DeviceIdentity.forkPending {
+                    Text(
+                        "Starting as a new device — takes effect when you next open Donpa.",
+                        bundle: .module
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Button(role: .destructive) {
+                        confirmingFork = true
+                    } label: {
+                        Text("Start as a new device", bundle: .module)
+                    }
+                    .confirmationDialog(
+                        Text("Start as a new device?", bundle: .module),
+                        isPresented: $confirmingFork
+                    ) {
+                        Button(role: .destructive) {
+                            DeviceIdentity.stageFork()
+                        } label: {
+                            Text("Start fresh", bundle: .module)
+                        }
+                    } message: {
+                        Text(
+                            """
+                            Scores stay with this device's old entry; new \
+                            games count under a fresh one. For when this \
+                            install was copied from a device you still use. \
+                            Takes effect when you next open Donpa.
+                            """, bundle: .module)
+                    }
+                }
+            }
+        }
     }
 }

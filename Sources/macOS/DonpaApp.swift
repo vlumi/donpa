@@ -4,13 +4,20 @@ import SwiftUI
 
 @main
 struct DonpaApp: App {
+    init() {
+        // FIRST: a staged fork must land before any store captures its
+        // DeviceID (the @StateObject closures run later, at first render).
+        DeviceIdentity.bootstrap()
+    }
+
     @StateObject private var viewModel = GameViewModel()
     // LaunchStores is the single isolation gate: under -uitest-clean these
     // swap to a wiped ephemeral suite with no cloud (see LaunchStores).
     @StateObject private var scoreboard = Scoreboard(
         defaults: LaunchStores.defaults,
         cloud: LaunchStores.isClean ? nil : UbiquitousStatsStore(),
-        syncEnabled: LaunchStores.syncScores)
+        syncEnabled: LaunchStores.syncScores,
+        writerToken: DeviceIdentity.writerToken)
     @StateObject private var settings = Settings(defaults: LaunchStores.defaults)
     @StateObject private var navigator = Navigator()
     @State private var showingAbout = false

@@ -15,6 +15,9 @@ extension Scoreboard {
         var version: Int
         var records: [String: ScoreRecord]
         var epoch: Int
+        /// This install's write stamp (see StatsSyncCoordinator.writerToken);
+        /// additive — old builds neither write nor read it.
+        var writer: String?
     }
     /// Bump only for a *breaking* shape change (additive fields decode tolerantly);
     /// then add a `migrated(_:)` step.
@@ -25,9 +28,11 @@ extension Scoreboard {
     /// total** quota — compression removes that ceiling for good. (The counters'
     /// `othersTotal` is also encoded although blob readers ignore it — see
     /// `StatsMerge` — but under compression the repetition costs nothing.)
-    static func encodeFile(_ records: [String: ScoreRecord], epoch: Int) -> Data? {
+    static func encodeFile(
+        _ records: [String: ScoreRecord], epoch: Int, writer: String? = nil
+    ) -> Data? {
         let json = try? JSONEncoder().encode(
-            StatsFile(version: currentVersion, records: records, epoch: epoch))
+            StatsFile(version: currentVersion, records: records, epoch: epoch, writer: writer))
         guard let json else { return nil }
         return (try? (json as NSData).compressed(using: .zlib) as Data) ?? json
     }
@@ -39,6 +44,14 @@ extension Scoreboard {
     static func decompressIfNeeded(_ data: Data) -> Data {
         guard data.first != UInt8(ascii: "{") else { return data }
         return (try? (data as NSData).decompressed(using: .zlib) as Data) ?? Data()
+    }
+
+    /// The install stamp in a blob (nil = old build / cache write).
+    static func decodeWriter(_ data: Data) -> String? {
+        let top =
+            try? JSONSerialization.jsonObject(with: decompressIfNeeded(data))
+            as? [String: Any]
+        return top?["writer"] as? String
     }
 
     /// The reset epoch stamped in a blob (0 if absent / undecodable).
