@@ -3,6 +3,7 @@ import XCTest
 @testable import DonpaCore
 
 /// A shared-world fake of the KVS transport, mirroring ScoreboardSyncTests'.
+@MainActor
 final class FakeAchievementsCloud: CloudAchievementsStore {
     final class Shared {
         var blobs: [String: Data] = [:]

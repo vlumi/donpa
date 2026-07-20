@@ -3,6 +3,9 @@ import Foundation
 /// iCloud transport for earned achievements — the same per-device-blob scheme
 /// as the stats stack. Union-only data: no tombstones and deliberately no
 /// reset-epoch (feats are permanent; the stats wipe must not touch them).
+/// Main-actor like the stores that drive it (matches the other Cloud*
+/// transports — the conforming NSUbiquitousKeyValueStore wrapper is too).
+@MainActor
 public protocol CloudAchievementsStore: AnyObject {
     /// When false, reads/writes are no-ops.
     var isAvailable: Bool { get }
