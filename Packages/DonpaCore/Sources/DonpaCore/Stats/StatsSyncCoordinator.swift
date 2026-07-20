@@ -88,7 +88,7 @@ final class StatsSyncCoordinator {
         encode: @escaping ([String: ScoreRecord], Int, String?) -> Data?,
         decode: @escaping (Data) -> [String: ScoreRecord],
         decodeEpoch: @escaping (Data) -> Int,
-        decodeWriter: @escaping (Data) -> String? = { _ in nil }
+        decodeWriter: @escaping (Data) -> String?
     ) {
         self.cloud = cloud
         self.deviceID = deviceID
