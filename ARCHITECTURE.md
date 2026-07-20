@@ -277,6 +277,51 @@ that no device ever *overwrites* another's history:
   is warned before opting back in. The epoch floor also doubles as a one-time
   "orphan all pre-rebalance scores" switch.
 
+## Device identity: a UserDefaults id, a Keychain marker, and the fork
+
+The per-device blobs above are keyed by a **`DeviceID`** — a UUID minted once
+and stored in **UserDefaults**, deliberately not `identifierForVendor` (iOS
+only) or any hardware id (none is stable + cross-platform, and Apple gives
+third-party apps no phone-to-phone hardware id anyway). The consequences that
+shape everything here:
+
+- **The id must ride with the data.** UserDefaults travels with a backup /
+  device transfer, and the local score store travels with it — so a normal
+  migration is a **clean takeover**: the new hardware keeps publishing to the
+  same blob slot, no duplication. A hardware-pinned id would leave the id
+  behind while the data moved, and the new device would republish the whole
+  migrated history under a fresh id — double-counting everything.
+- **"Scores by device" is a read, not a store.** Because each blob holds only
+  its own device's records, the whole feature — the per-device list
+  (`DeviceScoresView`), attribution glyphs (`DeviceAttribution`, unambiguous
+  class only), and the class-filtered career (`DeviceClassCareer`, the same
+  `StatsMerge.merge` over a filtered table set) — derives at read time, needs
+  no new collection, and works retroactively over existing blobs. Nicknames
+  are the one addition: a synced `DeviceID → name` map in its own KVS
+  namespace (`donpa.deviceNick.`), so iCloud's own last-writer-wins is the
+  per-entry LWW and a name can follow a migration or label a ghost.
+- **Migration is detectable** (`CloneDetection`). The id rides UserDefaults;
+  an **install marker** — a Keychain item marked *ThisDeviceOnly* — rides the
+  hardware and does NOT survive a restore onto a different device. "Stored id
+  present, marker gone" = migrated → a one-time continue-or-fork prompt. A
+  pre-feature install (id, no marker history) reads as established, never
+  migrated.
+- **The fork is staged, applied at launch** (`DeviceFork`). Every store
+  captures its `DeviceID` at init, so switching id in-process would push fresh
+  (empty) data under the OLD id and destroy the history the fork exists to
+  preserve. So "Start as a new device" stages a flag; `DeviceIdentity.bootstrap`
+  applies it FIRST at next launch — mint a fresh id, reset only the
+  counter-bearing local stores (scores, daily); the old blobs stay in the
+  cloud **untouched** (the fork never writes the cloud). The next merge shows
+  identical household totals — only provenance moves.
+- **A kept-alive clone is surfaced, not prevented.** If a migrated device
+  keeps playing while the original also does, both write one slot
+  (last-writer-wins). Each blob write carries the install marker as a
+  **writer stamp**; a device seeing a foreign stamp in its own slot knows two
+  live installs share the id (`idCollisionDetected`) and points at the fork.
+  This is the one case the model can't make lossless — detection + the fork is
+  the mitigation, documented as such.
+
 ## Navigation: a Home hub over an always-mounted board
 
 The app is a **game with a menu, not an app with tabs** — a tab bar over a
