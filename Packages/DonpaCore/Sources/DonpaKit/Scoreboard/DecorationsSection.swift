@@ -42,25 +42,18 @@ struct DecorationsSection: View {
     }
 
     /// Opt-in reporting — Game Center never hears about the app until this is on.
+    /// No status caption: unlike the sync footer (whose caption reflects iCloud
+    /// reachability the toggle can't show), reporting state IS the toggle, so a
+    /// caption only restated it — and truncated doing so on narrow screens.
     private func gameCenterFooter(_ binding: Binding<Bool>) -> some View {
-        HStack(spacing: 8) {
-            Toggle(isOn: binding) {
-                Text("Game Center", bundle: .module)
-                    .font(.subheadline.weight(.medium))
-            }
-            .toggleStyle(.switch)
-            #if os(iOS)
-            .controlSize(.mini)
-            #endif
-            .fixedSize()
-            Text(
-                binding.wrappedValue
-                    ? "Reporting to Game Center" : "Not reporting", bundle: .module
-            )
-            .font(.caption)
-            .foregroundStyle(.secondary)
+        Toggle(isOn: binding) {
+            Text("Game Center", bundle: .module)
+                .font(.subheadline.weight(.medium))
         }
-        .lineLimit(1)
+        .toggleStyle(.switch)
+        #if os(iOS)
+        .controlSize(.mini)
+        #endif
         .keyFocusRing(gcKeyFocused)
         .padding(.horizontal, rowInset)
     }

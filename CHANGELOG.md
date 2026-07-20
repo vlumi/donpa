@@ -29,6 +29,10 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
 
 ### Unreleased (next build)
 
+- **Tidier Game Center row.** The reporting toggle no longer carries a
+  status caption that just repeated its on/off state — and truncated on
+  narrow screens in some languages while doing it.
+
 - **A daily clear counts as a win.** Clearing the daily challenge now
   counts into the board's clear count and your career wins (and the
   no-flag/no-chord tallies) — it used to count as a game played without
