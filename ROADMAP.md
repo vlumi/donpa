@@ -47,9 +47,6 @@ no new collection. The whole feature is sync-gated and hides without it.
       names like "Duty stations" were considered and dropped as
       under-selling it). Lives beside the Record's Sync toggle. Read-only;
       forget-a-device joins later.
-- [ ] **Record attribution** — the expanded Record row (and top-5 entries)
-      gets a small class glyph beside a best: derived at merge time from
-      whose blob carries it, retroactively. Ties/unknown blobs show nothing.
 - [ ] **Career by device class** — All / Mac / iPhone / iPad segmented
       filter on the career (filter the blob set before the merge); appears
       only when two or more classes have data, like the Edges control.

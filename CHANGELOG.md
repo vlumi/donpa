@@ -35,6 +35,11 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
   ever counting as a win, quietly dragging your win rate down. Daily best
   times stay the day's own competition, as before.
 
+- **Records show where they were set.** In a multi-device household, the
+  expanded board's best times each carry a small device glyph — Mac,
+  iPhone, or iPad — telling you where that time was earned. The mark only
+  shows when the answer is unambiguous.
+
 - **Scores by device.** A new door beside the Service Record's Sync toggle
   breaks the synced household apart: every device that contributes to your
   record, with its own wins and playtime — the career by where it was

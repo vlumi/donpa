@@ -5551,6 +5551,22 @@
         }
       }
     },
+    "Set on %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelattu laitteella %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@で達成"
+          }
+        }
+      }
+    },
     "Settings" : {
       "comment" : "Settings sheet title",
       "localizations" : {

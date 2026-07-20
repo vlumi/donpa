@@ -98,6 +98,9 @@ struct StatBlock: View {
     /// expansion — a config's block is a long list nested inside a row, so it reads
     /// better a notch down. The global Career uses the full size.
     var compact: Bool = false
+    /// Which device class earned a best time (see DeviceAttribution) — nil
+    /// provider (the career scope) or a nil answer shows no glyph.
+    var deviceClass: ((BestTime) -> DeviceInfo.DeviceClass?)?
 
     private var valueFont: Font { compact ? .subheadline.monospaced() : .body.monospaced() }
     private var labelFont: Font { compact ? .subheadline : .body }
@@ -292,10 +295,39 @@ struct StatBlock: View {
                     Spacer(minLength: 12)
                     Text(verbatim: Self.relative(t.achievedAt))
                         .font(.caption).foregroundStyle(.secondary)
+                    classGlyph(for: t)
                 }
                 .padding(.vertical, 3)
                 .padding(.horizontal, rowInset)
             }
+        }
+    }
+
+    /// A small "where this was earned" mark; absent when unknown/ambiguous
+    /// or in a single-device household (DeviceAttribution decides).
+    @ViewBuilder private func classGlyph(for time: BestTime) -> some View {
+        if let deviceClass = deviceClass?(time) {
+            Image(systemName: Self.classSymbol(deviceClass))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityLabel(Text("Set on \(Self.className(deviceClass))", bundle: .module))
+        }
+    }
+
+    static func classSymbol(_ deviceClass: DeviceInfo.DeviceClass) -> String {
+        switch deviceClass {
+        case .phone: "iphone"
+        case .pad: "ipad"
+        case .mac: "desktopcomputer"
+        }
+    }
+
+    /// Product names, not localized terms.
+    static func className(_ deviceClass: DeviceInfo.DeviceClass) -> String {
+        switch deviceClass {
+        case .phone: "iPhone"
+        case .pad: "iPad"
+        case .mac: "Mac"
         }
     }
 

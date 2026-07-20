@@ -14,6 +14,8 @@ struct ScoreRow: View {
     var onPlay: (() -> Void)?
     var rivals: [Friend] = []
     var yourName: String = ""
+    /// The Record's per-open attribution index (nil = no glyphs).
+    var attribution: DeviceAttribution?
 
     /// Grows the stat columns with Dynamic Type — fixed widths would shrink
     /// grown values back down via `numericCell`, defeating the enlargement.
@@ -91,7 +93,10 @@ struct ScoreRow: View {
             if let record = scoreboard.record(for: config) {
                 StatBlock(
                     figures: StatFigures(record: record), hexCells: config.isHex,
-                    rowInset: rowInset, compact: true)
+                    rowInset: rowInset, compact: true,
+                    deviceClass: attribution.map { index in
+                        { index.deviceClass(for: $0, config: config.storageKey) }
+                    })
             } else {
                 Text("No games on this board yet.", bundle: .module)
                     .font(.callout).foregroundStyle(.secondary)
