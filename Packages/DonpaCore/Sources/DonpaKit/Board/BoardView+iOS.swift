@@ -25,13 +25,18 @@ struct BoardSKView: UIViewRepresentable {
         if view.scene !== scene { view.presentScene(scene) }
         applyScene(scene, palette: palette, minimap: minimap, useQuestionMarks: useQuestionMarks)
         view.keyboardOwner = keyboardOwner
-        // While the board owns the keyboard, hold first responder so a
-        // hardware keyboard (iPad) drives the cursor. Never under a modal —
-        // a sheet's text field must not be robbed.
-        if keyboardOwner, !view.isFirstResponder, view.window != nil {
-            DispatchQueue.main.async { [weak view] in
-                guard let view, view.window != nil, !view.isFirstResponder else { return }
+        // First-responder changes are deferred off the SwiftUI update pass:
+        // mutating the responder chain synchronously here re-enters the view
+        // graph mid-update (canBecomeFirstResponder → responderNode) — an
+        // AttributeGraph cycle, seen whenever an update repaints the board
+        // (e.g. the game-end panel). Both directions hop to the next runloop;
+        // the guards re-check state, so a stale hop is a no-op.
+        DispatchQueue.main.async { [weak view] in
+            guard let view, view.window != nil else { return }
+            if keyboardOwner, !view.isFirstResponder {
                 view.becomeFirstResponder()
+            } else if !keyboardOwner, view.isFirstResponder {
+                view.resignFirstResponder()
             }
         }
     }
@@ -42,14 +47,11 @@ struct BoardSKView: UIViewRepresentable {
 final class KeyForwardingSKView: SKView {
     /// Whether the board owns the hardware keyboard. False on the title and
     /// under modals: handled keys are dropped and first responder is resigned
-    /// — Esc on the title must NOT resume the hidden game, and arrows must
-    /// not reveal cells blind.
-    var keyboardOwner = false {
-        didSet {
-            guard keyboardOwner != oldValue, !keyboardOwner else { return }
-            if isFirstResponder { resignFirstResponder() }
-        }
-    }
+    /// — Esc on the title must NOT resume the hidden game, and arrows must not
+    /// reveal cells blind. The responder change itself is applied by
+    /// `updateUIView` (deferred off the SwiftUI update pass), NOT in a didSet
+    /// here — a synchronous resign mid-update cycles the attribute graph.
+    var keyboardOwner = false
 
     override var canBecomeFirstResponder: Bool { true }
 
