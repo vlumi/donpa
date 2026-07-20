@@ -9,7 +9,15 @@ public final class DailyStore: ObservableObject {
 
     private(set) var records: [String: DailyDayRecord] = [:]
     private let defaults: UserDefaults
-    private let key = "donpa.daily.v1"
+    private let key = DailyStore.localStoreKey
+    static let localStoreKey = "donpa.daily.v1"
+
+    /// A staged fork's local half (see DeviceFork): per-day attempt counters
+    /// would double-count if republished under a new id, so the local store
+    /// resets — the merged view recovers every day from the old blob.
+    static func forkLocalState(in defaults: UserDefaults) {
+        defaults.removeObject(forKey: localStoreKey)
+    }
     private let cloud: CloudDailyStore?
     private let deviceID: String
 

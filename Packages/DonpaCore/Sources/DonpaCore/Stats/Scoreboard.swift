@@ -20,7 +20,8 @@ public final class Scoreboard: ObservableObject {
     @Published public private(set) var recentRecord: String?
 
     private let defaults: UserDefaults
-    private let key = "donpa.stats.v1"
+    private let key = Scoreboard.localStoreKey
+    static let localStoreKey = "donpa.stats.v1"
 
     /// Owns the iCloud-KVS sync (push / merge / offline cache); nil-cloud → local.
     private let sync: StatsSyncCoordinator
@@ -48,10 +49,26 @@ public final class Scoreboard: ObservableObject {
     /// (a global wipe happened while sync was off) — so the toggle UI can ask first.
     public var enablingSyncWouldWipeLocal: Bool { sync.enablingSyncWouldWipeLocal }
 
+    /// Another live install is writing this device's blob slot — two devices
+    /// share one DeviceID (a kept-alive clone). Surfaced so the UI can
+    /// suggest the fork; latched until relaunch.
+    @Published public private(set) var idCollisionDetected = false
+
+    /// A staged fork's local half: reset the stores whose counters would
+    /// double-count if republished under the new id. Called by DeviceFork
+    /// BEFORE any Scoreboard exists; never touches the cloud.
+    static func forkLocalState(in defaults: UserDefaults) {
+        defaults.removeObject(forKey: localStoreKey)
+        // The offline cache carries the OLD identity's mine/others split —
+        // stale for the new id; the first online refresh rebuilds it.
+        defaults.removeObject(forKey: StatsSyncCoordinator.mergedCacheKey)
+    }
+
     public init(
         defaults: UserDefaults = .standard,
         cloud: (any CloudStatsStore)? = nil,
-        syncEnabled: Bool = true
+        syncEnabled: Bool = true,
+        writerToken: String? = nil
     ) {
         self.defaults = defaults
         // Load own records, but drop them if the local blob predates the reset-epoch
@@ -62,8 +79,10 @@ public final class Scoreboard: ObservableObject {
         displayRecords = own
         sync = StatsSyncCoordinator(
             cloud: cloud, deviceID: DeviceID.current(in: defaults), defaults: defaults,
-            syncEnabled: syncEnabled, encode: Self.encodeFile, decode: Self.decodeBlob,
-            decodeEpoch: Self.decodeEpoch)
+            syncEnabled: syncEnabled, writerToken: writerToken,
+            encode: Self.encodeFile, decode: Self.decodeBlob,
+            decodeEpoch: Self.decodeEpoch, decodeWriter: Self.decodeWriter)
+        sync.onCollision = { [weak self] in self?.idCollisionDetected = true }
         // Wire the coordinator's hooks now that `self` exists; it only calls them
         // from the methods invoked below.
         sync.ownRecords = { [weak self] in self?.records ?? [:] }

@@ -35,6 +35,14 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
   ever counting as a win, quietly dragging your win rate down. Daily best
   times stay the day's own competition, as before.
 
+- **Moving to a new device is now understood.** An install restored or
+  transferred from another device gets one question: continue as before
+  (a clean handover), or — if the old device stays in use — start this
+  one fresh with its own tally, keeping everything already earned. And
+  if two devices ever end up recording as one (a kept-alive copy), the
+  app notices and points at the same fix, instead of the two silently
+  overwriting each other.
+
 - **The career filters by device kind.** With two or more device kinds in
   your synced household, Tour of Duty gains an All / iPhone / iPad / Mac
   switch — how you play on the couch versus at the desk. The daily-orders

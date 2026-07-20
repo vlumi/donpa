@@ -174,6 +174,7 @@ public struct GameView: View {
                 navigator: navigator, friends: friends, scoreboard: scoreboard,
                 settings: settings, dailyStore: dailyStore)
         )
+        .modifier(MigrationPrompt())
         // An unreadable save is never a silent nothing.
         .alert(
             Text("Couldn't load the saved game", bundle: .module),

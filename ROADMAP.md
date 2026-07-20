@@ -60,22 +60,12 @@ history double-counts):
 - Fresh reinstall: new ID, old blob remains merged in (no data loss) but
   its registry entry goes stale — a ghost row in the list, cleaned by
   forget-a-device eventually.
-- [ ] **Fork this device** — "Start as a new device" on the This-device
-      row: mints a fresh DeviceID, zeroes the local mine-table, publishes a
-      fresh registry entry. Pre-fork history stays owned by the old blob —
-      totals preserved exactly, only provenance reassigns (pre-fork records
-      keep the old device's class in attribution: frozen at earn time, by
-      design). For the kept-both-devices-after-cloning case. Sync-gated.
-- [ ] **Clone detection** — a ThisDeviceOnly Keychain marker doesn't
-      survive restore onto new hardware: "ID present, marker missing" =
-      migrated/cloned. Offer the choice up front ("continue as ⟨old
-      name⟩" / "start fresh" = fork). If the user continues but the old
-      device is still alive, catch the mix-up anyway: stamp each blob
-      write with a per-install token; a device reading its own slot with
-      someone else's newer token knows two live installs share one ID —
-      surface it on both ("this ID is in use on another device") and
-      suggest the fork, instead of today's silent last-writer-wins
-      flip-flop.
+- [x] **Fork + clone detection** — SHIPPED: staged fork (applied at next
+      launch, before stores capture their DeviceID — never touches the
+      cloud, totals preserved by construction), the ThisDeviceOnly marker
+      migration prompt, and per-install blob write stamps that surface a
+      kept-alive clone on both sides. Pre-fork records keep the old
+      device's class in attribution: frozen at earn time, by design.
 
 
 ## v1.0.0 — The store release
