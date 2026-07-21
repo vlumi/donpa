@@ -9,7 +9,7 @@ Quick orientation:
 
 - **Build & run / tests:** see [AGENTS.md](AGENTS.md) (or the
   [README's Development section](README.md#development)). In short: Xcode 16+ and
-  XcodeGen; `make test` runs the logic tests, `make run-mac` / `make run-ios`
+  XcodeGen; `make test` runs the logic tests, `make run-mac` / `make run-iphone` / `make run-ipad`
   build and launch.
 - **Architecture / why things are the way they are:**
   [ARCHITECTURE.md](ARCHITECTURE.md).

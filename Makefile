@@ -34,9 +34,13 @@ generate: Donpa.xcodeproj  ## Regenerate Donpa.xcodeproj from project.yml (if st
 run-mac: Donpa.xcodeproj  ## Build + launch the macOS app
 	@Scripts/run.sh
 
-.PHONY: run-ios
-run-ios: Donpa.xcodeproj  ## Build + launch in an iOS simulator
-	@Scripts/run-ios.sh
+.PHONY: run-iphone
+run-iphone: Donpa.xcodeproj  ## Build + launch on an iPhone simulator (DEVICE="SE" / "17 Pro" to pick)
+	@Scripts/run-ios.sh iphone "$(DEVICE)"
+
+.PHONY: run-ipad
+run-ipad: Donpa.xcodeproj  ## Build + launch on an iPad simulator (DEVICE="Air" / "13-inch" to pick)
+	@Scripts/run-ios.sh ipad "$(DEVICE)"
 
 .PHONY: build-mac
 build-mac: Donpa.xcodeproj  ## Build the macOS app

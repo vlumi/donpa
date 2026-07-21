@@ -467,7 +467,8 @@ Requires Xcode 16+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 ```sh
 make            # list the available targets
 make run-mac    # build + launch the macOS app
-make run-ios    # build + launch in an iOS simulator
+make run-iphone # build + launch on an iPhone simulator (DEVICE="SE" to pick)
+make run-ipad   # build + launch on an iPad simulator
 make test       # run the package logic tests (no Xcode project needed)
 make uitest     # run the iOS UI tests in a simulator (local only; not on CI)
 ```

@@ -1,39 +1,65 @@
 #!/usr/bin/env bash
-# Build, install, and launch the iOS app in a simulator. Usage: run-ios.sh [device-name]
-# Builds for the generic simulator destination, then installs to a booted sim
-# (an already-booted one, else the named / first available iPhone).
+# Build, install, and launch the iOS app in a simulator.
+#   Usage: run-ios.sh [iphone|ipad] [device-name-substring]
+# Builds for the generic simulator destination, then installs to a sim of the
+# chosen family: an already-booted matching one, else the newest available that
+# matches the optional name substring (e.g. "SE", "17 Pro", "Air").
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 bundle_id="fi.misaki.donpa"
 derived=".build-xcode"
-device="${1:-}"
+family="${1:-iphone}"   # iphone | ipad
+device="${2:-}"         # optional name substring, e.g. "SE" or "17 Pro"
+case "$family" in
+    iphone) family_match="iPhone" ;;
+    ipad)   family_match="iPad" ;;
+    *) echo "error: family must be iphone or ipad (got '$family')" >&2; exit 2 ;;
+esac
 
-# Pick a simulator: an already-booted one if present, else the newest available
-# iPhone on iOS >= 16 (the app's minimum). Done in Python for reliable JSON
-# parsing and version comparison.
-udid="$(xcrun simctl list devices --json 2>/dev/null | DEVICE="$device" python3 -c '
+# Pick a simulator (iOS >= 16, the app's minimum). Rules:
+#  - No DEVICE filter: reuse an already-booted one of the family if any, else
+#    the newest by runtime version — the quick "just run it" path.
+#  - DEVICE filter given: it is AUTHORITATIVE — pick the best NAME match and
+#    boot it even if another sim is already booted (so `DEVICE=SE` really gives
+#    you the SE), and FAIL if nothing matches rather than silently substituting.
+#    Names are additive substrings ("17" ⊂ "17 Pro" ⊂ "17 Pro Max"), so among
+#    matches prefer an exact name, then the shortest name, then newest runtime —
+#    `DEVICE=17` favours plain "iPhone 17" over the Pro Max.
+udid="$(xcrun simctl list devices --json 2>/dev/null | DEVICE="$device" FAMILY="$family_match" python3 -c '
 import json, os, re, sys
 d = json.load(sys.stdin)["devices"]
-want = os.environ.get("DEVICE", "")
-booted, best = None, None
+want = os.environ.get("DEVICE", "").strip()
+fam = os.environ.get("FAMILY", "iPhone")
+booted = None
+matches = []  # (exact_name, name_len, ver, udid)
 for runtime, devs in d.items():
     m = re.search(r"iOS-(\d+)-(\d+)", runtime)
     ver = (int(m.group(1)), int(m.group(2))) if m else None
-    if not ver or ver < (16, 0):  # app requires iOS 16+
+    if not ver or ver < (16, 0):
         continue
     for dev in devs:
-        if not dev.get("isAvailable") or "iPhone" not in dev["name"]:
+        name = dev["name"]
+        if not dev.get("isAvailable") or fam not in name:
             continue
-        if want and want.lower() not in dev["name"].lower():
+        if want and want.lower() not in name.lower():
             continue
         if dev["state"] == "Booted":
             booted = dev["udid"]
-        if best is None or ver > best[0]:
-            best = (ver, dev["udid"])
-print(booted or (best[1] if best else ""))
+        exact = (name.lower() == want.lower())
+        matches.append((not exact, len(name), tuple(-x for x in ver), dev["udid"]))
+if not matches:
+    print("")
+elif want:
+    # Filter is authoritative: best name match wins, ignore whatever is booted.
+    print(sorted(matches)[0][3])
+else:
+    print(booted or sorted(matches)[0][3])
 ')"
-[ -n "$udid" ] || { echo "error: no available iOS>=16 simulator found" >&2; exit 1; }
+[ -n "$udid" ] || {
+    echo "error: no available iOS>=16 $family_match simulator${device:+ matching '$device'} found" >&2
+    exit 1
+}
 
 echo "Simulator: $udid"
 open -a Simulator
