@@ -47,9 +47,6 @@ no new collection. The whole feature is sync-gated and hides without it.
       names like "Duty stations" were considered and dropped as
       under-selling it). Lives beside the Record's Sync toggle. Read-only;
       forget-a-device joins later.
-- [ ] **Breakdown by device class** — the Breakdown block could gain a
-      by-class bar (same shape as its Edges bar), now that the class
-      career shipped.
 
 **Migration semantics** (DeviceID is a UUID in UserDefaults, so it travels
 with backup/transfer — the ID must ride with the data it describes, or
