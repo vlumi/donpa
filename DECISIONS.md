@@ -514,7 +514,11 @@ cover. A speculative higher-contrast-shading polish note died with it
 Recorded so the next review doesn't redo it: Live Activities (the game is
 foreground by nature), CloudKit save-sync (KVS is too
 small for board blobs; per-device saves were a deliberate call), Spotlight
-indexing beyond App Intents.
+indexing beyond App Intents, a **by-device-class Breakdown bar** (the "Scores
+by device" sheet already shows play split per device; a Breakdown axis would
+restate it, and unlike the family/size/edges axes it isn't a config property
+so it'd need the per-device tables threaded in — redundant work for a view
+that mostly reads "one device").
 
 ### Inked-paper board theme (dropped)
 
