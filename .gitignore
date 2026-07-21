@@ -41,3 +41,4 @@ __pycache__/
 
 # Abandoned manual-capture dir (the committed store set lives in shots/)
 screenshots/
+.playwright-mcp/

@@ -11,11 +11,9 @@
 	<string>$(TeamIdentifierPrefix)fi.misaki.donpa</string>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
-	<!-- Nearby exchange (MultipeerConnectivity/Bonjour): the sandbox needs both
-	     directions to advertise and browse on the local network. -->
+	<!-- TEST BUILD: client only (server removed) to determine whether MPC
+	     advertising works with just client + the local-network permission. -->
 	<key>com.apple.security.network.client</key>
-	<true/>
-	<key>com.apple.security.network.server</key>
 	<true/>
 	<!-- User-picked files, both directions: READ a picked image to scan a rival's
 	     QR (.fileImporter), and WRITE the share-card PNG where the user chooses
