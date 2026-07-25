@@ -477,6 +477,13 @@ No third-party runtime dependencies (nothing ships in the app; SwiftLint /
 swift-format are dev-only tools, not SPM packages). CI runs SwiftLint (pinned) +
 swift-format, the logic tests (with coverage), and both platform builds.
 
+## Support
+
+Donpa Squad is free, with no ads and no in-app purchases. If it brightened a
+commute and you'd like to support the work, you can
+[sponsor the developer on GitHub](https://github.com/sponsors/vlumi) — entirely
+optional, and thank you.
+
 ## License
 
 Code: [MIT](LICENSE). The **name and brand assets** ("Donpa Squad" / ドンパ隊, the
