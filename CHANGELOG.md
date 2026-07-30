@@ -22,22 +22,26 @@ rename that heading to the chosen version by hand (or fold its entries back
 into the previous version's section); the script only ever stamps the build
 heading.
 
-## [Unreleased]
+## [1.0.1]
 
-The next version — **1.0.0 build 31 if App Review rejects the submission,
-1.0.1 or 1.1.0 otherwise**; the heading is renamed by hand at cut time.
+**The first post-launch update — bug fixes and multi-device polish.**
+Compatible with 1.0.0: scores, sync, and old share links carry forward.
 
 ### Unreleased (next build)
-
-- **Tidier Game Center row.** The reporting toggle no longer carries a
-  status caption that just repeated its on/off state — and truncated on
-  narrow screens in some languages while doing it.
 
 - **A daily clear counts as a win.** Clearing the daily challenge now
   counts into the board's clear count and your career wins (and the
   no-flag/no-chord tallies) — it used to count as a game played without
   ever counting as a win, quietly dragging your win rate down. Daily best
   times stay the day's own competition, as before.
+
+- **Scores by device.** A new door beside the Service Record's Sync toggle
+  breaks the synced household apart: every device that contributes to your
+  record, with its own wins and playtime — the career by where it was
+  earned. Devices from before this feature still show (unnamed), so the
+  rows always add up to your total. Tap a row to give a device a
+  **nickname** — it syncs, survives the device renaming itself, and even a
+  forgotten old device can be named.
 
 - **Moving to a new device is now understood.** An install restored or
   transferred from another device gets one question: continue as before
@@ -46,6 +50,13 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
   if two devices ever end up recording as one (a kept-alive copy), the
   app notices and points at the same fix, instead of the two silently
   overwriting each other.
+
+- **Nearby exchange asks both players.** Cards now cross only after BOTH
+  players tap each other's name — a connection alone carries nothing, so
+  nobody's card can be pulled one-sided. The sheet shows each direction's
+  progress, connection hiccups retry themselves a couple of times before
+  bothering you, and the failure screen gains a Try again button that
+  reuses the players it already found.
 
 - **The career filters by device kind.** With two or more device kinds in
   your synced household, Tour of Duty gains an All / iPhone / iPad / Mac
@@ -57,20 +68,9 @@ The next version — **1.0.0 build 31 if App Review rejects the submission,
   iPhone, or iPad — telling you where that time was earned. The mark only
   shows when the answer is unambiguous.
 
-- **Scores by device.** A new door beside the Service Record's Sync toggle
-  breaks the synced household apart: every device that contributes to your
-  record, with its own wins and playtime — the career by where it was
-  earned. Devices from before this feature still show (unnamed), so the
-  rows always add up to your total. Tap a row to give a device a
-  **nickname** — it syncs, survives the device renaming itself, and even a
-  forgotten old device can be named.
-
-- **Nearby exchange asks both players.** Cards now cross only after BOTH
-  players tap each other's name — a connection alone carries nothing, so
-  nobody's card can be pulled one-sided. The sheet shows each direction's
-  progress, connection hiccups retry themselves a couple of times before
-  bothering you, and the failure screen gains a Try again button that
-  reuses the players it already found.
+- **Tidier Game Center row.** The reporting toggle no longer carries a
+  status caption that just repeated its on/off state — and truncated on
+  narrow screens in some languages while doing it.
 
 ## [1.0.0] — The store release
 
