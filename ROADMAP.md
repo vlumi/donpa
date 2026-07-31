@@ -6,11 +6,11 @@ Open, future work only. **Shipped milestones live in
 ideas are recorded in [DECISIONS.md](DECISIONS.md)**; the technical "why" is
 [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Versions are indicative, not contractual. For the record: v0.1.0 (classic),
-v0.2.0 (cross-device sync + big boards), v0.3.0 (board variants + the New
-Game / scoreboard redesign), v0.4.0 (friendly rivalry), v0.5.0 (progression),
-and v0.6.0 (keyboard & accessibility) all shipped to TestFlight — everything
-before 1.0 is beta by definition.
+Versions are indicative, not contractual. **1.0.0 shipped to the App Store
+2026-07-31** (both platforms, Universal Purchase); 1.0.1 followed as the
+first update. The pre-1.0 line (v0.1.0 classic → v0.6.0 keyboard &
+accessibility) shipped to TestFlight; full history is in
+[CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -32,52 +32,26 @@ gates.
       forget-a-device in the devices list (see "Your devices" below).
 
 
-## Your devices (post-1.0)
+## Your devices (mostly shipped)
 
-The registry COLLECTION shipped ahead of every reader (a metadata entry
-beside each device's KVS blob: name, model, class, first-seen/last-active;
-sync-gated, wipe-immune, never in the share payload — deliberately: device
-names identify people in a way score tables don't, so rivals stay
-device-blind). Because each blob holds only its own device's records and the
-cross-device view merges at read time, all readers below are derivable with
-no new collection. The whole feature is sync-gated and hides without it.
+The device suite shipped in 1.0.1: **Scores by device** (the per-device
+record list + nicknames), record attribution glyphs, the class-filtered
+career, and **fork + clone detection** for migrations. The technical model
+(DeviceID rides UserDefaults; the ThisDeviceOnly marker; staged fork) is in
+[ARCHITECTURE.md](ARCHITECTURE.md). One follow-on remains:
 
-- [x] **Scores by device** (the list, SHIPPED first) — named by what it
-      is: the record by where it was earned, not a device manager (theme
-      names like "Duty stations" were considered and dropped as
-      under-selling it). Lives beside the Record's Sync toggle. Read-only;
-      forget-a-device joins later.
-
-**Migration semantics** (DeviceID is a UUID in UserDefaults, so it travels
-with backup/transfer — the ID must ride with the data it describes, or
-history double-counts):
-
-- Normal migration (old device retired): clean takeover — same ID, same
-  blob, registry entry re-describes itself, nickname follows. Correct as-is.
-- Fresh reinstall: new ID, old blob remains merged in (no data loss) but
-  its registry entry goes stale — a ghost row in the list, cleaned by
-  forget-a-device eventually.
-- [x] **Fork + clone detection** — SHIPPED: staged fork (applied at next
-      launch, before stores capture their DeviceID — never touches the
-      cloud, totals preserved by construction), the ThisDeviceOnly marker
-      migration prompt, and per-install blob write stamps that surface a
-      kept-alive clone on both sides. Pre-fork records keep the old
-      device's class in attribution: frozen at earn time, by design.
+- [ ] **Forget a device** — remove a stale/ghost device entry (and prune its
+      orphaned KVS blob) from the devices list. The friendly face of the
+      KVS-blob-pruning carry-over above.
 
 
-## v1.0.0 — The store release
+## Open items
 
-**Build 30 is submitted for App Review** (both platforms, one Universal
-Purchase record; sharing is Nearby-only for 1.0 and squads are hidden — the
-rationale and the way back live in [DECISIONS.md](DECISIONS.md)). Store
-assets (listing text, screenshots, achievements) are live in ASC and synced
-from this repo via the `asc-*` targets. What remains:
+**1.0.0 shipped** to the App Store (both platforms, Universal Purchase) on
+2026-07-31; **1.0.1** (the devices suite, the daily-wins fix, and the Nearby
+mutual-tap rework) followed as the first update. Shipped detail lives in
+[CHANGELOG.md](CHANGELOG.md).
 
-- [ ] **Await App Review**; on approval, release (manual release is set)
-- [ ] **Update donpa.app after release** — App Store links (and any launch
-      wording) on the live site
-- [ ] Delete `release/0.5.x` once 1.0.0 ships (superseded-line rule in
-      [RELEASING.md](RELEASING.md))
 - [ ] **UI smoke tests on CI?** A local XCUITest suite already exists (`make
       uitest`, `Tests/UITests/`, shipped in v0.1) but is deliberately *not* run
       by CI — it needs a job that builds the `.xcodeproj` and boots a simulator
@@ -99,8 +73,8 @@ Remote sharing returns **bounded**, not as it was:
 
 ## Publishing & distribution
 
-The paid account exists, both apps ship to TestFlight under one Universal
-Purchase record, and the local release lane does the whole cut (see
+The paid account exists, both platforms ship to the App Store under one
+Universal Purchase record, and the local release lane does the whole cut (see
 [RELEASING.md](RELEASING.md); the two-native-targets / shared-bundle-id
 story is in [ARCHITECTURE.md](ARCHITECTURE.md)). Open items:
 

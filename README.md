@@ -5,7 +5,7 @@
 
 **Donpa Squad** (ドンパ隊) — a manga-styled Minesweeper for Apple platforms
 (iOS 16+ and macOS 14+). Classic mode shipped first, and the "epic" variants it
-was architected for are landing on schedule: huge zoomable maps, **Round
+was architected for all landed on the way: huge zoomable maps, **Round
 (torus) edges**, and **hex grids** (the Hive family) — each added without
 touching the game logic.
 
@@ -15,11 +15,13 @@ touching the game logic.
 home-screen redesign, per-board saves, forced-guess luck tracking, and the
 Lunatic tier), **v0.5.0** (progression — achievements, unlockable boards,
 Drills, how-to-play, Nearby exchange, sound & haptics), and **v0.6.0**
-(keyboard & accessibility, plus the daily challenge) shipped to TestFlight;
-**v1.0.0** — the public App Store release — is in submission. See
-[CHANGELOG.md](CHANGELOG.md) for the version history, [ROADMAP.md](ROADMAP.md)
-for what's next, and [ARCHITECTURE.md](ARCHITECTURE.md) for the key design
-decisions.
+(keyboard & accessibility, plus the daily challenge) shipped to TestFlight
+along the way. **[Donpa Squad 1.0.0](https://apps.apple.com/app/id6783582663)
+is on the App Store** (iPhone, iPad, and Mac — one Universal Purchase), with
+**v1.0.1** (per-device stats, migration handling, the Nearby mutual-tap
+rework) as the first update. See [CHANGELOG.md](CHANGELOG.md) for the version
+history, [ROADMAP.md](ROADMAP.md) for what's next, and
+[ARCHITECTURE.md](ARCHITECTURE.md) for the key design decisions.
 
 ## Contents
 
