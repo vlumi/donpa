@@ -284,8 +284,24 @@ later, this note will credit it.
 
 ## Version history
 
-High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail. Donpa is
-in TestFlight beta; releases ship as rolling per-platform betas on iOS and macOS.
+High-level only — see [CHANGELOG.md](CHANGELOG.md) for the full detail
+(per-patch and per-build). Donpa Squad is on the App Store for iPhone, iPad,
+and Mac.
+
+### 1.0 — the App Store release
+
+- **The public 1.0.** The full beta feature set, ship-shape: three board
+  families (Basic / Grid / Hive) with Flat and Round edges, sizes from a tap
+  to a million cells, the daily challenge, achievements, friendly rivalry,
+  full keyboard play, and VoiceOver board play. For the store, remote score
+  sharing narrowed to **Nearby** (in-person, peer-to-peer) — the link/QR
+  channels and squads are parked, to return as bounded challenge cards.
+- **New (1.0.1):** **per-device stats** — a *Scores by device* view breaks
+  your synced record down across iPhone, iPad, and Mac, with device
+  nicknames, "where a best was set" glyphs, and an All / iPhone / iPad / Mac
+  career filter. Moving to a new device is handled cleanly (keep your history,
+  or start the new device fresh), and Nearby now asks **both** players before
+  swapping. Plus the fix that a daily-challenge clear counts as a career win.
 
 ### 0.6.0 — keyboard & accessibility
 
