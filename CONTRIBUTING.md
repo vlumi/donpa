@@ -24,6 +24,15 @@ Pull requests:
   on CI; run `make test` and the linters locally before pushing.
 - Describe what changed and why in the PR body.
 
-By contributing you agree your contributions are licensed under the repository's
-[MIT License](LICENSE). (Note: art assets may carry a separate license in the
-future — see the roadmap.)
+Licensing:
+
+- By contributing you agree your contributions are licensed under the
+  repository's [MIT License](LICENSE), which includes distribution as part of
+  the shipped app (Donpa Squad ships on the App Store).
+- You confirm the contribution is your own work and that you have the right to
+  submit it under that license — not copied from code you don't have the right
+  to relicense (an employer's, or an incompatibly-licensed project's).
+- Ideas and suggestions in issues are welcome and, being ideas, aren't
+  something anyone owns — feel free to open them; implementing them is fine.
+- Art assets may carry a separate license in the future — see the
+  [roadmap](ROADMAP.md).
