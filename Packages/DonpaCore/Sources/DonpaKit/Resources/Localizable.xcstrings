@@ -1425,24 +1425,24 @@
         }
       }
     },
-    "collapsed, %lld of %lld earned" : {
+    "collapsed, %lld of %lld fully earned" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "collapsed, %lld of %lld earned"
+            "value" : "collapsed, %lld of %lld fully earned"
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "supistettu, %lld\/%lld ansaittu"
+            "value" : "supistettu, %lld\/%lld täysin ansaittu"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "折りたたみ中、%lld\/%lld獲得"
+            "value" : "折りたたみ中、%lld\/%lld完全獲得"
           }
         }
       }

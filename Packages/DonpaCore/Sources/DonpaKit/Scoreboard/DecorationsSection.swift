@@ -66,7 +66,7 @@ struct DecorationsSection: View {
                 Text("Decorations", bundle: .module)
                     .font(.title3.bold())
                 if collapsed {
-                    Text(verbatim: "\(earnedCount)/\(AchievementID.allCases.count)")
+                    Text(verbatim: "\(goldCount)/\(AchievementID.allCases.count)")
                         .font(.subheadline.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
@@ -87,12 +87,17 @@ struct DecorationsSection: View {
     private var collapsedA11yValue: Text {
         guard collapsed else { return Text("expanded", bundle: .module) }
         return Text(
-            "collapsed, \(earnedCount) of \(AchievementID.allCases.count) earned",
+            "collapsed, \(goldCount) of \(AchievementID.allCases.count) fully earned",
             bundle: .module)
     }
 
-    private var earnedCount: Int {
-        AchievementID.allCases.filter { achievements.earnedTier($0) > 0 }.count
+    /// Fully earned = at the feat's top tier (gold). A one-shot's only tier is
+    /// its gold; a tiered feat sitting at bronze/silver is not counted here, so
+    /// the chip reads "all gold", not "all touched".
+    private var goldCount: Int {
+        AchievementID.allCases.filter { id in
+            achievements.earnedTier(id) == (id.tierThresholds?.count ?? 1)
+        }.count
     }
 
     private func cell(_ id: AchievementID) -> some View {

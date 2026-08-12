@@ -29,6 +29,11 @@ Compatible with 1.0.0: scores, sync, and old share links carry forward.
 
 ### Unreleased (next build)
 
+- **Decorations count now reflects gold.** The collapsed Decorations chip
+  counted a feat as done the moment you earned bronze, so it read "all
+  earned" while some were still bronze or silver. It now counts only feats
+  at their top tier (gold) — the number is your genuine completion.
+
 ### build 31 — 2026-07-31
 
 - **A daily clear counts as a win.** Clearing the daily challenge now
