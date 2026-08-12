@@ -93,7 +93,10 @@ struct NearbyExchangeView: View {
     }
 
     /// The automatic retries are spent — offer a manual one. Discovery stayed
-    /// warm, so Retry re-invites the same player directly.
+    /// warm, so Retry re-invites the same player directly. The hint targets the
+    /// usual deterministic culprits — a denied Local Network permission (the
+    /// devices connect but the swap can't finish) or a version gap — since a
+    /// swap that fails every retry isn't a flaky radio.
     private func failed(_ peer: MCPeerID?) -> some View {
         VStack(spacing: 10) {
             status(Text("The connection dropped.", bundle: .module), spinner: false)
@@ -105,6 +108,16 @@ struct NearbyExchangeView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
+            Text(
+                """
+                Keeps failing? Check that Local Network is on for Donpa Squad in \
+                Settings, and that you're both on the latest version.
+                """,
+                bundle: .module
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
         }
     }
 

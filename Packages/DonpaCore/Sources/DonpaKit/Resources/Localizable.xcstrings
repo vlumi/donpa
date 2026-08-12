@@ -3203,6 +3203,23 @@
         }
       }
     },
+    "Keeps failing? Check that Local Network is on for Donpa Squad in Settings, and that you're both on the latest version." : {
+      "comment" : "Hint under the Nearby failure sheet; the usual causes are a denied Local Network permission or a version gap.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei toimi vieläkään? Tarkista, että Paikallinen verkko on päällä Donpa Squadille Asetuksissa ja että olette molemmat uusimmassa versiossa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "うまくいかない場合は、設定でDonpa Squadの「ローカルネットワーク」がオンになっているか、そして両方が最新バージョンかをご確認ください。"
+          }
+        }
+      }
+    },
     "Keyboard play" : {
       "localizations" : {
         "en" : {

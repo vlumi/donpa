@@ -26,6 +26,11 @@ heading.
 
 ### Unreleased (next build)
 
+- **A hint when Nearby won't connect.** If a swap keeps failing after retries,
+  the sheet now points at the usual causes — Local Network permission being
+  off, or the two devices running different app versions — instead of just
+  saying the connection dropped.
+
 - **Decorations count now reflects gold.** The collapsed Decorations chip
   counted a feat as done the moment you earned bronze, so it read "all
   earned" while some were still bronze or silver. It now counts only feats
