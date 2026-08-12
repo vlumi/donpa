@@ -44,16 +44,21 @@ struct CounterReadout: View {
             a11y: "Mines remaining", tint: tint)
     }
 
-    /// Whole-second timer: zero-padded 3-digit (e.g. `047`) under 1000s, then `m:ss`
-    /// instead of sticking at 999. Capped at 99:59.
+    /// Whole-second timer. Each format runs to its full width before the next
+    /// takes over — `000`…`999` (seconds), then `16:40`…`99:59` (`m:ss`), then
+    /// `1:40:00`… (`h:mm:ss`) — so `999`→`16:40` and `99:59`→`1:40:00` follow the
+    /// same rule. A marathon board keeps counting; recorded times were always
+    /// exact regardless.
     static func time(centiseconds: Int, tint: Color) -> CounterReadout {
         let seconds = max(0, centiseconds / 100)
         let value: String
         if seconds < 1000 {
             value = String(format: "%03d", seconds)
+        } else if seconds < 6000 {
+            value = String(format: "%d:%02d", seconds / 60, seconds % 60)
         } else {
-            let capped = min(seconds, 99 * 60 + 59)
-            value = String(format: "%d:%02d", capped / 60, capped % 60)
+            value = String(
+                format: "%d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
         }
         return CounterReadout(glyph: "⏱", value: value, a11y: "Time, seconds", tint: tint)
     }
