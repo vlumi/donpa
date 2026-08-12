@@ -30,6 +30,11 @@ old share links carry forward.
 
 ### Unreleased (next build)
 
+- **The in-game timer keeps counting past 99:59.** On a long board (an easy XXL
+  or a giant Lunatic run) the live timer used to freeze at 99:59; it now rolls
+  into `h:mm:ss` and keeps ticking. Recorded times were always exact — this was
+  the on-screen counter only.
+
 ### build 32 — 2026-08-12
 
 - **A hint when Nearby won't connect.** If a swap keeps failing after retries,
