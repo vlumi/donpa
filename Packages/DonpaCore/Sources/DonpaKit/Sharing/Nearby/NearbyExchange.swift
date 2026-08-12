@@ -18,6 +18,11 @@ final class NearbyExchange: NSObject, ObservableObject {
     @Published private(set) var receivedURL: URL?
     /// Per-direction progress for the exchanging view.
     @Published private(set) var sentOurs = false
+    /// The last transport failure's raw reason, for the "Copy diagnostics" the
+    /// failure sheet offers an issue reporter. A throwing send carries a real
+    /// NSError; a bare `.notConnected` drop carries none, so we note the phase
+    /// it died in instead. nil until something fails.
+    @Published private(set) var lastFailureReason: String?
 
     /// Bonjour service type (≤15 chars, lowercase/digits/hyphen).
     static let service = "donpa-swap"
@@ -83,6 +88,24 @@ final class NearbyExchange: NSObject, ObservableObject {
         perform(flow.userRetried())
     }
 
+    /// A short, copyable failure summary for an issue report — the raw reason
+    /// plus the environment needed to reproduce. Plain English by design (it
+    /// lands in a GitHub issue, not the UI); nothing here identifies the user.
+    func diagnostics() -> String {
+        let facts = DeviceFacts.current()
+        let version =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        let os = ProcessInfo.processInfo.operatingSystemVersionString
+        return """
+            Donpa Nearby failure
+            reason: \(lastFailureReason ?? "unknown")
+            app: \(version) (\(build))
+            os: \(os)
+            device: \(facts.model)
+            """
+    }
+
     // MARK: Flow actions → MCC calls
 
     private func perform(_ actions: [NearbyFlow<MCPeerID>.Action]) {
@@ -121,6 +144,8 @@ final class NearbyExchange: NSObject, ObservableObject {
             try session.send(data, toPeers: [peer], with: .reliable)
             return true
         } catch {
+            let ns = error as NSError
+            lastFailureReason = "send failed: \(ns.domain) \(ns.code)"
             perform(flow.linkFailed(with: peer))
             return false
         }
@@ -166,6 +191,10 @@ extension NearbyExchange: MCSessionDelegate {
             case .notConnected:
                 // The flow sorts transient drops (auto-retry) from real
                 // failures; after .done it's just the other sheet closing.
+                // MPC hands no error on a state change, so the phase it died in
+                // is the only detail — enough to tell a mid-exchange collapse
+                // (the Local-Network-denied signature) from a failed connect.
+                self.lastFailureReason = "disconnected during \(self.flow.phase.diagnosticName)"
                 self.perform(self.flow.linkFailed(with: peerID))
             default: break
             }

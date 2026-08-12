@@ -31,6 +31,21 @@ struct NearbyFlow<Peer: Hashable> {
         case reconnecting(Peer)
         case done(Peer)
         case failed(Peer?)
+
+        /// A stable, unlocalized tag for diagnostics/issue reports — never shown
+        /// as UI. "exchanging" here is the tell-tale Local-Network-denied case:
+        /// connected, then the payload couldn't cross.
+        var diagnosticName: String {
+            switch self {
+            case .browsing: return "browsing"
+            case .connecting: return "connecting"
+            case .waitingForTap: return "waitingForTap"
+            case .exchanging: return "exchanging"
+            case .reconnecting: return "reconnecting"
+            case .done: return "done"
+            case .failed: return "failed"
+            }
+        }
     }
 
     /// Automatic retries after a drop/send failure, before failing loudly.

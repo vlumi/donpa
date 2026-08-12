@@ -2,15 +2,26 @@ import DonpaCore
 import MultipeerConnectivity
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 /// The Nearby sheet; the received card goes to the host's normal receive/confirm
 /// flow, same as a scanned QR.
 struct NearbyExchangeView: View {
     @StateObject private var exchange: NearbyExchange
     let onReceived: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
+    #if os(iOS)
+    @Environment(\.openURL) private var openURL
+    #endif
     /// Tracked by IDENTITY, not list position: peers appear and drop mid-browse,
     /// and an index could silently retarget Return's invite at someone else.
     @State private var focusedPeer: MCPeerID?
+    /// Flips true briefly after Copy diagnostics, to confirm the copy landed.
+    @State private var copiedDiagnostics = false
 
     init(
         displayName: String, payloadURL: URL, identityKey: Data?,
@@ -93,7 +104,10 @@ struct NearbyExchangeView: View {
     }
 
     /// The automatic retries are spent — offer a manual one. Discovery stayed
-    /// warm, so Retry re-invites the same player directly.
+    /// warm, so Retry re-invites the same player directly. The hint targets the
+    /// usual deterministic culprits — a denied Local Network permission (the
+    /// devices connect but the swap can't finish) or a version gap — since a
+    /// swap that fails every retry isn't a flaky radio.
     private func failed(_ peer: MCPeerID?) -> some View {
         VStack(spacing: 10) {
             status(Text("The connection dropped.", bundle: .module), spinner: false)
@@ -105,6 +119,51 @@ struct NearbyExchangeView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
+            Text(
+                """
+                Keeps failing? Check that Local Network is on for Donpa Squad in \
+                Settings, and that you're both on the latest version.
+                """,
+                bundle: .module
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            #if os(iOS)
+            if let settings = URL(string: UIApplication.openSettingsURLString) {
+                Button {
+                    openURL(settings)
+                } label: {
+                    Text("Open Settings", bundle: .module)
+                }
+                .font(.footnote)
+            }
+            #endif
+            Button {
+                copyDiagnostics(exchange.diagnostics())
+            } label: {
+                copiedDiagnostics
+                    ? Text("Copied", bundle: .module)
+                    : Text("Copy diagnostics", bundle: .module)
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Puts the failure summary on the clipboard so an issue reporter can paste
+    /// it into GitHub; the "Copied" label reverts on its own.
+    private func copyDiagnostics(_ text: String) {
+        #if os(iOS)
+        UIPasteboard.general.string = text
+        #elseif os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #endif
+        copiedDiagnostics = true
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            copiedDiagnostics = false
         }
     }
 
