@@ -22,10 +22,7 @@ rename that heading to the chosen version by hand (or fold its entries back
 into the previous version's section); the script only ever stamps the build
 heading.
 
-## [1.0.1]
-
-**The first post-launch update — bug fixes and multi-device polish.**
-Compatible with 1.0.0: scores, sync, and old share links carry forward.
+## [Unreleased]
 
 ### Unreleased (next build)
 
@@ -33,6 +30,11 @@ Compatible with 1.0.0: scores, sync, and old share links carry forward.
   counted a feat as done the moment you earned bronze, so it read "all
   earned" while some were still bronze or silver. It now counts only feats
   at their top tier (gold) — the number is your genuine completion.
+
+## [1.0.1] — Post-launch polish
+
+**The first post-launch update — bug fixes and multi-device polish.**
+Compatible with 1.0.0: scores, sync, and old share links carry forward.
 
 ### build 31 — 2026-07-31
 
