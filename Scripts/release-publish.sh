@@ -133,9 +133,17 @@ while true; do
     sleep 5
 done
 say "Waiting for CI to finish (auto-merge completes on green)…"
-if ! gh pr checks "$rel_branch" --watch --fail-fast; then
+# `--watch` is a long-lived stream: a transient GitHub blip (502/timeout) drops
+# it with a non-zero exit that looks identical to "CI failed." So a dropped watch
+# is NOT terminal — re-derive the truth from a plain `gh pr checks` (which reports
+# pass/fail/pending distinctly, exit 8 = still pending) with retry, and re-watch
+# while anything is pending. Only a check that genuinely reports failure dies.
+while ! gh pr checks "$rel_branch" --watch --fail-fast; do
+    gh_retry gh pr checks "$rel_branch" >/dev/null 2>&1 && break   # all green after all
+    rc=$?
+    [ "$rc" -eq 8 ] && { say "watch dropped mid-run — re-watching…"; continue; }
     die "CI failed — PR left open at $rel_branch. No merge, tag, build, or upload was done."
-fi
+done
 
 say "Confirming merge…"
 # The no-auto-merge fallback: CI is green (watched above), merge now ourselves.
@@ -148,7 +156,7 @@ say "Confirming merge…"
 # recoverable by simply re-running `make release`.
 state=""
 for _ in $(seq 1 20); do
-    state="$(gh pr view "$rel_branch" --json state --jq .state)"
+    state="$(gh_retry gh pr view "$rel_branch" --json state --jq .state)"
     [ "$state" = "MERGED" ] && break
     sleep 3
 done
