@@ -22,7 +22,10 @@ rename that heading to the chosen version by hand (or fold its entries back
 into the previous version's section); the script only ever stamps the build
 heading.
 
-## [Unreleased]
+## [1.0.2] — Nearby troubleshooting
+
+**Small fixes and a better hand when Nearby won't connect.** Compatible with
+1.0.0 and 1.0.1: scores, sync, and old share links carry forward.
 
 ### Unreleased (next build)
 
