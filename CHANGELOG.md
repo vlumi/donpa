@@ -29,7 +29,8 @@ heading.
 - **A hint when Nearby won't connect.** If a swap keeps failing after retries,
   the sheet now points at the usual causes — Local Network permission being
   off, or the two devices running different app versions — instead of just
-  saying the connection dropped.
+  saying the connection dropped, with a one-tap Open Settings button on iPhone
+  and iPad.
 
 - **Decorations count now reflects gold.** The collapsed Decorations chip
   counted a feat as done the moment you earned bronze, so it read "all

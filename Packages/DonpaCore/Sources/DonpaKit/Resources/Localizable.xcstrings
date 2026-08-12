@@ -3209,7 +3209,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ei toimi vieläkään? Tarkista, että Paikallinen verkko on päällä Donpa Squadille Asetuksissa ja että olette molemmat uusimmassa versiossa."
+            "value" : "Ei toimi vieläkään? Tarkista, että paikallinen verkko on päällä Donpa Squadille asetuksissa ja että molemmilla on uusin versio asennettuna."
           }
         },
         "ja" : {
@@ -4391,6 +4391,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1万 \/ 10万 \/ 100万マスを開ける。"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "comment" : "Button under the Nearby failure hint; jumps to the app's iOS Settings page (Local Network lives there).",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa asetukset"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定を開く"
           }
         }
       }
@@ -5678,7 +5695,7 @@
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kirjaudu iCloudiin Asetuksissa synkronoidaksesi."
+            "value" : "Kirjaudu iCloudiin asetuksissa synkronoidaksesi."
           }
         },
         "ja" : {

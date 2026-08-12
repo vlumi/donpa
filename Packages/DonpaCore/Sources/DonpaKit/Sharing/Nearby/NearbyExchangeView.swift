@@ -2,12 +2,19 @@ import DonpaCore
 import MultipeerConnectivity
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#endif
+
 /// The Nearby sheet; the received card goes to the host's normal receive/confirm
 /// flow, same as a scanned QR.
 struct NearbyExchangeView: View {
     @StateObject private var exchange: NearbyExchange
     let onReceived: (URL) -> Void
     @Environment(\.dismiss) private var dismiss
+    #if os(iOS)
+    @Environment(\.openURL) private var openURL
+    #endif
     /// Tracked by IDENTITY, not list position: peers appear and drop mid-browse,
     /// and an index could silently retarget Return's invite at someone else.
     @State private var focusedPeer: MCPeerID?
@@ -118,6 +125,16 @@ struct NearbyExchangeView: View {
             .font(.footnote)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
+            #if os(iOS)
+            if let settings = URL(string: UIApplication.openSettingsURLString) {
+                Button {
+                    openURL(settings)
+                } label: {
+                    Text("Open Settings", bundle: .module)
+                }
+                .font(.footnote)
+            }
+            #endif
         }
     }
 
