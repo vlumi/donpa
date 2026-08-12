@@ -24,8 +24,9 @@ heading.
 
 ## [1.0.2] — Nearby troubleshooting
 
-**Small fixes and a better hand when Nearby won't connect.** Compatible with
-1.0.0 and 1.0.1: scores, sync, and old share links carry forward.
+**Small improvements — a better hand when Nearby won't connect, and a couple of
+readouts that go further.** Compatible with 1.0.0 and 1.0.1: scores, sync, and
+old share links carry forward.
 
 ### Unreleased (next build)
 
@@ -38,10 +39,10 @@ heading.
   and iPad. A **Copy diagnostics** button gathers the failure reason and your
   app/OS/device so you can paste it into a bug report.
 
-- **Decorations count now reflects gold.** The collapsed Decorations chip
-  counted a feat as done the moment you earned bronze, so it read "all
-  earned" while some were still bronze or silver. It now counts only feats
-  at their top tier (gold) — the number is your genuine completion.
+- **Decorations count now reflects gold.** The collapsed Decorations chip used
+  to count a feat the moment you earned bronze; it now counts only feats at
+  their top tier, so the number tracks how close you are to a full-gold set
+  rather than how many you've merely started.
 
 ## [1.0.1] — Post-launch polish
 
