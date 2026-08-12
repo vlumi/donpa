@@ -70,6 +70,17 @@ Remote sharing returns **bounded**, not as it was:
 - [ ] **Squads return** when remote sharing regrows rosters past what a
       flat rivals list handles comfortably — group data and sync stayed
       live underneath the hidden UI.
+- [ ] **Nearby failure reasons.** The exchange reports success on transport
+      and verifies the card only later in the receive sheet, so a rejected
+      card (peer on an older app that can't read the v3 envelope, or a bad
+      signature) and a transport failure (never connected, or Local Network
+      permission off) both surface as a generic "failed." Distinguish them:
+      an actionable message ("their app is older than yours" / "check Local
+      Network permission") beats a blank retry. A field pass with a friend
+      that always dropped mid-exchange — and had AirDrop trouble generally —
+      pointed at a device-level `awdl0`/Local-Network problem, not our code;
+      the app should say so. Ties into the discoverability finding (Nearby is
+      hard to find *and* hard to diagnose when it fails).
 
 ## Publishing & distribution
 
