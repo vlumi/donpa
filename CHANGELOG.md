@@ -29,6 +29,8 @@ heading.
 
 ### Unreleased (next build)
 
+### build 32 — 2026-08-12
+
 - **A hint when Nearby won't connect.** If a swap keeps failing after retries,
   the sheet now points at the usual causes — Local Network permission being
   off, or the two devices running different app versions — instead of just
