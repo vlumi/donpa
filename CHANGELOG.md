@@ -30,6 +30,8 @@ old share links carry forward.
 
 ### Unreleased (next build)
 
+### build 33 — 2026-08-12
+
 - **The in-game timer keeps counting past 99:59.** On a long board (an easy XXL
   or a giant Lunatic run) the live counter runs `m:ss` up to 99:59 and then
   rolls into `h:mm:ss` (1:40:00 and on), instead of holding once it filled up.
