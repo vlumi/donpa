@@ -14,6 +14,25 @@ CHANGELOG_FILE="CHANGELOG.md"
 say() { printf '\033[36m▶︎ %s\033[0m\n' "$*"; }
 die() { echo "error: $*" >&2; exit 1; }
 
+# Run a command, retrying on failure a few times with backoff — for GitHub API
+# calls in the release path, where a transient 502/timeout must NOT abort a
+# release mid-flight (polling a PR is inherently "try again"). Returns the
+# command's own exit code from the LAST attempt, so a caller that cares about a
+# specific code (e.g. `gh pr checks` exit 8 = pending) still sees it. Retries any
+# non-zero — safe here because the sites that use it re-derive the real truth
+# afterward (a persistent CI failure or unmerged PR still surfaces at its check).
+gh_retry() {
+    local tries=0 max=5 rc=0
+    while :; do
+        "$@" && return 0
+        rc=$?
+        tries=$(( tries + 1 ))
+        [ "$tries" -ge "$max" ] && return "$rc"
+        echo "  (GitHub call failed, rc=$rc — retry $tries/$((max - 1)) in $(( tries * 2 ))s)" >&2
+        sleep $(( tries * 2 ))
+    done
+}
+
 # Stamp the changelog's "Unreleased (next build)" section with a build number at
 # release time, so the human-written entries accumulated there during the cycle get
 # promoted to a `### build N` heading (and a fresh empty Unreleased takes its place).
