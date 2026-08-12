@@ -31,9 +31,9 @@ old share links carry forward.
 ### Unreleased (next build)
 
 - **The in-game timer keeps counting past 99:59.** On a long board (an easy XXL
-  or a giant Lunatic run) the live timer used to freeze at 99:59; it now rolls
-  into `h:mm:ss` and keeps ticking. Recorded times were always exact — this was
-  the on-screen counter only.
+  or a giant Lunatic run) the live counter now rolls into `h:mm:ss` and keeps
+  ticking rather than holding at its old 99:59 ceiling. Recorded times were
+  always exact — this is the on-screen counter going further.
 
 ### build 32 — 2026-08-12
 
