@@ -1529,6 +1529,40 @@
         }
       }
     },
+    "Copied" : {
+      "comment" : "Confirmation after tapping Copy diagnostics on the Nearby failure sheet.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopioitu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コピーしました"
+          }
+        }
+      }
+    },
+    "Copy diagnostics" : {
+      "comment" : "Button on the Nearby failure sheet; copies a short failure summary to paste into a bug report.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopioi vianmääritys"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "診断情報をコピー"
+          }
+        }
+      }
+    },
     "Couldn't load the saved game" : {
       "comment" : "Alert title: a saved board's file was unreadable when resuming",
       "localizations" : {

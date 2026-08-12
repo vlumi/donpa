@@ -175,4 +175,15 @@ final class NearbyFlowTests: XCTestCase {
     func testEqualTagsFallBackToAccepting() {
         XCTAssertTrue(Flow.acceptsCrossedInvite(myTag: "same", theirTag: "same"))
     }
+
+    // MARK: Diagnostics
+
+    /// The diagnostic tag feeds bug reports; "exchanging" is the tell for a
+    /// Local-Network-denied drop (connected, then the card couldn't cross), so
+    /// a silent rename would quietly degrade what a reporter can share.
+    func testPhaseDiagnosticNames() {
+        XCTAssertEqual(Flow.Phase.exchanging("aoi").diagnosticName, "exchanging")
+        XCTAssertEqual(Flow.Phase.connecting("aoi").diagnosticName, "connecting")
+        XCTAssertEqual(Flow.Phase.failed(nil).diagnosticName, "failed")
+    }
 }

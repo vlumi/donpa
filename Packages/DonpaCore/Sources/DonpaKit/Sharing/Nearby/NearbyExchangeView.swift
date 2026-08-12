@@ -4,6 +4,8 @@ import SwiftUI
 
 #if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
 #endif
 
 /// The Nearby sheet; the received card goes to the host's normal receive/confirm
@@ -18,6 +20,8 @@ struct NearbyExchangeView: View {
     /// Tracked by IDENTITY, not list position: peers appear and drop mid-browse,
     /// and an index could silently retarget Return's invite at someone else.
     @State private var focusedPeer: MCPeerID?
+    /// Flips true briefly after Copy diagnostics, to confirm the copy landed.
+    @State private var copiedDiagnostics = false
 
     init(
         displayName: String, payloadURL: URL, identityKey: Data?,
@@ -135,6 +139,31 @@ struct NearbyExchangeView: View {
                 .font(.footnote)
             }
             #endif
+            Button {
+                copyDiagnostics(exchange.diagnostics())
+            } label: {
+                copiedDiagnostics
+                    ? Text("Copied", bundle: .module)
+                    : Text("Copy diagnostics", bundle: .module)
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Puts the failure summary on the clipboard so an issue reporter can paste
+    /// it into GitHub; the "Copied" label reverts on its own.
+    private func copyDiagnostics(_ text: String) {
+        #if os(iOS)
+        UIPasteboard.general.string = text
+        #elseif os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #endif
+        copiedDiagnostics = true
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            copiedDiagnostics = false
         }
     }
 
