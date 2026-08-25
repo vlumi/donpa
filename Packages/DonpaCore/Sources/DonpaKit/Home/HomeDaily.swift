@@ -82,7 +82,7 @@ extension HomeScreen {
                 PaceText(pace: best.pace)
             }
         } else if let progress = dailyDay?.bestProgress {
-            Text(verbatim: StatBlock.percent(progress))
+            Text(verbatim: StatBlock.percentFloor(progress))
                 .font(.subheadline.monospaced())
                 .foregroundStyle(.secondary)
         } else {

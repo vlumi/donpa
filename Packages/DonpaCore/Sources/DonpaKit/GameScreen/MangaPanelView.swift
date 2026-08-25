@@ -97,11 +97,11 @@ struct MangaPanelView: View {
             "\(Int((fraction * 100).rounded(.down)))%"
         }
 
-        /// Short loss headline: the cleared percent, except when it would round to
-        /// 100% on a non-clear — then "N left" (rounded, so a 99.6% near-clear still
-        /// reads "N left" as the "so close" cue, not a flat "99%").
+        /// Short loss headline: the cleared percent (FLOORED — a non-clear never
+        /// reads "100%"), except within a hair of a clear, where "N left" is the
+        /// sharper "so close" cue than a flat "99%".
         static func lossHeadline(_ fraction: Double, safeRemaining: Int) -> String {
-            if Int((fraction * 100).rounded()) >= 100 && safeRemaining > 0 {
+            if soClose(fraction, safeRemaining) {
                 return String(localized: "\(safeRemaining) left", bundle: .module)
             }
             return percent(fraction)
@@ -113,12 +113,19 @@ struct MangaPanelView: View {
         static func clearedDisplay(
             _ fraction: Double, safeRemaining: Int, hexCells: Bool = false
         ) -> String {
-            if Int((fraction * 100).rounded()) >= 100 && safeRemaining > 0 {
+            if soClose(fraction, safeRemaining) {
                 return hexCells
                     ? String(localized: "So close — \(safeRemaining) cells left", bundle: .module)
                     : String(localized: "So close — \(safeRemaining) tiles left", bundle: .module)
             }
             return String(localized: "Cleared \(percent(fraction))", bundle: .module)
+        }
+
+        /// Within a hair of a full clear (≥99.5%) but not actually cleared — the
+        /// "N left" cue fires here. Purely the "so close" flourish now; showing
+        /// "100%" on a non-clear is already impossible since the percent floors.
+        private static func soClose(_ fraction: Double, _ safeRemaining: Int) -> Bool {
+            safeRemaining > 0 && (fraction * 100).rounded() >= 100
         }
 
         /// A time improvement as "−m:ss.t" (or "−s.t" under a minute) — how much was

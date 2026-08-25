@@ -268,6 +268,14 @@ struct StatBlock: View {
         fraction.formatted(.percent.precision(.fractionLength(0)))
     }
 
+    /// Cleared-progress percentage, FLOORED not rounded: a 99.7%-cleared loss must
+    /// read "99%", never "100%" (a non-clear can't show a full clear). Rounds down
+    /// to whole percent before the locale format. Use for cleared/progress figures;
+    /// `percent` (rounding) stays right for odds and densities.
+    static func percentFloor(_ fraction: Double) -> String {
+        ((fraction * 100).rounded(.down) / 100).formatted(.percent.precision(.fractionLength(0)))
+    }
+
     /// A pace as "0.62/s" (locale decimal separator; the unit stays verbatim).
     private func statRow(_ label: LocalizedStringKey, _ value: String) -> some View {
         HStack {

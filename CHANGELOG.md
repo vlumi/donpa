@@ -30,6 +30,11 @@ old share links carry forward.
 
 ### Unreleased (next build)
 
+- **Cleared-percentage readouts never round up to 100%.** The Continue list on
+  Home and the daily-challenge figures now floor the cleared percentage like the
+  scoreboard and in-game readout already did — a 99.7%-cleared board that isn't a
+  full clear reads "99%", not "100%".
+
 ### build 33 — 2026-08-12
 
 - **The in-game timer keeps counting past 99:59.** On a long board (an easy XXL

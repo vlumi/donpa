@@ -126,7 +126,7 @@ struct DailyCalendarView: View {
                         .font(.system(size: 9).monospacedDigit())
                         .foregroundStyle(Color.accentColor)
                 } else if let progress = day?.bestProgress {
-                    Text(verbatim: StatBlock.percent(progress))
+                    Text(verbatim: StatBlock.percentFloor(progress))
                         .font(.system(size: 9).monospacedDigit())
                         .foregroundStyle(.secondary)
                 } else {
@@ -160,7 +160,7 @@ struct DailyCalendarView: View {
             return key + ", " + TimeFormat.mmsst(centiseconds: best.centiseconds)
         }
         if let progress = day.bestProgress {
-            return key + ", " + StatBlock.percent(progress)
+            return key + ", " + StatBlock.percentFloor(progress)
         }
         return key
     }
@@ -207,7 +207,7 @@ struct DailyCalendarView: View {
             }
         } else if let day {
             HStack(spacing: 8) {
-                Text(verbatim: StatBlock.percent(day.bestProgress ?? 0))
+                Text(verbatim: StatBlock.percentFloor(day.bestProgress ?? 0))
                     .font(.body.monospaced())
                 Text("\(day.attempts.total) attempts", bundle: .module)
                     .font(.caption).foregroundStyle(.secondary)
