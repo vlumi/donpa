@@ -130,7 +130,9 @@ public struct SaveStore {
 
         public var progressPercent: Int {
             let safe = max(1, config.width * config.height - config.mineCount)
-            return Int((Double(revealedSafeCount) / Double(safe) * 100).rounded())
+            // Floor, like every cleared-% readout: a not-yet-cleared board must
+            // never show "100%".
+            return Int((Double(revealedSafeCount) / Double(safe) * 100).rounded(.down))
         }
     }
 
