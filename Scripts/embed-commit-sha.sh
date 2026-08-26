@@ -7,10 +7,10 @@
 # Xcode Organizer "Archive" (Apple sets INFOPLIST_PATH / TARGET_BUILD_DIR for us).
 #
 # It only writes the built product's plist (the bundled copy), never the source
-# Info.plist — that one is XcodeGen-owned. A non-git checkout (e.g. a source
-# tarball) writes "unknown" rather than failing the build, and a dirty tree gets
-# a "-dirty" suffix so a build off uncommitted changes is never mistaken for a
-# clean commit.
+# Info.plist — that one is XcodeGen-owned. A checkout with no resolvable HEAD (a
+# source tarball, or a fresh `git init` with no commits yet) writes "unknown"
+# rather than failing the build, and a dirty tree gets a "-dirty" suffix so a
+# build off uncommitted changes is never mistaken for a clean commit.
 
 set -eu
 
@@ -20,7 +20,11 @@ if [ -z "${TARGET_BUILD_DIR:-}" ] || [ -z "${INFOPLIST_PATH:-}" ] || [ ! -f "$PL
     exit 0
 fi
 
-if git -C "${SRCROOT:-.}" rev-parse --git-dir >/dev/null 2>&1; then
+# A repo with no commits yet (fresh `git init`) has a git dir but no HEAD to
+# resolve — check HEAD, not just the git dir, or `rev-parse HEAD` fails the build
+# under `set -e`. Both that and a non-git checkout (a source tarball) get
+# "unknown".
+if git -C "${SRCROOT:-.}" rev-parse --verify --quiet HEAD >/dev/null 2>&1; then
     SHA=$(git -C "${SRCROOT:-.}" rev-parse --short HEAD)
     if ! git -C "${SRCROOT:-.}" diff --quiet HEAD 2>/dev/null; then
         SHA="${SHA}-dirty"
