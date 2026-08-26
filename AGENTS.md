@@ -140,6 +140,11 @@ on whitespace/punctuation**; where SwiftLint conflicts (trailing commas, brace
 placement) those SwiftLint rules are disabled rather than fought. Run the
 formatter before committing.
 
+**Run SwiftLint from the repo root.** Its `excluded:` paths (`.build`,
+`Packages/DonpaCore/.build`) resolve relative to the invocation directory, not
+the config file — run it elsewhere and it lints the build dirs, drowning you in
+noise from generated sources.
+
 **SwiftLint is pinned to a specific version** (`SWIFTLINT_VERSION` in
 `.github/workflows/ci.yml`, currently **0.65.0**) so CI and local runs agree — an
 unpinned `brew install` follows the rolling latest, so a new release can turn CI
