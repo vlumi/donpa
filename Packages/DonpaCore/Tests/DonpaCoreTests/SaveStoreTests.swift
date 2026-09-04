@@ -298,4 +298,64 @@ final class SaveStoreTests: XCTestCase {
         // the factory + dir resolution run without crashing.
         _ = SaveStore.appSupport().all()
     }
+
+    /// Same read-only smoke as `appSupport`, for the daily store's factory
+    /// (resolves the real App Support dir under `daily-saves/`).
+    func testDailyAppSupportFactoryResolves() {
+        _ = SaveStore.dailyAppSupport().all()
+    }
+
+    // MARK: Daily saves (keyed by dateKey, isolated from casual saves)
+
+    /// A daily store keys on `dateKey`, and — crucially — a daily save and a
+    /// casual save of the SAME pool config coexist without overwriting each
+    /// other. This is the collision the whole daily-save feature guards against.
+    private func dailySnapshot(
+        _ config: GameConfig = .basic(.beginner), dateKey: String, elapsed: Int = 700
+    ) -> GameSnapshot {
+        var game = Game(config: config)
+        game.reveal(Coord(0, 0))
+        return GameSnapshot(
+            game: game, config: config, elapsedCentiseconds: elapsed, dateKey: dateKey)!
+    }
+
+    func testDailySaveRoundTripsByDateKey() {
+        let daily = SaveStore(directory: dir, subdirectory: "daily-saves")
+        let key = "2026-09-04"
+        XCTAssertFalse(daily.hasSave(dateKey: key))
+        daily.save(dailySnapshot(dateKey: key, elapsed: 700))
+        XCTAssertTrue(daily.hasSave(dateKey: key))
+        let loaded = daily.load(dateKey: key)
+        XCTAssertEqual(loaded?.elapsedCentiseconds, 700)
+        XCTAssertEqual(loaded?.dateKey, key)
+    }
+
+    func testDailyAndCasualSaveOfSameConfigDoNotCollide() {
+        let config = GameConfig.basic(.beginner)
+        let casual = store  // the `saves/` store from setUp
+        let daily = SaveStore(directory: dir, subdirectory: "daily-saves")
+        let key = "2026-09-04"
+
+        casual!.save(sampleSnapshot(config, elapsed: 111))
+        daily.save(dailySnapshot(config, dateKey: key, elapsed: 222))
+
+        // Each store sees only its own save; neither clobbered the other.
+        XCTAssertEqual(casual!.load(config: config)?.elapsedCentiseconds, 111)
+        XCTAssertNil(casual!.load(config: config)?.dateKey)
+        XCTAssertEqual(daily.load(dateKey: key)?.elapsedCentiseconds, 222)
+        XCTAssertEqual(daily.load(dateKey: key)?.dateKey, key)
+
+        // Clearing the daily leaves the casual save intact.
+        daily.clear(dateKey: key)
+        XCTAssertFalse(daily.hasSave(dateKey: key))
+        XCTAssertEqual(casual!.load(config: config)?.elapsedCentiseconds, 111)
+    }
+
+    func testDailySummaryCarriesDateKey() {
+        let daily = SaveStore(directory: dir, subdirectory: "daily-saves")
+        daily.save(dailySnapshot(dateKey: "2026-09-04"))
+        daily.save(dailySnapshot(dateKey: "2026-09-05"))
+        let dates = Set(daily.summaries().compactMap(\.dateKey))
+        XCTAssertEqual(dates, ["2026-09-04", "2026-09-05"])
+    }
 }

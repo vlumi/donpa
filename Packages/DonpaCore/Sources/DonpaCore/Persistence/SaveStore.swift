@@ -7,9 +7,13 @@ public struct SaveStore {
     private let directory: URL
     private let fileManager: FileManager
 
-    public init(directory: URL, fileManager: FileManager = .default) {
+    /// `subdirectory` isolates a store's files: casual saves live in `saves/`,
+    /// the daily store in `daily-saves/`, so the two never mix on disk.
+    public init(
+        directory: URL, subdirectory: String = "saves", fileManager: FileManager = .default
+    ) {
         self.fileManager = fileManager
-        self.directory = directory.appendingPathComponent("saves", isDirectory: true)
+        self.directory = directory.appendingPathComponent(subdirectory, isDirectory: true)
         try? fileManager.createDirectory(at: self.directory, withIntermediateDirectories: true)
         // Drop the obsolete pre-per-config single-slot save (no migration by design).
         try? fileManager.removeItem(at: directory.appendingPathComponent("currentGame.json"))
@@ -26,6 +30,15 @@ public struct SaveStore {
 
     public static func appSupport(fileManager: FileManager = .default) -> SaveStore {
         SaveStore(directory: appSupportDirectory, fileManager: fileManager)
+    }
+
+    /// The daily-challenge save store: same location, its own `daily-saves/`
+    /// subdirectory keyed by `dateKey`, isolated from casual saves so a daily and
+    /// a casual game of the same pool config never collide.
+    public static func dailyAppSupport(fileManager: FileManager = .default) -> SaveStore {
+        SaveStore(
+            directory: appSupportDirectory, subdirectory: "daily-saves",
+            fileManager: fileManager)
     }
 
     /// A fresh store in a unique temp directory — UI-test isolation (`-uitest-clean`).
@@ -50,10 +63,13 @@ public struct SaveStore {
         ProcessInfo.processInfo.arguments.contains("-uitest-clean")
     }
 
-    /// `storageKey` is already stable and versioned; non-alphanumerics map to `_`
-    /// for a filename-safe name.
-    private func url(for config: GameConfig) -> URL {
-        let safe = String(config.storageKey.map { $0.isLetter || $0.isNumber ? $0 : "_" })
+    /// The filename slot for a save. A casual game keys on `config.storageKey`
+    /// (stable + versioned); a daily keys on its `dateKey` instead, so a daily
+    /// and a casual game of the same pool config never share a file. The daily
+    /// store lives in its own directory (see `dailyAppSupport`), so the two never
+    /// mix even before the key differs.
+    private func url(forKey key: String) -> URL {
+        let safe = String(key.map { $0.isLetter || $0.isNumber ? $0 : "_" })
         return directory.appendingPathComponent("save-\(safe).json")
     }
 
@@ -66,19 +82,13 @@ public struct SaveStore {
         return mainURL.deletingLastPathComponent().appendingPathComponent(name)
     }
 
-    private func summaryURL(for config: GameConfig) -> URL {
-        summaryURL(forMainFile: url(for: config))
-    }
-
     public func save(_ snapshot: GameSnapshot) {
         guard let data = try? JSONEncoder().encode(snapshot),
             let packed = pack(data)
         else { return }
-        try? packed.write(to: url(for: snapshot.config), options: [.atomic])
-        writeSummary(
-            SaveSummary(
-                config: snapshot.config, elapsedCentiseconds: snapshot.elapsedCentiseconds,
-                revealedSafeCount: snapshot.revealedSafeCount, updatedAt: snapshot.updatedAt))
+        let mainURL = url(forKey: snapshot.saveKey)
+        try? packed.write(to: mainURL, options: [.atomic])
+        writeSummary(SaveSummary(snapshot: snapshot), to: summaryURL(forMainFile: mainURL))
     }
 
     // MARK: Compression
@@ -102,14 +112,19 @@ public struct SaveStore {
         return try? (payload as NSData).decompressed(using: .zlib) as Data
     }
 
-    private func writeSummary(_ summary: SaveSummary) {
+    private func writeSummary(_ summary: SaveSummary, to url: URL) {
         guard let data = try? JSONEncoder().encode(summary) else { return }
-        try? data.write(to: summaryURL(for: summary.config), options: [.atomic])
+        try? data.write(to: url, options: [.atomic])
     }
 
     /// nil if none / unreadable / unsupported version / geometry-stale.
-    public func load(config: GameConfig) -> GameSnapshot? {
-        decode(try? Data(contentsOf: url(for: config)))
+    public func load(config: GameConfig) -> GameSnapshot? { load(key: config.storageKey) }
+
+    /// The daily-store variant: a saved daily attempt for `dateKey`.
+    public func load(dateKey: String) -> GameSnapshot? { load(key: dateKey) }
+
+    private func load(key: String) -> GameSnapshot? {
+        decode(try? Data(contentsOf: url(forKey: key)))
     }
 
     /// Every live saved game, newest-played first.
@@ -127,6 +142,36 @@ public struct SaveStore {
         public let elapsedCentiseconds: Int
         public let revealedSafeCount: Int
         public let updatedAt: Date
+        /// The daily date this save is for (nil = casual). Additive; an old
+        /// sidecar without it decodes as nil.
+        public let dateKey: String?
+
+        public init(
+            config: GameConfig, elapsedCentiseconds: Int, revealedSafeCount: Int,
+            updatedAt: Date, dateKey: String? = nil
+        ) {
+            self.config = config
+            self.elapsedCentiseconds = elapsedCentiseconds
+            self.revealedSafeCount = revealedSafeCount
+            self.updatedAt = updatedAt
+            self.dateKey = dateKey
+        }
+
+        init(snapshot: GameSnapshot) {
+            self.init(
+                config: snapshot.config, elapsedCentiseconds: snapshot.elapsedCentiseconds,
+                revealedSafeCount: snapshot.revealedSafeCount, updatedAt: snapshot.updatedAt,
+                dateKey: snapshot.dateKey)
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            config = try c.decode(GameConfig.self, forKey: .config)
+            elapsedCentiseconds = try c.decode(Int.self, forKey: .elapsedCentiseconds)
+            revealedSafeCount = try c.decode(Int.self, forKey: .revealedSafeCount)
+            updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+            dateKey = try c.decodeIfPresent(String.self, forKey: .dateKey)
+        }
 
         public var progressPercent: Int {
             let safe = max(1, config.width * config.height - config.mineCount)
@@ -168,20 +213,25 @@ public struct SaveStore {
             return summary
         }
         guard let snapshot = decode(raw) else { return nil }
-        let summary = SaveSummary(
-            config: snapshot.config, elapsedCentiseconds: snapshot.elapsedCentiseconds,
-            revealedSafeCount: snapshot.revealedSafeCount, updatedAt: snapshot.updatedAt)
-        writeSummary(summary)
+        let summary = SaveSummary(snapshot: snapshot)
+        writeSummary(summary, to: summaryURL(forMainFile: mainURL))
         return summary
     }
 
-    public func hasSave(config: GameConfig) -> Bool {
-        fileManager.fileExists(atPath: url(for: config).path)
+    public func hasSave(config: GameConfig) -> Bool { hasSave(key: config.storageKey) }
+    public func hasSave(dateKey: String) -> Bool { hasSave(key: dateKey) }
+
+    private func hasSave(key: String) -> Bool {
+        fileManager.fileExists(atPath: url(forKey: key).path)
     }
 
-    public func clear(config: GameConfig) {
-        try? fileManager.removeItem(at: url(for: config))
-        try? fileManager.removeItem(at: summaryURL(for: config))
+    public func clear(config: GameConfig) { clear(key: config.storageKey) }
+    public func clear(dateKey: String) { clear(key: dateKey) }
+
+    private func clear(key: String) {
+        let mainURL = url(forKey: key)
+        try? fileManager.removeItem(at: mainURL)
+        try? fileManager.removeItem(at: summaryURL(forMainFile: mainURL))
     }
 
     // MARK: Internals

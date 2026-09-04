@@ -75,7 +75,15 @@ extension HomeScreen {
     }
 
     @ViewBuilder private var dailyStanding: some View {
-        if let best = dailyDay?.best {
+        if dailyInProgress {
+            Label {
+                Text("In progress", bundle: .module)
+            } icon: {
+                Image(systemName: "pause.circle")
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.accentColor)
+        } else if let best = dailyDay?.best {
             HStack(spacing: 6) {
                 Text(TimeFormat.mmsst(centiseconds: best.centiseconds))
                     .font(.subheadline.monospaced().bold())

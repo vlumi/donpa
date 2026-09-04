@@ -27,6 +27,8 @@ struct HomeScreen: View {
     var dailyBoard: DailyChallenge.Board?
     /// Your standing on today's board (nil = not attempted).
     var dailyDay: DailyDayRecord?
+    /// An unfinished attempt on today's board is saved — the card shows it.
+    var dailyInProgress: Bool = false
     var dailyStreak: (current: Int, longest: Int) = (0, 0)
     var onDaily: () -> Void = {}
     var onDailyCalendar: () -> Void = {}

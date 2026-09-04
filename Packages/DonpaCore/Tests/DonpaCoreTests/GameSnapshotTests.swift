@@ -45,6 +45,26 @@ final class GameSnapshotTests: XCTestCase {
         }
     }
 
+    func testDateKeyRoundTrips() throws {
+        let (game, config) = playingGame()
+        let daily = try XCTUnwrap(
+            GameSnapshot(
+                game: game, config: config, elapsedCentiseconds: 1, dateKey: "2026-09-04"))
+        let casual = try XCTUnwrap(
+            GameSnapshot(game: game, config: config, elapsedCentiseconds: 1))
+        XCTAssertNil(casual.dateKey)
+
+        let decodedDaily = try JSONDecoder().decode(
+            GameSnapshot.self, from: JSONEncoder().encode(daily))
+        let decodedCasual = try JSONDecoder().decode(
+            GameSnapshot.self, from: JSONEncoder().encode(casual))
+        XCTAssertEqual(decodedDaily.dateKey, "2026-09-04")
+        XCTAssertNil(decodedCasual.dateKey)
+        // saveKey routes the filename: a daily by its date, a casual by config.
+        XCTAssertEqual(decodedDaily.saveKey, "2026-09-04")
+        XCTAssertEqual(decodedCasual.saveKey, config.storageKey)
+    }
+
     // MARK: Cross-version consistency — the config is stored symbolically, so a
     // size/density retune between builds changes what it MEANS out from under a
     // save. Such saves must be detected (and discarded by loaders), not restored

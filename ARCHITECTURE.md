@@ -193,7 +193,13 @@ especially (losing a mid-game is a shrug; losing your records is not).
   the directory listing is the index (enumerate to list, `unlink` to discard,
   nothing to drift). Finished (won/lost) games are cleared, and the tolerant
   decode also *rejects* a non-playing snapshot, so a stale save can never
-  resurface as a "Continue".
+  resurface as a "Continue". **Daily attempts save separately:** a second
+  `SaveStore` under `daily-saves/` keys files by `dateKey` (not config), so an
+  in-progress daily and a casual game of the same pool config never collide;
+  the snapshot's additive `dateKey` field routes the write and, on resume,
+  re-enters daily mode (the whole `DailyChallenge.Board` is a pure function of
+  the key). The Home Continue list reads only the config store, so dailies stay
+  out of it.
 - **Compact + tagged + compressed.** `GameSnapshot` stores the **`GameConfig`**
   (which *carries* the topology kind + params — the `any Topology` existential
   is never encoded) plus the first-click-safe mine layout and the

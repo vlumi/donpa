@@ -17,11 +17,11 @@ final class SceneHolder: ObservableObject {
 }
 
 public struct GameView: View {
-    @StateObject private var viewModel: GameViewModel
+    @StateObject var viewModel: GameViewModel
     @StateObject private var scoreboard: Scoreboard
     @StateObject private var achievements: AchievementStore
     @StateObject private var settings: Settings
-    @ObservedObject private var navigator: Navigator
+    @ObservedObject var navigator: Navigator
     @StateObject private var friends: FriendsStore
     @StateObject private var dailyStore: DailyStore
     @StateObject private var sceneHolder: SceneHolder
@@ -36,10 +36,19 @@ public struct GameView: View {
         ? SaveStore.demoFixed()
         : SaveStore.isUITestCleanLaunch ? SaveStore.ephemeral() : SaveStore.appSupport()
     private var resumeStore: SaveStore { saveStore }
+    /// In-progress daily attempts, keyed by dateKey in their own directory (see
+    /// SaveStore.dailyAppSupport). Demo/uitest stay off the real store.
+    @State var dailySaveStore: SaveStore =
+        (DemoSeed.isRequested || SaveStore.isUITestCleanLaunch)
+        ? SaveStore.ephemeral() : SaveStore.dailyAppSupport()
     /// Cached, refreshed only when a surface that shows them (re)opens — NOT
     /// per body eval: `summaries()` parses every save file, and an XXXL save
     /// is megabytes of JSON.
     @State private var saveSummaries: [SaveStore.SaveSummary] = []
+    /// Dates with an unfinished daily save — feeds the in-progress markers on
+    /// the Home card and the calendar. Refreshed on `savesChanged`; daily saves
+    /// are tiny, so this parse is cheap.
+    @State var dailySaveDates: Set<String> = []
     /// Drives the broken-save alert (OK starts fresh on the same board).
     @State private var failedResumeConfig: GameConfig?
     /// Mirrors the OS launch image so the hand-off into the title is seamless.
@@ -115,7 +124,8 @@ public struct GameView: View {
                 viewModel: viewModel, scoreboard: scoreboard, settings: settings,
                 navigator: navigator, friends: friends, achievements: achievements,
                 gameCenter: gameCenter, dailyStore: dailyStore,
-                scene: scene, winsBaseline: winsBaseline, saveStore: saveStore)
+                scene: scene, winsBaseline: winsBaseline, saveStore: saveStore,
+                dailySaveStore: dailySaveStore)
             // Fade scoped HERE — an imperative `withAnimation` would also
             // animate the chrome's first layout.
             HomeScreen(
@@ -125,6 +135,7 @@ public struct GameView: View {
                 onNewGame: { navigator.showingNewGame = true },
                 dailyBoard: todaysBoard,
                 dailyDay: todaysBoard.flatMap { dailyStore.displayRecords[$0.dateKey] },
+                dailyInProgress: todaysBoard.map { dailySaveDates.contains($0.dateKey) } ?? false,
                 dailyStreak: (dailyStore.currentStreak(), dailyStore.longestStreak),
                 onDaily: { startDaily() },
                 onDailyCalendar: { navigator.showingDailyCalendar = true },
@@ -221,10 +232,12 @@ public struct GameView: View {
             if navigator.showingTitle || navigator.showingNewGame {
                 saveSummaries = resumeStore.summaries()
             }
+            refreshDailySaveDates()
         }
         // UI-test hooks: jump straight to a modal.
         .onAppear {
             saveSummaries = resumeStore.summaries()
+            refreshDailySaveDates()
             refreshDeviceRegistry()
             LaunchActionRouter.shared.register { handleLaunchAction($0) }
             if DemoSeed.isRequested, !didSeedDemo {
@@ -269,19 +282,6 @@ public struct GameView: View {
     private func refreshDeviceRegistry() {
         DeviceRegistry(cloud: UbiquitousDeviceRegistry(), deviceID: DeviceID.current())
             .refreshOwnEntry(syncEnabled: settings.syncScores, describe: DeviceFacts.current)
-    }
-
-    private var todaysBoard: DailyChallenge.Board? {
-        DailyChallenge.board(for: DailyChallenge.dateKey())
-    }
-
-    /// Start (or re-enter) today's board; the review overlay arms via the
-    /// gameID change in GameContent.
-    private func startDaily() {
-        guard let board = todaysBoard else { return }
-        navigator.activeDaily = board
-        viewModel.newGame(config: board.config, seed: board.seed)
-        navigator.showingTitle = false
     }
 
     private func startSelectedGame() {

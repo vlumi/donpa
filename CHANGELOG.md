@@ -30,6 +30,13 @@ old share links carry forward.
 
 ### Unreleased (next build)
 
+- **The daily challenge saves your progress.** Leave a daily mid-game — go to
+  the title, switch apps, whatever — and it's waiting where you left off when
+  you open it again; opening the daily always continues an unfinished attempt.
+  The Home card and the calendar mark days you have a game in progress, and the
+  calendar's button reads Continue for them. (Streaks are unchanged: a daily
+  still counts as played-live only when you finish it on its own day.)
+
 - **Cleared-percentage readouts never round up to 100%.** The Continue list on
   Home and the daily-challenge figures now floor the cleared percentage like the
   scoreboard and in-game readout already did — a 99.7%-cleared board that isn't a
