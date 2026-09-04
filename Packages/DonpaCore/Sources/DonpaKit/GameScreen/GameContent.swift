@@ -133,8 +133,11 @@ struct GameContent: View {
         .onChangeCompat(of: viewModel.lastForcedGuess) { handleGuessEvent($0) }
         .onChangeCompat(of: viewModel.gameID) { _ in
             dismissPanel()
-            // Every daily attempt (first or retry) opens in review.
-            navigator.dailyReviewActive = navigator.activeDaily != nil
+            // A FRESH daily attempt (first or retry) opens in review — the
+            // untimed pre-reveal study. A RESUMED daily is already under way
+            // (clock ticking, cells revealed), so it skips straight back in.
+            navigator.dailyReviewActive =
+                navigator.activeDaily != nil && viewModel.elapsedCentiseconds == 0
         }
         .onChangeCompat(of: viewModel.revision) { _ in autosaveSoon() }
         // Save INLINE when leaving the foreground — the process may suspend
