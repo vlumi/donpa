@@ -22,11 +22,11 @@ rename that heading to the chosen version by hand (or fold its entries back
 into the previous version's section); the script only ever stamps the build
 heading.
 
-## [1.0.2] — Nearby troubleshooting
+## [1.0.3]
 
-**Small improvements — a better hand when Nearby won't connect, and a couple of
-readouts that go further.** Compatible with 1.0.0 and 1.0.1: scores, sync, and
-old share links carry forward.
+**The daily challenge remembers where you left off, plus a few readout
+touch-ups.** Compatible with 1.0.x: scores, sync, and old share links carry
+forward.
 
 ### Unreleased (next build)
 
@@ -36,11 +36,16 @@ old share links carry forward.
   The Home card and the calendar mark days you have a game in progress, and the
   calendar's button reads Continue for them. (Streaks are unchanged: a daily
   still counts as played-live only when you finish it on its own day.)
-
 - **Cleared-percentage readouts never round up to 100%.** The Continue list on
   Home and the daily-challenge figures now floor the cleared percentage like the
   scoreboard and in-game readout already did — a 99.7%-cleared board that isn't a
   full clear reads "99%", not "100%".
+
+## [1.0.2] — Nearby troubleshooting
+
+**Small improvements — a better hand when Nearby won't connect, and a couple of
+readouts that go further.** Compatible with 1.0.0 and 1.0.1: scores, sync, and
+old share links carry forward.
 
 ### build 33 — 2026-08-12
 
