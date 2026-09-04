@@ -30,6 +30,8 @@ forward.
 
 ### Unreleased (next build)
 
+### build 34 — 2026-09-04
+
 - **The daily challenge saves your progress.** Leave a daily mid-game — go to
   the title, switch apps, whatever — and it's waiting where you left off when
   you open it again; opening the daily always continues an unfinished attempt.
