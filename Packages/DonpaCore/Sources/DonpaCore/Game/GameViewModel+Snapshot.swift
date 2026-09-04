@@ -11,7 +11,7 @@ extension GameViewModel {
     public func snapshot() -> GameSnapshot? {
         GameSnapshot(
             game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
-            camera: cameraView, inputMode: inputMode)
+            camera: cameraView, inputMode: inputMode, dateKey: dateKey)
     }
 
     /// The `Sendable` inputs a snapshot needs, captured cheaply on the main
@@ -22,13 +22,14 @@ extension GameViewModel {
         public let elapsedCentiseconds: Int
         public let camera: CameraView?
         public let inputMode: InputMode
+        public let dateKey: String?
     }
 
     public func snapshotInputs() -> SnapshotInputs? {
         guard game.status == .playing else { return nil }
         return SnapshotInputs(
             game: game, config: config, elapsedCentiseconds: currentCentiseconds(),
-            camera: cameraView, inputMode: inputMode)
+            camera: cameraView, inputMode: inputMode, dateKey: dateKey)
     }
 
     /// The launch-time board swap: a fresh board like `newGame`, but flagged as

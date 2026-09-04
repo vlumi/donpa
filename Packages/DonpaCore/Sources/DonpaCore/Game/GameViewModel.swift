@@ -145,6 +145,12 @@ public final class GameViewModel: ObservableObject {
     /// untouched `.notStarted` board as "no game → discard the save". See `prime`.
     public internal(set) var isPrimedBoard = true
 
+    /// The daily-challenge date this game belongs to (nil = casual). Set by the
+    /// daily-start path, restored from a resumed daily save, and cleared by any
+    /// casual `newGame`; it rides into the snapshot so a resume re-enters daily
+    /// mode. See [[GameSnapshot.dateKey]].
+    public internal(set) var dateKey: String?
+
     /// The keyboard/VoiceOver cursor's focused cell (logical board coord),
     /// mirrored here by `BoardScene` (like `boardExceedsViewport`) so the chrome
     /// can describe it. nil until a game's first arrow key.
@@ -321,11 +327,12 @@ public final class GameViewModel: ObservableObject {
         }
     }
 
-    public func newGame(config: GameConfig? = nil, seed: UInt64? = nil) {
+    public func newGame(config: GameConfig? = nil, seed: UInt64? = nil, dateKey: String? = nil) {
         // Flush the outgoing game's activity before discarding it, so abandoning a
         // dug-into game still counts. (A finished game already flushed at end.)
         if game.status == .playing { flushActivity() }
         if let config { self.config = config }
+        self.dateKey = dateKey  // nil for casual; the daily-start path passes its day
         game = Game(config: self.config)
         clock.elapsedCentiseconds = 0
         lastWin = nil
@@ -373,6 +380,7 @@ public final class GameViewModel: ObservableObject {
     /// Restore a persisted game and resume its clock from the saved elapsed.
     public func restore(from snapshot: GameSnapshot) {
         config = snapshot.config
+        dateKey = snapshot.dateKey  // a daily save resumes back into daily mode
         game = snapshot.makeGame()
         lastWin = nil
         lastResult = nil

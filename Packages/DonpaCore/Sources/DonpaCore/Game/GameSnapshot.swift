@@ -38,6 +38,15 @@ public struct GameSnapshot: Codable, Sendable {
     public let inputMode: InputMode
     /// The last-played stamp: sorts the in-progress list, picks auto-resume.
     public let updatedAt: Date
+    /// The daily-challenge date this save belongs to (nil = a casual game). Lets
+    /// a resumed daily re-enter daily mode — the whole `DailyChallenge.Board` is
+    /// a pure function of this key.
+    public let dateKey: String?
+
+    /// The filename slot: a daily keys on its date, a casual game on its config.
+    /// The daily store keys purely by `dateKey`, so a nil here in the daily store
+    /// never happens; the casual store ignores `dateKey`.
+    public var saveKey: String { dateKey ?? config.storageKey }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -55,12 +64,13 @@ public struct GameSnapshot: Codable, Sendable {
         camera = try c.decodeIfPresent(CameraView.self, forKey: .camera)
         inputMode = try c.decodeIfPresent(InputMode.self, forKey: .inputMode) ?? .reveal
         updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .distantPast
+        dateKey = try c.decodeIfPresent(String.self, forKey: .dateKey)
     }
 
     /// nil unless the game is genuinely in progress.
     public init?(
         game: Game, config: GameConfig, elapsedCentiseconds: Int, camera: CameraView? = nil,
-        inputMode: InputMode = .reveal, updatedAt: Date = Date()
+        inputMode: InputMode = .reveal, updatedAt: Date = Date(), dateKey: String? = nil
     ) {
         guard game.status == .playing else { return nil }
         self.version = Self.currentVersion
@@ -76,6 +86,7 @@ public struct GameSnapshot: Codable, Sendable {
         self.camera = camera
         self.inputMode = inputMode
         self.updatedAt = updatedAt
+        self.dateKey = dateKey
     }
 
     /// Builds from captured inputs so the heavy board scan can run off the
@@ -84,7 +95,7 @@ public struct GameSnapshot: Codable, Sendable {
         self.init(
             game: inputs.game, config: inputs.config,
             elapsedCentiseconds: inputs.elapsedCentiseconds, camera: inputs.camera,
-            inputMode: inputs.inputMode)
+            inputMode: inputs.inputMode, dateKey: inputs.dateKey)
     }
 
     public func makeGame() -> Game {

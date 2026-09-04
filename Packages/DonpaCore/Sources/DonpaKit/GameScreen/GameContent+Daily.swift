@@ -115,4 +115,41 @@ extension GameContent {
             return .loss(progress: progress, safeRemaining: safeRemaining, best: best)
         }
     }
+
+    /// Clear the active game's save, routing a daily to its own store by
+    /// dateKey. The async form (background writer) and the inline form (app-exit,
+    /// must finish before the process dies) share this routing.
+    func clearActiveSaveAsync() {
+        let config = viewModel.config
+        let dateKey = viewModel.dateKey
+        Task {
+            if let dateKey {
+                await saveWriter.clear(dateKey: dateKey)
+            } else {
+                await saveWriter.clear(config: config)
+            }
+            navigator.savesChanged &+= 1
+        }
+    }
+
+    func clearActiveSaveInline() {
+        if let dateKey = viewModel.dateKey {
+            dailySaveStore.clear(dateKey: dateKey)
+        } else {
+            saveStore.clear(config: viewModel.config)
+        }
+    }
+
+    /// Enter an attempt on any day's board (calendar Play/Continue). An
+    /// unfinished save for that day resumes into it (a save is sacred); else a
+    /// fresh attempt.
+    func startDailyBoard(_ board: DailyChallenge.Board) {
+        navigator.activeDaily = board
+        navigator.showingTitle = false
+        if let snapshot = dailySaveStore.load(dateKey: board.dateKey) {
+            viewModel.restore(from: snapshot)
+        } else {
+            viewModel.newGame(config: board.config, seed: board.seed, dateKey: board.dateKey)
+        }
+    }
 }

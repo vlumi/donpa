@@ -58,8 +58,12 @@ struct GameContent: View {
     @State var pausedForScores = false
     @State var pausedForMessHall = false
     @State private var pausedForNewGame = false
-    @State private var saveStore: SaveStore
-    @State private var saveWriter: BackgroundSaveWriter
+    @State var saveStore: SaveStore
+    @State var dailySaveStore: SaveStore
+    /// Dates with an unfinished daily save, snapshotted when the calendar opens
+    /// so its day cells can mark in-progress days.
+    @State var dailySaveDates: Set<String> = []
+    @State var saveWriter: BackgroundSaveWriter
     @Environment(\.requestReview) var requestReview
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
@@ -80,7 +84,8 @@ struct GameContent: View {
         viewModel: GameViewModel, scoreboard: Scoreboard, settings: Settings,
         navigator: Navigator, friends: FriendsStore, achievements: AchievementStore,
         gameCenter: GameCenterReporter, dailyStore: DailyStore,
-        scene: BoardScene, winsBaseline: [String: Int] = [:], saveStore: SaveStore
+        scene: BoardScene, winsBaseline: [String: Int] = [:], saveStore: SaveStore,
+        dailySaveStore: SaveStore
     ) {
         self.viewModel = viewModel
         self.scoreboard = scoreboard
@@ -95,7 +100,9 @@ struct GameContent: View {
         // Shared with GameViewRoot so the New Game popup's resume cues read the
         // same files this view writes.
         _saveStore = State(initialValue: saveStore)
-        _saveWriter = State(initialValue: BackgroundSaveWriter(store: saveStore))
+        _dailySaveStore = State(initialValue: dailySaveStore)
+        _saveWriter = State(
+            initialValue: BackgroundSaveWriter(store: saveStore, dailyStore: dailySaveStore))
     }
 
     /// One resolved scheme for chrome and scene. `colorScheme` is the iOS fallback,
@@ -187,10 +194,13 @@ struct GameContent: View {
             KeyboardShortcutsView()
         }
         .appearanceSheet(isPresented: $navigator.showingDailyCalendar, settings) {
-            DailyCalendarView(dailyStore: dailyStore) { board in
+            DailyCalendarView(dailyStore: dailyStore, savedDates: dailySaveDates) { board in
                 navigator.showingDailyCalendar = false
                 startDailyBoard(board)
             }
+        }
+        .onChangeCompat(of: navigator.showingDailyCalendar) { showing in
+            if showing { dailySaveDates = Set(dailySaveStore.summaries().compactMap(\.dateKey)) }
         }
         .onChangeCompat(of: navigator.playConfigRequested) { config in
             if let config { playFromScoreboard(config) }
@@ -319,11 +329,7 @@ struct GameContent: View {
             // The player never touched the launch-primed placeholder, so its
             // config's on-disk save is still the real game — leave it be.
         } else {
-            let config = viewModel.config
-            Task {
-                await saveWriter.clear(config: config)
-                navigator.savesChanged &+= 1
-            }
+            clearActiveSaveAsync()
         }
     }
 
@@ -356,9 +362,11 @@ struct GameContent: View {
         autosaveTask?.cancel()
         defer { navigator.savesChanged &+= 1 }
         if let snapshot = viewModel.snapshot() {
-            saveStore.save(snapshot)
+            // A daily save goes to its own store (keyed by dateKey); routed by
+            // the snapshot's dateKey, like BackgroundSaveWriter.write.
+            (snapshot.dateKey != nil ? dailySaveStore : saveStore).save(snapshot)
         } else if !viewModel.isPrimedBoard {  // never clear for the placeholder
-            saveStore.clear(config: viewModel.config)
+            clearActiveSaveInline()
         }
     }
 
@@ -371,13 +379,6 @@ struct GameContent: View {
             guard !Task.isCancelled else { return }
             autosave()
         }
-    }
-
-    /// Enter an attempt on any day's board (today's card, calendar Play).
-    func startDailyBoard(_ board: DailyChallenge.Board) {
-        navigator.activeDaily = board
-        viewModel.newGame(config: board.config, seed: board.seed)
-        navigator.showingTitle = false
     }
 
     /// Retry restarts the SAME board: a daily re-seeds its shared layout

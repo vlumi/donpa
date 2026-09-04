@@ -7,7 +7,11 @@ import SwiftUI
 /// navigation clamps to [epoch, today].
 struct DailyCalendarView: View {
     @ObservedObject var dailyStore: DailyStore
-    /// Start an attempt on a day's board; the host owns dismissal + routing.
+    /// Dates with an unfinished daily save — marked in-progress; their button
+    /// reads "Continue" and resumes.
+    var savedDates: Set<String> = []
+    /// Start (or resume) an attempt on a day's board; the host owns dismissal +
+    /// routing, and resumes if a save exists.
     let onPlay: (DailyChallenge.Board) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -112,6 +116,14 @@ struct DailyCalendarView: View {
         }
     }
 
+    /// Play (never touched) / Continue (an unfinished save exists — resumes) /
+    /// Replay (finished, start fresh). A save is sacred, so Continue wins.
+    private func dailyActionLabel(hasSave: Bool, played: Bool) -> Text {
+        if hasSave { return Text("Continue", bundle: .module) }
+        if played { return Text("Replay", bundle: .module) }
+        return Text("Play", bundle: .module)
+    }
+
     @ViewBuilder private func dayChip(_ key: String) -> some View {
         let day = dailyStore.displayRecords[key]
         let selectable = isPlayable(key)
@@ -124,6 +136,11 @@ struct DailyCalendarView: View {
                 if let best = day?.best {
                     Text(TimeFormat.mmsst(centiseconds: best.centiseconds))
                         .font(.system(size: 9).monospacedDigit())
+                        .foregroundStyle(Color.accentColor)
+                } else if savedDates.contains(key) {
+                    // An unfinished attempt is saved for this day.
+                    Image(systemName: "pause.circle.fill")
+                        .font(.system(size: 9))
                         .foregroundStyle(Color.accentColor)
                 } else if let progress = day?.bestProgress {
                     Text(verbatim: StatBlock.percentFloor(progress))
@@ -153,16 +170,16 @@ struct DailyCalendarView: View {
     }
 
     private func dayA11y(_ key: String, day: DailyDayRecord?) -> String {
-        guard let day else {
-            return key + ", " + String(localized: "Not played yet", bundle: .module)
-        }
-        if let best = day.best {
+        if let best = day?.best {
             return key + ", " + TimeFormat.mmsst(centiseconds: best.centiseconds)
         }
-        if let progress = day.bestProgress {
+        if savedDates.contains(key) {
+            return key + ", " + String(localized: "In progress", bundle: .module)
+        }
+        if let progress = day?.bestProgress {
             return key + ", " + StatBlock.percentFloor(progress)
         }
-        return key
+        return key + ", " + String(localized: "Not played yet", bundle: .module)
     }
 
     // MARK: Selected day
@@ -185,7 +202,7 @@ struct DailyCalendarView: View {
                     Button {
                         onPlay(board)
                     } label: {
-                        Text(day == nil ? "Play" : "Replay", bundle: .module)
+                        dailyActionLabel(hasSave: savedDates.contains(selectedKey), played: day != nil)
                             .padding(.horizontal, 12)
                     }
                     .buttonStyle(.borderedProminent)
