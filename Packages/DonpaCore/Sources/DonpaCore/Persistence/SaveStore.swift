@@ -73,8 +73,6 @@ public struct SaveStore {
         return directory.appendingPathComponent("save-\(safe).json")
     }
 
-    private func url(for config: GameConfig) -> URL { url(forKey: config.storageKey) }
-
     /// The tiny sidecar summary next to a save: listing saves by decoding the full
     /// files was a ~1s main-thread stall (an XXXL save is ~2MB of JSON). Written and
     /// removed by the same code paths as the main file, so there's no index to drift.

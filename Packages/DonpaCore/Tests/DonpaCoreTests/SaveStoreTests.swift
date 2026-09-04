@@ -299,6 +299,12 @@ final class SaveStoreTests: XCTestCase {
         _ = SaveStore.appSupport().all()
     }
 
+    /// Same read-only smoke as `appSupport`, for the daily store's factory
+    /// (resolves the real App Support dir under `daily-saves/`).
+    func testDailyAppSupportFactoryResolves() {
+        _ = SaveStore.dailyAppSupport().all()
+    }
+
     // MARK: Daily saves (keyed by dateKey, isolated from casual saves)
 
     /// A daily store keys on `dateKey`, and — crucially — a daily save and a

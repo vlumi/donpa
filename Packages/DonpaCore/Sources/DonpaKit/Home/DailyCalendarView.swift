@@ -202,8 +202,10 @@ struct DailyCalendarView: View {
                     Button {
                         onPlay(board)
                     } label: {
-                        dailyActionLabel(hasSave: savedDates.contains(selectedKey), played: day != nil)
-                            .padding(.horizontal, 12)
+                        dailyActionLabel(
+                            hasSave: savedDates.contains(selectedKey), played: day != nil
+                        )
+                        .padding(.horizontal, 12)
                     }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("daily.calendar.play")
