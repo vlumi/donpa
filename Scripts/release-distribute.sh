@@ -31,6 +31,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ "$require_tag" -eq 1 ]; then
+    sync_tags
     version="$(read_unique MARKETING_VERSION)"
     build="$(read_unique CURRENT_PROJECT_VERSION)"
     for p in $([ "$platform" = all ] && echo "ios macos" || echo "$platform"); do

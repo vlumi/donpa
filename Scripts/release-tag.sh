@@ -18,6 +18,7 @@ platform="$(require_platform "${1:-}")"
 base="$(release_base)"
 say "Refreshing ${base}…"
 git pull --quiet --ff-only origin "$base"
+sync_tags
 version="$(read_unique MARKETING_VERSION)"
 build="$(read_unique CURRENT_PROJECT_VERSION)"
 merge_sha="$(git rev-parse HEAD)"

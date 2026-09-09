@@ -13,6 +13,7 @@ command -v gh >/dev/null || die "gh CLI not found (needed to open + auto-merge t
 base="$(release_base)"
 say "Fetching origin…"
 git fetch --quiet origin "$base"
+sync_tags
 [ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$base")" ] \
     || die "local ${base} differs from origin/${base} — pull/push to sync first."
 echo "✓ preflight: on a clean ${base} matching origin."
